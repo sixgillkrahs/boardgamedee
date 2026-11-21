@@ -1,0 +1,5 @@
+# Separate Platform Core from Game Cartridges with Server-Side View Projection
+
+We split the system at a strict seam between a game-agnostic **Platform Core** (rooms, seats, match persistence, timers, channels, real-time transport) and pluggable **Game Cartridges** (starting with Werewolf). Each Game Cartridge is implemented as a pure state machine (`reduce(state, command, context) -> { nextState, events }`) paired with a server-side projection function (`projectView(state, viewerSeatId) -> PlayerView`) and a Channel permission resolver (`resolveChannels(state, seatId)`).
+
+We chose this over embedding game tables directly in the database schema or filtering secret state on the client because tabletop and social-deduction board games rely on strict hidden information (roles, night actions, hands of cards) and vary wildly in state shape; keeping cartridges pure makes every game rule unit-testable without a database and ensures no client device ever receives another player's secrets over the network.
