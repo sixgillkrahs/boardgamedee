@@ -2015,6 +2015,653 @@ export function drawContessaCard2D(
 }
 
 /**
+ * Draws the detailed 2D illustration for the Coup "Ambassador" card matching the reference artwork
+ * (without any text on the card):
+ * - Warm dusty ochre/olive-gold sky, hazy horizon cityscape, elevated concrete landing sky-pads
+ *   (left pad with 2 tiny dark standing silhouettes conversing, right pad with a parked golden-bronze
+ *   sci-fi speeder/shuttle), and flying speeders (including one on the upper-right with twin blue thrusters)
+ * - Top-right chartreuse/lime-green geometric emblem: central hollow diamond flanked by inward-pointing
+ *   Top, Left, Right triangles and 2 stacked upward-pointing Bottom triangles
+ * - Mature diplomatic portrait with a richly pleated saffron-orange wrapped turban (pagri),
+ *   furrowed brow, shrewd dark eyes with crow's-feet, and a thick drooping dark mustache
+ * - Ornate black/orange/gold patterned silk cravat tucked into an olive-green coat with gold-piped
+ *   botanical leaf-brocade lapels
+ */
+export function drawAmbassadorCard2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  // 1. Dusty Ochre / Olive-Gold Sky, Distant City Horizon & Elevated Landing Sky-Pads
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+  skyGrad.addColorStop(0, "#bda758");
+  skyGrad.addColorStop(0.28, "#cfba6d");
+  skyGrad.addColorStop(0.47, "#e2d49e");
+  skyGrad.addColorStop(0.62, "#b59d5c");
+  skyGrad.addColorStop(1, "#1e2210");
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Distant hazy city buildings along the mid-horizon (between y = 0.45*h and 0.68*h)
+  ctx.fillStyle = "rgba(148, 126, 74, 0.55)";
+  for (const [bx, by, bw, bh] of [
+    [0.02, 0.45, 0.08, 0.2],
+    [0.12, 0.46, 0.14, 0.2],
+    [0.64, 0.45, 0.12, 0.22],
+    [0.78, 0.44, 0.18, 0.22],
+  ] as const) {
+    ctx.fillRect(w * bx, h * by, w * bw, h * bh);
+  }
+
+  // Elevated Concrete Sky-Pads / Landing Platforms (Left & Right)
+  // Right sky-pad pedestal & platform
+  ctx.fillStyle = "#5c5d4e";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.61, h * 0.505);
+  ctx.lineTo(w, h * 0.495);
+  ctx.lineTo(w, h * 0.675);
+  ctx.lineTo(w * 0.91, h * 0.675);
+  ctx.quadraticCurveTo(w * 0.91, h * 0.545, w * 0.75, h * 0.54);
+  ctx.lineTo(w * 0.61, h * 0.53);
+  ctx.closePath();
+  ctx.fill();
+
+  // Right sky-pad sunlit concrete top deck
+  ctx.fillStyle = "#d9d1b8";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.61, h * 0.505);
+  ctx.quadraticCurveTo(w * 0.75, h * 0.48, w, h * 0.485);
+  ctx.lineTo(w, h * 0.515);
+  ctx.quadraticCurveTo(w * 0.78, h * 0.52, w * 0.61, h * 0.508);
+  ctx.closePath();
+  ctx.fill();
+
+  // Left sky-pad underside & sunlit top deck
+  ctx.fillStyle = "#535243";
+  ctx.beginPath();
+  ctx.moveTo(0, h * 0.555);
+  ctx.lineTo(w * 0.31, h * 0.535);
+  ctx.lineTo(w * 0.31, h * 0.575);
+  ctx.lineTo(w * 0.12, h * 0.65);
+  ctx.lineTo(0, h * 0.67);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#e0d8c0";
+  ctx.beginPath();
+  ctx.moveTo(0, h * 0.508);
+  ctx.quadraticCurveTo(w * 0.16, h * 0.5, w * 0.31, h * 0.535);
+  ctx.lineTo(w * 0.16, h * 0.575);
+  ctx.lineTo(0, h * 0.56);
+  ctx.closePath();
+  ctx.fill();
+
+  // Two tiny dark standing silhouettes conversing on the Left Sky-Pad
+  ctx.fillStyle = "#26281e";
+  for (const [px, py, ph] of [
+    [0.104, 0.478, 0.064],
+    [0.142, 0.474, 0.068],
+  ] as const) {
+    // Head
+    ctx.beginPath();
+    ctx.arc(w * px, h * py, w * 0.009, 0, Math.PI * 2);
+    ctx.fill();
+    // Torso & coat
+    ctx.fillRect(w * (px - 0.011), h * (py + 0.008), w * 0.022, h * ph * 0.55);
+    // Legs
+    ctx.fillRect(
+      w * (px - 0.009),
+      h * (py + 0.008 + ph * 0.55),
+      w * 0.007,
+      h * ph * 0.42
+    );
+    ctx.fillRect(
+      w * (px + 0.002),
+      h * (py + 0.008 + ph * 0.55),
+      w * 0.007,
+      h * ph * 0.42
+    );
+  }
+
+  // Parked Golden-Bronze Sci-Fi Shuttle/Speeder on the Right Sky-Pad
+  ctx.save();
+  ctx.fillStyle = "#a1712c";
+  ctx.strokeStyle = "#3f2b12";
+  ctx.lineWidth = Math.max(0.6, w * 0.007);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.76, h * 0.484);
+  ctx.lineTo(w * 0.785, h * 0.452);
+  ctx.lineTo(w * 0.875, h * 0.462);
+  ctx.lineTo(w * 0.952, h * 0.482);
+  ctx.lineTo(w * 0.845, h * 0.495);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Shuttle cockpit canopy highlight
+  ctx.fillStyle = "#fef3c7";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.855, h * 0.464);
+  ctx.lineTo(w * 0.922, h * 0.477);
+  ctx.lineTo(w * 0.865, h * 0.479);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // Flying Speeders in the Sky (Upper-Right Speeder with Twin Glowing Blue Engine Thrusters)
+  ctx.fillStyle = "#8a5a24";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.805, h * 0.238);
+  ctx.lineTo(w * 0.865, h * 0.222);
+  ctx.lineTo(w * 0.915, h * 0.236);
+  ctx.lineTo(w * 0.855, h * 0.244);
+  ctx.closePath();
+  ctx.fill();
+
+  // Twin glowing blue rear engine thrusters on the upper-right speeder
+  for (const tx of [w * 0.872, w * 0.896]) {
+    ctx.fillStyle = "#38bdf8";
+    ctx.beginPath();
+    ctx.arc(tx, h * 0.235, w * 0.01, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#e0f2fe";
+    ctx.beginPath();
+    ctx.arc(tx, h * 0.235, w * 0.005, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Distant smaller flying craft silhouettes on upper-left & top-center
+  ctx.fillStyle = "rgba(138, 92, 36, 0.72)";
+  for (const [fx, fy, fw] of [
+    [0.18, 0.232, 0.065],
+    [0.105, 0.278, 0.025],
+    [0.578, 0.142, 0.032],
+  ] as const) {
+    ctx.beginPath();
+    ctx.moveTo(w * (fx - fw * 0.5), h * fy);
+    ctx.lineTo(w * fx, h * (fy - 0.008));
+    ctx.lineTo(w * (fx + fw * 0.5), h * fy);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // 2. Top-Right Chartreuse / Lime-Green Geometric Emblem (Hollow Diamond + 3 Inward Triangles + 2 Stacked Bottom Triangles)
+  ctx.save();
+  const emCx = w * 0.756;
+  const emCy = h * 0.165;
+  const emS = w * 0.22;
+
+  ctx.shadowColor = "rgba(0, 0, 0, 0.38)";
+  ctx.shadowBlur = Math.max(2, w * 0.022);
+
+  const limeGrad = ctx.createLinearGradient(
+    emCx - emS * 0.5,
+    emCy - emS * 0.5,
+    emCx + emS * 0.5,
+    emCy + emS * 0.5
+  );
+  limeGrad.addColorStop(0, "#d9f928");
+  limeGrad.addColorStop(0.55, "#b5db18");
+  limeGrad.addColorStop(1, "#84a80c");
+  ctx.fillStyle = limeGrad;
+  ctx.strokeStyle = "#6d8c08";
+  ctx.lineWidth = Math.max(0.7, w * 0.008);
+
+  // Central Hollow Diamond (outer diamond CW + inner diamond cutout CCW)
+  const dOut = emS * 0.24;
+  const dIn = emS * 0.1;
+  ctx.beginPath();
+  ctx.moveTo(emCx, emCy - dOut);
+  ctx.lineTo(emCx + dOut, emCy);
+  ctx.lineTo(emCx, emCy + dOut);
+  ctx.lineTo(emCx - dOut, emCy);
+  ctx.closePath();
+  // Inner diamond hole (counter-clockwise)
+  ctx.moveTo(emCx, emCy - dIn);
+  ctx.lineTo(emCx - dIn, emCy);
+  ctx.lineTo(emCx, emCy + dIn);
+  ctx.lineTo(emCx + dIn, emCy);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Top triangle pointing DOWN toward top vertex
+  const triW = emS * 0.165;
+  const triH = emS * 0.125;
+  ctx.beginPath();
+  ctx.moveTo(emCx - triW, emCy - dOut - emS * 0.19);
+  ctx.lineTo(emCx + triW, emCy - dOut - emS * 0.19);
+  ctx.lineTo(emCx, emCy - dOut - emS * 0.19 + triH);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Left triangle pointing RIGHT toward left vertex
+  ctx.beginPath();
+  ctx.moveTo(emCx - dOut - emS * 0.26, emCy - triW);
+  ctx.lineTo(emCx - dOut - emS * 0.26, emCy + triW);
+  ctx.lineTo(emCx - dOut - emS * 0.26 + triH, emCy);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Right triangle pointing LEFT toward right vertex
+  ctx.beginPath();
+  ctx.moveTo(emCx + dOut + emS * 0.26, emCy - triW);
+  ctx.lineTo(emCx + dOut + emS * 0.26, emCy + triW);
+  ctx.lineTo(emCx + dOut + emS * 0.26 - triH, emCy);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Bottom TWO stacked triangles pointing UP toward bottom vertex
+  for (const offset of [0.06, 0.19]) {
+    const tipY = emCy + dOut + emS * offset;
+    ctx.beginPath();
+    ctx.moveTo(emCx, tipY);
+    ctx.lineTo(emCx + triW, tipY + triH);
+    ctx.lineTo(emCx - triW, tipY + triH);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 3. Olive-Green Diplomatic Coat, Gold-Piped Botanical Brocade Lapels & Ornate Silk Cravat
+  ctx.save();
+  // Outer Olive-Khaki Coat Shoulders & Sleeves
+  const coatGrad = ctx.createLinearGradient(0, h * 0.56, w, h);
+  coatGrad.addColorStop(0, "#757548");
+  coatGrad.addColorStop(0.5, "#4a4c29");
+  coatGrad.addColorStop(1, "#1e200e");
+  ctx.fillStyle = coatGrad;
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.02, h);
+  ctx.lineTo(w * 0.08, h * 0.675);
+  ctx.quadraticCurveTo(w * 0.2, h * 0.625, w * 0.31, h * 0.6);
+  ctx.lineTo(w * 0.67, h * 0.585);
+  ctx.quadraticCurveTo(w * 0.85, h * 0.63, w * 0.93, h * 0.675);
+  ctx.lineTo(w * 1.03, h);
+  ctx.closePath();
+  ctx.fill();
+
+  // Inner Emerald-Olive Waistcoat / Vest
+  const vestGrad = ctx.createLinearGradient(0, h * 0.68, 0, h);
+  vestGrad.addColorStop(0, "#4e6e32");
+  vestGrad.addColorStop(1, "#1b2910");
+  ctx.fillStyle = vestGrad;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.24, h);
+  ctx.lineTo(w * 0.31, h * 0.68);
+  ctx.lineTo(w * 0.64, h * 0.68);
+  ctx.lineTo(w * 0.71, h);
+  ctx.closePath();
+  ctx.fill();
+
+  // Dark crimson waistcoat button near bottom center
+  ctx.fillStyle = "#450a0a";
+  ctx.beginPath();
+  ctx.arc(w * 0.386, h * 0.945, w * 0.018, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Wide Botanical Leaf-Brocade Lapels Edged with Bright Gold Piping
+  const lapelGrad = ctx.createLinearGradient(0, h * 0.6, 0, h);
+  lapelGrad.addColorStop(0, "#557538");
+  lapelGrad.addColorStop(0.6, "#374f21");
+  lapelGrad.addColorStop(1, "#1a280e");
+  ctx.fillStyle = lapelGrad;
+  ctx.strokeStyle = "#facc15";
+  ctx.lineWidth = Math.max(1.2, w * 0.013);
+
+  // Left notched brocade lapel
+  ctx.beginPath();
+  ctx.moveTo(w * 0.3, h * 0.62);
+  ctx.lineTo(w * 0.145, h * 0.765);
+  ctx.lineTo(w * 0.22, h * 0.82);
+  ctx.lineTo(w * 0.15, h);
+  ctx.lineTo(w * 0.26, h);
+  ctx.lineTo(w * 0.33, h * 0.78);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Right notched brocade lapel
+  ctx.beginPath();
+  ctx.moveTo(w * 0.675, h * 0.59);
+  ctx.lineTo(w * 0.685, h * 0.695);
+  ctx.lineTo(w * 0.778, h * 0.785);
+  ctx.lineTo(w * 0.72, h * 0.84);
+  ctx.lineTo(w * 0.74, h);
+  ctx.lineTo(w * 0.51, h);
+  ctx.lineTo(w * 0.585, h * 0.695);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Botanical Leaf & Vine Brocade Embroidery on the Right & Left Lapels
+  ctx.strokeStyle = "rgba(180, 198, 108, 0.55)";
+  ctx.fillStyle = "rgba(163, 184, 88, 0.45)";
+  ctx.lineWidth = Math.max(0.7, w * 0.008);
+  for (const [lx, ly] of [
+    [0.22, 0.73],
+    [0.25, 0.78],
+    [0.64, 0.71],
+    [0.68, 0.76],
+    [0.62, 0.81],
+    [0.66, 0.86],
+    [0.61, 0.91],
+  ] as const) {
+    ctx.beginPath();
+    ctx.ellipse(w * lx, h * ly, w * 0.026, h * 0.011, -0.35, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // White Shirt Collar Peeking Under the Chin
+  ctx.fillStyle = "#e2e8f0";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.34, h * 0.585);
+  ctx.lineTo(w * 0.44, h * 0.635);
+  ctx.lineTo(w * 0.57, h * 0.585);
+  ctx.lineTo(w * 0.6, h * 0.52);
+  ctx.lineTo(w * 0.34, h * 0.55);
+  ctx.closePath();
+  ctx.fill();
+
+  // Ornate Black, Saffron-Orange & Gold Patterned Silk Cravat / Ascot Scarf
+  const cravatGrad = ctx.createLinearGradient(
+    w * 0.29,
+    h * 0.53,
+    w * 0.67,
+    h * 0.84
+  );
+  cravatGrad.addColorStop(0, "#451a03");
+  cravatGrad.addColorStop(0.5, "#1c120c");
+  cravatGrad.addColorStop(1, "#291509");
+  ctx.fillStyle = cravatGrad;
+  ctx.strokeStyle = "#d97706";
+  ctx.lineWidth = Math.max(0.9, w * 0.01);
+
+  ctx.beginPath();
+  ctx.moveTo(w * 0.31, h * 0.555);
+  ctx.quadraticCurveTo(w * 0.45, h * 0.65, w * 0.605, h * 0.51);
+  ctx.quadraticCurveTo(w * 0.675, h * 0.575, w * 0.645, h * 0.645);
+  ctx.quadraticCurveTo(w * 0.54, h * 0.72, w * 0.445, h * 0.75);
+  ctx.lineTo(w * 0.39, h * 0.855);
+  ctx.lineTo(w * 0.32, h * 0.74);
+  ctx.quadraticCurveTo(w * 0.285, h * 0.64, w * 0.31, h * 0.555);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Glowing Saffron-Orange & Gold Paisley Scroll Motifs across the Silk Cravat
+  for (const [px, py, pr] of [
+    [0.37, 0.62, 0.022],
+    [0.45, 0.64, 0.025],
+    [0.54, 0.625, 0.024],
+    [0.6, 0.585, 0.02],
+    [0.38, 0.7, 0.026],
+    [0.42, 0.745, 0.024],
+    [0.39, 0.795, 0.018],
+  ] as const) {
+    ctx.strokeStyle = "#f97316";
+    ctx.lineWidth = Math.max(1.2, w * 0.014);
+    ctx.beginPath();
+    ctx.arc(w * px, h * py, w * pr, 0, Math.PI * 1.75);
+    ctx.stroke();
+
+    ctx.fillStyle = "#facc15";
+    ctx.beginPath();
+    ctx.arc(w * px, h * py, w * pr * 0.42, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // 4. The Ambassador's Mature Portrait, Bushy Mustache & Saffron-Orange Wrapped Turban
+  ctx.save();
+  const faceCx = w * 0.43;
+  const faceCy = h * 0.435;
+
+  // Right Ear (on viewer's right, below turban edge)
+  ctx.fillStyle = "#a36c52";
+  ctx.strokeStyle = "#6e422e";
+  ctx.lineWidth = Math.max(0.8, w * 0.009);
+  ctx.beginPath();
+  ctx.ellipse(
+    w * 0.612,
+    h * 0.458,
+    w * 0.026,
+    h * 0.042,
+    0.18,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.stroke();
+
+  // Ruddy-Tan / Olive-Brown Face, Cheeks & Double Chin
+  const faceGrad = ctx.createRadialGradient(
+    faceCx - w * 0.02,
+    faceCy - h * 0.02,
+    w * 0.02,
+    faceCx,
+    faceCy,
+    w * 0.22
+  );
+  faceGrad.addColorStop(0, "#e0a889");
+  faceGrad.addColorStop(0.55, "#bf8162");
+  faceGrad.addColorStop(1, "#784732");
+  ctx.fillStyle = faceGrad;
+  ctx.strokeStyle = "#5e3422";
+  ctx.lineWidth = Math.max(0.8, w * 0.009);
+
+  ctx.beginPath();
+  ctx.moveTo(w * 0.258, h * 0.375);
+  // Left cheek down to rounded jowl and chin
+  ctx.quadraticCurveTo(w * 0.265, h * 0.54, w * 0.375, h * 0.585);
+  ctx.quadraticCurveTo(w * 0.475, h * 0.605, w * 0.598, h * 0.515);
+  ctx.lineTo(w * 0.61, h * 0.425);
+  ctx.lineTo(w * 0.41, h * 0.31);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Grey sideburn hair temple tuft next to right ear
+  ctx.fillStyle = "#4b4846";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.565, h * 0.405);
+  ctx.lineTo(w * 0.608, h * 0.44);
+  ctx.lineTo(w * 0.585, h * 0.455);
+  ctx.closePath();
+  ctx.fill();
+
+  // Furrowed Forehead & Brow Crease Lines
+  ctx.strokeStyle = "rgba(92, 48, 32, 0.65)";
+  ctx.lineWidth = Math.max(0.8, w * 0.009);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.32, h * 0.362);
+  ctx.quadraticCurveTo(w * 0.37, h * 0.355, w * 0.43, h * 0.364);
+  // Vertical frown lines between eyebrows
+  ctx.moveTo(w * 0.348, h * 0.368);
+  ctx.lineTo(w * 0.352, h * 0.392);
+  ctx.moveTo(w * 0.372, h * 0.366);
+  ctx.lineTo(w * 0.372, h * 0.392);
+  ctx.stroke();
+
+  // Thick Dark Salt-and-Pepper Eyebrows
+  ctx.strokeStyle = "#292524";
+  ctx.lineWidth = Math.max(1.6, w * 0.018);
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.268, h * 0.398);
+  ctx.quadraticCurveTo(w * 0.305, h * 0.382, w * 0.345, h * 0.395);
+  ctx.moveTo(w * 0.388, h * 0.392);
+  ctx.quadraticCurveTo(w * 0.438, h * 0.372, w * 0.488, h * 0.392);
+  ctx.stroke();
+
+  // Shrewd Dark Eyes with Crow's-Feet Wrinkles
+  for (const [ex, ey, ew] of [
+    [w * 0.312, h * 0.414, w * 0.025],
+    [w * 0.435, h * 0.408, w * 0.028],
+  ] as const) {
+    // Eye white
+    ctx.fillStyle = "#f1e9e4";
+    ctx.beginPath();
+    ctx.ellipse(ex, ey, ew, h * 0.009, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Dark brown-black iris & pupil
+    ctx.fillStyle = "#1c1917";
+    ctx.beginPath();
+    ctx.arc(ex - w * 0.003, ey, ew * 0.45, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sharp white eye glint
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(ex - w * 0.006, ey - h * 0.002, ew * 0.17, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Upper eyelid fold
+    ctx.strokeStyle = "#3b1f14";
+    ctx.lineWidth = Math.max(0.9, w * 0.01);
+    ctx.beginPath();
+    ctx.arc(ex, ey + h * 0.003, ew, Math.PI * 1.12, Math.PI * 1.88);
+    ctx.stroke();
+  }
+
+  // Crow's-feet & under-eye pouch creases
+  ctx.strokeStyle = "rgba(92, 48, 32, 0.55)";
+  ctx.lineWidth = Math.max(0.7, w * 0.008);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.468, h * 0.408);
+  ctx.lineTo(w * 0.508, h * 0.415);
+  ctx.moveTo(w * 0.465, h * 0.414);
+  ctx.lineTo(w * 0.498, h * 0.426);
+  ctx.stroke();
+
+  // Broad Sculpted Nose & Nostrils
+  ctx.fillStyle = "rgba(110, 62, 42, 0.42)";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.355, h * 0.398);
+  ctx.lineTo(w * 0.322, h * 0.458);
+  ctx.quadraticCurveTo(w * 0.358, h * 0.48, w * 0.405, h * 0.465);
+  ctx.lineTo(w * 0.375, h * 0.4);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#5c3120";
+  ctx.lineWidth = Math.max(1, w * 0.011);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.355, h * 0.4);
+  ctx.lineTo(w * 0.324, h * 0.458);
+  ctx.quadraticCurveTo(w * 0.36, h * 0.476, w * 0.402, h * 0.462);
+  ctx.stroke();
+
+  // Signature Bushy Dark Salt-and-Pepper Drooping Mustache
+  ctx.fillStyle = "#262322";
+  ctx.strokeStyle = "#44403c";
+  ctx.lineWidth = Math.max(0.8, w * 0.009);
+  ctx.beginPath();
+  // Center philtrum dip
+  ctx.moveTo(w * 0.362, h * 0.49);
+  // Left drooping mustache tip
+  ctx.quadraticCurveTo(w * 0.305, h * 0.485, w * 0.28, h * 0.522);
+  ctx.quadraticCurveTo(w * 0.292, h * 0.532, w * 0.315, h * 0.512);
+  ctx.quadraticCurveTo(w * 0.34, h * 0.502, w * 0.362, h * 0.504);
+  // Right drooping mustache tip
+  ctx.quadraticCurveTo(w * 0.405, h * 0.502, w * 0.448, h * 0.538);
+  ctx.quadraticCurveTo(w * 0.465, h * 0.525, w * 0.445, h * 0.495);
+  ctx.quadraticCurveTo(w * 0.405, h * 0.482, w * 0.362, h * 0.49);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Lower Lip & Chin Shadow under the Mustache
+  ctx.fillStyle = "#96604c";
+  ctx.beginPath();
+  ctx.ellipse(w * 0.366, h * 0.515, w * 0.042, h * 0.009, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(87, 46, 31, 0.6)";
+  ctx.lineWidth = Math.max(0.9, w * 0.01);
+  ctx.beginPath();
+  ctx.arc(w * 0.375, h * 0.542, w * 0.055, Math.PI * 0.18, Math.PI * 0.82);
+  ctx.stroke();
+
+  // 5. Large Richly Pleated Saffron-Orange Wrapped Turban (Pagri)
+  const turbGrad = ctx.createRadialGradient(
+    w * 0.46,
+    h * 0.24,
+    w * 0.04,
+    w * 0.47,
+    h * 0.29,
+    w * 0.3
+  );
+  turbGrad.addColorStop(0, "#fdb849");
+  turbGrad.addColorStop(0.5, "#f27d16");
+  turbGrad.addColorStop(0.85, "#c24e08");
+  turbGrad.addColorStop(1, "#7c2d05");
+  ctx.fillStyle = turbGrad;
+  ctx.strokeStyle = "#8c3306";
+  ctx.lineWidth = Math.max(0.9, w * 0.01);
+
+  ctx.beginPath();
+  // Bottom-left brow edge of turban
+  ctx.moveTo(w * 0.248, h * 0.388);
+  ctx.quadraticCurveTo(w * 0.195, h * 0.33, w * 0.228, h * 0.27);
+  // Left upper swell to high rounded saffron crown
+  ctx.quadraticCurveTo(w * 0.29, h * 0.205, w * 0.475, h * 0.172);
+  // Right upper slope down to wide right turban side
+  ctx.quadraticCurveTo(w * 0.695, h * 0.23, w * 0.72, h * 0.312);
+  ctx.quadraticCurveTo(w * 0.71, h * 0.39, w * 0.625, h * 0.44);
+  // Diagonal inner turban fold sweeping from right ear up-left across the forehead
+  ctx.quadraticCurveTo(w * 0.51, h * 0.355, w * 0.365, h * 0.312);
+  // Left overlapping brow band fold
+  ctx.quadraticCurveTo(w * 0.295, h * 0.34, w * 0.248, h * 0.388);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Overlapping Diagonal Cloth Pleat Creases Across the Saffron Turban
+  ctx.strokeStyle = "rgba(124, 45, 18, 0.62)";
+  ctx.lineWidth = Math.max(1, w * 0.011);
+  for (const [x1, y1, cx1, cy1, x2, y2] of [
+    [0.24, 0.27, 0.46, 0.295, 0.695, 0.375],
+    [0.275, 0.238, 0.49, 0.26, 0.71, 0.34],
+    [0.335, 0.205, 0.53, 0.23, 0.712, 0.305],
+    [0.23, 0.305, 0.42, 0.33, 0.655, 0.412],
+    [0.225, 0.345, 0.295, 0.325, 0.365, 0.312],
+  ] as const) {
+    ctx.beginPath();
+    ctx.moveTo(w * x1, h * y1);
+    ctx.quadraticCurveTo(w * cx1, h * cy1, w * x2, h * y2);
+    ctx.stroke();
+  }
+
+  // Sunlit golden-orange highlight ridges along the top turban pleats
+  ctx.strokeStyle = "rgba(254, 215, 102, 0.55)";
+  ctx.lineWidth = Math.max(1, w * 0.011);
+  for (const [x1, y1, cx1, cy1, x2, y2] of [
+    [0.31, 0.22, 0.48, 0.238, 0.66, 0.295],
+    [0.265, 0.254, 0.46, 0.275, 0.65, 0.335],
+  ] as const) {
+    ctx.beginPath();
+    ctx.moveTo(w * x1, h * y1);
+    ctx.quadraticCurveTo(w * cx1, h * cy1, w * x2, h * y2);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+  ctx.restore();
+}
+
+/**
  * Draws the 2D vector illustration for one of the 5 Coup Characters inside a card frame.
  */
 function drawCoupCharacterArt2D(
@@ -2083,49 +2730,7 @@ function drawCoupCharacterArt2D(
     ctx.fill();
     ctx.stroke();
   } else if (character === "Ambassador") {
-    // Diplomatic Emerald-Jade Court Backdrop
-    const bg = ctx.createRadialGradient(cx, cy, s * 0.05, cx, cy, s * 0.75);
-    bg.addColorStop(0, "#059669");
-    bg.addColorStop(0.65, "#064e3b");
-    bg.addColorStop(1, "#022c22");
-    ctx.fillStyle = bg;
-    ctx.fillRect(x, y, w, h);
-
-    // Two overlapping miniature 2D cards being exchanged
-    for (const [dx, dy, rot, col] of [
-      [-0.08, -0.04, -0.18, "#fde68a"],
-      [0.08, 0.02, 0.18, "#a7f3d0"],
-    ] as const) {
-      ctx.save();
-      ctx.translate(cx + dx * s, cy + dy * s);
-      ctx.rotate(rot);
-      drawRoundedRect(ctx, -s * 0.14, -s * 0.2, s * 0.28, s * 0.38, 6);
-      ctx.fillStyle = "#fef3c7";
-      ctx.fill();
-      ctx.strokeStyle = "#78350f";
-      ctx.lineWidth = Math.max(1.5, s * 0.02);
-      ctx.stroke();
-
-      // Crimson wax seal in center of scroll card
-      ctx.fillStyle = "#dc2626";
-      ctx.beginPath();
-      ctx.arc(0, 0, s * 0.065, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = col;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // Circular Golden Exchange Arrows around the two cards
-    ctx.strokeStyle = "#fbbf24";
-    ctx.lineWidth = Math.max(2, s * 0.032);
-    ctx.beginPath();
-    ctx.arc(cx, cy, s * 0.28, -Math.PI * 0.8, -Math.PI * 0.15);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(cx, cy, s * 0.28, Math.PI * 0.2, Math.PI * 0.85);
-    ctx.stroke();
+    drawAmbassadorCard2D(ctx, x, y, w, h);
   } else {
     drawContessaCard2D(ctx, x, y, w, h);
   }

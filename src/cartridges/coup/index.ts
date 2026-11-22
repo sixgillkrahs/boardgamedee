@@ -57,7 +57,7 @@ export const COUP_CHARACTER_META: Record<
     titleVi: "ĐẠI SỨ",
     actionVi: "Đổi Bài (rút 2 lá từ Bộ bài)",
     blockVi: "Chặn Cướp Xu",
-    accentColor: "#10b981",
+    accentColor: "#b5db18",
   },
   Contessa: {
     nameVi: "Bá Tước Phu Nhân (Contessa)",
