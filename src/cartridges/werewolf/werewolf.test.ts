@@ -115,6 +115,32 @@ describe("Werewolf Cartridge - Seam 1 (GameCartridge Interface)", () => {
     expect(wolfView.seats.find((s) => s.seatNo === 1)?.role).toBe("Werewolf");
     expect(wolfView.seats.find((s) => s.seatNo === 2)?.role).toBe("Werewolf");
     expect(wolfView.seats.find((s) => s.seatNo === 4)?.role).toBeNull();
+
+    // When Werewolf Seat 1 selects/votes a target (lock: false or lock: true), fellow Werewolf Seat 2 sees Seat 1's vote target in projectView, while Villager Seat 3 does not
+    const { state: afterWolf1Aim } = werewolfCartridge.reduce({
+      state,
+      actorSeatNo: 1,
+      command: { type: "WEREWOLF_VOTE", targetSeatNo: 5, lock: false },
+      nowMs: 1_500,
+    });
+    expect(afterWolf1Aim.step).toBe("NightActionStep");
+    expect(afterWolf1Aim.werewolfSubmitted[1]).toBeFalsy();
+
+    const wolf2View = werewolfCartridge.projectView({
+      state: afterWolf1Aim,
+      viewerSeatNo: 2,
+    });
+    expect(
+      wolf2View.seats.find((s) => s.seatNo === 1)?.werewolfVoteTarget
+    ).toBe(5);
+
+    const villager3View = werewolfCartridge.projectView({
+      state: afterWolf1Aim,
+      viewerSeatNo: 3,
+    });
+    expect(
+      villager3View.seats.find((s) => s.seatNo === 1)?.werewolfVoteTarget
+    ).toBeNull();
   });
 
   it("handles NightActionStep (Werewolf, Seer, Bodyguard) and advances to WitchStep where Witch can self-heal and poison", () => {

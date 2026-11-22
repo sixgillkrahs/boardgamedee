@@ -318,7 +318,32 @@ function RoomPageContent({
               viewerSeatNo={snapshot?.viewerSeatNo ?? null}
               playerView={pv}
               selectedTargetSeatNo={selectedTargetSeatNo}
-              onSelectSeat={(seatNo) => setSelectedTargetSeatNo(seatNo)}
+              onSelectSeat={(seatNo) => {
+                setSelectedTargetSeatNo(seatNo);
+                // If viewer is a living Werewolf during NightActionStep, broadcast their live target vote (lock: false) immediately so fellow Werewolves see their vote arrow on Canvas!
+                if (
+                  pv &&
+                  pv.step === "NightActionStep" &&
+                  pv.myAlive &&
+                  pv.myRole === "Werewolf"
+                ) {
+                  const targetSeat = pv.seats.find((s) => s.seatNo === seatNo);
+                  if (targetSeat?.alive) {
+                    void fetch(`/api/rooms/${normalizedCode}/action`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        type: "MATCH_COMMAND",
+                        command: {
+                          type: "WEREWOLF_VOTE",
+                          targetSeatNo: seatNo,
+                          lock: false,
+                        },
+                      }),
+                    }).catch(() => {});
+                  }
+                }
+              }}
               roleCardRevealed={roleCardRevealed}
               onToggleRoleCard={() => setRoleCardRevealed((prev) => !prev)}
             />

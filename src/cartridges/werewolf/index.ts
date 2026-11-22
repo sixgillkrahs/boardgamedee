@@ -168,7 +168,7 @@ export interface WerewolfMatchState {
 }
 
 export type WerewolfCommand =
-  | { type: "WEREWOLF_VOTE"; targetSeatNo: number }
+  | { type: "WEREWOLF_VOTE"; targetSeatNo: number; lock?: boolean }
   | { type: "BODYGUARD_PROTECT"; targetSeatNo: number }
   | { type: "SEER_INSPECT"; targetSeatNo: number }
   | {
@@ -997,35 +997,46 @@ export const werewolfCartridge: GameCartridge<
           throw new Error("Mục tiêu không hợp lệ.");
         }
 
+        const shouldLock = command.lock !== false;
         const nextState: WerewolfMatchState = {
           ...state,
           werewolfVotes: {
             ...state.werewolfVotes,
             [actorSeatNo]: target.seatNo,
           },
-          werewolfSubmitted: {
-            ...state.werewolfSubmitted,
-            [actorSeatNo]: true,
-          },
+          werewolfSubmitted: shouldLock
+            ? {
+                ...state.werewolfSubmitted,
+                [actorSeatNo]: true,
+              }
+            : state.werewolfSubmitted,
         };
 
         const wolfSeats = state.seats
           .filter((s) => s.role === "Werewolf")
           .map((s) => s.seatNo);
         const voteEvent: MatchEventRecord = {
-          eventType: "WEREWOLF_TARGET_LOCKED",
-          message: `${actorSeat.displayName} nhắm vào ${target.displayName}.`,
+          eventType: shouldLock
+            ? "WEREWOLF_TARGET_LOCKED"
+            : "WEREWOLF_TARGET_AIMED",
+          message: shouldLock
+            ? `${actorSeat.displayName} đã chốt cắn ${target.displayName} (#${target.seatNo}).`
+            : `${actorSeat.displayName} đang đề xuất cắn ${target.displayName} (#${target.seatNo}).`,
           visibleToSeatNos: wolfSeats,
-          payload: { actorSeatNo, targetSeatNo: target.seatNo },
+          payload: {
+            actorSeatNo,
+            targetSeatNo: target.seatNo,
+            locked: shouldLock,
+          },
         };
 
-        if (isNightActionStepComplete(nextState)) {
+        if (shouldLock && isNightActionStepComplete(nextState)) {
           return advanceFromNightActionStep(nextState, nowMs, [voteEvent]);
         }
 
         return {
           state: nextState,
-          events: [voteEvent],
+          events: shouldLock ? [voteEvent] : [],
           phaseDeadlineMs: nextState.phaseDeadlineMs,
         };
       }
@@ -1558,25 +1569,38 @@ export const werewolfCartridge: GameCartridge<
       const livingBots = livingSeats.filter((s) => botSet.has(s.seatNo));
 
       if (state.step === "NightActionStep") {
+        const humanWolves = livingSeats.filter(
+          (s) => s.role === "Werewolf" && !botSet.has(s.seatNo)
+        );
+        const allHumanWolvesLocked =
+          humanWolves.length === 0 ||
+          humanWolves.every((hw) => state.werewolfSubmitted[hw.seatNo]);
+
         for (const bot of livingBots) {
-          if (
-            bot.role === "Werewolf" &&
-            !state.werewolfSubmitted[bot.seatNo]
-          ) {
-            const targets = livingSeats.filter((s) => s.role !== "Werewolf");
-            const target = targets[0] ?? livingSeats[0];
-            if (target) {
-              const res = this.reduce({
-                state,
-                actorSeatNo: bot.seatNo,
-                command: { type: "WEREWOLF_VOTE", targetSeatNo: target.seatNo },
-                nowMs,
-              });
-              state = res.state;
-              events.push(...res.events);
-              phaseDeadlineMs = res.phaseDeadlineMs;
-              botActed = true;
-              break;
+          if (bot.role === "Werewolf") {
+            const alreadyAimed = state.werewolfVotes[bot.seatNo] !== undefined;
+            const alreadyLocked = Boolean(state.werewolfSubmitted[bot.seatNo]);
+
+            if (!alreadyLocked && (allHumanWolvesLocked || !alreadyAimed)) {
+              const targets = livingSeats.filter((s) => s.role !== "Werewolf");
+              const target = targets[0] ?? livingSeats[0];
+              if (target) {
+                const res = this.reduce({
+                  state,
+                  actorSeatNo: bot.seatNo,
+                  command: {
+                    type: "WEREWOLF_VOTE",
+                    targetSeatNo: target.seatNo,
+                    lock: allHumanWolvesLocked,
+                  },
+                  nowMs,
+                });
+                state = res.state;
+                events.push(...res.events);
+                phaseDeadlineMs = res.phaseDeadlineMs;
+                botActed = true;
+                break;
+              }
             }
           }
           if (bot.role === "Seer" && !state.seerSubmitted) {

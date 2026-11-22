@@ -499,7 +499,7 @@ export function WerewolfCanvas({
         seatPositions.set(seat.seatNo, pos);
       });
 
-      // Targeting beam if a target Seat is selected
+      // Targeting beam if a target Seat is selected locally
       if (curTarget !== null && seatPositions.has(curTarget)) {
         const targetPos = seatPositions.get(curTarget)!;
         const originPos =
@@ -524,13 +524,92 @@ export function WerewolfCanvas({
         ctx.restore();
       }
 
+      // Compute Day votes & Night Werewolf Pack votes against each Seat, and draw live vote arrows between Seats!
       const dayVoteCounts = new Map<number, number>();
+      const dayVotersByTarget = new Map<number, number[]>();
+      const wolfVotersByTarget = new Map<number, number[]>();
+
+      const drawVoteArrow = (
+        fromSeatNo: number,
+        toSeatNo: number,
+        color: string
+      ) => {
+        if (fromSeatNo === toSeatNo) return;
+        const fromPos = seatPositions.get(fromSeatNo);
+        const toPos = seatPositions.get(toSeatNo);
+        if (!fromPos || !toPos) return;
+
+        const dx = toPos.x - fromPos.x;
+        const dy = toPos.y - fromPos.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 40) return;
+
+        const ux = dx / dist;
+        const uy = dy / dist;
+        const startX = fromPos.x + ux * 36;
+        const startY = fromPos.y + uy * 36;
+        const endX = toPos.x - ux * 42;
+        const endY = toPos.y - uy * 42;
+
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 2.2;
+        ctx.setLineDash([6, 4]);
+        ctx.lineDashOffset = -(now / 30);
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Arrowhead at endX, endY
+        const angle = Math.atan2(dy, dx);
+        const headLen = 9;
+        ctx.beginPath();
+        ctx.moveTo(endX, endY);
+        ctx.lineTo(
+          endX - headLen * Math.cos(angle - Math.PI / 6),
+          endY - headLen * Math.sin(angle - Math.PI / 6)
+        );
+        ctx.lineTo(
+          endX - headLen * Math.cos(angle + Math.PI / 6),
+          endY - headLen * Math.sin(angle + Math.PI / 6)
+        );
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      };
+
       if (curMode === "match" && pv) {
         for (const s of pv.seats) {
+          // 1. Day Voting arrows & tallies (visible to everyone during DayVotingStep)
           if (typeof s.dayVoteTarget === "number") {
             dayVoteCounts.set(
               s.dayVoteTarget,
               (dayVoteCounts.get(s.dayVoteTarget) ?? 0) + 1
+            );
+            const list = dayVotersByTarget.get(s.dayVoteTarget) ?? [];
+            list.push(s.seatNo);
+            dayVotersByTarget.set(s.dayVoteTarget, list);
+
+            if (pv.step === "DayVotingStep") {
+              drawVoteArrow(s.seatNo, s.dayVoteTarget, "rgba(245, 158, 11, 0.78)");
+            }
+          }
+
+          // 2. Night Werewolf Pack votes (projectView only populates werewolfVoteTarget for fellow Werewolves!)
+          if (
+            pv.phase === "NightPhase" &&
+            typeof s.werewolfVoteTarget === "number"
+          ) {
+            const wList = wolfVotersByTarget.get(s.werewolfVoteTarget) ?? [];
+            wList.push(s.seatNo);
+            wolfVotersByTarget.set(s.werewolfVoteTarget, wList);
+            drawVoteArrow(
+              s.seatNo,
+              s.werewolfVoteTarget,
+              "rgba(239, 68, 68, 0.85)"
             );
           }
         }
@@ -696,8 +775,11 @@ export function WerewolfCanvas({
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // Vote tally badge (top-right of card)
+        // Vote tally badge (top-right of card: Day votes OR Night Werewolf Pack votes)
         const votesAgainst = dayVoteCounts.get(seat.seatNo) ?? 0;
+        const dayVoters = dayVotersByTarget.get(seat.seatNo) ?? [];
+        const wolfVoters = wolfVotersByTarget.get(seat.seatNo) ?? [];
+
         if (votesAgainst > 0) {
           const vX = pos.x + cardSize * 0.46;
           const vY = pos.y - cardSize * 0.46;
@@ -708,6 +790,43 @@ export function WerewolfCanvas({
           ctx.fillStyle = "#ffffff";
           ctx.font = "bold 11px sans-serif";
           ctx.fillText(`${votesAgainst}`, vX, vY + 0.5);
+
+          // Voter list tag above the card (e.g. "⬅ #1, #3")
+          const tagText = `⬅ ${dayVoters.map((n) => `#${n}`).join(",")}`;
+          const tagW = Math.max(42, tagText.length * 6.5 + 10);
+          drawRoundedRect(
+            ctx,
+            pos.x - tagW / 2,
+            pos.y - cardSize * 0.5 - 22,
+            tagW,
+            17,
+            8
+          );
+          ctx.fillStyle = "rgba(220, 38, 38, 0.92)";
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 9.5px sans-serif";
+          ctx.fillText(tagText, pos.x, pos.y - cardSize * 0.5 - 13.5);
+        } else if (wolfVoters.length > 0) {
+          // Werewolf Pack Vote Badge visible to all Werewolves during NightPhase!
+          const wText = `🐺 ← ${wolfVoters.map((n) => `#${n}`).join(",")}`;
+          const wTagW = Math.max(54, wText.length * 6.8 + 12);
+          drawRoundedRect(
+            ctx,
+            pos.x - wTagW / 2,
+            pos.y - cardSize * 0.5 - 23,
+            wTagW,
+            18,
+            9
+          );
+          ctx.fillStyle = "rgba(185, 28, 28, 0.95)";
+          ctx.fill();
+          ctx.strokeStyle = "#fca5a5";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.fillStyle = "#fef2f2";
+          ctx.font = "bold 10px sans-serif";
+          ctx.fillText(wText, pos.x, pos.y - cardSize * 0.5 - 14);
         }
 
         // Seer private inspection badge (bottom-right of card)
@@ -751,12 +870,30 @@ export function WerewolfCanvas({
           plateY + 10.5
         );
 
-        // Status subtitle
+        // Status subtitle (includes live Werewolf teammate vote & Day vote choice!)
         let subLabel: string | null = null;
         let subColor = "#94a3b8";
         if (isWolfVictimForWitch) {
           subLabel = "⚠️ Bị Sói cắn!";
           subColor = "#fca5a5";
+        } else if (
+          curMode === "match" &&
+          pv?.phase === "NightPhase" &&
+          typeof seat.werewolfVoteTarget === "number"
+        ) {
+          subLabel = `🐺 Vote cắn #${seat.werewolfVoteTarget}`;
+          subColor = "#f87171";
+        } else if (
+          curMode === "match" &&
+          pv?.step === "DayVotingStep" &&
+          seat.dayVoteTarget !== null
+        ) {
+          subLabel =
+            seat.dayVoteTarget === "abstain"
+              ? "🏳️ Phiếu trắng"
+              : `🗳️ Vote #${seat.dayVoteTarget}`;
+          subColor =
+            seat.dayVoteTarget === "abstain" ? "#cbd5e1" : "#fbbf24";
         } else if (
           seat.role &&
           (!isMe || isRoleOpen || pv?.phase === "Finished")
