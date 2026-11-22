@@ -4230,14 +4230,16 @@ export function drawCoupActionIcon2D(
 }
 
 /**
- * Draws the full 2D Dystopian Universe (Indie Boards & Cards Coup) background and High-Council Command Table:
- * - Twilight megacity sky with upper-right orbital lunar globe & tactical HUD radar rings (Captain theme)
- *   and upper-left warm amber sun-haze orb (Contessa/Ambassador theme)
- * - 2D futuristic megacity skyline along the horizon featuring the Golden-Domed Cylindrical Tower,
- *   Angled Silver Spire, Elevated Sky-Pads, Neo-Baroque Senate Arch, and animated flying sci-fi shuttles
- * - Left & right 45° sci-fi circuit-board trace borders (matching the Coup PLAY reference card)
- * - Central 2D Brushed-Steel & Obsidian High-Council Command Table with wavy moiré damask surface,
- *   tactical telemetry ring, and 5 glowing Faction Inlay Medallions (Duke, Assassin, Ambassador, Captain, Contessa)
+ * Draws the full 2D Pixel-Art Dystopian Universe (Indie Boards & Cards Coup) background
+ * and Pixel-Art High-Council Command Table using crisp snapped pixel blocks (`P = 4`):
+ * - 16-bit banded twilight sky with Bayer checkerboard pixel dithering between color bands,
+ *   twinkling pixel stars, upper-left scanline pixel setting sun, and upper-right pixelated orbital moon
+ * - Multi-layered 2D Pixel-Art Cyberpunk Megacity Skyline along the horizon (including the
+ *   Pixel Golden-Domed Tower, Stepped Megacorp Spire, blinking red roof beacons, pixel window grids,
+ *   and animated 2D pixel-art flying hover-cars/shuttles with flickering pixel thruster flames)
+ * - 16-bit Pixel-Art Senate Chamber tiled floor, pixel pillars & glowing neon wall sconces
+ * - Stepped 2D Pixel-Art Octagonal High-Council Table with pixel gold/gunmetal bevels,
+ *   pixel-dithered royal surface, and 5 embedded Faction Inlays
  */
 export function drawCoupDystopianBackgroundAndTable2D(
   ctx: CanvasRenderingContext2D,
@@ -4250,346 +4252,362 @@ export function drawCoupDystopianBackgroundAndTable2D(
   nowMs: number
 ) {
   ctx.save();
+  ctx.imageSmoothingEnabled = false;
 
-  // 1. Dystopian Megacity Twilight Sky & Senate Floor Gradient
-  const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
-  skyGrad.addColorStop(0, "#071120");
-  skyGrad.addColorStop(0.22, "#12263a");
-  skyGrad.addColorStop(0.42, "#382433");
-  skyGrad.addColorStop(0.54, "#542d26");
-  skyGrad.addColorStop(0.7, "#111624");
-  skyGrad.addColorStop(1, "#04070e");
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(0, 0, width, height);
+  const P = 4; // Crisp 4x4 logical pixel size for authentic 16-bit 2D pixel art
+  const snap = (v: number) => Math.floor(v / P) * P;
+  const fillPx = (gx: number, gy: number, gw = 1, gh = 1, color?: string) => {
+    if (color) ctx.fillStyle = color;
+    ctx.fillRect(gx * P, gy * P, gw * P, gh * P);
+  };
 
-  // Upper-Left Warm Amber Dystopian Sun Haze Orb (Contessa / Ambassador motif)
-  const sunX = width * 0.14;
-  const sunY = height * 0.16;
-  const sunR = Math.min(width, height) * 0.16;
-  const sunGrad = ctx.createRadialGradient(sunX, sunY, 4, sunX, sunY, sunR);
-  sunGrad.addColorStop(0, "rgba(251, 146, 60, 0.32)");
-  sunGrad.addColorStop(0.55, "rgba(234, 88, 12, 0.14)");
-  sunGrad.addColorStop(1, "rgba(234, 88, 12, 0)");
-  ctx.fillStyle = sunGrad;
-  ctx.beginPath();
-  ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
-  ctx.fill();
+  const cols = Math.ceil(width / P);
+  const rows = Math.ceil(height / P);
+  const horizonRow = Math.floor((height * 0.42) / P);
 
-  // Upper-Right Orbital Lunar Globe & Tactical HUD Telemetry Rings (Captain motif)
-  const moonX = width * 0.84;
-  const moonY = height * 0.17;
-  const moonR = Math.min(width, height) * 0.15;
-  const moonGrad = ctx.createRadialGradient(
-    moonX - moonR * 0.3,
-    moonY - moonR * 0.3,
-    4,
-    moonX,
-    moonY,
-    moonR
-  );
-  moonGrad.addColorStop(0, "rgba(186, 230, 253, 0.24)");
-  moonGrad.addColorStop(0.65, "rgba(56, 189, 248, 0.1)");
-  moonGrad.addColorStop(1, "rgba(14, 165, 233, 0)");
-  ctx.fillStyle = moonGrad;
-  ctx.beginPath();
-  ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Dashed orbital telemetry rings around upper-right moon
-  ctx.save();
-  ctx.strokeStyle = "rgba(125, 211, 252, 0.22)";
-  ctx.lineWidth = 1;
-  ctx.setLineDash([6, 5]);
-  ctx.beginPath();
-  ctx.arc(moonX, moonY, moonR * 1.18, -Math.PI * 0.85, Math.PI * 0.35);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.beginPath();
-  ctx.arc(moonX, moonY, moonR * 0.72, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
-
-  // 2. Futuristic Dystopian Megacity Skyline Silhouette along the Mid-Horizon
-  const horizonY = height * 0.43;
-
-  // Distant city blocks & megastructure towers
-  ctx.fillStyle = "rgba(15, 23, 42, 0.78)";
-  const towers: [number, number, number][] = [
-    [0.01, 0.035, 0.18],
-    [0.05, 0.04, 0.13],
-    [0.16, 0.045, 0.15],
-    [0.22, 0.038, 0.11],
-    [0.27, 0.05, 0.16],
-    [0.68, 0.048, 0.15],
-    [0.74, 0.036, 0.12],
-    [0.79, 0.052, 0.17],
-    [0.93, 0.045, 0.16],
+  // 1. 16-Bit Pixel-Art Banded Twilight Sky with Checkerboard Dithering Transitions
+  const skyPalette = [
+    "#060916",
+    "#0c1428",
+    "#15223c",
+    "#232946",
+    "#3a2744",
+    "#572b3d",
+    "#7a3632",
+    "#a14a28",
   ];
-  for (const [tx, tw, th] of towers) {
-    ctx.fillRect(width * tx, horizonY - height * th, width * tw, height * th);
+  const bandRows = Math.max(2, Math.floor(horizonRow / skyPalette.length));
+
+  for (let r = 0; r <= horizonRow; r++) {
+    const bIdx = Math.min(
+      skyPalette.length - 1,
+      Math.floor(r / bandRows)
+    );
+    const localRow = r % bandRows;
+    ctx.fillStyle = skyPalette[bIdx];
+    ctx.fillRect(0, r * P, width, P);
+
+    // 2-row Bayer checkerboard pixel dithering at the boundary of each sky band
+    if (bIdx < skyPalette.length - 1 && localRow >= bandRows - 2) {
+      ctx.fillStyle = skyPalette[bIdx + 1];
+      const parity = localRow === bandRows - 1 ? 0 : 1;
+      for (let c = (r + parity) % 2; c < cols; c += 2) {
+        if (localRow === bandRows - 1 || c % 4 === 0) {
+          ctx.fillRect(c * P, r * P, P, P);
+        }
+      }
+    }
   }
 
-  // Iconic Left Cylindrical Skyscraper with Glowing Golden Ribbed Dome (Contessa card landmark)
-  const domTowX = width * 0.095;
-  const domTowW = width * 0.055;
-  const domTowTop = horizonY - height * 0.21;
-  const domGrad = ctx.createLinearGradient(domTowX, 0, domTowX + domTowW, 0);
-  domGrad.addColorStop(0, "#1e1b24");
-  domGrad.addColorStop(0.5, "#3b2f26");
-  domGrad.addColorStop(1, "#17161f");
-  ctx.fillStyle = domGrad;
-  ctx.fillRect(domTowX, domTowTop, domTowW, horizonY - domTowTop);
-
-  // Golden dome roof on the left cylindrical skyscraper
-  const domeRoofGrad = ctx.createRadialGradient(
-    domTowX + domTowW * 0.4,
-    domTowTop - 4,
-    2,
-    domTowX + domTowW * 0.5,
-    domTowTop,
-    domTowW * 0.55
-  );
-  domeRoofGrad.addColorStop(0, "rgba(254, 240, 138, 0.75)");
-  domeRoofGrad.addColorStop(0.6, "rgba(217, 119, 6, 0.65)");
-  domeRoofGrad.addColorStop(1, "rgba(120, 53, 15, 0.5)");
-  ctx.fillStyle = domeRoofGrad;
-  ctx.beginPath();
-  ctx.arc(
-    domTowX + domTowW * 0.5,
-    domTowTop,
-    domTowW * 0.5,
-    Math.PI,
-    0
-  );
-  ctx.closePath();
-  ctx.fill();
-
-  // Tiny warm lit window grid on the cylindrical tower
-  ctx.strokeStyle = "rgba(253, 224, 71, 0.22)";
-  ctx.lineWidth = 1;
-  for (let r = 1; r <= 7; r++) {
-    const wy = domTowTop + r * ((horizonY - domTowTop) / 8);
-    ctx.beginPath();
-    ctx.moveTo(domTowX + 4, wy);
-    ctx.lineTo(domTowX + domTowW - 4, wy);
-    ctx.stroke();
+  // Twinkling 1x1 and Plus-shaped Pixel Stars in the Upper Sky
+  const starCoords: [number, number, number][] = [
+    [0.06, 0.05, 0],
+    [0.12, 0.09, 1],
+    [0.21, 0.04, 2],
+    [0.29, 0.11, 0],
+    [0.37, 0.06, 1],
+    [0.45, 0.08, 2],
+    [0.54, 0.05, 0],
+    [0.63, 0.1, 1],
+    [0.72, 0.04, 2],
+    [0.92, 0.07, 0],
+    [0.96, 0.13, 1],
+  ];
+  const blinkTick = Math.floor(nowMs / 450);
+  for (const [sx, sy, phase] of starCoords) {
+    const gx = Math.floor((width * sx) / P);
+    const gy = Math.floor((height * sy) / P);
+    const isBright = (blinkTick + phase) % 3 === 0;
+    fillPx(gx, gy, 1, 1, isBright ? "#fef08a" : "#94a3b8");
+    if (isBright) {
+      fillPx(gx - 1, gy, 1, 1, "#38bdf8");
+      fillPx(gx + 1, gy, 1, 1, "#38bdf8");
+      fillPx(gx, gy - 1, 1, 1, "#38bdf8");
+      fillPx(gx, gy + 1, 1, 1, "#38bdf8");
+    }
   }
 
-  // Iconic Right Angled Silver-White Spire Skyscraper (Contessa card landmark)
-  const spX = width * 0.865;
-  const spW = width * 0.044;
-  const spTop = horizonY - height * 0.24;
-  ctx.fillStyle = "rgba(148, 163, 184, 0.35)";
-  ctx.beginPath();
-  ctx.moveTo(spX, horizonY);
-  ctx.lineTo(spX, spTop + height * 0.04);
-  ctx.lineTo(spX + spW * 0.35, spTop);
-  ctx.lineTo(spX + spW * 0.65, spTop);
-  ctx.lineTo(spX + spW, spTop + height * 0.08);
-  ctx.lineTo(spX + spW, horizonY);
-  ctx.closePath();
-  ctx.fill();
-
-  // Central Neo-Baroque Spiked Senate Arch Silhouette behind the High-Council Table (Duke card landmark)
-  ctx.save();
-  ctx.strokeStyle = "rgba(226, 232, 240, 0.14)";
-  ctx.lineWidth = 2;
-  const archR = Math.min(tableRx * 0.58, 210);
-  const archCy = horizonY - 6;
-  ctx.beginPath();
-  ctx.arc(centerX, archCy, archR, Math.PI * 1.08, Math.PI * 1.92);
-  ctx.stroke();
-
-  // 7 Diamond Finial Spikes radiating from the central Senate Arch
-  ctx.fillStyle = "rgba(226, 232, 240, 0.15)";
-  for (let i = -3; i <= 3; i++) {
-    const a = -Math.PI / 2 + i * 0.22;
-    const bx = centerX + Math.cos(a) * (archR + 4);
-    const by = archCy + Math.sin(a) * (archR + 4);
-    const tx = centerX + Math.cos(a) * (archR + 24);
-    const ty = archCy + Math.sin(a) * (archR + 24);
-    const px = -Math.sin(a) * 4;
-    const py = Math.cos(a) * 4;
-    ctx.beginPath();
-    ctx.moveTo(bx, by);
-    ctx.lineTo((bx + tx) * 0.5 + px, (by + ty) * 0.5 + py);
-    ctx.lineTo(tx, ty);
-    ctx.lineTo((bx + tx) * 0.5 - px, (by + ty) * 0.5 - py);
-    ctx.closePath();
-    ctx.fill();
+  // Upper-Left 16-Bit Scanline Pixel Setting Sun (Contessa / Ambassador motif)
+  const sunCx = Math.floor((width * 0.14) / P);
+  const sunCy = Math.floor((height * 0.17) / P);
+  const sunRad = 11;
+  for (let dy = -sunRad; dy <= sunRad; dy++) {
+    // Classic retro pixel-art horizontal scanline gaps in the lower half of the sun
+    if (dy > 2 && dy % 2 === 0) continue;
+    const span = Math.floor(Math.sqrt(sunRad * sunRad - dy * dy));
+    const sunCol =
+      dy < -3 ? "#fde047" : dy < 3 ? "#f97316" : "#dc2626";
+    fillPx(sunCx - span, sunCy + dy, span * 2 + 1, 1, sunCol);
   }
-  ctx.restore();
 
-  // Animated Flying Sci-Fi Shuttles / Speeders gliding across the Dystopian Sky
-  for (const [speed, yFrac, dir, scale] of [
-    [0.018, 0.18, 1, 1],
-    [0.012, 0.25, -1, 0.8],
+  // Upper-Right Pixelated Orbital Cratered Moon + Pixel HUD Reticle (Captain motif)
+  const moonCx = Math.floor((width * 0.85) / P);
+  const moonCy = Math.floor((height * 0.16) / P);
+  const moonRad = 10;
+  for (let dy = -moonRad; dy <= moonRad; dy++) {
+    const span = Math.floor(Math.sqrt(moonRad * moonRad - dy * dy));
+    for (let dx = -span; dx <= span; dx++) {
+      const distLight = Math.hypot(dx + 3, dy + 3);
+      const col =
+        distLight < 6
+          ? "#e0f2fe"
+          : distLight < 11
+            ? "#7dd3fc"
+            : "#0369a1";
+      fillPx(moonCx + dx, moonCy + dy, 1, 1, col);
+    }
+  }
+  // Pixel craters on the moon
+  fillPx(moonCx + 2, moonCy - 2, 2, 2, "#0284c7");
+  fillPx(moonCx - 4, moonCy + 3, 3, 2, "#0284c7");
+  // 1-pixel cyan tactical targeting corner brackets around the moon
+  for (const [bx, by] of [
+    [-moonRad - 3, -moonRad - 3],
+    [moonRad + 1, -moonRad - 3],
+    [-moonRad - 3, moonRad + 1],
+    [moonRad + 1, moonRad + 1],
+  ] as const) {
+    fillPx(moonCx + bx, moonCy + by, 3, 1, "#38bdf8");
+    fillPx(moonCx + bx, moonCy + by, 1, 3, "#38bdf8");
+  }
+
+  // 2. Multi-Layered 2D Pixel-Art Cyberpunk Megacity Skyline
+  // Layer A: Far-background dark indigo pixel skyscrapers
+  const bgTowers: [number, number, number][] = [
+    [0.01, 0.05, 0.19],
+    [0.06, 0.04, 0.14],
+    [0.16, 0.05, 0.17],
+    [0.22, 0.04, 0.12],
+    [0.27, 0.06, 0.18],
+    [0.34, 0.04, 0.11],
+    [0.62, 0.04, 0.12],
+    [0.67, 0.06, 0.18],
+    [0.74, 0.04, 0.13],
+    [0.79, 0.05, 0.17],
+    [0.92, 0.06, 0.19],
+  ];
+  for (const [fx, fw, fh] of bgTowers) {
+    const gx = Math.floor((width * fx) / P);
+    const gw = Math.max(4, Math.floor((width * fw) / P));
+    const gh = Math.max(6, Math.floor((height * fh) / P));
+    const gy = horizonRow - gh;
+
+    fillPx(gx, gy, gw, gh, "#0f172a");
+    fillPx(gx, gy, 1, gh, "#1e293b"); // Left pixel highlight edge
+    // Roof antenna + blinking red pixel aviation beacon
+    const antX = gx + Math.floor(gw / 2);
+    fillPx(antX, gy - 3, 1, 3, "#475569");
+    fillPx(
+      antX,
+      gy - 4,
+      1,
+      1,
+      (blinkTick + gx) % 2 === 0 ? "#ef4444" : "#7f1d1d"
+    );
+
+    // Pixel window grid (1x1 lit windows)
+    for (let wy = gy + 2; wy < horizonRow - 2; wy += 3) {
+      for (let wx = gx + 2; wx < gx + gw - 1; wx += 2) {
+        if ((wx * 7 + wy * 13) % 5 !== 0) {
+          const wCol =
+            (wx + wy) % 7 === 0
+              ? "#38bdf8"
+              : (wx + wy) % 5 === 0
+                ? "#f43f5e"
+                : "#fde047";
+          fillPx(wx, wy, 1, 1, wCol);
+        }
+      }
+    }
+  }
+
+  // Layer B: Iconic Left Pixel-Art Golden-Domed Tower (Contessa card landmark)
+  const domeGx = Math.floor((width * 0.095) / P);
+  const domeGw = 12;
+  const domeGh = Math.floor((height * 0.21) / P);
+  const domeGy = horizonRow - domeGh;
+  fillPx(domeGx, domeGy, domeGw, domeGh, "#1c1917");
+  fillPx(domeGx + 1, domeGy, 2, domeGh, "#44403c");
+  fillPx(domeGx + domeGw - 2, domeGy, 2, domeGh, "#0c0a09");
+  // Stepped Pixel Golden Dome Roof
+  fillPx(domeGx + 1, domeGy - 2, domeGw - 2, 2, "#d97706");
+  fillPx(domeGx + 2, domeGy - 4, domeGw - 4, 2, "#f59e0b");
+  fillPx(domeGx + 4, domeGy - 6, domeGw - 8, 2, "#fef08a");
+  fillPx(domeGx + 5, domeGy - 8, 2, 2, "#fef08a");
+  // Golden pixel windows on the tower
+  for (let wy = domeGy + 2; wy < horizonRow - 1; wy += 2) {
+    for (let wx = domeGx + 2; wx < domeGx + domeGw - 2; wx += 3) {
+      fillPx(wx, wy, 2, 1, "#fbbf24");
+    }
+  }
+
+  // Layer C: Iconic Right Pixel-Art Stepped White/Cyan Megacorp Spire (Contessa/Captain landmark)
+  const spireGx = Math.floor((width * 0.855) / P);
+  const spireGw = 10;
+  const spireGh = Math.floor((height * 0.23) / P);
+  const spireGy = horizonRow - spireGh;
+  fillPx(spireGx, spireGy + 6, spireGw, spireGh - 6, "#cbd5e1");
+  fillPx(spireGx + 2, spireGy + 3, spireGw - 2, 3, "#e2e8f0");
+  fillPx(spireGx + 4, spireGy, spireGw - 4, 3, "#f8fafc");
+  fillPx(spireGx + 6, spireGy - 4, 2, 4, "#38bdf8");
+  // Vertical dark pixel window slits on the white spire
+  fillPx(spireGx + 3, spireGy + 5, 1, spireGh - 7, "#1e293b");
+  fillPx(spireGx + 6, spireGy + 2, 1, spireGh - 4, "#1e293b");
+
+  // Layer D: Center Pixel-Art Neo-Baroque Spiked Senate Crown Arch (Duke card landmark)
+  const senateCx = Math.floor(centerX / P);
+  const senateSpan = 26;
+  for (let dx = -senateSpan; dx <= senateSpan; dx++) {
+    const archH = Math.floor(
+      Math.sqrt(Math.max(0, senateSpan * senateSpan - dx * dx)) * 0.55
+    );
+    const py = horizonRow - archH;
+    fillPx(senateCx + dx, py, 1, 2, "#475569");
+    if (dx % 8 === 0) {
+      // Pixel diamond spire finial above the arch
+      fillPx(senateCx + dx, py - 4, 1, 4, "#94a3b8");
+      fillPx(senateCx + dx - 1, py - 3, 3, 2, "#e2e8f0");
+    }
+  }
+
+  // Animated 2D Pixel-Art Hover-Cars / Shuttles flying across the pixel sky
+  for (const [speed, rowFrac, dir, mainCol] of [
+    [0.02, 0.19, 1, "#e11d84"],
+    [0.014, 0.27, -1, "#38bdf8"],
+    [0.025, 0.33, 1, "#b5db18"],
   ] as const) {
     const rawT = ((nowMs * 0.001 * speed) % 1.2) - 0.1;
-    const sx = dir === 1 ? width * rawT : width * (1 - rawT);
-    const sy = height * yFrac;
+    const fx = Math.floor(((dir === 1 ? rawT : 1 - rawT) * width) / P);
+    const fy = Math.floor((height * rowFrac) / P);
 
-    ctx.save();
-    ctx.translate(sx, sy);
-    if (dir === -1) ctx.scale(-1, 1);
-    ctx.scale(scale, scale);
-
-    // Glowing cyan contrail
-    const trailGrad = ctx.createLinearGradient(-34, 0, 0, 0);
-    trailGrad.addColorStop(0, "rgba(56, 189, 248, 0)");
-    trailGrad.addColorStop(1, "rgba(56, 189, 248, 0.55)");
-    ctx.strokeStyle = trailGrad;
-    ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    ctx.moveTo(-34, 0);
-    ctx.lineTo(-4, 0);
-    ctx.stroke();
-
-    // Delta-wing shuttle body
-    ctx.fillStyle = "#1e293b";
-    ctx.strokeStyle = "#94a3b8";
-    ctx.lineWidth = 0.8;
-    ctx.beginPath();
-    ctx.moveTo(10, 0);
-    ctx.lineTo(-4, -4);
-    ctx.lineTo(-8, 0);
-    ctx.lineTo(-4, 4);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Glowing blue thruster dot
-    ctx.fillStyle = "#38bdf8";
-    ctx.beginPath();
-    ctx.arc(-6, 0, 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    // Pixel hull (5x2 pixels) + cockpit (2x1) + flickering 2-frame thruster flame
+    fillPx(fx - 2, fy, 5, 1, "#334155");
+    fillPx(fx - 1, fy - 1, 3, 1, mainCol);
+    const flameLen = (Math.floor(nowMs / 90) % 2) + 2;
+    const flameX = dir === 1 ? fx - 2 - flameLen : fx + 3;
+    fillPx(flameX, fy, flameLen, 1, "#38bdf8");
+    fillPx(dir === 1 ? fx - 3 : fx + 3, fy, 1, 1, "#fef08a");
   }
 
-  // 3. Left & Right 45° Sci-Fi Circuit-Board Trace Borders (Matching the Coup PLAY Summary Card)
-  ctx.save();
-  ctx.strokeStyle = "rgba(148, 163, 184, 0.18)";
-  ctx.fillStyle = "rgba(56, 189, 248, 0.28)";
-  ctx.lineWidth = 1.2;
-  for (const side of [-1, 1]) {
-    const edgeX = side === -1 ? 10 : width - 10;
-    const in1 = edgeX - side * 12;
-    const in2 = edgeX - side * 24;
+  // 3. 16-Bit Pixel-Art Senate Balcony Balustrade & Checkerboard Tiled Chamber Floor
+  // Horizon stone balustrade wall with crenellations
+  fillPx(0, horizonRow - 1, cols, 3, "#1e293b");
+  fillPx(0, horizonRow - 1, cols, 1, "#475569");
+  for (let c = 2; c < cols; c += 6) {
+    fillPx(c, horizonRow - 3, 3, 2, "#334155");
+    fillPx(c, horizonRow - 3, 3, 1, "#64748b");
+  }
 
-    ctx.beginPath();
-    ctx.moveTo(edgeX, height * 0.12);
-    ctx.lineTo(edgeX, height * 0.28);
-    ctx.lineTo(in1, height * 0.28 + 12);
-    ctx.lineTo(in1, height * 0.52);
-    ctx.lineTo(in2, height * 0.52 + 12);
-    ctx.lineTo(in2, height * 0.72);
-    ctx.lineTo(in1, height * 0.72 + 12);
-    ctx.lineTo(in1, height * 0.88);
-    ctx.stroke();
-
-    // Circuit trace terminal nodes
-    for (const ny of [0.28, 0.52, 0.72]) {
-      ctx.beginPath();
-      ctx.arc(in1, height * ny + 12, 2.5, 0, Math.PI * 2);
-      ctx.fill();
+  // Pixel-Art Checkerboard Tiled Senate Chamber Floor below the horizon
+  const tileW = 6;
+  const tileH = 4;
+  for (let r = horizonRow + 2; r < rows; r += tileH) {
+    const rowIdx = Math.floor((r - horizonRow) / tileH);
+    for (let c = 0; c < cols; c += tileW) {
+      const colIdx = Math.floor(c / tileW);
+      const isEven = (rowIdx + colIdx) % 2 === 0;
+      fillPx(
+        c,
+        r,
+        tileW,
+        tileH,
+        isEven ? "#090e1a" : "#0e1628"
+      );
+      // Pixel tile bevel highlight
+      fillPx(c, r, tileW, 1, isEven ? "#111a2e" : "#17233b");
     }
   }
-  ctx.restore();
 
-  // 4. Central 2D Dystopian High-Council Command Table
-  // Outer dark metallic table shadow & bevelled steel rim
-  ctx.save();
-  ctx.fillStyle = "rgba(2, 6, 23, 0.75)";
-  ctx.beginPath();
-  ctx.ellipse(
-    centerX,
-    centerY + 8,
-    tableRx * 1.07,
-    tableRy * 1.07,
-    0,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-
-  // Outer brushed-gunmetal rim
-  const rimGrad = ctx.createLinearGradient(
-    centerX - tableRx,
-    centerY - tableRy,
-    centerX + tableRx,
-    centerY + tableRy
-  );
-  rimGrad.addColorStop(0, "#334155");
-  rimGrad.addColorStop(0.5, "#1e293b");
-  rimGrad.addColorStop(1, "#0f172a");
-  ctx.fillStyle = rimGrad;
-  ctx.strokeStyle = "rgba(148, 163, 184, 0.42)";
-  ctx.lineWidth = 2.2;
-  ctx.beginPath();
-  ctx.ellipse(
-    centerX,
-    centerY,
-    tableRx * 1.04,
-    tableRy * 1.04,
-    0,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-  ctx.stroke();
-
-  // Inner Command Table Surface (clipped for moiré damask texture & holographic faction grid)
-  ctx.save();
-  ctx.beginPath();
-  ctx.ellipse(
-    centerX,
-    centerY,
-    tableRx * 0.985,
-    tableRy * 0.985,
-    0,
-    0,
-    Math.PI * 2
-  );
-  ctx.clip();
-
-  const surfaceGrad = ctx.createRadialGradient(
-    centerX,
-    centerY,
-    18,
-    centerX,
-    centerY,
-    Math.max(tableRx, tableRy)
-  );
-  surfaceGrad.addColorStop(0, "#172036");
-  surfaceGrad.addColorStop(0.62, "#0d1424");
-  surfaceGrad.addColorStop(1, "#070b14");
-  ctx.fillStyle = surfaceGrad;
-  ctx.fillRect(
-    centerX - tableRx,
-    centerY - tableRy,
-    tableRx * 2,
-    tableRy * 2
-  );
-
-  // Subtle Wavy Moiré Damask Texture across the Table Surface (matching the Coup Card Back!)
-  ctx.strokeStyle = "rgba(148, 163, 184, 0.055)";
-  ctx.lineWidth = 1.4;
-  const waveStepY = 14;
-  for (
-    let wy = centerY - tableRy;
-    wy <= centerY + tableRy;
-    wy += waveStepY
-  ) {
-    ctx.beginPath();
-    for (let wx = centerX - tableRx; wx <= centerX + tableRx; wx += 18) {
-      const sy = wy + Math.sin((wx - centerX) * 0.045) * 3.2;
-      if (wx === centerX - tableRx) ctx.moveTo(wx, sy);
-      else ctx.lineTo(wx, sy);
-    }
-    ctx.stroke();
+  // Left & Right Pixel-Art Senate Columns with Glowing Neon Faction Sconces
+  for (const pGx of [3, cols - 9]) {
+    fillPx(pGx, horizonRow - 18, 6, rows - (horizonRow - 18), "#1e293b");
+    fillPx(pGx + 1, horizonRow - 18, 2, rows - (horizonRow - 18), "#334155");
+    fillPx(pGx - 1, horizonRow - 19, 8, 2, "#475569");
+    // Animated glowing pixel neon sconce on each column
+    const glowPulse = Math.floor(nowMs / 300) % 2 === 0;
+    fillPx(pGx + 2, horizonRow + 4, 2, 6, glowPulse ? "#38bdf8" : "#0284c7");
+    fillPx(pGx + 2, horizonRow + 6, 2, 2, "#e0f2fe");
   }
 
-  // 5 Translucent Faction Emblem Inlays Embedded in a Ring around the Command Table
+  // 4. Stepped 2D Pixel-Art High-Council Command Table (Crisp Stepped Pixel Oval/Octagon)
+  const tCx = Math.floor(centerX / P);
+  const tCy = Math.floor(centerY / P);
+  const tRx = Math.floor(tableRx / P);
+  const tRy = Math.floor(tableRy / P);
+
+  // Scanline pixel-by-pixel stepped oval table with pixel drop shadow, gold/gunmetal rim, and dithered royal felt
+  for (let dy = -tRy - 3; dy <= tRy + 5; dy++) {
+    // Stepped quantization (every 2 pixel rows share the same horizontal span for an authentic 16-bit stepped curve!)
+    const qDy = Math.round(dy / 2) * 2;
+
+    // 1. Table drop shadow (shifted down by +3 pixel rows)
+    const shNormY = (qDy - 3) / (tRy * 1.05);
+    if (Math.abs(shNormY) <= 1) {
+      const shSpan = Math.floor(
+        tRx * 1.05 * Math.sqrt(1 - shNormY * shNormY)
+      );
+      fillPx(tCx - shSpan, tCy + dy, shSpan * 2, 1, "#02040a");
+    }
+
+    // 2. Outer Gold & Gunmetal Stepped Pixel Table Rim
+    const rimNormY = qDy / (tRy * 1.03);
+    if (Math.abs(rimNormY) <= 1) {
+      const rimSpan = Math.floor(
+        tRx * 1.03 * Math.sqrt(1 - rimNormY * rimNormY)
+      );
+      const rimCol = dy < -tRy * 0.4 ? "#f59e0b" : dy > tRy * 0.5 ? "#78350f" : "#b45309";
+      fillPx(tCx - rimSpan, tCy + dy, rimSpan * 2, 1, rimCol);
+
+      // Inner gunmetal steel bezel inside the gold rim
+      const bezNormY = qDy / (tRy * 0.99);
+      if (Math.abs(bezNormY) <= 1) {
+        const bezSpan = Math.floor(
+          tRx * 0.99 * Math.sqrt(1 - bezNormY * bezNormY)
+        );
+        fillPx(tCx - bezSpan, tCy + dy, bezSpan * 2, 1, "#1e293b");
+      }
+    }
+
+    // 3. Inner Royal Velvet Pixel-Dithered Tabletop Mat
+    const matNormY = qDy / (tRy * 0.94);
+    if (Math.abs(matNormY) <= 1) {
+      const matSpan = Math.floor(
+        tRx * 0.94 * Math.sqrt(1 - matNormY * matNormY)
+      );
+      const baseFelt =
+        Math.abs(dy) < tRy * 0.45 ? "#1e1638" : "#130d26";
+      fillPx(tCx - matSpan, tCy + dy, matSpan * 2, 1, baseFelt);
+
+      // Pixel-art wavy moiré / checkerboard pattern on the tabletop felt
+      if (dy % 3 === 0) {
+        ctx.fillStyle = "#281d4a";
+        for (let dx = -matSpan + 2; dx < matSpan - 2; dx += 4) {
+          const waveShift = Math.floor(Math.sin(dx * 0.25) * 1);
+          ctx.fillRect((tCx + dx) * P, (tCy + dy + waveShift) * P, P * 2, P);
+        }
+      }
+    }
+  }
+
+  // Pixel-Art Gold Inner Ring & 4 Cardinal Pixel Gem Studs on the Table Rim
+  for (let a = 0; a < 64; a++) {
+    if (a % 2 === 1) continue;
+    const ang = (a / 64) * Math.PI * 2;
+    const px = tCx + Math.round(Math.cos(ang) * tRx * 0.78);
+    const py = tCy + Math.round(Math.sin(ang) * tRy * 0.78);
+    fillPx(px, py, 1, 1, "#eab308");
+  }
+  for (const [gx, gy, gCol] of [
+    [tCx, tCy - tRy, "#ec4899"],
+    [tCx, tCy + tRy - 1, "#ef4444"],
+    [tCx - tRx, tCy, "#b5db18"],
+    [tCx + tRx - 1, tCy, "#38bdf8"],
+  ] as const) {
+    fillPx(gx - 1, gy - 1, 3, 3, "#fef08a");
+    fillPx(gx, gy, 1, 1, gCol);
+  }
+
+  // 5 Translucent Faction Emblem Inlays Embedded around the Pixel Command Table
   const factionRing: CoupCharacter[] = [
     "Duke",
     "Assassin",
@@ -4599,48 +4617,14 @@ export function drawCoupDystopianBackgroundAndTable2D(
   ];
   factionRing.forEach((ch, idx) => {
     const ang = -Math.PI / 2 + (idx * Math.PI * 2) / 5;
-    const fx = centerX + Math.cos(ang) * (tableRx * 0.62);
-    const fy = centerY + Math.sin(ang) * (tableRy * 0.62);
+    const fx = snap(centerX + Math.cos(ang) * (tableRx * 0.6));
+    const fy = snap(centerY + Math.sin(ang) * (tableRy * 0.6));
 
     ctx.save();
-    ctx.globalAlpha = 0.22;
-    drawCoupActionIcon2D(ctx, fx, fy, 34, ch);
+    ctx.globalAlpha = 0.24;
+    drawCoupActionIcon2D(ctx, fx, fy, 36, ch);
     ctx.restore();
   });
 
-  ctx.restore(); // End inner table clip
-
-  // Golden & Cyan Tactical Inner Filigree Rings on the Command Table
-  ctx.strokeStyle = "rgba(245, 158, 11, 0.42)";
-  ctx.lineWidth = 1.8;
-  ctx.beginPath();
-  ctx.ellipse(
-    centerX,
-    centerY,
-    tableRx * 0.985,
-    tableRy * 0.985,
-    0,
-    0,
-    Math.PI * 2
-  );
-  ctx.stroke();
-
-  ctx.strokeStyle = "rgba(56, 189, 248, 0.22)";
-  ctx.lineWidth = 1.1;
-  ctx.setLineDash([10, 7]);
-  ctx.beginPath();
-  ctx.ellipse(
-    centerX,
-    centerY,
-    tableRx * 0.78,
-    tableRy * 0.78,
-    0,
-    0,
-    Math.PI * 2
-  );
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  ctx.restore();
   ctx.restore();
 }
