@@ -2662,6 +2662,669 @@ export function drawAmbassadorCard2D(
 }
 
 /**
+ * Draws the detailed 2D illustration for the Coup "Captain" card matching the reference artwork
+ * (without any text on the card):
+ * - Cool slate-blue orbital lunar/planetary surface backdrop with white tactical HUD telemetry
+ *   reticles, left radar tick ring, upper targeting box, and lower-right dashed trajectory waypoints
+ * - Top-right electric sky-blue naval insignia: upward arrow rising from a winged chevron above
+ *   two nested V-chevrons
+ * - Fierce Captain portrait with shaved sides, dark mohawk crest with vibrant electric-cyan highlights,
+ *   a jagged diagonal battle scar cutting from inside the mohawk down through the right eyebrow & cheek,
+ *   piercing icy-blue eyes, upward-curled handlebar mustache, and full chin goatee
+ * - High-collared Prussian-teal naval greatcoat with an asymmetric diagonal chest plastron fastened by
+ *   two ornate silver twin-prong shoulder buckles and lavish raised 3D gold baroque scrollwork embroidery
+ */
+export function drawCaptainCard2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  // 1. Slate-Blue Outer Sky & Orbital Cratered Lunar/Planetary Globe Backdrop
+  ctx.fillStyle = "#6287a2";
+  ctx.fillRect(0, 0, w, h);
+
+  // Large Orbital Lunar/Planetary Globe occupying the upper & middle backdrop
+  const globeCx = w * 0.62;
+  const globeCy = h * 0.16;
+  const globeR = w * 0.72;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(globeCx, globeCy, globeR, 0, Math.PI * 2);
+  ctx.clip();
+
+  const globeGrad = ctx.createRadialGradient(
+    w * 0.18,
+    h * 0.06,
+    w * 0.05,
+    w * 0.55,
+    h * 0.3,
+    w * 0.85
+  );
+  globeGrad.addColorStop(0, "#b8d2e3");
+  globeGrad.addColorStop(0.42, "#7ca0b8");
+  globeGrad.addColorStop(0.75, "#4c6c80");
+  globeGrad.addColorStop(1, "#233745");
+  ctx.fillStyle = globeGrad;
+  ctx.fillRect(0, 0, w, h * 0.75);
+
+  // Subtle Lunar Crater Rings & Surface Texture patches on the planet globe
+  for (const [cx, cy, cr, alpha] of [
+    [0.84, 0.29, 0.065, 0.22],
+    [0.74, 0.36, 0.048, 0.18],
+    [0.91, 0.42, 0.055, 0.2],
+    [0.21, 0.21, 0.04, 0.16],
+    [0.32, 0.14, 0.05, 0.14],
+    [0.65, 0.08, 0.07, 0.16],
+  ] as const) {
+    ctx.fillStyle = `rgba(30, 49, 61, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(w * cx, h * cy, w * cr, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = `rgba(186, 214, 232, ${alpha * 0.9})`;
+    ctx.lineWidth = Math.max(0.6, w * 0.007);
+    ctx.beginPath();
+    ctx.arc(w * cx, h * cy, w * cr, -Math.PI * 0.85, Math.PI * 0.15);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 2. White Tactical Sci-Fi HUD & Orbital Telemetry Overlay Graphics
+  ctx.save();
+  // Upper-left circular target reticle + outer dashed arc + diagonal callout line
+  const retX = w * 0.188;
+  const retY = h * 0.205;
+  const retR = w * 0.082;
+  ctx.strokeStyle = "rgba(241, 245, 249, 0.75)";
+  ctx.lineWidth = Math.max(0.8, w * 0.009);
+  ctx.beginPath();
+  ctx.arc(retX, retY, retR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Outer dashed arc around upper-left reticle
+  ctx.save();
+  ctx.setLineDash([Math.max(2, w * 0.025), Math.max(2, w * 0.02)]);
+  ctx.beginPath();
+  ctx.arc(retX, retY, retR * 1.48, -Math.PI * 0.68, -Math.PI * 0.12);
+  ctx.stroke();
+  ctx.restore();
+
+  // Diagonal callout line up to telemetry header bar
+  ctx.beginPath();
+  ctx.moveTo(retX + retR * 0.65, retY - retR * 0.65);
+  ctx.lineTo(w * 0.34, h * 0.075);
+  ctx.lineTo(w * 0.62, h * 0.075);
+  ctx.stroke();
+
+  // Far-left circular radar compass ring with tick marks
+  const radX = w * 0.042;
+  const radY = h * 0.382;
+  const radR = w * 0.095;
+  ctx.strokeStyle = "rgba(226, 232, 240, 0.55)";
+  ctx.lineWidth = Math.max(0.7, w * 0.008);
+  ctx.beginPath();
+  ctx.arc(radX, radY, radR, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(radX, radY, radR * 0.82, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Radar degree tick marks around the ring
+  for (let i = 0; i < 24; i++) {
+    const a = (i * Math.PI) / 12;
+    ctx.beginPath();
+    ctx.moveTo(radX + Math.cos(a) * radR * 0.82, radY + Math.sin(a) * radR * 0.82);
+    ctx.lineTo(radX + Math.cos(a) * radR, radY + Math.sin(a) * radR);
+    ctx.stroke();
+  }
+
+  // White rectangular HUD framing box behind the top-right Captain emblem
+  ctx.strokeStyle = "rgba(248, 250, 252, 0.88)";
+  ctx.lineWidth = Math.max(1.5, w * 0.018);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.505, h * 0.155);
+  ctx.lineTo(w * 0.505, h * 0.118);
+  ctx.lineTo(w * 0.675, h * 0.118);
+  ctx.moveTo(w * 0.64, h * 0.232);
+  ctx.lineTo(w * 0.805, h * 0.232);
+  ctx.lineTo(w * 0.805, h * 0.195);
+  ctx.stroke();
+
+  // Thin outer HUD frame lines around the top-right box
+  ctx.strokeStyle = "rgba(226, 232, 240, 0.5)";
+  ctx.lineWidth = Math.max(0.6, w * 0.007);
+  ctx.strokeRect(w * 0.53, h * 0.105, w * 0.315, h * 0.155);
+
+  // Dashed white orbital trajectory path & glowing bullseye waypoint nodes (left & right of head)
+  ctx.save();
+  ctx.strokeStyle = "rgba(248, 250, 252, 0.85)";
+  ctx.lineWidth = Math.max(1, w * 0.011);
+  ctx.setLineDash([Math.max(2.5, w * 0.025), Math.max(2, w * 0.02)]);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.18, h * 0.365);
+  ctx.lineTo(w * 0.28, h * 0.398);
+  ctx.moveTo(w * 0.64, h * 0.482);
+  ctx.lineTo(w * 0.788, h * 0.514);
+  ctx.lineTo(w * 0.99, h * 0.452);
+  ctx.stroke();
+  ctx.restore();
+
+  // Prominent glowing bullseye waypoint node at (0.788 * w, 0.514 * h)
+  const wpX = w * 0.788;
+  const wpY = h * 0.514;
+  ctx.strokeStyle = "#f8fafc";
+  ctx.lineWidth = Math.max(1.2, w * 0.014);
+  ctx.beginPath();
+  ctx.arc(wpX, wpY, w * 0.026, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(wpX, wpY, w * 0.008, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Secondary smaller waypoint node above at (0.775 * w, 0.392 * h)
+  ctx.lineWidth = Math.max(0.8, w * 0.009);
+  ctx.beginPath();
+  ctx.arc(w * 0.775, h * 0.392, w * 0.016, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(w * 0.775, h * 0.392, w * 0.005, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // 3. Top-Right Sky-Blue Naval Chevron & Upward Arrow Anchor Insignia
+  ctx.save();
+  const emX = w * 0.752;
+  const emY = h * 0.172;
+  const emS = w * 0.24;
+
+  ctx.shadowColor = "rgba(0, 0, 0, 0.42)";
+  ctx.shadowBlur = Math.max(2, w * 0.024);
+
+  const blueEmGrad = ctx.createLinearGradient(
+    emX - emS * 0.5,
+    emY - emS * 0.45,
+    emX + emS * 0.5,
+    emY + emS * 0.45
+  );
+  blueEmGrad.addColorStop(0, "#67d4ff");
+  blueEmGrad.addColorStop(0.5, "#38bdf8");
+  blueEmGrad.addColorStop(1, "#0284c7");
+  ctx.fillStyle = blueEmGrad;
+  ctx.strokeStyle = "#0369a1";
+  ctx.lineWidth = Math.max(0.7, w * 0.008);
+
+  // Upper Piece: Central Upward Arrow Rising from a V-Winged Anchor Base
+  ctx.beginPath();
+  // Top arrow tip
+  ctx.moveTo(emX, emY - emS * 0.45);
+  ctx.lineTo(emX + emS * 0.14, emY - emS * 0.25);
+  ctx.lineTo(emX + emS * 0.055, emY - emS * 0.25);
+  // Down central shaft to right diagonal wing
+  ctx.lineTo(emX + emS * 0.055, emY - emS * 0.04);
+  ctx.lineTo(emX + emS * 0.23, emY - emS * 0.21);
+  ctx.lineTo(emX + emS * 0.37, emY - emS * 0.21);
+  ctx.lineTo(emX + emS * 0.1, emY + emS * 0.06);
+  ctx.lineTo(emX - emS * 0.1, emY + emS * 0.06);
+  // Left diagonal wing
+  ctx.lineTo(emX - emS * 0.37, emY - emS * 0.21);
+  ctx.lineTo(emX - emS * 0.23, emY - emS * 0.21);
+  ctx.lineTo(emX - emS * 0.055, emY - emS * 0.04);
+  // Up central shaft to left arrow barb
+  ctx.lineTo(emX - emS * 0.055, emY - emS * 0.25);
+  ctx.lineTo(emX - emS * 0.14, emY - emS * 0.25);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Middle Nested V-Chevron Ribbon
+  ctx.beginPath();
+  ctx.moveTo(emX - emS * 0.28, emY - emS * 0.02);
+  ctx.lineTo(emX - emS * 0.22, emY - emS * 0.07);
+  ctx.lineTo(emX, emY + emS * 0.15);
+  ctx.lineTo(emX + emS * 0.22, emY - emS * 0.07);
+  ctx.lineTo(emX + emS * 0.28, emY - emS * 0.02);
+  ctx.lineTo(emX, emY + emS * 0.25);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Outer Bottom V-Chevron Ribbon
+  ctx.beginPath();
+  ctx.moveTo(emX - emS * 0.51, emY - emS * 0.04);
+  ctx.lineTo(emX - emS * 0.42, emY - emS * 0.11);
+  ctx.lineTo(emX, emY + emS * 0.3);
+  ctx.lineTo(emX + emS * 0.42, emY - emS * 0.11);
+  ctx.lineTo(emX + emS * 0.51, emY - emS * 0.04);
+  ctx.lineTo(emX, emY + emS * 0.45);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  // 4. Prussian-Teal Naval Greatcoat, High Upturned Collar, Twin Silver Shoulder Buckles & Gold-Filigree Plastron
+  ctx.save();
+  // High Upturned Prussian-Teal Collar Behind the Jaw & Goatee
+  const collarGrad = ctx.createLinearGradient(
+    w * 0.28,
+    h * 0.44,
+    w * 0.66,
+    h * 0.62
+  );
+  collarGrad.addColorStop(0, "#0b5e8a");
+  collarGrad.addColorStop(0.5, "#032033");
+  collarGrad.addColorStop(1, "#094e73");
+  ctx.fillStyle = collarGrad;
+  ctx.strokeStyle = "#0ea5e9";
+  ctx.lineWidth = Math.max(1, w * 0.011);
+
+  ctx.beginPath();
+  ctx.moveTo(w * 0.305, h * 0.445);
+  ctx.lineTo(w * 0.35, h * 0.592);
+  ctx.lineTo(w * 0.485, h * 0.61);
+  ctx.lineTo(w * 0.62, h * 0.555);
+  ctx.lineTo(w * 0.652, h * 0.452);
+  ctx.lineTo(w * 0.305, h * 0.445);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Outer Prussian-Teal Naval Greatcoat Shoulders, Epaulets & Ribbed Sleeves
+  const coatGrad = ctx.createLinearGradient(0, h * 0.54, w, h);
+  coatGrad.addColorStop(0, "#0b5880");
+  coatGrad.addColorStop(0.45, "#053652");
+  coatGrad.addColorStop(1, "#02101c");
+  ctx.fillStyle = coatGrad;
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.03, h);
+  ctx.lineTo(-w * 0.02, h * 0.66);
+  ctx.quadraticCurveTo(w * 0.14, h * 0.58, w * 0.335, h * 0.53);
+  ctx.lineTo(w * 0.635, h * 0.515);
+  ctx.quadraticCurveTo(w * 0.82, h * 0.57, w * 1.03, h * 0.68);
+  ctx.lineTo(w * 1.03, h);
+  ctx.closePath();
+  ctx.fill();
+
+  // Ribbed Sleeve Stripes on Left & Right Outer Arms
+  ctx.strokeStyle = "rgba(56, 189, 248, 0.38)";
+  ctx.lineWidth = Math.max(1.2, w * 0.014);
+  for (const sx of [0.02, 0.06, 0.89, 0.94, 0.98]) {
+    ctx.beginPath();
+    ctx.moveTo(w * sx, h * 0.72);
+    ctx.lineTo(w * (sx + (sx < 0.5 ? -0.03 : 0.04)), h);
+    ctx.stroke();
+  }
+
+  // Silver-Gold Piped Left & Right Shoulder Epaulet Flaps
+  ctx.strokeStyle = "#cbd5e1";
+  ctx.lineWidth = Math.max(1.2, w * 0.013);
+  ctx.beginPath();
+  // Left shoulder seam
+  ctx.moveTo(w * 0.072, h * 0.605);
+  ctx.quadraticCurveTo(w * 0.16, h * 0.75, w * 0.33, h * 0.81);
+  // Right shoulder strap panel holding the plastron buckles
+  ctx.moveTo(w * 0.668, h * 0.518);
+  ctx.lineTo(w * 0.585, h * 0.625);
+  ctx.lineTo(w * 0.825, h * 0.775);
+  ctx.lineTo(w * 0.92, h * 0.625);
+  ctx.stroke();
+
+  // Asymmetric Diagonal Prussian-Blue Plastron / Chest Shield Edged in Braided Antique Gold
+  const plastronGrad = ctx.createLinearGradient(
+    w * 0.25,
+    h * 0.6,
+    w * 0.78,
+    h
+  );
+  plastronGrad.addColorStop(0, "#0b5c87");
+  plastronGrad.addColorStop(0.5, "#053654");
+  plastronGrad.addColorStop(1, "#021626");
+  ctx.fillStyle = plastronGrad;
+  ctx.strokeStyle = "#e2c15a";
+  ctx.lineWidth = Math.max(1.8, w * 0.02);
+
+  ctx.beginPath();
+  ctx.moveTo(w * 0.535, h * 0.605);
+  ctx.lineTo(w * 0.795, h * 0.728);
+  ctx.lineTo(w * 0.63, h);
+  ctx.lineTo(w * 0.22, h);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Two Ornate Silver/Brass Twin-Prong Metal Buckles Fastening the Plastron at Upper-Right
+  for (const [bx, by] of [
+    [0.642, 0.618],
+    [0.735, 0.668],
+  ] as const) {
+    ctx.save();
+    ctx.translate(w * bx, h * by);
+    ctx.rotate(0.52);
+    ctx.fillStyle = "#f1f5f9";
+    ctx.strokeStyle = "#475569";
+    ctx.lineWidth = Math.max(0.7, w * 0.008);
+    drawRoundedRect(ctx, -w * 0.022, -h * 0.022, w * 0.044, h * 0.044, 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Dark buckle center notch
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(-w * 0.01, -h * 0.009, w * 0.02, h * 0.018);
+    ctx.restore();
+  }
+
+  // Lavish Raised 3D Antique-Gold Baroque Scrollwork & Arabesque Embroidery on the Plastron
+  ctx.save();
+  ctx.translate(w * 0.53, h * 0.82);
+  ctx.rotate(0.46);
+
+  ctx.strokeStyle = "#eab308";
+  ctx.fillStyle = "#fef08a";
+  ctx.lineWidth = Math.max(1.3, w * 0.015);
+
+  // Symmetrical Baroque Gold Filigree C-Scrolls & Fleur-de-Lis Crest along the Plastron Axis
+  for (const dir of [-1, 1]) {
+    // Upper C-scroll & gold bead
+    ctx.beginPath();
+    ctx.arc(dir * w * 0.075, -h * 0.12, w * 0.045, 0, Math.PI * 1.5);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(dir * w * 0.1, -h * 0.14, w * 0.016, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Middle flourishing S-scroll
+    ctx.beginPath();
+    ctx.moveTo(dir * w * 0.02, -h * 0.07);
+    ctx.bezierCurveTo(
+      dir * w * 0.14,
+      -h * 0.05,
+      dir * w * 0.15,
+      h * 0.04,
+      dir * w * 0.03,
+      h * 0.05
+    );
+    ctx.stroke();
+
+    // Lower baroque scroll loop
+    ctx.beginPath();
+    ctx.arc(dir * w * 0.065, h * 0.1, w * 0.048, -Math.PI * 0.3, Math.PI * 1.2);
+    ctx.stroke();
+  }
+
+  // Central golden spine & diamond filigree nodes
+  ctx.beginPath();
+  ctx.moveTo(0, -h * 0.16);
+  ctx.lineTo(0, h * 0.16);
+  ctx.stroke();
+  for (const cyOff of [-0.11, -0.03, 0.05, 0.12]) {
+    ctx.beginPath();
+    ctx.arc(0, h * cyOff, w * 0.018, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+  ctx.restore();
+
+  // 5. The Captain's Portrait: Shaved Sides, Cyan-Highlight Mohawk, Diagonal Scar, Piercing Icy Eyes, Handlebar Mustache & Goatee
+  ctx.save();
+  const faceCx = w * 0.482;
+  const faceCy = h * 0.395;
+
+  // Left & Right Ears
+  ctx.fillStyle = "#c9b097";
+  ctx.strokeStyle = "#6e5a47";
+  ctx.lineWidth = Math.max(0.8, w * 0.009);
+  for (const [ex, rot] of [
+    [w * 0.312, -0.14],
+    [w * 0.654, 0.14],
+  ] as const) {
+    ctx.beginPath();
+    ctx.ellipse(ex, h * 0.382, w * 0.02, h * 0.044, rot, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // Shaved Head Sides & Rugged Pale-Weathered Face Contour
+  const headGrad = ctx.createRadialGradient(
+    faceCx - w * 0.02,
+    h * 0.33,
+    w * 0.02,
+    faceCx,
+    faceCy,
+    w * 0.24
+  );
+  headGrad.addColorStop(0, "#fdf6ec");
+  headGrad.addColorStop(0.55, "#dec7ad");
+  headGrad.addColorStop(0.85, "#9c856d");
+  headGrad.addColorStop(1, "#5c4d3e");
+  ctx.fillStyle = headGrad;
+  ctx.strokeStyle = "#4f4134";
+  ctx.lineWidth = Math.max(0.9, w * 0.01);
+
+  ctx.beginPath();
+  ctx.moveTo(w * 0.318, h * 0.335);
+  // Left temple & hollow cheekbone down to chin goatee
+  ctx.quadraticCurveTo(w * 0.318, h * 0.47, w * 0.405, h * 0.555);
+  ctx.quadraticCurveTo(w * 0.485, h * 0.6, w * 0.562, h * 0.555);
+  // Right jawline up to right temple
+  ctx.quadraticCurveTo(w * 0.648, h * 0.47, w * 0.648, h * 0.335);
+  // Shaved cranium dome
+  ctx.quadraticCurveTo(w * 0.64, h * 0.195, w * 0.482, h * 0.19);
+  ctx.quadraticCurveTo(w * 0.325, h * 0.195, w * 0.318, h * 0.335);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Grey-brown shaved stubble shading on left and right upper temples
+  ctx.fillStyle = "rgba(71, 68, 64, 0.35)";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.32, h * 0.32);
+  ctx.quadraticCurveTo(w * 0.33, h * 0.22, w * 0.41, h * 0.21);
+  ctx.lineTo(w * 0.38, h * 0.31);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(w * 0.645, h * 0.32);
+  ctx.quadraticCurveTo(w * 0.635, h * 0.22, w * 0.56, h * 0.21);
+  ctx.lineTo(w * 0.585, h * 0.31);
+  ctx.closePath();
+  ctx.fill();
+
+  // Thick Dark Mohawk Crest with Electric-Cyan Top Sheen
+  const mohawkGrad = ctx.createRadialGradient(
+    w * 0.46,
+    h * 0.165,
+    w * 0.015,
+    w * 0.485,
+    h * 0.22,
+    w * 0.14
+  );
+  mohawkGrad.addColorStop(0, "#38bdf8");
+  mohawkGrad.addColorStop(0.32, "#0284c7");
+  mohawkGrad.addColorStop(0.6, "#091526");
+  mohawkGrad.addColorStop(1, "#05070c");
+  ctx.fillStyle = mohawkGrad;
+
+  ctx.beginPath();
+  ctx.moveTo(w * 0.372, h * 0.225);
+  ctx.quadraticCurveTo(w * 0.39, h * 0.14, w * 0.485, h * 0.142);
+  ctx.quadraticCurveTo(w * 0.59, h * 0.145, w * 0.608, h * 0.235);
+  ctx.quadraticCurveTo(w * 0.565, h * 0.295, w * 0.485, h * 0.285);
+  ctx.quadraticCurveTo(w * 0.405, h * 0.29, w * 0.372, h * 0.225);
+  ctx.closePath();
+  ctx.fill();
+
+  // Signature Jagged Diagonal Battle Scar (Starting Inside the Mohawk, Cutting Across Forehead, Right Eyebrow & Right Cheek)
+  // Upper white-cyan scar part-line cutting through the dark mohawk hair
+  ctx.strokeStyle = "#bae6fd";
+  ctx.lineWidth = Math.max(1.3, w * 0.015);
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.415, h * 0.215);
+  ctx.quadraticCurveTo(w * 0.485, h * 0.23, w * 0.525, h * 0.278);
+  ctx.stroke();
+
+  // Lower skin scar seam across forehead, splitting right eyebrow and running down right cheek
+  ctx.strokeStyle = "rgba(148, 108, 94, 0.78)";
+  ctx.lineWidth = Math.max(1.6, w * 0.018);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.525, h * 0.278);
+  ctx.lineTo(w * 0.565, h * 0.325);
+  ctx.lineTo(w * 0.608, h * 0.365);
+  ctx.lineTo(w * 0.588, h * 0.418);
+  ctx.lineTo(w * 0.608, h * 0.465);
+  ctx.stroke();
+
+  // Pale scar ridge highlight right next to the skin scar seam
+  ctx.strokeStyle = "rgba(254, 242, 242, 0.85)";
+  ctx.lineWidth = Math.max(0.9, w * 0.01);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.521, h * 0.278);
+  ctx.lineTo(w * 0.561, h * 0.325);
+  ctx.lineTo(w * 0.604, h * 0.365);
+  ctx.lineTo(w * 0.584, h * 0.418);
+  ctx.lineTo(w * 0.604, h * 0.465);
+  ctx.stroke();
+
+  // Deep Menacing Eye Socket Shadows & Furrowed Glabella Scowl Lines
+  ctx.fillStyle = "rgba(74, 65, 52, 0.48)";
+  ctx.beginPath();
+  ctx.ellipse(w * 0.41, h * 0.382, w * 0.052, h * 0.018, 0.12, 0, Math.PI * 2);
+  ctx.ellipse(
+    w * 0.555,
+    h * 0.382,
+    w * 0.052,
+    h * 0.018,
+    -0.12,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Low-Angled Scowling Dark Eyebrows (Right eyebrow split by the diagonal battle scar)
+  ctx.strokeStyle = "#171717";
+  ctx.lineWidth = Math.max(1.6, w * 0.018);
+  ctx.beginPath();
+  // Viewer's left eyebrow
+  ctx.moveTo(w * 0.348, h * 0.358);
+  ctx.lineTo(w * 0.455, h * 0.376);
+  // Viewer's right eyebrow (inner segment + outer segment split by the scar at x = 0.60)
+  ctx.moveTo(w * 0.508, h * 0.376);
+  ctx.lineTo(w * 0.588, h * 0.356);
+  ctx.moveTo(w * 0.608, h * 0.354);
+  ctx.lineTo(w * 0.625, h * 0.362);
+  ctx.stroke();
+
+  // Piercing Icy Pale-Blue Eyes with Pinpoint Pupils
+  for (const [ex, ey] of [
+    [w * 0.415, h * 0.382],
+    [w * 0.552, h * 0.382],
+  ] as const) {
+    // Crisp sclera
+    ctx.fillStyle = "#f1f5f9";
+    ctx.beginPath();
+    ctx.ellipse(ex, ey, w * 0.028, h * 0.0085, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Glowing ice-blue iris
+    ctx.fillStyle = "#7dd3fc";
+    ctx.beginPath();
+    ctx.arc(ex, ey, w * 0.011, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pinpoint black pupil
+    ctx.fillStyle = "#090d16";
+    ctx.beginPath();
+    ctx.arc(ex, ey, w * 0.0045, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Dark upper lash outline
+    ctx.strokeStyle = "#0f172a";
+    ctx.lineWidth = Math.max(0.8, w * 0.009);
+    ctx.beginPath();
+    ctx.ellipse(ex, ey, w * 0.029, h * 0.0085, 0, Math.PI, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Sharp Straight Nose Bridge & Flared Nostrils
+  ctx.fillStyle = "rgba(120, 98, 79, 0.38)";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.472, h * 0.378);
+  ctx.lineTo(w * 0.448, h * 0.452);
+  ctx.lineTo(w * 0.482, h * 0.468);
+  ctx.lineTo(w * 0.516, h * 0.452);
+  ctx.lineTo(w * 0.492, h * 0.378);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#6e5644";
+  ctx.lineWidth = Math.max(0.9, w * 0.01);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.45, h * 0.454);
+  ctx.quadraticCurveTo(w * 0.482, h * 0.472, w * 0.514, h * 0.454);
+  ctx.stroke();
+
+  // Signature Upward-Curled Handlebar Mustache
+  ctx.fillStyle = "#141210";
+  ctx.strokeStyle = "#292524";
+  ctx.lineWidth = Math.max(0.8, w * 0.009);
+  ctx.beginPath();
+  // Center top indentation under nose
+  ctx.moveTo(w * 0.482, h * 0.484);
+  // Left wing sweeping down and curling UP into a handlebar hook
+  ctx.quadraticCurveTo(w * 0.435, h * 0.475, w * 0.405, h * 0.498);
+  ctx.quadraticCurveTo(w * 0.375, h * 0.505, w * 0.378, h * 0.478);
+  ctx.quadraticCurveTo(w * 0.385, h * 0.515, w * 0.42, h * 0.508);
+  ctx.quadraticCurveTo(w * 0.455, h * 0.496, w * 0.482, h * 0.498);
+  // Right wing sweeping down and curling UP into a handlebar hook
+  ctx.quadraticCurveTo(w * 0.51, h * 0.496, w * 0.545, h * 0.508);
+  ctx.quadraticCurveTo(w * 0.58, h * 0.515, w * 0.586, h * 0.478);
+  ctx.quadraticCurveTo(w * 0.59, h * 0.505, w * 0.558, h * 0.498);
+  ctx.quadraticCurveTo(w * 0.528, h * 0.475, w * 0.482, h * 0.484);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Firm Lower Lip Below the Handlebar Mustache
+  ctx.fillStyle = "#b58378";
+  ctx.beginPath();
+  ctx.ellipse(w * 0.482, h * 0.51, w * 0.036, h * 0.0085, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Full Trim Dark Chin Goatee Beard
+  ctx.fillStyle = "#121110";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.455, h * 0.518);
+  ctx.lineTo(w * 0.51, h * 0.518);
+  ctx.lineTo(w * 0.535, h * 0.508);
+  ctx.lineTo(w * 0.562, h * 0.515);
+  ctx.quadraticCurveTo(w * 0.558, h * 0.585, w * 0.482, h * 0.598);
+  ctx.quadraticCurveTo(w * 0.405, h * 0.585, w * 0.402, h * 0.515);
+  ctx.lineTo(w * 0.43, h * 0.508);
+  ctx.closePath();
+  ctx.fill();
+
+  // Fine beard hair strand highlights on the chin goatee
+  ctx.strokeStyle = "rgba(148, 134, 120, 0.38)";
+  ctx.lineWidth = Math.max(0.6, w * 0.007);
+  for (const bx of [0.435, 0.46, 0.482, 0.505, 0.53]) {
+    ctx.beginPath();
+    ctx.moveTo(w * bx, h * 0.53);
+    ctx.lineTo(w * bx, h * 0.585);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+  ctx.restore();
+}
+
+/**
  * Draws the 2D vector illustration for one of the 5 Coup Characters inside a card frame.
  */
 function drawCoupCharacterArt2D(
@@ -2672,10 +3335,6 @@ function drawCoupCharacterArt2D(
   h: number,
   character: CoupCharacter
 ) {
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.44;
-  const s = Math.min(w, h);
-
   ctx.save();
 
   if (character === "Duke") {
@@ -2683,52 +3342,7 @@ function drawCoupCharacterArt2D(
   } else if (character === "Assassin") {
     drawAssassinCard2D(ctx, x, y, w, h);
   } else if (character === "Captain") {
-    // Deep Maritime Navy-Cyan Backdrop
-    const bg = ctx.createRadialGradient(cx, cy, s * 0.05, cx, cy, s * 0.75);
-    bg.addColorStop(0, "#0284c7");
-    bg.addColorStop(0.65, "#0c4a6e");
-    bg.addColorStop(1, "#082f49");
-    ctx.fillStyle = bg;
-    ctx.fillRect(x, y, w, h);
-
-    // Ship's Wheel / Naval Helm spokes in 2D
-    ctx.strokeStyle = "#f59e0b";
-    ctx.lineWidth = Math.max(2, s * 0.035);
-    for (let i = 0; i < 8; i++) {
-      const ang = (i * Math.PI) / 4;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy + s * 0.04);
-      ctx.lineTo(
-        cx + Math.cos(ang) * s * 0.28,
-        cy + s * 0.04 + Math.sin(ang) * s * 0.28
-      );
-      ctx.stroke();
-    }
-
-    // Helm outer & inner brass rings
-    ctx.strokeStyle = "#fbbf24";
-    ctx.lineWidth = Math.max(3, s * 0.05);
-    ctx.beginPath();
-    ctx.arc(cx, cy + s * 0.04, s * 0.2, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.fillStyle = "#0f172a";
-    ctx.beginPath();
-    ctx.arc(cx, cy + s * 0.04, s * 0.075, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-
-    // Captain's Tricorn Hat at top of helm
-    ctx.fillStyle = "#0f172a";
-    ctx.strokeStyle = "#fde047";
-    ctx.lineWidth = Math.max(1.5, s * 0.022);
-    ctx.beginPath();
-    ctx.moveTo(cx - s * 0.28, cy - s * 0.12);
-    ctx.quadraticCurveTo(cx, cy - s * 0.34, cx + s * 0.28, cy - s * 0.12);
-    ctx.quadraticCurveTo(cx, cy - s * 0.06, cx - s * 0.28, cy - s * 0.12);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+    drawCaptainCard2D(ctx, x, y, w, h);
   } else if (character === "Ambassador") {
     drawAmbassadorCard2D(ctx, x, y, w, h);
   } else {
