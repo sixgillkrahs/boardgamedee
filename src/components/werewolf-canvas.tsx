@@ -491,6 +491,7 @@ export function WerewolfCanvas({
             }));
 
       const seatPositions = new Map<number, { x: number; y: number }>();
+      const seatNamesByNo = new Map<number, string>();
       seatsToRender.forEach((seat, idx) => {
         const pos = computeRadialSeatPosition(
           idx,
@@ -501,6 +502,7 @@ export function WerewolfCanvas({
           tableRy
         );
         seatPositions.set(seat.seatNo, pos);
+        seatNamesByNo.set(seat.seatNo, seat.displayName);
       });
 
       // Targeting beam if a target Seat is selected locally
@@ -752,22 +754,6 @@ export function WerewolfCanvas({
           ctx.fillText(seat.isBot ? "🤖" : "🧑", pos.x, pos.y);
         }
 
-        // Seat Number pill (top-left of card)
-        const badgeX = pos.x - cardSize * 0.46;
-        const badgeY = pos.y - cardSize * 0.46;
-        ctx.fillStyle = isMe ? "#0284c7" : "#1e293b";
-        ctx.beginPath();
-        ctx.arc(badgeX, badgeY, 11, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "#475569";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.fillStyle = "#f8fafc";
-        ctx.font = "bold 10px sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(`#${seat.seatNo}`, badgeX, badgeY + 0.5);
-
         // Connection status dot (bottom-left of card)
         const connX = pos.x - cardSize * 0.46;
         const connY = pos.y + cardSize * 0.46;
@@ -784,6 +770,12 @@ export function WerewolfCanvas({
         const dayVoters = dayVotersByTarget.get(seat.seatNo) ?? [];
         const wolfVoters = wolfVotersByTarget.get(seat.seatNo) ?? [];
 
+        const formatVoterNames = (voterNos: number[]) =>
+          voterNos
+            .map((no) => (seatNamesByNo.get(no) ?? "").slice(0, 8))
+            .filter(Boolean)
+            .join(", ");
+
         if (votesAgainst > 0) {
           const vX = pos.x + cardSize * 0.46;
           const vY = pos.y - cardSize * 0.46;
@@ -793,11 +785,13 @@ export function WerewolfCanvas({
           ctx.fill();
           ctx.fillStyle = "#ffffff";
           ctx.font = "bold 11px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
           ctx.fillText(`${votesAgainst}`, vX, vY + 0.5);
 
-          // Voter list tag above the card (e.g. "⬅ #1, #3")
-          const tagText = `⬅ ${dayVoters.map((n) => `#${n}`).join(",")}`;
-          const tagW = Math.max(42, tagText.length * 6.5 + 10);
+          // Voter list tag above the card by player names
+          const tagText = `⬅ ${formatVoterNames(dayVoters)}`;
+          const tagW = Math.max(48, Math.min(136, tagText.length * 6.2 + 12));
           drawRoundedRect(
             ctx,
             pos.x - tagW / 2,
@@ -810,11 +804,15 @@ export function WerewolfCanvas({
           ctx.fill();
           ctx.fillStyle = "#ffffff";
           ctx.font = "bold 9.5px sans-serif";
-          ctx.fillText(tagText, pos.x, pos.y - cardSize * 0.5 - 13.5);
+          ctx.fillText(
+            tagText.length > 20 ? `${tagText.slice(0, 19)}…` : tagText,
+            pos.x,
+            pos.y - cardSize * 0.5 - 13.5
+          );
         } else if (wolfVoters.length > 0) {
-          // Werewolf Pack Vote Badge visible to all Werewolves during NightPhase!
-          const wText = `🐺 ← ${wolfVoters.map((n) => `#${n}`).join(",")}`;
-          const wTagW = Math.max(54, wText.length * 6.8 + 12);
+          // Werewolf Pack Vote Badge visible to all Werewolves during NightPhase
+          const wText = `🐺 ← ${formatVoterNames(wolfVoters)}`;
+          const wTagW = Math.max(58, Math.min(142, wText.length * 6.4 + 12));
           drawRoundedRect(
             ctx,
             pos.x - wTagW / 2,
@@ -830,7 +828,13 @@ export function WerewolfCanvas({
           ctx.stroke();
           ctx.fillStyle = "#fef2f2";
           ctx.font = "bold 10px sans-serif";
-          ctx.fillText(wText, pos.x, pos.y - cardSize * 0.5 - 14);
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(
+            wText.length > 20 ? `${wText.slice(0, 19)}…` : wText,
+            pos.x,
+            pos.y - cardSize * 0.5 - 14
+          );
         }
 
         // Seer private inspection badge (bottom-right of card)
@@ -885,9 +889,12 @@ export function WerewolfCanvas({
           pv?.phase === "NightPhase" &&
           typeof seat.werewolfVoteTarget === "number"
         ) {
+          const targetName = (
+            seatNamesByNo.get(seat.werewolfVoteTarget) ?? ""
+          ).slice(0, 10);
           subLabel = seat.werewolfVoteLocked
-            ? `🐺 ✓ Chốt cắn #${seat.werewolfVoteTarget}`
-            : `🐺 Đang chọn #${seat.werewolfVoteTarget}`;
+            ? `🐺 ✓ ${targetName}`
+            : `🐺 → ${targetName}`;
           subColor = seat.werewolfVoteLocked ? "#ef4444" : "#fca5a5";
         } else if (
           curMode === "match" &&
@@ -895,10 +902,14 @@ export function WerewolfCanvas({
           seat.dayVoteTarget !== null
         ) {
           const lockMark = seat.dayVoteLocked ? "✓ " : "";
+          const targetName =
+            typeof seat.dayVoteTarget === "number"
+              ? (seatNamesByNo.get(seat.dayVoteTarget) ?? "").slice(0, 10)
+              : "";
           subLabel =
             seat.dayVoteTarget === "abstain"
               ? `🏳️ ${lockMark}Phiếu trắng`
-              : `🗳️ ${lockMark}Vote #${seat.dayVoteTarget}`;
+              : `🗳️ ${lockMark}${targetName}`;
           subColor =
             seat.dayVoteTarget === "abstain" ? "#cbd5e1" : "#fbbf24";
         } else if (

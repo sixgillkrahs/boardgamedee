@@ -1,7 +1,6 @@
 "use client";
 
 import React, { Suspense, use, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { WerewolfCanvas } from "@/components/werewolf-canvas";
 import {
   ROLE_META,
@@ -58,10 +57,11 @@ function RoomPageContent({
   const [witchWantHeal, setWitchWantHeal] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // HUD Chat & Event Log tabs
-  const [activeTab, setActiveTab] = useState<"chat" | "events" | "config">(
-    "chat"
-  );
+  // Right Slide-over Drawer (Chat & Events) + Header Gear Config Modal
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerTab, setDrawerTab] = useState<"chat" | "events">("chat");
+  const [configModalOpen, setConfigModalOpen] = useState(false);
+
   const [activeChannelId, setActiveChannelId] =
     useState<ChannelId>("village");
   const [chatInput, setChatInput] = useState("");
@@ -132,8 +132,10 @@ function RoomPageContent({
   }, [snapshot?.playerView?.cycle, snapshot?.playerView?.step]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [snapshot?.messages?.length, snapshot?.events?.length]);
+    if (drawerOpen) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [drawerOpen, snapshot?.messages?.length, snapshot?.events?.length]);
 
   const sendRoomAction = async (payload: Record<string, unknown>) => {
     setBusy(true);
@@ -199,6 +201,14 @@ function RoomPageContent({
         null
       : null;
 
+  const witchVictimObj =
+    pv?.witchState?.pendingWolfVictimSeatNo !== null &&
+    pv?.witchState?.pendingWolfVictimSeatNo !== undefined
+      ? pv.seats.find(
+          (s) => s.seatNo === pv.witchState?.pendingWolfVictimSeatNo
+        ) ?? null
+      : null;
+
   const activeChannelPerm = snapshot?.channels.find(
     (c) => c.channelId === activeChannelId
   );
@@ -206,9 +216,9 @@ function RoomPageContent({
     snapshot?.messages.filter((m) => m.channelId === activeChannelId) ?? [];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col overflow-x-hidden">
       {/* Top Platform Header Bar */}
-      <header className="border-b border-slate-800/80 bg-slate-900/85 backdrop-blur px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      <header className="border-b border-slate-800/80 bg-slate-900/85 backdrop-blur px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 z-30">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -237,28 +247,59 @@ function RoomPageContent({
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 text-xs">
+        <div className="flex items-center gap-2 text-xs">
+          {/* Gear Icon Button for Configuration */}
+          <button
+            type="button"
+            onClick={() => setConfigModalOpen(true)}
+            className="rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 p-2 text-sm text-slate-200 transition cursor-pointer"
+            title="Cấu hình vai trò & thời gian"
+            aria-label="Cấu hình vai trò & thời gian"
+          >
+            ⚙️
+          </button>
+
+          {/* Drawer Toggle Button for Chat & Events */}
+          <button
+            type="button"
+            onClick={() => setDrawerOpen((v) => !v)}
+            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+              drawerOpen
+                ? "border-amber-500/60 bg-amber-500/20 text-amber-300"
+                : "border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
+            }`}
+          >
+            <span>💬 Chat & Nhật ký</span>
+            {(snapshot?.messages.length ?? 0) > 0 && (
+              <span className="rounded-full bg-amber-500 px-1.5 py-0.2 text-[10px] font-bold text-slate-950">
+                {snapshot?.messages.length}
+              </span>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={() => setSoundEnabled((v) => !v)}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1 text-xs text-slate-200 hover:bg-slate-700 transition cursor-pointer"
-            title="Bật/Tắt âm hiệu"
+            className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-slate-200 hover:bg-slate-700 transition cursor-pointer"
+            title="Bật/Tắt âm thanh"
           >
-            {soundEnabled ? "🔊 Âm thanh" : "🔇 Tắt tiếng"}
+            {soundEnabled ? "🔊" : "🔇"}
           </button>
           <button
             type="button"
             onClick={() => {
               if (!document.fullscreenElement) {
-                void document.documentElement.requestFullscreen().catch(() => {});
+                void document.documentElement
+                  .requestFullscreen()
+                  .catch(() => {});
               } else {
                 void document.exitFullscreen().catch(() => {});
               }
             }}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1 text-xs text-slate-200 hover:bg-slate-700 transition cursor-pointer"
+            className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-slate-200 hover:bg-slate-700 transition cursor-pointer"
             title="Toàn màn hình"
           >
-            ⛶ Toàn màn hình
+            ⛶
           </button>
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-medium ${
@@ -272,7 +313,7 @@ function RoomPageContent({
                 connected ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
               }`}
             />
-            {connected ? "SSE Trực tuyến" : "Đang kết nối..."}
+            {connected ? "Trực tuyến" : "Đang kết nối..."}
           </span>
 
           {actor && (
@@ -283,11 +324,6 @@ function RoomPageContent({
               <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] text-slate-300">
                 {actor.isGuest ? "Guest" : "Google"}
               </span>
-              {snapshot?.viewerSeatNo && (
-                <span className="rounded bg-sky-500/20 text-sky-300 px-1.5 py-0.5 font-bold">
-                  Ghế #{snapshot.viewerSeatNo}
-                </span>
-              )}
             </div>
           )}
         </div>
@@ -307,350 +343,294 @@ function RoomPageContent({
         </div>
       )}
 
-      {/* Main Split Layout: Interactive 2D Canvas Tabletop (Left/Center) + HUD Overlay Dock (Right) */}
-      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-3 md:p-4 max-w-[1600px] w-full mx-auto">
-        {/* Left/Center 8 Columns: 2D Canvas Scene + Action Command Dock */}
-        <section className="lg:col-span-8 flex flex-col gap-3 min-h-[540px]">
-          <div className="flex-1 min-h-[460px] relative">
-            <WerewolfCanvas
-              mode={isLobby ? "lobby" : "match"}
-              lobbySeats={snapshot?.seats ?? []}
-              viewerSeatNo={snapshot?.viewerSeatNo ?? null}
-              playerView={pv}
-              selectedTargetSeatNo={selectedTargetSeatNo}
-              onSelectSeat={(seatNo) => {
-                setSelectedTargetSeatNo(seatNo);
-                if (!pv || !pv.myAlive) return;
-                const targetSeat = pv.seats.find((s) => s.seatNo === seatNo);
-                if (!targetSeat?.alive) return;
+      {/* Full-Width Interactive 2D Canvas Tabletop + Bottom Action Bar */}
+      <main className="relative flex-1 flex flex-col gap-3 p-3 md:p-4 max-w-[1600px] w-full mx-auto">
+        <div className="flex-1 min-h-[520px] relative">
+          <WerewolfCanvas
+            mode={isLobby ? "lobby" : "match"}
+            lobbySeats={snapshot?.seats ?? []}
+            viewerSeatNo={snapshot?.viewerSeatNo ?? null}
+            playerView={pv}
+            selectedTargetSeatNo={selectedTargetSeatNo}
+            onSelectSeat={(seatNo) => {
+              setSelectedTargetSeatNo(seatNo);
+              if (!pv || !pv.myAlive) return;
+              const targetSeat = pv.seats.find((s) => s.seatNo === seatNo);
+              if (!targetSeat?.alive) return;
 
-                // 1. NightActionStep: Werewolf broadcasts live target vote to fellow Werewolves
-                if (
-                  pv.step === "NightActionStep" &&
-                  pv.myRole === "Werewolf"
-                ) {
-                  void fetch(`/api/rooms/${normalizedCode}/action`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      type: "MATCH_COMMAND",
-                      command: {
-                        type: "WEREWOLF_VOTE",
-                        targetSeatNo: seatNo,
-                        lock: false,
-                      },
-                    }),
-                  }).catch(() => {});
-                }
+              if (pv.step === "NightActionStep" && pv.myRole === "Werewolf") {
+                void fetch(`/api/rooms/${normalizedCode}/action`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    type: "MATCH_COMMAND",
+                    command: {
+                      type: "WEREWOLF_VOTE",
+                      targetSeatNo: seatNo,
+                      lock: false,
+                    },
+                  }),
+                }).catch(() => {});
+              }
 
-                // 2. DayVotingStep: Every living player broadcasts their live public vote so everyone sees each other's votes in real time!
-                if (pv.step === "DayVotingStep") {
-                  void fetch(`/api/rooms/${normalizedCode}/action`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      type: "MATCH_COMMAND",
-                      command: {
-                        type: "DAY_VOTE",
-                        targetSeatNo: seatNo,
-                        lock: false,
-                      },
-                    }),
-                  }).catch(() => {});
-                }
-              }}
-              roleCardRevealed={roleCardRevealed}
-              onToggleRoleCard={() => setRoleCardRevealed((prev) => !prev)}
-            />
-          </div>
+              if (pv.step === "DayVotingStep") {
+                void fetch(`/api/rooms/${normalizedCode}/action`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    type: "MATCH_COMMAND",
+                    command: {
+                      type: "DAY_VOTE",
+                      targetSeatNo: seatNo,
+                      lock: false,
+                    },
+                  }),
+                }).catch(() => {});
+              }
+            }}
+            roleCardRevealed={roleCardRevealed}
+            onToggleRoleCard={() => setRoleCardRevealed((prev) => !prev)}
+          />
 
-          {/* Context Action Bar (Lobby or Active Match Step Controls) */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-3.5 shadow-xl">
-            {isLobby ? (
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-sm font-bold text-amber-300">
-                    Sảnh chờ Làng Ma Sói ({snapshot?.seats.length ?? 0}/16 ghế)
-                  </h2>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    {snapshot?.configValidation.valid
-                      ? "✓ Cấu hình vai trò đã hợp lệ, sẵn sàng bắt đầu ván đấu!"
-                      : snapshot?.configValidation.error ??
-                        "Cần tối thiểu 4 người chơi (hoặc thêm Bot) để bắt đầu."}
-                  </p>
-                </div>
+          {/* Floating Quick-Open Tab on Right Edge when Drawer is closed */}
+          {!drawerOpen && (
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="fixed right-0 top-1/2 -translate-y-1/2 z-30 rounded-l-2xl border border-r-0 border-amber-500/40 bg-slate-900/95 hover:bg-slate-800 px-3 py-4 text-xs font-bold text-amber-300 shadow-2xl flex flex-col items-center gap-1.5 cursor-pointer transition"
+              title="Mở Kênh Chat & Nhật Ký"
+            >
+              <span className="text-lg">💬</span>
+              <span className="[writing-mode:vertical-rl] tracking-wider">
+                CHAT & NHẬT KÝ
+              </span>
+            </button>
+          )}
+        </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  {snapshot?.isHost && (
-                    <>
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => sendRoomAction({ type: "ADD_BOT" })}
-                        className="rounded-xl border border-sky-500/40 bg-sky-500/15 hover:bg-sky-500/25 px-3.5 py-2 text-xs font-semibold text-sky-200 transition cursor-pointer disabled:opacity-50"
-                      >
-                        🤖 + Thêm Bot Làng
-                      </button>
-                      <button
-                        type="button"
-                        disabled={busy || !snapshot?.configValidation.valid}
-                        onClick={() => sendRoomAction({ type: "START_MATCH" })}
-                        className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-2 text-xs font-bold text-slate-950 shadow-lg transition cursor-pointer disabled:opacity-40"
-                      >
-                        🔥 BẮT ĐẦU VÁN ĐẤU
-                      </button>
-                    </>
-                  )}
-                  {!snapshot?.isHost && (
-                    <span className="text-xs text-slate-400 italic">
-                      Đang chờ Chủ phòng bắt đầu ván đấu...
-                    </span>
-                  )}
-                </div>
+        {/* Context Action Bar */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-3.5 shadow-xl">
+          {isLobby ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-bold text-amber-300">
+                  Sảnh chờ Làng Ma Sói ({snapshot?.seats.length ?? 0}/16 người
+                  chơi)
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {snapshot?.configValidation.valid
+                    ? "✓ Cấu hình vai trò đã hợp lệ, sẵn sàng bắt đầu ván đấu!"
+                    : snapshot?.configValidation.error ??
+                      "Cần tối thiểu 4 người chơi (hoặc thêm Bot) để bắt đầu."}
+                </p>
               </div>
-            ) : (
-              /* Match Action Controls */
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
-                      {pv.phase === "Finished"
-                        ? "Kết quả chung cuộc"
-                        : pv.step === "NightActionStep"
-                          ? "Bước Đêm 1: Hành động bí mật"
-                          : pv.step === "WitchStep"
-                            ? "Bước Đêm 2: Lượt của Phù Thủy"
-                            : pv.step === "HunterRevengeStep"
-                              ? "Phát súng cuối của Thợ Săn"
-                              : pv.step === "DayDiscussionStep"
-                                ? "Ban Ngày: Thảo luận công khai"
-                                : "Ban Ngày: Bỏ phiếu treo cổ"}
-                    </span>
-                    {pv.myRole && (
-                      <span className="rounded-md bg-slate-800 border border-slate-700 px-2 py-0.5 text-xs font-semibold text-sky-300">
-                        Vai của bạn: {ROLE_META[pv.myRole].nameVi}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-300">
-                    {pv.phase === "Finished"
-                      ? pv.winReasonVi
-                      : selectedTargetSeatNo !== null && targetSeatObj
-                        ? `Đang chọn mục tiêu trên Canvas: Ghế #${selectedTargetSeatNo} (${targetSeatObj.displayName})`
-                        : "Chạm trực tiếp vào ghế người chơi trên bàn Canvas để chọn mục tiêu."}
-                  </p>
-                </div>
 
-                {/* Role & Phase Specific Buttons */}
-                <div className="flex flex-wrap items-center gap-2">
-                  {/* NightActionStep Actions */}
-                  {pv.step === "NightActionStep" &&
-                    pv.myAlive &&
-                    pv.myRole === "Werewolf" && (
-                      <button
-                        type="button"
-                        disabled={busy || selectedTargetSeatNo === null}
-                        onClick={() =>
-                          sendRoomAction({
-                            type: "MATCH_COMMAND",
-                            command: {
-                              type: "WEREWOLF_VOTE",
-                              targetSeatNo: selectedTargetSeatNo,
-                            },
-                          })
-                        }
-                        className="rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold text-white shadow transition cursor-pointer disabled:opacity-40"
-                      >
-                        🐺{" "}
-                        {selectedTargetSeatNo
-                          ? `Chốt cắn Ghế #${selectedTargetSeatNo}`
-                          : "Chọn 1 ghế trên Canvas để cắn"}
-                      </button>
-                    )}
-
-                  {pv.step === "NightActionStep" &&
-                    pv.myAlive &&
-                    pv.myRole === "Seer" &&
-                    !pv.hasSubmittedCurrentStep && (
-                      <button
-                        type="button"
-                        disabled={busy || selectedTargetSeatNo === null}
-                        onClick={() =>
-                          sendRoomAction({
-                            type: "MATCH_COMMAND",
-                            command: {
-                              type: "SEER_INSPECT",
-                              targetSeatNo: selectedTargetSeatNo,
-                            },
-                          })
-                        }
-                        className="rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-2 text-xs font-bold text-white shadow transition cursor-pointer disabled:opacity-40"
-                      >
-                        🔮{" "}
-                        {selectedTargetSeatNo
-                          ? `Soi danh tính Ghế #${selectedTargetSeatNo}`
-                          : "Chọn 1 ghế trên Canvas để soi"}
-                      </button>
-                    )}
-
-                  {pv.step === "NightActionStep" &&
-                    pv.myAlive &&
-                    pv.myRole === "Bodyguard" &&
-                    !pv.hasSubmittedCurrentStep && (
-                      <button
-                        type="button"
-                        disabled={busy || selectedTargetSeatNo === null}
-                        onClick={() =>
-                          sendRoomAction({
-                            type: "MATCH_COMMAND",
-                            command: {
-                              type: "BODYGUARD_PROTECT",
-                              targetSeatNo: selectedTargetSeatNo,
-                            },
-                          })
-                        }
-                        className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow transition cursor-pointer disabled:opacity-40"
-                      >
-                        🛡️{" "}
-                        {selectedTargetSeatNo
-                          ? `Bảo vệ Ghế #${selectedTargetSeatNo}`
-                          : "Chọn 1 ghế trên Canvas để bảo vệ"}
-                      </button>
-                    )}
-
-                  {/* WitchStep Actions (Supports combining Heal AND Poison in the same night) */}
-                  {pv.step === "WitchStep" &&
-                    pv.myAlive &&
-                    pv.myRole === "Witch" &&
-                    !pv.hasSubmittedCurrentStep && (
-                      <>
-                        {pv.witchState?.healAvailable &&
-                          pv.witchState.pendingWolfVictimSeatNo !== null && (
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() => setWitchWantHeal((v) => !v)}
-                              className={`rounded-xl px-3.5 py-2 text-xs font-bold transition cursor-pointer border ${
-                                witchWantHeal
-                                  ? "bg-emerald-600 text-white border-emerald-400"
-                                  : "bg-emerald-950/60 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900/60"
-                              }`}
-                            >
-                              {witchWantHeal ? "✓ " : "💚 "}
-                              Cứu Ghế #{pv.witchState.pendingWolfVictimSeatNo}
-                            </button>
-                          )}
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() =>
-                            sendRoomAction({
-                              type: "MATCH_COMMAND",
-                              command: {
-                                type: "WITCH_ACT",
-                                useHeal: witchWantHeal,
-                                poisonTargetSeatNo:
-                                  pv.witchState?.poisonAvailable
-                                    ? selectedTargetSeatNo
-                                    : null,
-                              },
-                            })
-                          }
-                          className="rounded-xl bg-purple-600 hover:bg-purple-500 px-4 py-2 text-xs font-bold text-white transition cursor-pointer"
-                        >
-                          🧪 Xác nhận Phù Thủy (
-                          {witchWantHeal ? "Có Cứu" : "Không Cứu"}
-                          {pv.witchState?.poisonAvailable &&
-                          selectedTargetSeatNo !== null
-                            ? ` + Độc Ghế #${selectedTargetSeatNo}`
-                            : ""}
-                          )
-                        </button>
-                      </>
-                    )}
-
-                  {/* HunterRevengeStep Actions */}
-                  {pv.step === "HunterRevengeStep" &&
-                    pv.activeHunterSeatNo === snapshot?.viewerSeatNo && (
-                      <>
-                        <button
-                          type="button"
-                          disabled={busy || selectedTargetSeatNo === null}
-                          onClick={() =>
-                            sendRoomAction({
-                              type: "MATCH_COMMAND",
-                              command: {
-                                type: "HUNTER_SHOOT",
-                                targetSeatNo: selectedTargetSeatNo,
-                              },
-                            })
-                          }
-                          className="rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2 text-xs font-bold text-slate-950 transition cursor-pointer disabled:opacity-40"
-                        >
-                          🏹{" "}
-                          {selectedTargetSeatNo
-                            ? `Nổ súng bắn Ghế #${selectedTargetSeatNo}!`
-                            : "Chọn ghế trên Canvas để bắn"}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() =>
-                            sendRoomAction({
-                              type: "MATCH_COMMAND",
-                              command: {
-                                type: "HUNTER_SHOOT",
-                                targetSeatNo: null,
-                              },
-                            })
-                          }
-                          className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 transition cursor-pointer"
-                        >
-                          Không nổ súng
-                        </button>
-                      </>
-                    )}
-
-                  {/* DayDiscussionStep Actions */}
-                  {pv.step === "DayDiscussionStep" && pv.myAlive && (
+              <div className="flex flex-wrap items-center gap-2">
+                {snapshot?.isHost && (
+                  <>
                     <button
                       type="button"
-                      disabled={busy || pv.hasSubmittedCurrentStep}
+                      disabled={busy}
+                      onClick={() => sendRoomAction({ type: "ADD_BOT" })}
+                      className="rounded-xl border border-sky-500/40 bg-sky-500/15 hover:bg-sky-500/25 px-3.5 py-2 text-xs font-semibold text-sky-200 transition cursor-pointer disabled:opacity-50"
+                    >
+                      🤖 + Thêm Bot Làng
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy || !snapshot?.configValidation.valid}
+                      onClick={() => sendRoomAction({ type: "START_MATCH" })}
+                      className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-2 text-xs font-bold text-slate-950 shadow-lg transition cursor-pointer disabled:opacity-40"
+                    >
+                      🔥 BẮT ĐẦU VÁN ĐẤU
+                    </button>
+                  </>
+                )}
+                {!snapshot?.isHost && (
+                  <span className="text-xs text-slate-400 italic">
+                    Đang chờ Chủ phòng bắt đầu ván đấu...
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
+                    {pv.phase === "Finished"
+                      ? "Kết quả chung cuộc"
+                      : pv.step === "NightActionStep"
+                        ? "Bước Đêm 1: Hành động bí mật"
+                        : pv.step === "WitchStep"
+                          ? "Bước Đêm 2: Lượt của Phù Thủy"
+                          : pv.step === "HunterRevengeStep"
+                            ? "Phát súng cuối của Thợ Săn"
+                            : pv.step === "DayDiscussionStep"
+                              ? "Ban Ngày: Thảo luận công khai"
+                              : "Ban Ngày: Bỏ phiếu treo cổ"}
+                  </span>
+                  {pv.myRole && (
+                    <span className="rounded-md bg-slate-800 border border-slate-700 px-2 py-0.5 text-xs font-semibold text-sky-300">
+                      Vai của bạn: {ROLE_META[pv.myRole].nameVi}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-300">
+                  {pv.phase === "Finished"
+                    ? pv.winReasonVi
+                    : targetSeatObj
+                      ? `Đang chọn mục tiêu trên Canvas: ${targetSeatObj.displayName}`
+                      : "Chạm trực tiếp vào thẻ người chơi trên bàn Canvas để chọn mục tiêu."}
+                </p>
+              </div>
+
+              {/* Role & Phase Specific Buttons */}
+              <div className="flex flex-wrap items-center gap-2">
+                {pv.step === "NightActionStep" &&
+                  pv.myAlive &&
+                  pv.myRole === "Werewolf" && (
+                    <button
+                      type="button"
+                      disabled={busy || !targetSeatObj}
                       onClick={() =>
                         sendRoomAction({
                           type: "MATCH_COMMAND",
-                          command: { type: "DAY_READY_TO_VOTE" },
+                          command: {
+                            type: "WEREWOLF_VOTE",
+                            targetSeatNo: selectedTargetSeatNo,
+                            lock: true,
+                          },
                         })
                       }
-                      className="rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2 text-xs font-bold text-slate-950 transition cursor-pointer disabled:opacity-50"
+                      className="rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold text-white shadow transition cursor-pointer disabled:opacity-40"
                     >
-                      {pv.hasSubmittedCurrentStep
-                        ? "✓ Đã sẵn sàng bỏ phiếu"
-                        : "🗳️ Sẵn sàng chuyển sang Bỏ phiếu"}
+                      🐺{" "}
+                      {targetSeatObj
+                        ? `Chốt cắn ${targetSeatObj.displayName}`
+                        : "Chọn 1 người trên Canvas để cắn"}
                     </button>
                   )}
 
-                  {/* DayVotingStep Actions */}
-                  {pv.step === "DayVotingStep" && pv.myAlive && (
+                {pv.step === "NightActionStep" &&
+                  pv.myAlive &&
+                  pv.myRole === "Seer" &&
+                  !pv.hasSubmittedCurrentStep && (
+                    <button
+                      type="button"
+                      disabled={busy || !targetSeatObj}
+                      onClick={() =>
+                        sendRoomAction({
+                          type: "MATCH_COMMAND",
+                          command: {
+                            type: "SEER_INSPECT",
+                            targetSeatNo: selectedTargetSeatNo,
+                          },
+                        })
+                      }
+                      className="rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-2 text-xs font-bold text-white shadow transition cursor-pointer disabled:opacity-40"
+                    >
+                      🔮{" "}
+                      {targetSeatObj
+                        ? `Soi danh tính ${targetSeatObj.displayName}`
+                        : "Chọn 1 người trên Canvas để soi"}
+                    </button>
+                  )}
+
+                {pv.step === "NightActionStep" &&
+                  pv.myAlive &&
+                  pv.myRole === "Bodyguard" &&
+                  !pv.hasSubmittedCurrentStep && (
+                    <button
+                      type="button"
+                      disabled={busy || !targetSeatObj}
+                      onClick={() =>
+                        sendRoomAction({
+                          type: "MATCH_COMMAND",
+                          command: {
+                            type: "BODYGUARD_PROTECT",
+                            targetSeatNo: selectedTargetSeatNo,
+                          },
+                        })
+                      }
+                      className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow transition cursor-pointer disabled:opacity-40"
+                    >
+                      🛡️{" "}
+                      {targetSeatObj
+                        ? `Bảo vệ ${targetSeatObj.displayName}`
+                        : "Chọn 1 người trên Canvas để bảo vệ"}
+                    </button>
+                  )}
+
+                {pv.step === "WitchStep" &&
+                  pv.myAlive &&
+                  pv.myRole === "Witch" &&
+                  !pv.hasSubmittedCurrentStep && (
                     <>
+                      {pv.witchState?.healAvailable && witchVictimObj && (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => setWitchWantHeal((v) => !v)}
+                          className={`rounded-xl px-3.5 py-2 text-xs font-bold transition cursor-pointer border ${
+                            witchWantHeal
+                              ? "bg-emerald-600 text-white border-emerald-400"
+                              : "bg-emerald-950/60 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900/60"
+                          }`}
+                        >
+                          {witchWantHeal ? "✓ " : "💚 "}
+                          Cứu {witchVictimObj.displayName}
+                        </button>
+                      )}
                       <button
                         type="button"
-                        disabled={busy || selectedTargetSeatNo === null}
+                        disabled={busy}
                         onClick={() =>
                           sendRoomAction({
                             type: "MATCH_COMMAND",
                             command: {
-                              type: "DAY_VOTE",
+                              type: "WITCH_ACT",
+                              useHeal: witchWantHeal,
+                              poisonTargetSeatNo:
+                                pv.witchState?.poisonAvailable
+                                  ? selectedTargetSeatNo
+                                  : null,
+                            },
+                          })
+                        }
+                        className="rounded-xl bg-purple-600 hover:bg-purple-500 px-4 py-2 text-xs font-bold text-white transition cursor-pointer"
+                      >
+                        🧪 Xác nhận Phù Thủy (
+                        {witchWantHeal ? "Có Cứu" : "Không Cứu"}
+                        {pv.witchState?.poisonAvailable && targetSeatObj
+                          ? ` + Độc ${targetSeatObj.displayName}`
+                          : ""}
+                        )
+                      </button>
+                    </>
+                  )}
+
+                {pv.step === "HunterRevengeStep" &&
+                  pv.activeHunterSeatNo === snapshot?.viewerSeatNo && (
+                    <>
+                      <button
+                        type="button"
+                        disabled={busy || !targetSeatObj}
+                        onClick={() =>
+                          sendRoomAction({
+                            type: "MATCH_COMMAND",
+                            command: {
+                              type: "HUNTER_SHOOT",
                               targetSeatNo: selectedTargetSeatNo,
                             },
                           })
                         }
-                        className="rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold text-white transition cursor-pointer disabled:opacity-40"
+                        className="rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2 text-xs font-bold text-slate-950 transition cursor-pointer disabled:opacity-40"
                       >
-                        ⚖️{" "}
-                        {selectedTargetSeatNo
-                          ? `Bầu treo cổ Ghế #${selectedTargetSeatNo}`
-                          : "Chọn 1 ghế trên Canvas để bỏ phiếu"}
+                        🏹{" "}
+                        {targetSeatObj
+                          ? `Nổ súng bắn ${targetSeatObj.displayName}!`
+                          : "Chọn người trên Canvas để bắn"}
                       </button>
                       <button
                         type="button"
@@ -659,45 +639,114 @@ function RoomPageContent({
                           sendRoomAction({
                             type: "MATCH_COMMAND",
                             command: {
-                              type: "DAY_VOTE",
-                              targetSeatNo: "abstain",
+                              type: "HUNTER_SHOOT",
+                              targetSeatNo: null,
                             },
                           })
                         }
                         className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 transition cursor-pointer"
                       >
-                        🏳️ Bỏ phiếu trắng (Abstain)
+                        Không nổ súng
                       </button>
                     </>
                   )}
 
-                  {/* Finished / Rematch Actions */}
-                  {pv.phase === "Finished" && snapshot?.isHost && (
+                {pv.step === "DayDiscussionStep" && pv.myAlive && (
+                  <button
+                    type="button"
+                    disabled={busy || pv.hasSubmittedCurrentStep}
+                    onClick={() =>
+                      sendRoomAction({
+                        type: "MATCH_COMMAND",
+                        command: { type: "DAY_READY_TO_VOTE" },
+                      })
+                    }
+                    className="rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2 text-xs font-bold text-slate-950 transition cursor-pointer disabled:opacity-50"
+                  >
+                    {pv.hasSubmittedCurrentStep
+                      ? "✓ Đã sẵn sàng bỏ phiếu"
+                      : "🗳️ Sẵn sàng chuyển sang Bỏ phiếu"}
+                  </button>
+                )}
+
+                {pv.step === "DayVotingStep" && pv.myAlive && (
+                  <>
+                    <button
+                      type="button"
+                      disabled={busy || !targetSeatObj}
+                      onClick={() =>
+                        sendRoomAction({
+                          type: "MATCH_COMMAND",
+                          command: {
+                            type: "DAY_VOTE",
+                            targetSeatNo: selectedTargetSeatNo,
+                            lock: true,
+                          },
+                        })
+                      }
+                      className="rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold text-white transition cursor-pointer disabled:opacity-40"
+                    >
+                      ⚖️{" "}
+                      {targetSeatObj
+                        ? `Chốt treo cổ ${targetSeatObj.displayName}`
+                        : "Chọn 1 người trên Canvas để bỏ phiếu"}
+                    </button>
                     <button
                       type="button"
                       disabled={busy}
-                      onClick={() => sendRoomAction({ type: "REMATCH" })}
-                      className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-2 text-xs font-bold text-slate-950 shadow-lg transition cursor-pointer"
+                      onClick={() =>
+                        sendRoomAction({
+                          type: "MATCH_COMMAND",
+                          command: {
+                            type: "DAY_VOTE",
+                            targetSeatNo: "abstain",
+                            lock: true,
+                          },
+                        })
+                      }
+                      className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 transition cursor-pointer"
                     >
-                      🔄 Chơi Ván Mới (Về Sảnh Chờ)
+                      🏳️ Bỏ phiếu trắng (Abstain)
                     </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
+                  </>
+                )}
 
-        {/* Right 4 Columns: HTML HUD Overlay for Vietnamese IME Channel Chat, Match Events & Cartridge Config */}
-        <aside className="lg:col-span-4 flex flex-col rounded-2xl border border-slate-800 bg-slate-900/90 shadow-xl overflow-hidden h-[560px] lg:h-auto">
-          {/* HUD Top Tab Switcher */}
-          <div className="grid grid-cols-3 border-b border-slate-800 bg-slate-950/60 text-xs font-semibold">
+                {pv.phase === "Finished" && snapshot?.isHost && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => sendRoomAction({ type: "REMATCH" })}
+                    className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-2 text-xs font-bold text-slate-950 shadow-lg transition cursor-pointer"
+                  >
+                    🔄 Chơi Ván Mới (Về Sảnh Chờ)
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Slide-Over Right Drawer: Kênh Chat & Nhật Ký */}
+      {drawerOpen && (
+        <div
+          onClick={() => setDrawerOpen(false)}
+          className="fixed inset-0 bg-slate-950/40 backdrop-blur-[1px] z-40"
+        />
+      )}
+      <aside
+        className={`fixed top-0 right-0 h-full w-full max-w-md z-50 border-l border-slate-800 bg-slate-900/95 backdrop-blur-md shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+          drawerOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/70 px-4 py-3">
+          <div className="flex items-center gap-2 text-xs font-bold">
             <button
               type="button"
-              onClick={() => setActiveTab("chat")}
-              className={`py-3 text-center transition cursor-pointer ${
-                activeTab === "chat"
-                  ? "border-b-2 border-amber-400 text-amber-300 bg-slate-900"
+              onClick={() => setDrawerTab("chat")}
+              className={`rounded-lg px-3 py-1.5 transition cursor-pointer ${
+                drawerTab === "chat"
+                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
@@ -705,179 +754,182 @@ function RoomPageContent({
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab("events")}
-              className={`py-3 text-center transition cursor-pointer ${
-                activeTab === "events"
-                  ? "border-b-2 border-amber-400 text-amber-300 bg-slate-900"
+              onClick={() => setDrawerTab("events")}
+              className={`rounded-lg px-3 py-1.5 transition cursor-pointer ${
+                drawerTab === "events"
+                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
               📜 Nhật Ký ({snapshot?.events.length ?? 0})
             </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("config")}
-              className={`py-3 text-center transition cursor-pointer ${
-                activeTab === "config"
-                  ? "border-b-2 border-amber-400 text-amber-300 bg-slate-900"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              ⚙️ Cấu Hình Vai
-            </button>
           </div>
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(false)}
+            className="rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2.5 py-1 text-xs font-bold text-slate-300 cursor-pointer"
+          >
+            Đóng ✕
+          </button>
+        </div>
 
-          {/* Tab 1: Dynamic Gated Channel Chat */}
-          {activeTab === "chat" && (
-            <div className="flex-1 flex flex-col min-h-0">
-              {/* Channel selector pills */}
-              <div className="flex items-center gap-1.5 px-3 py-2 border-b border-slate-800/80 bg-slate-950/30 overflow-x-auto">
-                {(snapshot?.channels.length
-                  ? snapshot.channels
-                  : [
-                      {
-                        channelId: "village" as ChannelId,
-                        label: "Làng (Công khai)",
-                        canRead: true,
-                        canWrite: false,
-                      },
-                    ]
-                ).map((ch) => (
-                  <button
-                    key={ch.channelId}
-                    type="button"
-                    onClick={() => setActiveChannelId(ch.channelId)}
-                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
-                      activeChannelId === ch.channelId
-                        ? ch.channelId === "werewolf"
-                          ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
-                          : ch.channelId === "graveyard"
-                            ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
-                            : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
-                        : "bg-slate-800/70 text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    {ch.channelId === "werewolf"
-                      ? "🐺 "
-                      : ch.channelId === "graveyard"
-                        ? "🪦 "
-                        : "🏡 "}
-                    {ch.label}
-                  </button>
-                ))}
-              </div>
+        {drawerTab === "chat" ? (
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex items-center gap-1.5 px-3 py-2 border-b border-slate-800/80 bg-slate-950/30 overflow-x-auto">
+              {(snapshot?.channels.length
+                ? snapshot.channels
+                : [
+                    {
+                      channelId: "village" as ChannelId,
+                      label: "Làng (Công khai)",
+                      canRead: true,
+                      canWrite: false,
+                    },
+                  ]
+              ).map((ch) => (
+                <button
+                  key={ch.channelId}
+                  type="button"
+                  onClick={() => setActiveChannelId(ch.channelId)}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+                    activeChannelId === ch.channelId
+                      ? ch.channelId === "werewolf"
+                        ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                        : ch.channelId === "graveyard"
+                          ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
+                          : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                      : "bg-slate-800/70 text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  {ch.channelId === "werewolf"
+                    ? "🐺 "
+                    : ch.channelId === "graveyard"
+                      ? "🪦 "
+                      : "🏡 "}
+                  {ch.label}
+                </button>
+              ))}
+            </div>
 
-              {/* Message Feed */}
-              <div className="flex-1 overflow-y-auto p-3 space-y-2.5 text-xs">
-                {channelMessages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 px-4">
-                    <p className="font-medium">
-                      Chưa có tin nhắn trong kênh này.
-                    </p>
-                    <p className="text-[11px] mt-1">
-                      {isLobby
-                        ? "Bắt đầu ván đấu để mở kênh thảo luận theo pha Ngày/Đêm."
-                        : activeChannelPerm?.canWrite
-                          ? "Hãy gửi tin nhắn đầu tiên để thảo luận!"
-                          : "Kênh này hiện đang khoá ghi ở pha hiện tại."}
-                    </p>
-                  </div>
-                ) : (
-                  channelMessages.map((msg) => {
-                    const isMine = msg.senderSeatNo === snapshot?.viewerSeatNo;
-                    return (
+            <div className="flex-1 overflow-y-auto p-3.5 space-y-2.5 text-xs">
+              {channelMessages.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 px-4">
+                  <p className="font-medium">
+                    Chưa có tin nhắn trong kênh này.
+                  </p>
+                  <p className="text-[11px] mt-1">
+                    {isLobby
+                      ? "Bắt đầu ván đấu để mở kênh thảo luận theo pha Ngày/Đêm."
+                      : activeChannelPerm?.canWrite
+                        ? "Hãy gửi tin nhắn đầu tiên để thảo luận!"
+                        : "Kênh này hiện đang khoá ghi ở pha hiện tại."}
+                  </p>
+                </div>
+              ) : (
+                channelMessages.map((msg) => {
+                  const isMine = msg.senderSeatNo === snapshot?.viewerSeatNo;
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`flex flex-col ${
+                        isMine ? "items-end" : "items-start"
+                      }`}
+                    >
+                      <span className="text-[10px] text-slate-400 mb-0.5 px-1">
+                        {msg.senderName}
+                      </span>
                       <div
-                        key={msg.id}
-                        className={`flex flex-col ${
-                          isMine ? "items-end" : "items-start"
+                        className={`rounded-xl px-3 py-2 max-w-[85%] break-words ${
+                          isMine
+                            ? "bg-amber-500/20 border border-amber-500/30 text-amber-100"
+                            : "bg-slate-800 border border-slate-700 text-slate-100"
                         }`}
                       >
-                        <span className="text-[10px] text-slate-400 mb-0.5 px-1">
-                          Ghế #{msg.senderSeatNo} • {msg.senderName}
-                        </span>
-                        <div
-                          className={`rounded-xl px-3 py-2 max-w-[85%] break-words ${
-                            isMine
-                              ? "bg-amber-500/20 border border-amber-500/30 text-amber-100"
-                              : "bg-slate-800 border border-slate-700 text-slate-100"
-                          }`}
-                        >
-                          {msg.content}
-                        </div>
+                        {msg.content}
                       </div>
-                    );
-                  })
-                )}
-                <div ref={chatEndRef} />
-              </div>
-
-              {/* Vietnamese IME Native HTML Form */}
-              <form
-                onSubmit={handleSendChat}
-                className="p-2.5 border-t border-slate-800 bg-slate-950/70 flex items-center gap-2"
-              >
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  disabled={!activeChannelPerm?.canWrite || busy}
-                  placeholder={
-                    activeChannelPerm?.canWrite
-                      ? `Nhập tin nhắn vào kênh ${activeChannelPerm.label}...`
-                      : "Kênh chat đang khoá ở pha này..."
-                  }
-                  className="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none disabled:opacity-50"
-                />
-                <button
-                  type="submit"
-                  disabled={
-                    !activeChannelPerm?.canWrite || !chatInput.trim() || busy
-                  }
-                  className="rounded-xl bg-amber-500 hover:bg-amber-400 px-3.5 py-2 text-xs font-bold text-slate-950 transition cursor-pointer disabled:opacity-40"
-                >
-                  Gửi
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* Tab 2: Match Events Log */}
-          {activeTab === "events" && (
-            <div className="flex-1 overflow-y-auto p-3 space-y-2 text-xs">
-              {!snapshot?.events.length ? (
-                <p className="text-slate-500 text-center py-12">
-                  Nhật ký sự kiện của ván đấu sẽ hiển thị tại đây.
-                </p>
-              ) : (
-                snapshot.events.map((ev) => (
-                  <div
-                    key={ev.id}
-                    className="rounded-xl border border-slate-800 bg-slate-950/60 p-2.5 text-slate-200"
-                  >
-                    <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
-                      <span className="font-mono text-amber-400/90">
-                        {ev.eventType}
-                      </span>
-                      <span>
-                        {new Date(ev.createdAt).toLocaleTimeString("vi-VN")}
-                      </span>
                     </div>
-                    <p className="leading-relaxed">{ev.message}</p>
-                  </div>
-                ))
+                  );
+                })
               )}
+              <div ref={chatEndRef} />
             </div>
-          )}
 
-          {/* Tab 3: Cartridge Role & Rule Configuration */}
-          {activeTab === "config" && (
-            <div className="flex-1 overflow-y-auto p-3.5 space-y-3 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-200">
-                  Cơ cấu Vai trò ({snapshot?.seats.length ?? 0} ghế)
+            <form
+              onSubmit={handleSendChat}
+              className="p-3 border-t border-slate-800 bg-slate-950/80 flex items-center gap-2"
+            >
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                disabled={!activeChannelPerm?.canWrite || busy}
+                placeholder={
+                  activeChannelPerm?.canWrite
+                    ? `Nhập tin nhắn vào kênh ${activeChannelPerm.label}...`
+                    : "Kênh chat đang khoá ở pha này..."
+                }
+                className="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={
+                  !activeChannelPerm?.canWrite || !chatInput.trim() || busy
+                }
+                className="rounded-xl bg-amber-500 hover:bg-amber-400 px-3.5 py-2 text-xs font-bold text-slate-950 transition cursor-pointer disabled:opacity-40"
+              >
+                Gửi
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto p-3.5 space-y-2 text-xs">
+            {!snapshot?.events.length ? (
+              <p className="text-slate-500 text-center py-12">
+                Nhật ký sự kiện của ván đấu sẽ hiển thị tại đây.
+              </p>
+            ) : (
+              snapshot.events.map((ev) => (
+                <div
+                  key={ev.id}
+                  className="rounded-xl border border-slate-800 bg-slate-950/60 p-2.5 text-slate-200"
+                >
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                    <span className="font-mono text-amber-400/90">
+                      {ev.eventType}
+                    </span>
+                    <span>
+                      {new Date(ev.createdAt).toLocaleTimeString("vi-VN")}
+                    </span>
+                  </div>
+                  <p className="leading-relaxed">{ev.message}</p>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </aside>
+
+      {/* Gear Icon Configuration Modal */}
+      {configModalOpen && (
+        <div
+          onClick={() => setConfigModalOpen(false)}
+          className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg max-h-[85vh] rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl flex flex-col overflow-hidden text-xs"
+          >
+            <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/70 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <span className="text-base">⚙️</span>
+                <span className="font-bold text-sm text-white">
+                  Cấu Hình Vai Trò & Thời Gian ({snapshot?.seats.length ?? 0}{" "}
+                  người chơi)
                 </span>
+              </div>
+              <div className="flex items-center gap-2">
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                  className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
                     snapshot?.configValidation.valid
                       ? "bg-emerald-500/20 text-emerald-300"
                       : "bg-rose-500/20 text-rose-300"
@@ -885,8 +937,17 @@ function RoomPageContent({
                 >
                   {snapshot?.configValidation.valid ? "Hợp lệ" : "Chưa khớp"}
                 </span>
+                <button
+                  type="button"
+                  onClick={() => setConfigModalOpen(false)}
+                  className="rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2.5 py-1 font-bold text-slate-300 cursor-pointer"
+                >
+                  ✕
+                </button>
               </div>
+            </div>
 
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
               <div className="space-y-2">
                 {WEREWOLF_ROLES.map((role) => {
                   const meta = ROLE_META[role];
@@ -945,7 +1006,6 @@ function RoomPageContent({
                 })}
               </div>
 
-              {/* Reveal Role on Death Toggle & Phase Timers */}
               {snapshot?.room.config && (
                 <div className="space-y-2.5">
                   <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 flex items-center justify-between">
@@ -982,7 +1042,6 @@ function RoomPageContent({
                     </button>
                   </div>
 
-                  {/* Phase Timer Durations */}
                   <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 space-y-2">
                     <p className="font-semibold text-slate-200">
                       Thời gian mỗi pha (`Phase Timer`)
@@ -996,8 +1055,7 @@ function RoomPageContent({
                         ["hunterRevengeSeconds", "Thợ Săn Bắn"],
                       ] as const
                     ).map(([key, label]) => {
-                      const val =
-                        snapshot.room.config.timers?.[key] ?? 30;
+                      const val = snapshot.room.config.timers?.[key] ?? 30;
                       const canEdit = isLobby && snapshot.isHost;
                       return (
                         <div
@@ -1057,9 +1115,9 @@ function RoomPageContent({
                 </div>
               )}
             </div>
-          )}
-        </aside>
-      </main>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
