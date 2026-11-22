@@ -121,8 +121,7 @@ export function WerewolfCanvas({
         (playerView.phase === "DayPhase" ||
           playerView.step === "HunterRevengeStep" ||
           playerView.phase === "Finished") &&
-        playerView.lastDawnDeaths.length > 0 &&
-        playerView.lastExecutedSeatNo === null
+        playerView.lastDawnDeaths.length > 0
       ) {
         const dawnKey = `${playerView.cycle}-${playerView.lastDawnDeaths.join(",")}`;
         if (lastDawnKeyRef.current !== dawnKey) {

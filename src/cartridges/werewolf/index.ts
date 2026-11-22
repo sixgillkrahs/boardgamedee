@@ -560,7 +560,6 @@ function resolveDawn(
     seats: updatedSeats,
     lastProtectedSeatNoByBodyguard: updatedLastProtected,
     lastDawnDeaths: deadSeatNos,
-    lastExecutedSeatNo: null,
   };
 
   return transitionAfterMortality(
@@ -628,21 +627,24 @@ function resolveDayVoting(
   priorEvents: MatchEventRecord[]
 ): CartridgeTransitionResult<WerewolfMatchState> {
   const living = getLivingSeats(state);
-  const tally = new Map<number | "abstain", number>();
+  const validLivingNos = new Set(living.map((s) => s.seatNo));
+  const tally = new Map<number, number>();
 
   for (const seat of living) {
-    const choice = state.dayVotes[seat.seatNo] ?? "abstain";
-    tally.set(choice, (tally.get(choice) ?? 0) + 1);
+    const choice = state.dayVotes[seat.seatNo];
+    if (typeof choice === "number" && validLivingNos.has(choice)) {
+      tally.set(choice, (tally.get(choice) ?? 0) + 1);
+    }
   }
 
-  let topChoice: number | "abstain" = "abstain";
-  let topCount = -1;
+  let topSeatNo: number | null = null;
+  let topCount = 0;
   let isTie = false;
 
-  for (const [choice, count] of tally.entries()) {
+  for (const [targetSeatNo, count] of tally.entries()) {
     if (count > topCount) {
       topCount = count;
-      topChoice = choice;
+      topSeatNo = targetSeatNo;
       isTie = false;
     } else if (count === topCount) {
       isTie = true;
@@ -651,14 +653,14 @@ function resolveDayVoting(
 
   const events: MatchEventRecord[] = [...priorEvents];
 
-  if (isTie || topChoice === "abstain") {
+  if (topSeatNo === null || isTie) {
     events.push({
       eventType: "DAY_VOTE_NO_EXECUTION",
       message: isTie
-        ? "Kết quả bỏ phiếu hòa nhau! Không ai bị treo cổ hôm nay."
-        : "Đa số chọn Bỏ phiếu trắng! Không ai bị treo cổ hôm nay.",
+        ? `Kết quả bỏ phiếu hòa nhau (${topCount} phiếu)! Không ai bị treo cổ hôm nay.`
+        : "Không có ai bị bỏ phiếu treo cổ hôm nay.",
       visibleToSeatNos: "all",
-      payload: { isTie, topChoice },
+      payload: { isTie, topSeatNo },
     });
 
     const noExecState: WerewolfMatchState = {
@@ -668,7 +670,7 @@ function resolveDayVoting(
     return enterNightPhase(noExecState, state.cycle + 1, nowMs, events);
   }
 
-  const executedSeatNo = topChoice;
+  const executedSeatNo = topSeatNo;
   const executedSeat = state.seats.find((s) => s.seatNo === executedSeatNo);
   const newlyDeadHunters: number[] = [];
 
@@ -1756,11 +1758,9 @@ export const werewolfCartridge: GameCartridge<
           const alreadyLocked = Boolean(state.dayVoteSubmitted?.[bot.seatNo]);
 
           if (!alreadyLocked && (allHumansLocked || !alreadyAimed)) {
-            // Bots publicly show their vote (either abstain or a suspect seat) while humans are still deciding, and only lock once all humans have locked!
-            const suspect = livingSeats.find((s) => s.seatNo !== bot.seatNo);
+            // Bots default to abstain so human players' votes determine who gets executed without random bot tie interference
             const botChoice: number | "abstain" =
-              state.dayVotes[bot.seatNo] ??
-              (bot.seatNo % 2 === 0 && suspect ? suspect.seatNo : "abstain");
+              state.dayVotes[bot.seatNo] ?? "abstain";
 
             const res = this.reduce({
               state,

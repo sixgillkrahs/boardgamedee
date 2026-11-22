@@ -385,6 +385,28 @@ describe("Werewolf Cartridge - Seam 1 (GameCartridge Interface)", () => {
     expect(cur.step).toBe("NightActionStep");
     expect(cur.lastExecutedSeatNo).toBeNull();
 
+    // Plurality execution even when most players abstain: if Seat 1 votes Seat 2 (1 vote) and everyone else abstains, Seat 2 has the most votes and IS executed!
+    let execTest = s5;
+    execTest = werewolfCartridge.reduce({
+      state: execTest,
+      actorSeatNo: 1,
+      command: { type: "DAY_VOTE", targetSeatNo: 2, lock: true },
+      nowMs: 66_000,
+    }).state;
+    for (const seatNo of [2, 3, 4, 5, 6]) {
+      execTest = werewolfCartridge.reduce({
+        state: execTest,
+        actorSeatNo: seatNo,
+        command: { type: "DAY_VOTE", targetSeatNo: "abstain", lock: true },
+        nowMs: 66_200,
+      }).state;
+    }
+    expect(execTest.lastExecutedSeatNo).toBe(2);
+    expect(execTest.seats.find((s) => s.seatNo === 2)?.alive).toBe(false);
+    expect(execTest.seats.find((s) => s.seatNo === 2)?.deathCause).toBe(
+      "day_execution"
+    );
+
     // Night 2: Bodyguard (Seat 4) attempts to protect Seat 3 again -> rejected!
     expect(() =>
       werewolfCartridge.reduce({
