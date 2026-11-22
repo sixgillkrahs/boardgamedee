@@ -143,6 +143,78 @@ describe("Werewolf Cartridge - Seam 1 (GameCartridge Interface)", () => {
     ).toBeNull();
   });
 
+  it("enforces Type A Werewolf pack consensus: tied wolf votes do not end NightActionStep early, result in no kill on timeout, and advance once a wolf switches to break the tie", () => {
+    const seats = makeSeats(6);
+    const twoWolfConfig: WerewolfConfig = {
+      ...SIX_PLAYER_CONFIG,
+      roleCounts: {
+        Werewolf: 2,
+        Villager: 2,
+        Seer: 1,
+        Bodyguard: 1,
+        Witch: 0,
+        Hunter: 0,
+      },
+    };
+    // Seat 1: Werewolf, Seat 2: Werewolf, Seat 3: Villager, Seat 4: Villager, Seat 5: Seer, Seat 6: Bodyguard
+    const { state: s0 } = werewolfCartridge.createInitialState({
+      config: twoWolfConfig,
+      seats,
+      nowMs: 1_000,
+      rng: () => 0.999,
+    });
+
+    // Seer (Seat 5) and Bodyguard (Seat 6) finish their night actions
+    const { state: s1 } = werewolfCartridge.reduce({
+      state: s0,
+      actorSeatNo: 5,
+      command: { type: "SEER_INSPECT", targetSeatNo: 3 },
+      nowMs: 1_500,
+    });
+    const { state: s2 } = werewolfCartridge.reduce({
+      state: s1,
+      actorSeatNo: 6,
+      command: { type: "BODYGUARD_PROTECT", targetSeatNo: 5 },
+      nowMs: 1_800,
+    });
+
+    // Werewolf 1 locks Seat 3, Werewolf 2 locks Seat 4 (1-1 tie!)
+    const { state: s3 } = werewolfCartridge.reduce({
+      state: s2,
+      actorSeatNo: 1,
+      command: { type: "WEREWOLF_VOTE", targetSeatNo: 3, lock: true },
+      nowMs: 2_000,
+    });
+    const { state: s4 } = werewolfCartridge.reduce({
+      state: s3,
+      actorSeatNo: 2,
+      command: { type: "WEREWOLF_VOTE", targetSeatNo: 4, lock: true },
+      nowMs: 2_200,
+    });
+
+    // Must NOT advance early because the pack is tied 1-1!
+    expect(s4.phase).toBe("NightPhase");
+    expect(s4.step).toBe("NightActionStep");
+
+    // Branch A: If Phase Timer expires while still tied 1-1 -> no one is bitten!
+    const { state: timeoutDawn } = werewolfCartridge.onPhaseTimeout({
+      state: s4,
+      nowMs: 35_000,
+    });
+    expect(timeoutDawn.phase).toBe("DayPhase");
+    expect(timeoutDawn.lastDawnDeaths).toEqual([]);
+
+    // Branch B: If Werewolf 2 changes their vote to Seat 3 before timeout -> consensus reached, Seat 3 dies at dawn!
+    const { state: consensusDawn } = werewolfCartridge.reduce({
+      state: s4,
+      actorSeatNo: 2,
+      command: { type: "WEREWOLF_VOTE", targetSeatNo: 3, lock: true },
+      nowMs: 3_000,
+    });
+    expect(consensusDawn.phase).toBe("DayPhase");
+    expect(consensusDawn.lastDawnDeaths).toEqual([3]);
+  });
+
   it("handles NightActionStep (Werewolf, Seer, Bodyguard) and advances to WitchStep where Witch can self-heal and poison", () => {
     const { state: s0 } = werewolfCartridge.createInitialState({
       config: SIX_PLAYER_CONFIG,

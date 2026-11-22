@@ -286,20 +286,28 @@ function resolvePluralityWolfTarget(
 
   let bestTarget: number | null = null;
   let bestCount = 0;
+  let isTie = false;
+
   for (const [target, count] of counts.entries()) {
     if (count > bestCount) {
       bestCount = count;
       bestTarget = target;
+      isTie = false;
+    } else if (count === bestCount) {
+      isTie = true;
     }
   }
-  return bestTarget;
+
+  return isTie ? null : bestTarget;
 }
 
 function isNightActionStepComplete(state: WerewolfMatchState): boolean {
+  const livingSeats = getLivingSeats(state);
   const livingWolves = getLivingSeatsByRole(state, "Werewolf");
   const allWolvesDone =
     livingWolves.length === 0 ||
-    livingWolves.every((w) => state.werewolfSubmitted[w.seatNo]);
+    (livingWolves.every((w) => state.werewolfSubmitted[w.seatNo]) &&
+      resolvePluralityWolfTarget(state.werewolfVotes, livingSeats) !== null);
 
   const livingSeers = getLivingSeatsByRole(state, "Seer");
   const seerDone = livingSeers.length === 0 || state.seerSubmitted;
@@ -1582,8 +1590,16 @@ export const werewolfCartridge: GameCartridge<
             const alreadyLocked = Boolean(state.werewolfSubmitted[bot.seatNo]);
 
             if (!alreadyLocked && (allHumanWolvesLocked || !alreadyAimed)) {
+              const humanChosenTarget = humanWolves
+                .map((hw) => state.werewolfVotes[hw.seatNo])
+                .find((t) => typeof t === "number");
               const targets = livingSeats.filter((s) => s.role !== "Werewolf");
-              const target = targets[0] ?? livingSeats[0];
+              const target =
+                (humanChosenTarget
+                  ? livingSeats.find((s) => s.seatNo === humanChosenTarget)
+                  : undefined) ??
+                targets[0] ??
+                livingSeats[0];
               if (target) {
                 const res = this.reduce({
                   state,
