@@ -5,7 +5,12 @@ import {
 } from "@/cartridges/coup";
 
 /**
- * Draws a single 2D metallic gold coin at (cx, cy) with radius `r` using pure 2D Canvas primitives.
+ * Draws the official Coup octagonal brushed-silver/pewter "1 ISK" metal coin at (cx, cy) with radius `r`
+ * using pure 2D Canvas primitives:
+ * - Regular octagon with flat Top/Bottom/Left/Right edges and brushed steel gradient
+ * - 4 cardinal sets of 3 recessed dark-pewter notches (top, bottom, left, right)
+ * - Central engraved ring with 3 small circular nodes (9h, 3h, 6h) and a larger 12h medallion containing "1"
+ * - Engraved "ƗSK" sci-fi currency lettering across the center
  */
 export function drawCoupCoin2D(
   ctx: CanvasRenderingContext2D,
@@ -16,65 +21,171 @@ export function drawCoupCoin2D(
   ctx.save();
   ctx.translate(cx, cy);
 
-  // Drop shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-  ctx.beginPath();
-  ctx.arc(1, 2, r, 0, Math.PI * 2);
+  const defineOctagonPath = (rad: number) => {
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      // Rotate by 22.5 deg (PI/8) so Top, Right, Bottom, Left are flat edges
+      const ang = (i * Math.PI) / 4 + Math.PI / 8;
+      const px = Math.cos(ang) * rad;
+      const py = Math.sin(ang) * rad;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+  };
+
+  // 1. Drop shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+  ctx.save();
+  ctx.translate(1.2, 2.2);
+  defineOctagonPath(r);
+  ctx.fill();
+  ctx.restore();
+
+  // 2. Outer Dark Pewter Bevel & Brushed Silver-Steel Octagon Body
+  defineOctagonPath(r);
+  const metalGrad = ctx.createLinearGradient(-r, -r, r, r);
+  metalGrad.addColorStop(0, "#eef0f2");
+  metalGrad.addColorStop(0.35, "#c8ccd0");
+  metalGrad.addColorStop(0.7, "#999ea4");
+  metalGrad.addColorStop(1, "#5f6368");
+  ctx.fillStyle = metalGrad;
   ctx.fill();
 
-  // Outer bevelled metallic gold rim
-  const rimGrad = ctx.createLinearGradient(-r, -r, r, r);
-  rimGrad.addColorStop(0, "#fef08a");
-  rimGrad.addColorStop(0.5, "#eab308");
-  rimGrad.addColorStop(1, "#a16207");
-  ctx.fillStyle = rimGrad;
-  ctx.beginPath();
-  ctx.arc(0, 0, r, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.strokeStyle = "#713f12";
-  ctx.lineWidth = Math.max(1, r * 0.1);
+  ctx.strokeStyle = "#272a2e";
+  ctx.lineWidth = Math.max(1, r * 0.09);
   ctx.stroke();
 
-  // Inner recessed coin face
-  const faceR = r * 0.76;
-  const faceGrad = ctx.createRadialGradient(
-    -faceR * 0.25,
-    -faceR * 0.25,
-    faceR * 0.1,
-    0,
-    0,
-    faceR
-  );
-  faceGrad.addColorStop(0, "#fde047");
-  faceGrad.addColorStop(0.7, "#ca8a04");
-  faceGrad.addColorStop(1, "#854d0e");
-  ctx.fillStyle = faceGrad;
-  ctx.beginPath();
-  ctx.arc(0, 0, faceR, 0, Math.PI * 2);
-  ctx.fill();
+  // Clip inside the octagon for brushed-metal texture lines and edge notches
+  ctx.save();
+  defineOctagonPath(r * 0.96);
+  ctx.clip();
 
-  ctx.strokeStyle = "rgba(254, 240, 138, 0.65)";
-  ctx.lineWidth = Math.max(0.8, r * 0.07);
+  // Subtle diagonal brushed-metal scratch lines
+  if (r >= 9) {
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
+    ctx.lineWidth = Math.max(0.5, r * 0.03);
+    for (let s = -4; s <= 4; s++) {
+      const offset = s * r * 0.24;
+      ctx.beginPath();
+      ctx.moveTo(-r + offset, -r);
+      ctx.lineTo(r + offset, r);
+      ctx.stroke();
+    }
+  }
+
+  // 3. Four Sets of 3 Recessed Dark-Pewter Notches along the Top, Right, Bottom, Left flat edges
+  for (let side = 0; side < 4; side++) {
+    ctx.save();
+    ctx.rotate((side * Math.PI) / 2);
+
+    const notchOffsets = [-0.24, 0, 0.24];
+    const notchW = r * 0.14;
+    const notchTopY = -r * 0.92;
+    const notchBotY = -r * 0.62;
+
+    for (const nx of notchOffsets) {
+      const centerX = nx * r;
+      ctx.fillStyle = "#484b50";
+      ctx.strokeStyle = "#26282b";
+      ctx.lineWidth = Math.max(0.6, r * 0.045);
+
+      ctx.beginPath();
+      ctx.moveTo(centerX - notchW * 0.55, notchTopY);
+      ctx.lineTo(centerX + notchW * 0.55, notchTopY);
+      ctx.lineTo(centerX + notchW * 0.44, notchBotY);
+      ctx.lineTo(centerX - notchW * 0.44, notchBotY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 4. Central Engraved Ring (radius ~ 0.45 * r) with 3 Small Circular Nodes (left, right, bottom)
+  const ringR = r * 0.44;
+  const ringCy = r * 0.04;
+  ctx.strokeStyle = "#36393d";
+  ctx.lineWidth = Math.max(0.9, r * 0.065);
+  ctx.beginPath();
+  ctx.arc(0, ringCy, ringR, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Embossed 4-pointed royal diamond star in the center of the coin
-  const starR = r * 0.44;
-  const innerR = r * 0.16;
-  ctx.fillStyle = "#fef9c3";
-  ctx.strokeStyle = "#713f12";
-  ctx.lineWidth = Math.max(0.7, r * 0.06);
+  // 3 small circular nodes at Left (PI), Right (0), and Bottom (PI/2) of the central ring
+  for (const [nx, ny, nr] of [
+    [-ringR, ringCy, r * 0.075],
+    [ringR, ringCy, r * 0.075],
+    [0, ringCy + ringR, r * 0.09],
+  ] as const) {
+    ctx.fillStyle = "#b8bcc2";
+    ctx.strokeStyle = "#36393d";
+    ctx.lineWidth = Math.max(0.8, r * 0.055);
+    ctx.beginPath();
+    ctx.arc(nx, ny, nr, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // 5. Top 12-o'clock Medallion Circle containing the engraved numeral "1"
+  const topMedY = ringCy - ringR * 0.78;
+  const topMedR = r * 0.21;
+  ctx.fillStyle = "#c2c6cc";
+  ctx.strokeStyle = "#2f3236";
+  ctx.lineWidth = Math.max(0.9, r * 0.06);
   ctx.beginPath();
-  for (let i = 0; i < 8; i++) {
-    const ang = (i * Math.PI) / 4 - Math.PI / 2;
-    const rad = i % 2 === 0 ? starR : innerR;
-    const px = Math.cos(ang) * rad;
-    const py = Math.sin(ang) * rad;
-    if (i === 0) ctx.moveTo(px, py);
+  ctx.arc(0, topMedY, topMedR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Vertical flanking hatch lines inside the top "1" medallion
+  if (r >= 10) {
+    ctx.strokeStyle = "#484b50";
+    ctx.lineWidth = Math.max(0.6, r * 0.04);
+    for (const dir of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(dir * topMedR * 0.56, topMedY - topMedR * 0.7);
+      ctx.lineTo(dir * topMedR * 0.56, topMedY + topMedR * 0.7);
+      ctx.stroke();
+    }
+  }
+
+  // Engraved "1" inside the top medallion
+  ctx.fillStyle = "#323539";
+  ctx.font = `900 ${Math.max(5, Math.round(r * 0.27))}px sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("1", 0, topMedY + r * 0.01);
+
+  // 6. Engraved "ƗSK" Currency Text across the middle of the central circle
+  if (r >= 8) {
+    ctx.fillStyle = "#3a3d42";
+    ctx.font = `900 ${Math.max(5, Math.round(r * 0.28))}px sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("ISK", r * 0.02, ringCy + r * 0.08);
+
+    // Horizontal crossbar protruding left from the "I" in "ISK" (matching the "ƗSK" glyph)
+    ctx.strokeStyle = "#3a3d42";
+    ctx.lineWidth = Math.max(0.9, r * 0.065);
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.29, ringCy + r * 0.07);
+    ctx.lineTo(-r * 0.14, ringCy + r * 0.07);
+    ctx.stroke();
+  }
+
+  ctx.restore(); // end octagon clip
+
+  // Subtle top-left metallic highlight edge
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+  ctx.lineWidth = Math.max(0.7, r * 0.045);
+  ctx.beginPath();
+  for (let i = 4; i <= 7; i++) {
+    const ang = (i * Math.PI) / 4 + Math.PI / 8;
+    const px = Math.cos(ang) * (r * 0.94);
+    const py = Math.sin(ang) * (r * 0.94);
+    if (i === 4) ctx.moveTo(px, py);
     else ctx.lineTo(px, py);
   }
-  ctx.closePath();
-  ctx.fill();
   ctx.stroke();
 
   ctx.restore();
@@ -112,28 +223,28 @@ export function drawCoupCoinStack2D(
     ctx.setLineDash([]);
   }
 
-  // Crisp 2D numeric coin count pill below stack
-  const pillW = 42;
+  // Crisp 2D numeric ISK coin count pill below stack
+  const pillW = 46;
   const pillH = 18;
   drawRoundedRect(
     ctx,
     cx - pillW / 2,
-    cy + coinRadius + 4,
+    cy + coinRadius + 5,
     pillW,
     pillH,
     9
   );
   ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
   ctx.fill();
-  ctx.strokeStyle = coins >= 10 ? "#ef4444" : "#f59e0b";
+  ctx.strokeStyle = coins >= 10 ? "#ef4444" : "#94a3b8";
   ctx.lineWidth = 1.2;
   ctx.stroke();
 
-  ctx.fillStyle = coins >= 10 ? "#fca5a5" : "#fde047";
-  ctx.font = "bold 10.5px sans-serif";
+  ctx.fillStyle = coins >= 10 ? "#fca5a5" : "#e2e8f0";
+  ctx.font = "bold 10px sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(`${coins} xu`, cx, cy + coinRadius + 13);
+  ctx.fillText(`${coins} ISK`, cx, cy + coinRadius + 14);
 
   ctx.restore();
 }
