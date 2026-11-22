@@ -64,10 +64,11 @@ function RoomPageContent({
   const [witchWantHeal, setWitchWantHeal] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // Right Slide-over Drawer (Chat & Events) + Header Gear Config Modal
+  // Right Slide-over Drawer (Chat & Events) + Header Gear Config Modal + Info 'i' Rules Modal
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState<"chat" | "events">("chat");
   const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [rulesModalOpen, setRulesModalOpen] = useState(false);
 
   const [activeChannelId, setActiveChannelId] =
     useState<ChannelId>("village");
@@ -273,6 +274,17 @@ function RoomPageContent({
           >
             <span>💬</span>
             <span className="hidden sm:inline">Chat & Nhật Ký</span>
+          </button>
+
+          {/* Info 'i' Button for Viewing Game Rules */}
+          <button
+            type="button"
+            onClick={() => setRulesModalOpen(true)}
+            className="rounded-lg border border-sky-500/40 bg-sky-500/15 hover:bg-sky-500/25 w-8 h-8 flex items-center justify-center font-serif italic font-extrabold text-sm text-sky-300 transition cursor-pointer"
+            title="Xem luật chơi"
+            aria-label="Xem luật chơi"
+          >
+            i
           </button>
 
           {/* Gear Icon Button for Configuration */}
@@ -887,68 +899,6 @@ function RoomPageContent({
                         🔄 Chơi Ván Mới (Về Sảnh Chờ)
                       </button>
                     )}
-
-                    {/* 5. Official Coup 2D Play Summary Table (Matching Reference Card) */}
-                    <div className="mt-2 rounded-xl border border-slate-800 bg-slate-950/80 p-2.5 space-y-1.5">
-                      <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1">
-                        <span>Nhân vật / Action</span>
-                        <span>Hiệu ứng & Chặn</span>
-                      </div>
-
-                      {(
-                        [
-                          {
-                            char: "Duke" as const,
-                            badgeBg: "bg-pink-700/80 border-pink-500/60 text-white",
-                            action: "Tax (+3 xu)",
-                            block: "Chặn Viện Trợ",
-                          },
-                          {
-                            char: "Assassin" as const,
-                            badgeBg: "bg-slate-700/90 border-slate-500/60 text-white",
-                            action: "Ám Sát (-3 xu)",
-                            block: "✕",
-                          },
-                          {
-                            char: "Ambassador" as const,
-                            badgeBg:
-                              "bg-lime-500/85 border-lime-300/70 text-slate-950",
-                            action: "Đổi Bài (2 lá)",
-                            block: "Chặn Cướp Xu",
-                          },
-                          {
-                            char: "Captain" as const,
-                            badgeBg: "bg-sky-600/85 border-sky-400/60 text-white",
-                            action: "Cướp (+2 xu)",
-                            block: "Chặn Cướp Xu",
-                          },
-                          {
-                            char: "Contessa" as const,
-                            badgeBg: "bg-red-700/85 border-red-500/60 text-white",
-                            action: "✕",
-                            block: "Chặn Ám Sát",
-                          },
-                        ] as const
-                      ).map((row) => (
-                        <div
-                          key={row.char}
-                          className="flex items-center justify-between gap-2 text-[11px]"
-                        >
-                          <div
-                            className={`flex items-center gap-1.5 rounded-md border px-2 py-0.5 font-extrabold w-31 shrink-0 ${row.badgeBg}`}
-                          >
-                            <CoupActionIconCanvas kind={row.char} size={18} />
-                            <span className="truncate">{row.char}</span>
-                          </div>
-                          <div className="text-right text-[10.5px] text-slate-300 leading-tight">
-                            <div className="font-semibold text-slate-100">
-                              {row.action}
-                            </div>
-                            <div className="text-slate-400">{row.block}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 </div>
               );
@@ -1664,6 +1614,303 @@ function RoomPageContent({
                   </div>
                 </div>
               )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Info 'i' Game Rules Modal */}
+      {rulesModalOpen && (
+        <div
+          onClick={() => setRulesModalOpen(false)}
+          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-2xl max-h-[88vh] rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl flex flex-col overflow-hidden text-xs"
+          >
+            <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/75 px-4 py-3">
+              <div className="flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-lg border border-sky-500/40 bg-sky-500/15 flex items-center justify-center font-serif italic font-extrabold text-sm text-sky-300">
+                  i
+                </span>
+                <div>
+                  <h2 className="font-bold text-sm text-white">
+                    {isCoup
+                      ? "Luật Chơi Coup: Đảo Chính (3–6 Người Chơi)"
+                      : "Luật Chơi Làng Ma Sói (4–16 Người Chơi)"}
+                  </h2>
+                  <p className="text-[11px] text-slate-400">
+                    {isCoup
+                      ? "Bảng tham chiếu hành động (Play) • Nói dối, Bắt bài & Chặn"
+                      : "Các vai trò, quy trình Đêm/Ngày và điều kiện thắng"}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRulesModalOpen(false)}
+                className="rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2.5 py-1 font-bold text-slate-300 cursor-pointer"
+              >
+                Đóng ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {isCoup ? (
+                <>
+                  {/* 1. Overview & Setup */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-1.5 leading-relaxed text-slate-300">
+                    <p className="font-bold text-amber-300 text-xs">
+                      1. Mục tiêu & Khởi đầu ván đấu
+                    </p>
+                    <p>
+                      • Bộ bài Triều đình gồm <strong>15 lá bài</strong> (5 Nhân
+                      vật × 3 lá mỗi nhân vật). Khi bắt đầu, mỗi người chơi nhận{" "}
+                      <strong>2 lá bài úp</strong> (Quyền lực / Influence) và{" "}
+                      <strong>2 đồng xu `1 ISK`</strong>.
+                    </p>
+                    <p>
+                      • Mỗi khi mất 1 Quyền lực, bạn phải chọn{" "}
+                      <strong>lật ngửa 1 lá bài</strong>. Ai mất cả 2 lá bài sẽ
+                      bị loại. Người cuối cùng còn lá bài úp trên bàn là người
+                      chiến thắng!
+                    </p>
+                  </div>
+
+                  {/* 2. Official PLAY Action Reference Table */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/75 overflow-hidden">
+                    <div className="bg-slate-900/90 px-3.5 py-2.5 border-b border-slate-800 flex items-center justify-between">
+                      <span className="font-extrabold text-amber-300 uppercase tracking-wider">
+                        2. Bảng Tham Chiếu Hành Động (PLAY — Take One Action)
+                      </span>
+                      <span className="text-[11px] text-rose-300 font-semibold">
+                        * Có từ 10+ xu bắt buộc phải Đảo Chính (Coup)
+                      </span>
+                    </div>
+
+                    <div className="divide-y divide-slate-800/80">
+                      <div className="grid grid-cols-12 gap-2 px-3.5 py-2 bg-slate-900/40 font-bold text-[11px] uppercase tracking-wider text-slate-400">
+                        <div className="col-span-3">Nhân vật</div>
+                        <div className="col-span-3">Hành động</div>
+                        <div className="col-span-3">Hiệu ứng</div>
+                        <div className="col-span-3">Chặn (Counter)</div>
+                      </div>
+
+                      {/* 3 General Actions */}
+                      {(
+                        [
+                          {
+                            icon: "INCOME" as const,
+                            action: "Income (Thu Nhập)",
+                            effect: "Lấy +1 xu từ Kho Bạc",
+                            counter: "✕ Không thể chặn / bắt bài",
+                          },
+                          {
+                            icon: "FOREIGN_AID" as const,
+                            action: "Foreign Aid (Viện Trợ)",
+                            effect: "Lấy +2 xu từ Kho Bạc",
+                            counter: "Bị chặn bởi Duke",
+                          },
+                          {
+                            icon: "COUP" as const,
+                            action: "Coup (Đảo Chính)",
+                            effect:
+                              "Trả 7 xu • Chọn 1 người mất ngay 1 lá bài",
+                            counter: "✕ Không thể chặn / bắt bài",
+                          },
+                        ] as const
+                      ).map((g) => (
+                        <div
+                          key={g.action}
+                          className="grid grid-cols-12 gap-2 px-3.5 py-2.5 items-center text-slate-200"
+                        >
+                          <div className="col-span-3 flex items-center gap-2 text-slate-400 font-mono">
+                            <CoupActionIconCanvas kind={g.icon} size={20} />
+                            <span>— Chung —</span>
+                          </div>
+                          <div className="col-span-3 font-bold text-slate-100">
+                            {g.action}
+                          </div>
+                          <div className="col-span-3 text-slate-300">
+                            {g.effect}
+                          </div>
+                          <div className="col-span-3 text-slate-400">
+                            {g.counter}
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* 5 Character Actions */}
+                      {(
+                        [
+                          {
+                            char: "Duke" as const,
+                            badgeBg:
+                              "bg-pink-700/85 border-pink-500/60 text-white",
+                            action: "Tax (Thu Thuế)",
+                            effect: "Lấy +3 xu từ Kho Bạc",
+                            counter: "Chặn Foreign Aid (Viện Trợ)",
+                          },
+                          {
+                            char: "Assassin" as const,
+                            badgeBg:
+                              "bg-slate-700/90 border-slate-500/60 text-white",
+                            action: "Assassinate (Ám Sát)",
+                            effect:
+                              "Trả 3 xu • Chọn 1 người mất 1 lá bài",
+                            counter: "✕ Không có kỹ năng chặn",
+                          },
+                          {
+                            char: "Ambassador" as const,
+                            badgeBg:
+                              "bg-lime-500/85 border-lime-300/70 text-slate-950",
+                            action: "Exchange (Đổi Bài)",
+                            effect:
+                              "Rút 2 lá từ Bộ bài, chọn lá giữ lại rồi trả 2 lá về Bộ bài",
+                            counter: "Chặn Steal (Cướp Xu)",
+                          },
+                          {
+                            char: "Captain" as const,
+                            badgeBg:
+                              "bg-sky-600/85 border-sky-400/60 text-white",
+                            action: "Steal (Cướp Xu)",
+                            effect: "Cướp tối đa 2 xu từ 1 người chơi khác",
+                            counter: "Chặn Steal (Cướp Xu)",
+                          },
+                          {
+                            char: "Contessa" as const,
+                            badgeBg:
+                              "bg-red-700/85 border-red-500/60 text-white",
+                            action: "✕ Không có",
+                            effect: "✕",
+                            counter: "Chặn Assassinate (Ám Sát)",
+                          },
+                        ] as const
+                      ).map((row) => (
+                        <div
+                          key={row.char}
+                          className="grid grid-cols-12 gap-2 px-3.5 py-2.5 items-center"
+                        >
+                          <div className="col-span-3">
+                            <div
+                              className={`inline-flex items-center gap-2 rounded-lg border px-2.5 py-1 font-extrabold ${row.badgeBg}`}
+                            >
+                              <CoupActionIconCanvas kind={row.char} size={20} />
+                              <span>{row.char}</span>
+                            </div>
+                          </div>
+                          <div className="col-span-3 font-bold text-slate-100">
+                            {row.action}
+                          </div>
+                          <div className="col-span-3 text-slate-300">
+                            {row.effect}
+                          </div>
+                          <div className="col-span-3 text-amber-200 font-medium">
+                            {row.counter}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 3. Bluffing, Challenge & Double Loss Rules */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-2 leading-relaxed text-slate-300">
+                    <p className="font-bold text-amber-300 text-xs">
+                      3. Luật Nói Dối (Bluff), Bắt Bài (Challenge) & Mất 2 Lá Cùng Lúc
+                    </p>
+                    <p>
+                      • <strong>Quyền nói dối</strong>: Bạn có thể tuyên bố thực
+                      hiện hành động hoặc chặn bằng bất kỳ Nhân vật nào dù trên
+                      tay có thật hay không.
+                    </p>
+                    <p>
+                      • <strong>Bắt bài (Challenge)</strong>: Khi một người
+                      tuyên bố Nhân vật (để hành động hoặc chặn), bất kỳ người
+                      chơi nào khác cũng có thể bấm <strong>Bắt Bài</strong>:
+                    </p>
+                    <p className="pl-3">
+                      – Nếu người bị bắt bài <strong>nói dối</strong> (không có
+                      lá đó): Người nói dối mất 1 lá bài và hành động/cú chặn bị
+                      huỷ ngay lập tức.
+                    </p>
+                    <p className="pl-3">
+                      – Nếu người bị bắt bài <strong>có thật</strong> lá đó:
+                      Người bắt bài sai phải mất 1 lá bài! Người có thật sẽ trả
+                      lá bài vừa lộ về Bộ bài, rút 1 lá mới và hành động/cú chặn
+                      vẫn được thực thi.
+                    </p>
+                    <p>
+                      • <strong>Nguy cơ mất 2 lá bài cùng lúc</strong>: Nếu bạn
+                      bị Sát Thủ Ám Sát mà cố tình{" "}
+                      <strong>Bắt bài sai</strong> (họ có Sát Thủ thật) hoặc{" "}
+                      <strong>Nói dối có Contessa để chặn rồi bị lật tẩy</strong>
+                      , bạn sẽ mất 1 lá vì thua Bắt bài + 1 lá vì đòn Ám Sát vẫn
+                      giáng xuống (tổng cộng mất cả 2 lá bài)!
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Werewolf Rules */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-2 leading-relaxed text-slate-300">
+                    <p className="font-bold text-amber-300 text-xs">
+                      1. Phe Phái & Điều Kiện Chiến Thắng
+                    </p>
+                    <p>
+                      • <strong>Phe Dân Làng (Village Faction)</strong>: Thắng
+                      khi tiêu diệt toàn bộ Ma Sói trong làng.
+                    </p>
+                    <p>
+                      • <strong>Phe Ma Sói (Werewolf Faction)</strong>: Thắng
+                      khi số lượng Ma Sói còn sống{" "}
+                      <strong>bằng hoặc nhiều hơn</strong> số lượng Dân Làng còn
+                      sống (`Sói ≥ Dân`).
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-2 leading-relaxed text-slate-300">
+                    <p className="font-bold text-amber-300 text-xs">
+                      2. Quy Trình Ban Đêm & Ban Ngày
+                    </p>
+                    <p>
+                      • <strong>Đêm 1 (Hành động bí mật)</strong>:
+                    </p>
+                    <p className="pl-3">
+                      – <strong>Ma Sói</strong>: Thảo luận trong kênh Sói và bỏ
+                      phiếu chọn con mồi. Nếu phiếu bầu giữa các Sói bị hòa
+                      (không thống nhất được 1 mục tiêu duy nhất) thì đêm đó{" "}
+                      <strong>Sói không cắn được ai</strong>.
+                    </p>
+                    <p className="pl-3">
+                      – <strong>Tiên Tri (Seer)</strong>: Chọn soi 1 người mỗi
+                      đêm để biết người đó thuộc phe Sói hay phe Dân.
+                    </p>
+                    <p className="pl-3">
+                      – <strong>Bảo Vệ (Bodyguard)</strong>: Chọn bảo vệ 1 người
+                      khỏi đòn cắn của Sói (không được bảo vệ trùng 1 người ở 2
+                      đêm liên tiếp).
+                    </p>
+                    <p>
+                      • <strong>Đêm 2 (Lượt của Phù Thủy)</strong>: Phù Thủy có{" "}
+                      <strong>1 bình Cứu</strong> và{" "}
+                      <strong>1 bình Độc</strong> cho cả ván đấu, có thể dùng
+                      trong cùng 1 đêm.
+                    </p>
+                    <p>
+                      • <strong>Thợ Săn (Hunter)</strong>: Nếu bị Sói cắn chết
+                      hoặc bị treo cổ (trừ khi bị Phù Thủy đầu độc), Thợ Săn
+                      được nổ súng kéo theo 1 người trước khi gục.
+                    </p>
+                    <p>
+                      • <strong>Ban Ngày (Thảo luận & Bỏ phiếu Treo Cổ)</strong>
+                      : Ai nhận <strong>nhiều phiếu bầu nhất</strong> sẽ bị treo
+                      cổ. Nếu số phiếu cao nhất bị <strong>hòa nhau</strong> thì
+                      ngày hôm đó không ai bị treo cổ.
+                    </p>
+                  </div>
                 </>
               )}
             </div>
