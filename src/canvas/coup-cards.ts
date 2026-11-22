@@ -3353,6 +3353,342 @@ function drawCoupCharacterArt2D(
 }
 
 /**
+ * Draws the official 2D Coup Card Back matching the reference artwork:
+ * - Crisp pure-white outer border with an ornate scalloped/stepped top & bottom inner cartouche
+ * - Cool silver-grey inner panel with horizontal sinusoidal wavy moiré damask bands
+ * - 180° rotationally symmetric top & bottom white baroque spiral scrollwork friezes,
+ *   double horizontal bars with curled volute ends, central interlocking white rings,
+ *   and vertical black stiletto daggers piercing through the top and bottom medallions
+ * - 180° symmetric 3D beveled black geometric sci-fi "akhoup" ambigram wordmarks
+ */
+export function drawCoupCardBack2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  // 1. Crisp Pure-White Outer Card Border Background
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, w, h);
+
+  // Define the symmetric scalloped inner cartouche path
+  const defineInnerCartouche = () => {
+    const xL = w * 0.105;
+    const xR = w * 0.895;
+    ctx.beginPath();
+    // Top central plateau
+    ctx.moveTo(w * 0.28, h * 0.082);
+    ctx.lineTo(w * 0.72, h * 0.082);
+    // Top-right scalloped step down to right shoulder
+    ctx.bezierCurveTo(
+      w * 0.755,
+      h * 0.082,
+      w * 0.775,
+      h * 0.128,
+      w * 0.825,
+      h * 0.132
+    );
+    ctx.quadraticCurveTo(xR, h * 0.134, xR, h * 0.175);
+    // Right vertical edge
+    ctx.lineTo(xR, h * 0.825);
+    // Bottom-right shoulder & scalloped step to bottom plateau
+    ctx.quadraticCurveTo(xR, h * 0.866, w * 0.825, h * 0.868);
+    ctx.bezierCurveTo(
+      w * 0.775,
+      h * 0.872,
+      w * 0.755,
+      h * 0.918,
+      w * 0.72,
+      h * 0.918
+    );
+    // Bottom central plateau
+    ctx.lineTo(w * 0.28, h * 0.918);
+    // Bottom-left scalloped step up to left shoulder
+    ctx.bezierCurveTo(
+      w * 0.245,
+      h * 0.918,
+      w * 0.225,
+      h * 0.872,
+      w * 0.175,
+      h * 0.868
+    );
+    ctx.quadraticCurveTo(xL, h * 0.866, xL, h * 0.825);
+    // Left vertical edge
+    ctx.lineTo(xL, h * 0.175);
+    // Top-left shoulder & step up to top plateau
+    ctx.quadraticCurveTo(xL, h * 0.134, w * 0.175, h * 0.132);
+    ctx.bezierCurveTo(
+      w * 0.225,
+      h * 0.128,
+      w * 0.245,
+      h * 0.082,
+      w * 0.28,
+      h * 0.082
+    );
+    ctx.closePath();
+  };
+
+  // 2. Clipped Silver-Grey Inner Field with Horizontal Wavy Moiré Damask Texture
+  ctx.save();
+  defineInnerCartouche();
+  ctx.clip();
+
+  const greyGrad = ctx.createLinearGradient(0, 0, w, h);
+  greyGrad.addColorStop(0, "#8f9194");
+  greyGrad.addColorStop(0.5, "#9c9ea1");
+  greyGrad.addColorStop(1, "#86888b");
+  ctx.fillStyle = greyGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Horizontal sinusoidal wavy moiré stripes across the grey panel
+  const waveRows = Math.max(14, Math.min(30, Math.floor(h * 0.24)));
+  const waveAmp = h * 0.0075;
+  ctx.lineWidth = Math.max(1, (h * 0.84) / (waveRows * 2.1));
+  for (let r = 0; r < waveRows; r++) {
+    const baseY = h * 0.08 + (r / waveRows) * (h * 0.84);
+    ctx.strokeStyle =
+      r % 2 === 0
+        ? "rgba(112, 114, 117, 0.45)"
+        : "rgba(168, 170, 173, 0.36)";
+    ctx.beginPath();
+    const steps = 16;
+    for (let s = 0; s <= steps; s++) {
+      const t = s / steps;
+      const wx = w * 0.1 + t * (w * 0.8);
+      const wy = baseY + Math.sin(t * Math.PI * 9) * waveAmp;
+      if (s === 0) ctx.moveTo(wx, wy);
+      else ctx.lineTo(wx, wy);
+    }
+    ctx.stroke();
+  }
+
+  // Helper that draws ONE rotational half (top baroque white frieze + bottom-right "akhoup" wordmark)
+  const drawRotationalHalfInside = () => {
+    // A. White Baroque Scrollwork Frieze & Double Horizontal Bars at Top
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    // Double parallel horizontal white lines across the frieze base
+    ctx.lineWidth = Math.max(0.9, w * 0.013);
+    ctx.beginPath();
+    ctx.moveTo(w * 0.105, h * 0.182);
+    ctx.lineTo(w * 0.895, h * 0.182);
+    ctx.moveTo(w * 0.105, h * 0.194);
+    ctx.lineTo(w * 0.895, h * 0.194);
+    ctx.stroke();
+
+    // Central White Ring + Flanking Interlocking Loops
+    ctx.lineWidth = Math.max(1.2, w * 0.022);
+    ctx.beginPath();
+    ctx.arc(w * 0.5, h * 0.175, w * 0.048, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.lineWidth = Math.max(1, w * 0.016);
+    for (const dir of [-1, 1]) {
+      // Interlocking side loop next to central ring
+      ctx.beginPath();
+      ctx.arc(
+        w * (0.5 + dir * 0.056),
+        h * 0.188,
+        w * 0.036,
+        dir === -1 ? Math.PI * 0.15 : -Math.PI * 0.15,
+        dir === -1 ? Math.PI * 1.15 : Math.PI * 0.85
+      );
+      ctx.stroke();
+
+      // Underside outer spiral volute curl at x = 0.5 ± 0.355
+      const vx = w * (0.5 + dir * 0.352);
+      const vy = h * 0.206;
+      ctx.beginPath();
+      ctx.moveTo(w * (0.5 + dir * 0.39), h * 0.194);
+      ctx.quadraticCurveTo(
+        w * (0.5 + dir * 0.382),
+        vy + h * 0.015,
+        vx,
+        vy + h * 0.014
+      );
+      ctx.quadraticCurveTo(
+        vx - dir * w * 0.022,
+        vy + h * 0.012,
+        vx - dir * w * 0.018,
+        vy - h * 0.004
+      );
+      ctx.quadraticCurveTo(
+        vx - dir * w * 0.01,
+        vy - h * 0.012,
+        vx + dir * w * 0.004,
+        vy - h * 0.003
+      );
+      ctx.stroke();
+
+      // Inner baroque S-scroll spiral above the horizontal bar (x = 0.5 ± 0.165)
+      const sx = w * (0.5 + dir * 0.168);
+      const sy = h * 0.142;
+      ctx.lineWidth = Math.max(1.1, w * 0.02);
+      ctx.beginPath();
+      ctx.arc(sx, sy, w * 0.036, 0, Math.PI * 1.65);
+      ctx.stroke();
+
+      // Upper scroll flourish arching from central medallion to inner spiral
+      ctx.beginPath();
+      ctx.moveTo(w * (0.5 + dir * 0.06), h * 0.125);
+      ctx.quadraticCurveTo(
+        w * (0.5 + dir * 0.11),
+        h * 0.16,
+        w * (0.5 + dir * 0.132),
+        h * 0.088
+      );
+      ctx.stroke();
+
+      // Outer C-scroll arcs toward shoulder corners
+      ctx.beginPath();
+      ctx.arc(
+        w * (0.5 + dir * 0.275),
+        h * 0.115,
+        w * 0.044,
+        Math.PI * 0.1,
+        Math.PI * 0.9
+      );
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(
+        w * (0.5 + dir * 0.375),
+        h * 0.132,
+        w * 0.044,
+        Math.PI * 0.15,
+        Math.PI * 0.85
+      );
+      ctx.stroke();
+    }
+
+    // B. 3D Beveled Metallic Black Geometric Sci-Fi "akhoup" Wordmark (Bottom-Right in default orientation)
+    const wx0 = w * 0.328;
+    const wy0 = h * 0.708;
+    const ww = w * 0.474;
+    const wh = h * 0.044;
+
+    const strokeWordmark = (ox: number, oy: number, color: string) => {
+      ctx.save();
+      ctx.translate(wx0 + ox, wy0 + oy);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = Math.max(1.1, w * 0.017);
+      ctx.lineCap = "square";
+      ctx.lineJoin = "miter";
+
+      const cw = ww / 6.3;
+      const gap = cw * 0.24;
+      const step = cw + gap;
+
+      ctx.beginPath();
+      // 1. 'a' (squared sci-fi lower-case 'a')
+      let lx = 0;
+      ctx.moveTo(lx + cw * 0.1, 0);
+      ctx.lineTo(lx + cw, 0);
+      ctx.lineTo(lx + cw, wh);
+      ctx.lineTo(lx, wh);
+      ctx.lineTo(lx, wh * 0.48);
+      ctx.lineTo(lx + cw, wh * 0.48);
+
+      // 2. 'k' (tall stem from -wh*0.35 to wh + angular chevron arms)
+      lx = step;
+      ctx.moveTo(lx, -wh * 0.36);
+      ctx.lineTo(lx, wh);
+      ctx.moveTo(lx + cw * 0.95, 0);
+      ctx.lineTo(lx + cw * 0.2, wh * 0.5);
+      ctx.lineTo(lx + cw, wh);
+
+      // 3. 'h' (tall stem from -wh*0.36 to wh + squared arch)
+      lx = step * 2;
+      ctx.moveTo(lx, -wh * 0.36);
+      ctx.lineTo(lx, wh);
+      ctx.moveTo(lx, wh * 0.05);
+      ctx.lineTo(lx + cw, wh * 0.05);
+      ctx.lineTo(lx + cw, wh);
+
+      // 4. 'o' (squared geometric box)
+      lx = step * 3;
+      ctx.rect(lx, 0, cw, wh);
+
+      // 5. 'u' (open-top squared U)
+      lx = step * 4;
+      ctx.moveTo(lx, 0);
+      ctx.lineTo(lx, wh);
+      ctx.lineTo(lx + cw, wh);
+      ctx.lineTo(lx + cw, 0);
+
+      // 6. 'p' (descender stem down to wh*1.36 + squared bowl)
+      lx = step * 5;
+      ctx.moveTo(lx, wh * 1.36);
+      ctx.lineTo(lx, 0);
+      ctx.lineTo(lx + cw, 0);
+      ctx.lineTo(lx + cw, wh);
+      ctx.lineTo(lx, wh);
+
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    // 3D drop shadow, metallic bevel highlight, and charcoal-black core
+    strokeWordmark(w * 0.005, h * 0.004, "rgba(0, 0, 0, 0.42)");
+    strokeWordmark(-w * 0.003, -h * 0.002, "#686a6e");
+    strokeWordmark(0, 0, "#141618");
+  };
+
+  // Draw top half normally, then rotate 180° around card center (w/2, h/2) for exact rotational symmetry
+  drawRotationalHalfInside();
+  ctx.save();
+  ctx.translate(w, h);
+  ctx.rotate(Math.PI);
+  drawRotationalHalfInside();
+  ctx.restore();
+
+  ctx.restore(); // End inner cartouche clip
+
+  // 3. Vertical Black Stiletto Daggers Piercing Top & Bottom Medallions (extending slightly beyond cartouche edge)
+  const drawVerticalBlackDagger = () => {
+    ctx.fillStyle = "#111315";
+    // Round pommel knob at bottom of hilt
+    ctx.beginPath();
+    ctx.ellipse(w * 0.5, h * 0.207, w * 0.011, h * 0.005, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Grip & Crossguard + Long Tapered Stiletto Blade pointing straight UP to y = 0.063*h
+    ctx.beginPath();
+    ctx.moveTo(w * 0.494, h * 0.205);
+    ctx.lineTo(w * 0.494, h * 0.188);
+    // Left crossguard quillon
+    ctx.lineTo(w * 0.484, h * 0.186);
+    ctx.lineTo(w * 0.484, h * 0.181);
+    ctx.lineTo(w * 0.494, h * 0.181);
+    // Left blade edge tapering to needle tip
+    ctx.quadraticCurveTo(w * 0.489, h * 0.125, w * 0.5, h * 0.063);
+    // Right blade edge
+    ctx.quadraticCurveTo(w * 0.511, h * 0.125, w * 0.506, h * 0.181);
+    // Right crossguard quillon
+    ctx.lineTo(w * 0.516, h * 0.181);
+    ctx.lineTo(w * 0.516, h * 0.186);
+    ctx.lineTo(w * 0.506, h * 0.188);
+    ctx.lineTo(w * 0.506, h * 0.205);
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  drawVerticalBlackDagger();
+  ctx.save();
+  ctx.translate(w, h);
+  ctx.rotate(Math.PI);
+  drawVerticalBlackDagger();
+  ctx.restore();
+
+  ctx.restore();
+}
+
+/**
  * Draws a 2D Coup Character Card (or Royal Card Back if `character` is null)
  * at `(x, y)` with dimensions `(w, h)`.
  */
@@ -3378,43 +3714,7 @@ export function drawCoupCard2D(
   ctx.clip();
 
   if (character === null) {
-    // Royal Coup Card Back (2D Filigree & Crown Emblem)
-    const backGrad = ctx.createLinearGradient(x, y, x + w, y + h);
-    backGrad.addColorStop(0, "#1e1b4b");
-    backGrad.addColorStop(0.5, "#31102f");
-    backGrad.addColorStop(1, "#0f172a");
-    ctx.fillStyle = backGrad;
-    ctx.fillRect(x, y, w, h);
-
-    // Inner gold filigree border
-    const pad = Math.max(4, w * 0.09);
-    ctx.strokeStyle = "rgba(251, 191, 36, 0.5)";
-    ctx.lineWidth = 1.4;
-    drawRoundedRect(ctx, x + pad, y + pad, w - pad * 2, h - pad * 2, radius * 0.6);
-    ctx.stroke();
-
-    // Central 2D geometric crown medallion on card back
-    const cx = x + w * 0.5;
-    const cy = y + h * 0.5;
-    const r = Math.min(w, h) * 0.25;
-    ctx.strokeStyle = "#f59e0b";
-    ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Mini 2D crown vector inside the back medallion
-    ctx.fillStyle = "#fbbf24";
-    ctx.beginPath();
-    ctx.moveTo(cx - r * 0.55, cy + r * 0.35);
-    ctx.lineTo(cx - r * 0.65, cy - r * 0.3);
-    ctx.lineTo(cx - r * 0.25, cy);
-    ctx.lineTo(cx, cy - r * 0.5);
-    ctx.lineTo(cx + r * 0.25, cy);
-    ctx.lineTo(cx + r * 0.65, cy - r * 0.3);
-    ctx.lineTo(cx + r * 0.55, cy + r * 0.35);
-    ctx.closePath();
-    ctx.fill();
+    drawCoupCardBack2D(ctx, x, y, w, h);
   } else {
     drawCoupCharacterArt2D(ctx, x, y, w, h, character);
   }
