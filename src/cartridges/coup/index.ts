@@ -153,6 +153,14 @@ export interface CoupMatchState {
     atTurn: number;
   } | null;
 
+  lastCardExchange?: {
+    seatNo: number;
+    count: number;
+    phase: "DRAW" | "RETURN" | "CHALLENGE_SWAP";
+    revealedCharacter?: CoupCharacter | null;
+    atTurn: number;
+  } | null;
+
   lastChallengeBannerVi: string | null;
   winnerSeatNo: number | null;
   winReasonVi: string | null;
@@ -201,6 +209,7 @@ export interface CoupPlayerView {
   exchangePool: CoupCharacter[];
   exchangeKeepCount: number;
   lastTransfer: CoupMatchState["lastTransfer"];
+  lastCardExchange?: CoupMatchState["lastCardExchange"];
   lastChallengeBannerVi: string | null;
   winnerSeatNo: number | null;
   winReasonVi: string | null;
@@ -577,6 +586,13 @@ function executeApprovedAction(
         phaseDeadlineMs: deadline,
         courtDeck: deckCopy,
         exchangePool: pool,
+        lastCardExchange: {
+          seatNo: actor.seatNo,
+          count: drawn.length,
+          phase: "DRAW",
+          revealedCharacter: null,
+          atTurn: state.turnNumber,
+        },
       },
       events,
       phaseDeadlineMs: deadline,
@@ -615,6 +631,13 @@ function replaceRevealedTruthfulCard(
     ...state,
     seats: updatedSeats,
     courtDeck: newDeck,
+    lastCardExchange: {
+      seatNo: holderSeatNo,
+      count: 1,
+      phase: "CHALLENGE_SWAP",
+      revealedCharacter: claimedCharacter,
+      atTurn: state.turnNumber,
+    },
   };
 }
 
@@ -710,6 +733,7 @@ export const coupCartridge: GameCartridge<
       afterLossContinuation: null,
       exchangePool: [],
       lastTransfer: null,
+      lastCardExchange: null,
       lastChallengeBannerVi: null,
       winnerSeatNo: null,
       winReasonVi: null,
@@ -1255,6 +1279,13 @@ export const coupCartridge: GameCartridge<
           seats: updatedSeats,
           courtDeck: [...state.courtDeck, ...returnedChars],
           exchangePool: [],
+          lastCardExchange: {
+            seatNo: actorSeatNo,
+            count: returnedChars.length,
+            phase: "RETURN",
+            revealedCharacter: null,
+            atTurn: state.turnNumber,
+          },
         },
         nowMs,
         [
@@ -1596,6 +1627,7 @@ export const coupCartridge: GameCartridge<
       exchangePool,
       exchangeKeepCount,
       lastTransfer: state.lastTransfer,
+      lastCardExchange: state.lastCardExchange ?? null,
       lastChallengeBannerVi: state.lastChallengeBannerVi,
       winnerSeatNo: state.winnerSeatNo,
       winReasonVi: state.winReasonVi,

@@ -60,6 +60,15 @@ export function CoupCanvas({
   const transferStartRef = useRef<number | null>(null);
   const lastTransferKeyRef = useRef<string>("");
 
+  // Card exchange animation timer (tabletop flight & Court Deck shuffle)
+  const exchangeStartRef = useRef<number | null>(null);
+  const lastExchangeKeyRef = useRef<string>("");
+
+  // Ambassador 2D modal open & card-flip animation timer + smooth per-card lift values
+  const exchangeModalStartRef = useRef<number | null>(null);
+  const wasInExchangeStepRef = useRef<boolean>(false);
+  const cardLiftProgressRef = useRef<number[]>([1, 1, 0, 0]);
+
   // Ambassador Exchange selected indices (on 2D Canvas)
   const [exchangeSelected, setExchangeSelected] = useState<number[]>([0, 1]);
 
@@ -118,11 +127,32 @@ export function CoupCanvas({
           transferStartRef.current = performance.now();
         }
       }
+
+      if (playerView.lastCardExchange) {
+        const ex = playerView.lastCardExchange;
+        const exKey = `${ex.atTurn}-${ex.seatNo}-${ex.phase}-${ex.count}-${ex.revealedCharacter ?? ""}`;
+        if (lastExchangeKeyRef.current !== exKey) {
+          lastExchangeKeyRef.current = exKey;
+          exchangeStartRef.current = performance.now();
+        }
+      }
+
+      const inExchangeStep = playerView.step === "ExchangePickStep";
+      if (inExchangeStep && !wasInExchangeStepRef.current) {
+        wasInExchangeStepRef.current = true;
+        exchangeModalStartRef.current = performance.now();
+      } else if (!inExchangeStep) {
+        wasInExchangeStepRef.current = false;
+      }
     } else {
       lastMatchKeyRef.current = "";
       dealStartRef.current = null;
       lastTransferKeyRef.current = "";
       transferStartRef.current = null;
+      lastExchangeKeyRef.current = "";
+      exchangeStartRef.current = null;
+      wasInExchangeStepRef.current = false;
+      exchangeModalStartRef.current = null;
     }
   }, [
     mode,
@@ -668,6 +698,300 @@ export function CoupCanvas({
         }
       }
 
+      // 7.2. Animated 2D Card Exchange Effect (Court Deck <-> Ambassador Seat / Challenge Swap)
+      const exchangeElapsed =
+        exchangeStartRef.current !== null
+          ? (now - exchangeStartRef.current) / 1000
+          : 999;
+
+      // 7.2a. Live Orbiting Mini-Cards & Dual Exchange Arc while Ambassador is in `ExchangePickStep`
+      if (curMode === "match" && pv?.step === "ExchangePickStep") {
+        const ambPos = seatPositions.get(pv.activeSeatNo);
+        if (ambPos) {
+          ctx.save();
+          // Dual glowing chartreuse-lime exchange arcs between Court Deck and Ambassador's seat
+          ctx.strokeStyle = "rgba(181, 219, 24, 0.65)";
+          ctx.lineWidth = 2.2;
+          ctx.setLineDash([7, 6]);
+          ctx.lineDashOffset = -(now / 20);
+          const midX = (deckOriginX + ambPos.x) * 0.5;
+          const midY = (deckOriginY + ambPos.y) * 0.5;
+          const dx = ambPos.x - deckOriginX;
+          const dy = ambPos.y - deckOriginY;
+          const len = Math.max(1, Math.hypot(dx, dy));
+          const nx = -dy / len;
+          const ny = dx / len;
+
+          ctx.beginPath();
+          ctx.moveTo(deckOriginX, deckOriginY);
+          ctx.quadraticCurveTo(
+            midX + nx * 36,
+            midY + ny * 36,
+            ambPos.x,
+            ambPos.y
+          );
+          ctx.stroke();
+
+          ctx.strokeStyle = "rgba(250, 204, 21, 0.55)";
+          ctx.lineDashOffset = now / 20;
+          ctx.beginPath();
+          ctx.moveTo(ambPos.x, ambPos.y);
+          ctx.quadraticCurveTo(
+            midX - nx * 36,
+            midY - ny * 36,
+            deckOriginX,
+            deckOriginY
+          );
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // 2 Orbiting miniature 2D cards hovering around the Ambassador's seat
+          for (let i = 0; i < 2; i++) {
+            const ang = now / 340 + i * Math.PI;
+            const ox = ambPos.x + Math.cos(ang) * 42;
+            const oy = ambPos.y - 36 + Math.sin(ang) * 12;
+            ctx.save();
+            ctx.translate(ox, oy);
+            ctx.rotate(Math.sin(ang) * 0.22);
+            drawCoupCard2D(ctx, -13, -18, 26, 36, null, false, true);
+            ctx.restore();
+          }
+          ctx.restore();
+        }
+      }
+
+      // 7.2b. Triggered Card Flight & Central Court Deck Rifle-Shuffle Burst (`lastCardExchange`)
+      if (
+        curMode === "match" &&
+        pv?.lastCardExchange &&
+        exchangeElapsed < 1.65
+      ) {
+        const ex = pv.lastCardExchange;
+        const seatPos = seatPositions.get(ex.seatNo) ?? {
+          x: centerX,
+          y: centerY,
+        };
+        const flyW = 40;
+        const flyH = 56;
+        const dx = seatPos.x - deckOriginX;
+        const dy = seatPos.y - deckOriginY;
+        const len = Math.max(1, Math.hypot(dx, dy));
+        const nx = -dy / len;
+        const ny = dx / len;
+
+        ctx.save();
+
+        if (ex.phase === "DRAW") {
+          // 2 Cards flying out from Central Court Deck -> Ambassador's Seat
+          const count = Math.max(1, ex.count);
+          for (let i = 0; i < count; i++) {
+            const stagger = i * 0.14;
+            const t = Math.max(
+              0,
+              Math.min(1, (exchangeElapsed - stagger) / 0.72)
+            );
+            if (t <= 0 || t >= 1) continue;
+            const ease = 1 - Math.pow(1 - t, 3);
+            const curve = Math.sin(ease * Math.PI) * (36 + i * 14);
+            const cx = lerp(deckOriginX, seatPos.x, ease) + nx * curve;
+            const cy = lerp(deckOriginY, seatPos.y, ease) + ny * curve;
+            const rot = (1 - ease) * (i % 2 === 0 ? -0.45 : 0.45);
+
+            // Glowing chartreuse wake ring behind the flying card
+            ctx.strokeStyle = `rgba(181, 219, 24, ${(1 - ease) * 0.75})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 24 + ease * 10, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(rot);
+            drawCoupCard2D(
+              ctx,
+              -flyW / 2,
+              -flyH / 2,
+              flyW,
+              flyH,
+              null,
+              false,
+              true
+            );
+            ctx.restore();
+          }
+        } else if (ex.phase === "RETURN") {
+          // Full Round-Trip / Return Card Swap + Central Court Deck Rifle-Shuffle Fan Burst!
+          const count = Math.max(1, ex.count);
+          for (let i = 0; i < count; i++) {
+            const stagger = i * 0.11;
+            const t = Math.max(
+              0,
+              Math.min(1, (exchangeElapsed - stagger) / 0.76)
+            );
+            if (t > 0 && t < 1) {
+              const ease = 1 - Math.pow(1 - t, 3);
+              const curve = Math.sin(ease * Math.PI) * (40 + i * 12);
+
+              // Outgoing card arc (Seat -> Court Deck)
+              const retX = lerp(seatPos.x, deckOriginX, ease) - nx * curve;
+              const retY = lerp(seatPos.y, deckOriginY, ease) - ny * curve;
+              const rot = Math.sin(ease * Math.PI * 2) * 0.35;
+
+              // Trail line
+              ctx.strokeStyle = `rgba(181, 219, 24, ${(1 - ease) * 0.7})`;
+              ctx.lineWidth = 2.2;
+              ctx.beginPath();
+              ctx.moveTo(seatPos.x, seatPos.y);
+              ctx.quadraticCurveTo(
+                (seatPos.x + deckOriginX) * 0.5 - nx * curve,
+                (seatPos.y + deckOriginY) * 0.5 - ny * curve,
+                retX,
+                retY
+              );
+              ctx.stroke();
+
+              ctx.save();
+              ctx.translate(retX, retY);
+              ctx.rotate(rot);
+              drawCoupCard2D(
+                ctx,
+                -flyW / 2,
+                -flyH / 2,
+                flyW,
+                flyH,
+                null,
+                false,
+                true
+              );
+              ctx.restore();
+
+              // Simultaneous counter-arc card (Court Deck -> Seat) during first 0.65s so even quick Bot exchanges show a 2-way swap
+              const drawX = lerp(deckOriginX, seatPos.x, ease) + nx * curve;
+              const drawY = lerp(deckOriginY, seatPos.y, ease) + ny * curve;
+              ctx.save();
+              ctx.translate(drawX, drawY);
+              ctx.rotate(-rot);
+              drawCoupCard2D(
+                ctx,
+                -flyW / 2,
+                -flyH / 2,
+                flyW,
+                flyH,
+                null,
+                false,
+                true
+              );
+              ctx.restore();
+            }
+          }
+
+          // Stage 2 (0.60s -> 1.65s): Central Court Deck 2D Rifle-Shuffle Fan & Shockwave Ring
+          if (exchangeElapsed > 0.58) {
+            const shufT = Math.min(1, (exchangeElapsed - 0.58) / 1.02);
+            const fanSpread = Math.sin(shufT * Math.PI * 2) * (1 - shufT) * 28;
+
+            // Expanding chartreuse-gold shockwave ring around the Court Deck
+            ctx.strokeStyle = `rgba(181, 219, 24, ${(1 - shufT) * 0.85})`;
+            ctx.lineWidth = 2.8 * (1 - shufT * 0.5);
+            ctx.beginPath();
+            ctx.arc(deckOriginX, deckOriginY, 22 + shufT * 58, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 3 Fanned 2D Cards shuffling in place on top of the Court Deck
+            for (const dir of [-1, 0, 1]) {
+              ctx.save();
+              ctx.translate(deckOriginX + dir * fanSpread, deckOriginY);
+              ctx.rotate(dir * (fanSpread / 72));
+              drawCoupCard2D(
+                ctx,
+                -24,
+                -33,
+                48,
+                66,
+                null,
+                false,
+                dir === 0
+              );
+              ctx.restore();
+            }
+
+            // Floating 2D Banner above the Court Deck
+            const badgeAlpha = Math.min(1, (1 - shufT) * 2.2);
+            ctx.save();
+            ctx.globalAlpha = badgeAlpha;
+            const badgeY = deckOriginY - 52 - shufT * 14;
+            drawRoundedRect(ctx, deckOriginX - 74, badgeY - 12, 148, 24, 12);
+            ctx.fillStyle = "rgba(15, 23, 42, 0.94)";
+            ctx.fill();
+            ctx.strokeStyle = "#b5db18";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.fillStyle = "#d9f99d";
+            ctx.font = "bold 10.5px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("🔄 ĐÃ TRÁO BÀI ĐẠI SỨ", deckOriginX, badgeY);
+            ctx.restore();
+          }
+        } else if (ex.phase === "CHALLENGE_SWAP") {
+          // Stage 1 (0.0s -> 0.78s): Proven face-up card flies from truthful player's seat to Court Deck
+          // Stage 2 (0.78s -> 1.65s): Court Deck shuffles and deals a new secret card back to the player's seat
+          if (exchangeElapsed < 0.78) {
+            const t = exchangeElapsed / 0.78;
+            const ease = 1 - Math.pow(1 - t, 3);
+            const curve = Math.sin(ease * Math.PI) * 38;
+            const cx = lerp(seatPos.x, deckOriginX, ease) - nx * curve;
+            const cy = lerp(seatPos.y, deckOriginY, ease) - ny * curve;
+
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate((1 - ease) * 0.25);
+            drawCoupCard2D(
+              ctx,
+              -flyW / 2,
+              -flyH / 2,
+              flyW,
+              flyH,
+              ex.revealedCharacter ?? null,
+              false,
+              true
+            );
+            ctx.restore();
+          } else {
+            const t = Math.min(1, (exchangeElapsed - 0.78) / 0.85);
+            const ease = 1 - Math.pow(1 - t, 3);
+            const curve = Math.sin(ease * Math.PI) * 38;
+            const cx = lerp(deckOriginX, seatPos.x, ease) + nx * curve;
+            const cy = lerp(deckOriginY, seatPos.y, ease) + ny * curve;
+
+            // Deck shuffle ring
+            ctx.strokeStyle = `rgba(250, 204, 21, ${(1 - t) * 0.85})`;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.arc(deckOriginX, deckOriginY, 22 + t * 50, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate((1 - ease) * -0.3);
+            drawCoupCard2D(
+              ctx,
+              -flyW / 2,
+              -flyH / 2,
+              flyW,
+              flyH,
+              null,
+              false,
+              true
+            );
+            ctx.restore();
+          }
+        }
+
+        ctx.restore();
+      }
+
       // 7.5. Bottom-Left Large 2D Hand Dock (Shows Viewer's 2 Influence Cards in High Detail)
       if (curMode === "match" && pv && curViewerSeatNo !== null) {
         const mySeat = pv.seats.find((s) => s.seatNo === curViewerSeatNo);
@@ -833,86 +1157,147 @@ export function CoupCanvas({
 
         const pool = pv.exchangePool;
         const keepCount = pv.exchangeKeepCount;
-        const modalW = Math.min(width - 20, 490);
-        const modalH = 310;
+        const modalW = Math.min(width - 20, 510);
+        const modalH = 336;
         const modalX = (width - modalW) / 2;
         const modalY = (height - modalH) / 2;
+
+        const modalElapsed =
+          exchangeModalStartRef.current !== null
+            ? (now - exchangeModalStartRef.current) / 1000
+            : 999;
 
         drawRoundedRect(ctx, modalX, modalY, modalW, modalH, 22);
         ctx.fillStyle = "#0f172a";
         ctx.fill();
-        ctx.strokeStyle = "#10b981";
+        ctx.strokeStyle = "#b5db18";
         ctx.lineWidth = 2.5;
         ctx.stroke();
 
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillStyle = "#6ee7b7";
+        ctx.fillStyle = "#d9f99d";
         ctx.font = "bold 13px sans-serif";
         ctx.fillText(
-          `ĐẠI SỨ ĐỔI BÀI • CHỌN GIỮ LẠI ĐÚNG ${keepCount} LÁ BÀI`,
+          `🔄 ĐẠI SỨ ĐỔI BÀI • CHỌN GIỮ LẠI ĐÚNG ${keepCount} LÁ BÀI`,
           centerX,
-          modalY + 28
+          modalY + 26
+        );
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "11px sans-serif";
+        ctx.fillText(
+          "Chạm vào lá bài để chuyển đổi giữa [Giữ trên tay] và [Trả về Bộ bài]",
+          centerX,
+          modalY + 45
         );
 
         const cW = width < 520 ? 74 : 92;
         const cH = width < 520 ? 106 : 128;
-        const gap = 14;
+        const gap = 16;
         const totalRowW = pool.length * cW + (pool.length - 1) * gap;
         const startX = centerX - totalRowW / 2;
-        const cardY = modalY + 58;
+        const baseCardY = modalY + 76;
+
+        // Origin point at top-center of modal for initial card deal & flip
+        const dealFromX = centerX - cW / 2;
+        const dealFromY = modalY + 14;
 
         pool.forEach((ch, idx) => {
-          const cxCard = startX + idx * (cW + gap);
+          const targetX = startX + idx * (cW + gap);
           const isPicked = curExchangeSel.includes(idx);
+
+          // Smoothly interpolate per-card lift progress (0 = return to deck, 1 = keep in hand)
+          const curLift = cardLiftProgressRef.current[idx] ?? (isPicked ? 1 : 0);
+          const nextLift = lerp(
+            curLift,
+            isPicked ? 1 : 0,
+            Math.min(1, dt * 12)
+          );
+          cardLiftProgressRef.current[idx] = nextLift;
+
+          // Staggered deal & 2D horizontal card-flip animation when modal opens
+          const stagger = idx * 0.1;
+          const dealT = Math.max(
+            0,
+            Math.min(1, (modalElapsed - stagger) / 0.52)
+          );
+          const dealEase = 1 - Math.pow(1 - dealT, 3);
+
+          const liftOffsetY = lerp(8, -14, nextLift);
+          const cxCard = lerp(dealFromX, targetX, dealEase);
+          const cyCard = lerp(dealFromY, baseCardY + liftOffsetY, dealEase);
+
+          // 2D horizontal flip from royal card back (cos < 0) to face-up portrait (cos >= 0)
+          const flipAngle = (1 - dealEase) * Math.PI;
+          const flipScaleX = Math.max(0.08, Math.abs(Math.cos(flipAngle)));
+          const showFront = dealEase >= 0.5;
+          const cardScale = lerp(0.96, 1.04, nextLift);
 
           newHitRegions.push({
             id: `exchange-card-${idx}`,
             shape: "rect",
-            x: cxCard,
-            y: cardY,
+            x: targetX,
+            y: baseCardY - 16,
             width: cW,
-            height: cH,
+            height: cH + 46,
             cursor: "pointer",
             data: { type: "toggle-exchange-card", index: idx, keepCount },
           });
 
+          ctx.save();
+          // Pulsing chartreuse-lime glow behind cards selected to keep
+          if (nextLift > 0.2) {
+            ctx.shadowColor = "rgba(181, 219, 24, 0.65)";
+            ctx.shadowBlur = 16 * nextLift;
+          }
+
+          ctx.translate(cxCard + cW / 2, cyCard + cH / 2);
+          ctx.scale(flipScaleX * cardScale, cardScale);
+          ctx.globalAlpha = lerp(0.76, 1, nextLift);
+
           drawCoupCard2D(
             ctx,
-            cxCard,
-            cardY,
+            -cW / 2,
+            -cH / 2,
             cW,
             cH,
-            ch,
+            showFront ? ch : null,
             false,
             isPicked
           );
+          ctx.restore();
 
           // 2D Selection Badge below each card
+          const badgeY = cyCard + cH + 8;
           drawRoundedRect(
             ctx,
-            cxCard + cW * 0.1,
-            cardY + cH + 8,
-            cW * 0.8,
-            20,
+            targetX + cW * 0.06,
+            badgeY,
+            cW * 0.88,
+            21,
             10
           );
-          ctx.fillStyle = isPicked ? "#059669" : "#1e293b";
+          ctx.fillStyle = isPicked ? "#65a30d" : "#1e293b";
           ctx.fill();
+          ctx.strokeStyle = isPicked ? "#d9f99d" : "#475569";
+          ctx.lineWidth = 1.1;
+          ctx.stroke();
+
           ctx.fillStyle = isPicked ? "#ffffff" : "#94a3b8";
           ctx.font = "bold 10px sans-serif";
           ctx.fillText(
-            isPicked ? "✓ GIỮ LẠI" : "Trả về bộ bài",
-            cxCard + cW / 2,
-            cardY + cH + 18
+            isPicked ? "⬆ GIỮ LẠI" : "↩ Trả bộ bài",
+            targetX + cW / 2,
+            badgeY + 10.5
           );
         });
 
         // 2D Confirm Exchange Button on Canvas
-        const btnW = 210;
-        const btnH = 38;
+        const btnW = 230;
+        const btnH = 40;
         const btnX = centerX - btnW / 2;
-        const btnY = modalY + modalH - 52;
+        const btnY = modalY + modalH - 54;
         const canSubmit = curExchangeSel.length === keepCount;
 
         if (canSubmit) {
@@ -929,12 +1314,12 @@ export function CoupCanvas({
         }
 
         drawRoundedRect(ctx, btnX, btnY, btnW, btnH, 12);
-        ctx.fillStyle = canSubmit ? "#10b981" : "#334155";
+        ctx.fillStyle = canSubmit ? "#b5db18" : "#334155";
         ctx.fill();
-        ctx.fillStyle = canSubmit ? "#022c22" : "#94a3b8";
+        ctx.fillStyle = canSubmit ? "#1a2e05" : "#94a3b8";
         ctx.font = "bold 12px sans-serif";
         ctx.fillText(
-          `XÁC NHẬN GIỮ ${curExchangeSel.length}/${keepCount} LÁ`,
+          `🔄 XÁC NHẬN ĐỔI BÀI (${curExchangeSel.length}/${keepCount} LÁ)`,
           centerX,
           btnY + btnH / 2
         );
