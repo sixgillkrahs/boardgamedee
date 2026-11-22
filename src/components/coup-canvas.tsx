@@ -344,11 +344,11 @@ export function CoupCanvas({
       ctx.textBaseline = "middle";
       if (curMode === "lobby") {
         ctx.fillStyle = "#fde047";
-        ctx.font = "bold 12px sans-serif";
-        ctx.fillText("COUP", centerX, centerY - 6);
+        ctx.font = "bold 11px sans-serif";
+        ctx.fillText("SẢNH CHỜ", centerX, centerY - 5);
         ctx.fillStyle = "#cbd5e1";
         ctx.font = "600 10px sans-serif";
-        ctx.fillText("SẢNH CHỜ", centerX, centerY + 10);
+        ctx.fillText(`${curLobbySeats.length}/6`, centerX, centerY + 10);
       } else if (pv?.step === "Finished") {
         ctx.fillStyle = "#fde047";
         ctx.font = "bold 11px sans-serif";
@@ -367,7 +367,7 @@ export function CoupCanvas({
       }
       ctx.restore();
 
-      // 5. Top Status Banner on 2D Canvas
+      // 5. Top Status Banner on 2D Canvas (Only shown when needed, without "Coup: Đảo Chính")
       const activeSeatObj = pv?.seats.find(
         (s) => s.seatNo === pv.activeSeatNo
       );
@@ -381,7 +381,7 @@ export function CoupCanvas({
         ? pv.seats.find((s) => s.seatNo === pv.pendingBlock?.blockerSeatNo)
         : null;
 
-      let bannerText = `Coup: Đảo Chính • Đang chờ người chơi (${curLobbySeats.length}/6)`;
+      let bannerText: string | null = null;
       if (curMode === "match" && pv) {
         if (pv.step === "Finished") {
           bannerText = pv.winReasonVi ?? "Ván đấu đã kết thúc!";
@@ -404,22 +404,24 @@ export function CoupCanvas({
         }
       }
 
-      ctx.save();
-      const bannerW = Math.min(width - 24, 580);
-      const bannerX = (width - bannerW) / 2;
-      drawRoundedRect(ctx, bannerX, 12, bannerW, 36, 18);
-      ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
-      ctx.fill();
-      ctx.strokeStyle = "rgba(192, 132, 252, 0.45)";
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
+      if (bannerText) {
+        ctx.save();
+        const bannerW = Math.min(width - 24, 580);
+        const bannerX = (width - bannerW) / 2;
+        drawRoundedRect(ctx, bannerX, 12, bannerW, 36, 18);
+        ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(192, 132, 252, 0.45)";
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
 
-      ctx.fillStyle = "#f8fafc";
-      ctx.font = "600 12.5px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(bannerText, width / 2, 30);
-      ctx.restore();
+        ctx.fillStyle = "#f8fafc";
+        ctx.font = "600 12.5px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(bannerText, width / 2, 30);
+        ctx.restore();
+      }
 
       // 6. Seats around the Table (Each with two 2D Influence Cards + 2D Gold Coin Stack)
       const newHitRegions: HitRegion[] = [];
