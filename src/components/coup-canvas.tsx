@@ -268,8 +268,8 @@ export function CoupCanvas({
 
       const centerX = width * 0.5;
       const centerY = height * 0.47;
-      const tableRx = Math.min(width * 0.36, 305);
-      const tableRy = Math.min(height * 0.32, 210);
+      const tableRx = Math.min(width * 0.39, 510);
+      const tableRy = Math.min(height * 0.36, 330);
 
       // 2. Royal Velvet Table Oval & Double Gold Filigree Rim
       const tableGrad = ctx.createRadialGradient(
@@ -536,11 +536,11 @@ export function CoupCanvas({
           ? (now - dealStartRef.current) / 1000
           : 999;
 
-      const cardW = width < 560 ? 38 : 46;
-      const cardH = width < 560 ? 54 : 64;
-      const deckOriginX = centerX - 72;
+      const cardW = width < 560 ? 46 : width < 960 ? 58 : 68;
+      const cardH = width < 560 ? 64 : width < 960 ? 82 : 96;
+      const deckOriginX = centerX - 88;
       const deckOriginY = centerY;
-      const treasOriginX = centerX + 74;
+      const treasOriginX = centerX + 86;
       const treasOriginY = centerY;
 
       seatsToRender.forEach((seat, seatIdx) => {
@@ -635,9 +635,9 @@ export function CoupCanvas({
         }
 
         // Draw the Seat's 2D Gold Coin Stack right beside their 2 Influence Cards
-        const coinStackX = pos.x + cardW + 16;
-        const coinStackY = pos.y + 4;
-        drawCoupCoinStack2D(ctx, coinStackX, coinStackY, seat.coins, 10);
+        const coinStackX = pos.x + cardW + 20;
+        const coinStackY = pos.y + 6;
+        drawCoupCoinStack2D(ctx, coinStackX, coinStackY, seat.coins, 12);
 
         // Name Plate below the 2 cards
         const nameText = isMe
@@ -1060,8 +1060,8 @@ export function CoupCanvas({
       if (curMode === "match" && pv && curViewerSeatNo !== null) {
         const mySeat = pv.seats.find((s) => s.seatNo === curViewerSeatNo);
         if (mySeat) {
-          const bigW = width < 560 ? 64 : 84;
-          const bigH = width < 560 ? 92 : 120;
+          const bigW = width < 560 ? 74 : 98;
+          const bigH = width < 560 ? 104 : 138;
           const dockPad = 10;
           const dockW = bigW * 2 + dockPad * 3;
           const dockH = bigH + 34;
@@ -1460,7 +1460,7 @@ export function CoupCanvas({
   };
 
   return (
-    <div className="relative w-full h-full min-h-[500px] select-none overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl">
+    <div className="relative w-full h-full min-h-[640px] select-none overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl">
       <canvas
         ref={canvasRef}
         onMouseMove={handleMouseMove}

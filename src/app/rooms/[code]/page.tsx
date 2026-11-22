@@ -339,8 +339,8 @@ function RoomPageContent({
       )}
 
       {/* Full-Width Interactive 2D Canvas Tabletop (Left) + Action Selection Sidebar (Right) */}
-      <main className="relative flex-1 flex flex-col lg:flex-row gap-3 p-3 md:p-4 max-w-[1680px] w-full mx-auto">
-        <div className="flex-1 min-h-[540px] relative">
+      <main className="relative flex-1 flex flex-col lg:flex-row gap-2.5 p-2 md:p-2.5 w-full">
+        <div className="flex-1 min-h-[680px] lg:min-h-[calc(100vh-64px)] relative">
           {isCoup ? (
             <CoupCanvas
               mode={isLobby ? "lobby" : "match"}

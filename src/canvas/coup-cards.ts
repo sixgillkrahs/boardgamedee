@@ -3762,9 +3762,9 @@ export function drawCoupCenterTreasuryAndDeck2D(
   ctx.save();
 
   // 1. Left of center: Stacked 2D Court Deck
-  const deckW = 48;
-  const deckH = 66;
-  const deckX = centerX - 96;
+  const deckW = 58;
+  const deckH = 80;
+  const deckX = centerX - 114;
   const deckY = centerY - deckH / 2;
 
   for (let layer = 2; layer >= 0; layer--) {
@@ -3795,20 +3795,20 @@ export function drawCoupCenterTreasuryAndDeck2D(
   ctx.fillText(`Bộ bài: ${courtDeckCount}`, deckX + deckW / 2, deckY + deckH + 14);
 
   // 2. Right of center: Central Treasury 2D Gold Coin Pile
-  const treasX = centerX + 74;
+  const treasX = centerX + 86;
   const treasY = centerY + 6;
   const coinOffsets: [number, number][] = [
-    [-14, 6],
-    [12, 8],
-    [0, 4],
-    [-10, -2],
-    [10, -1],
-    [0, -6],
-    [-4, -13],
-    [6, -12],
+    [-16, 7],
+    [14, 9],
+    [0, 5],
+    [-12, -2],
+    [12, -1],
+    [0, -7],
+    [-5, -15],
+    [7, -14],
   ];
   for (const [ox, oy] of coinOffsets) {
-    drawCoupCoin2D(ctx, treasX + ox, treasY + oy, 11);
+    drawCoupCoin2D(ctx, treasX + ox, treasY + oy, 13);
   }
 
   // Subtle shimmer pulse on top coin
