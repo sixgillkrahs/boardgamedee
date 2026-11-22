@@ -1295,6 +1295,726 @@ export function drawAssassinCard2D(
 }
 
 /**
+ * Draws the detailed 2D illustration for the Coup "Contessa" card matching the reference artwork
+ * (without any text on the card):
+ * - Warm golden-orange dusk sky with upper-left sun/moon disk, futuristic skyline (left cylindrical
+ *   skyscraper topped with a glowing golden ribbed dome, right sleek white diagonal spire), and flying speeders
+ * - Top-right crimson-red pentagonal diamond shield emblem with a 3-merlon castle tower cutout & twin slits
+ * - Voluminous curly auburn-copper upswept hair studded with luminous silver-white pearls
+ * - Aristocratic face with white vertical forehead line & ring glyph, red nose-chain across cheeks & nose bridge
+ *   with 6 hanging pearl drops, and long crimson needle earrings
+ * - Massive dramatic high flared crimson-red calla-lily collar with 5 diagonal raised ribs on each wing,
+ *   exposed collarbones/décolletage, and deep crimson brocade bodice with off-shoulder sleeve cuffs
+ */
+export function drawContessaCard2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  // 1. Golden-Orange Futuristic Dusk Sky & Horizon Cityscape Backdrop
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+  skyGrad.addColorStop(0, "#d8640b");
+  skyGrad.addColorStop(0.24, "#f49f38");
+  skyGrad.addColorStop(0.5, "#f5deb3");
+  skyGrad.addColorStop(0.68, "#a17c47");
+  skyGrad.addColorStop(1, "#2a0808");
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Faint Sun / Planet Orb in Upper-Left Sky
+  const sunGrad = ctx.createRadialGradient(
+    w * 0.1,
+    h * 0.088,
+    w * 0.01,
+    w * 0.1,
+    h * 0.088,
+    w * 0.085
+  );
+  sunGrad.addColorStop(0, "rgba(253, 186, 116, 0.55)");
+  sunGrad.addColorStop(0.75, "rgba(234, 88, 12, 0.35)");
+  sunGrad.addColorStop(1, "rgba(234, 88, 12, 0)");
+  ctx.fillStyle = sunGrad;
+  ctx.beginPath();
+  ctx.arc(w * 0.1, h * 0.088, w * 0.085, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Far-left hazy background skyscraper
+  ctx.fillStyle = "rgba(120, 96, 72, 0.55)";
+  ctx.fillRect(0, h * 0.25, w * 0.038, h * 0.42);
+
+  // Left Cylindrical High-Rise Tower with Glowing Golden Ribbed Dome
+  const towX = w * 0.055;
+  const towW = w * 0.165;
+  const towTopY = h * 0.335;
+  const towBotY = h * 0.72;
+
+  const towBodyGrad = ctx.createLinearGradient(towX, 0, towX + towW, 0);
+  towBodyGrad.addColorStop(0, "#382c1e");
+  towBodyGrad.addColorStop(0.45, "#786242");
+  towBodyGrad.addColorStop(0.75, "#9c8259");
+  towBodyGrad.addColorStop(1, "#2e2317");
+  ctx.fillStyle = towBodyGrad;
+  ctx.fillRect(towX, towTopY, towW, towBotY - towTopY);
+
+  // Window grid lines on the cylindrical tower body
+  ctx.strokeStyle = "rgba(253, 224, 71, 0.32)";
+  ctx.lineWidth = Math.max(0.6, w * 0.006);
+  for (let row = 0; row < 14; row++) {
+    const wy = towTopY + (row + 0.5) * ((towBotY - towTopY) / 15);
+    ctx.beginPath();
+    ctx.moveTo(towX + towW * 0.08, wy);
+    ctx.lineTo(towX + towW * 0.92, wy);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "rgba(25, 19, 12, 0.65)";
+  for (let col = 1; col <= 4; col++) {
+    const wx = towX + (col / 5) * towW;
+    ctx.beginPath();
+    ctx.moveTo(wx, towTopY);
+    ctx.lineTo(wx, towBotY);
+    ctx.stroke();
+  }
+
+  // Glowing Golden Ribbed Dome atop the left cylindrical tower
+  const domeCx = towX + towW * 0.5;
+  const domeGrad = ctx.createRadialGradient(
+    domeCx + towW * 0.14,
+    towTopY - h * 0.025,
+    towW * 0.04,
+    domeCx,
+    towTopY,
+    towW * 0.58
+  );
+  domeGrad.addColorStop(0, "#fef08a");
+  domeGrad.addColorStop(0.45, "#f59e0b");
+  domeGrad.addColorStop(0.85, "#92400e");
+  domeGrad.addColorStop(1, "#451a03");
+  ctx.fillStyle = domeGrad;
+  ctx.beginPath();
+  ctx.arc(domeCx, towTopY, towW * 0.5, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  // Golden dome vertical meridian ribs
+  ctx.strokeStyle = "rgba(69, 26, 3, 0.55)";
+  ctx.lineWidth = Math.max(0.6, w * 0.006);
+  for (const rx of [-0.28, -0.1, 0.1, 0.28]) {
+    ctx.beginPath();
+    ctx.moveTo(domeCx + rx * towW * 0.4, towTopY - h * 0.052);
+    ctx.quadraticCurveTo(
+      domeCx + rx * towW * 0.95,
+      towTopY - h * 0.025,
+      domeCx + rx * towW * 0.85,
+      towTopY
+    );
+    ctx.stroke();
+  }
+
+  // Right Sleek White/Silver Angled Spire Skyscraper
+  const spireX = w * 0.875;
+  const spireGrad = ctx.createLinearGradient(spireX, 0, spireX + w * 0.09, 0);
+  spireGrad.addColorStop(0, "#94a3b8");
+  spireGrad.addColorStop(0.35, "#f8fafc");
+  spireGrad.addColorStop(1, "#cbd5e1");
+  ctx.fillStyle = spireGrad;
+  ctx.beginPath();
+  ctx.moveTo(spireX, h * 0.46);
+  ctx.lineTo(spireX, h * 0.25);
+  ctx.lineTo(spireX + w * 0.024, h * 0.25);
+  ctx.lineTo(spireX + w * 0.024, h * 0.182);
+  ctx.lineTo(spireX + w * 0.052, h * 0.182);
+  ctx.lineTo(spireX + w * 0.052, h * 0.285);
+  ctx.lineTo(spireX + w * 0.088, h * 0.322);
+  ctx.lineTo(spireX + w * 0.088, h * 0.5);
+  ctx.closePath();
+  ctx.fill();
+
+  // Dark vertical window slots on the right white spire
+  ctx.strokeStyle = "#334155";
+  ctx.lineWidth = Math.max(0.7, w * 0.008);
+  ctx.beginPath();
+  ctx.moveTo(spireX + w * 0.036, h * 0.205);
+  ctx.lineTo(spireX + w * 0.036, h * 0.43);
+  ctx.moveTo(spireX + w * 0.064, h * 0.32);
+  ctx.lineTo(spireX + w * 0.064, h * 0.45);
+  ctx.stroke();
+
+  // Flying Sci-Fi Shuttle Speeder on Upper Left (above golden dome) + Faint Contrail
+  ctx.strokeStyle = "rgba(254, 243, 199, 0.38)";
+  ctx.lineWidth = Math.max(0.8, w * 0.008);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.05, h * 0.205);
+  ctx.lineTo(w * 0.15, h * 0.208);
+  ctx.stroke();
+
+  ctx.fillStyle = "#292524";
+  ctx.strokeStyle = "#d6d3d1";
+  ctx.lineWidth = Math.max(0.5, w * 0.005);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.225, h * 0.21);
+  ctx.lineTo(w * 0.162, h * 0.197);
+  ctx.lineTo(w * 0.145, h * 0.205);
+  ctx.lineTo(w * 0.118, h * 0.214);
+  ctx.lineTo(w * 0.154, h * 0.214);
+  ctx.lineTo(w * 0.158, h * 0.224);
+  ctx.lineTo(w * 0.18, h * 0.213);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Smaller distant flying speeder near top center-right
+  ctx.fillStyle = "#57412d";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.608, h * 0.138);
+  ctx.lineTo(w * 0.578, h * 0.134);
+  ctx.lineTo(w * 0.565, h * 0.143);
+  ctx.closePath();
+  ctx.fill();
+
+  // 2. Top-Right Crimson Diamond-Shield Castle-Tower Faction Emblem
+  ctx.save();
+  const emX = w * 0.744;
+  const emY = h * 0.16;
+  const emW = w * 0.27;
+  const emH = h * 0.144;
+
+  ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
+  ctx.shadowBlur = Math.max(2, w * 0.025);
+
+  const emGrad = ctx.createLinearGradient(
+    emX - emW * 0.5,
+    emY - emH * 0.5,
+    emX + emW * 0.5,
+    emY + emH * 0.5
+  );
+  emGrad.addColorStop(0, "#ff2a32");
+  emGrad.addColorStop(0.55, "#e1161e");
+  emGrad.addColorStop(1, "#a60b11");
+  ctx.fillStyle = emGrad;
+  ctx.strokeStyle = "#8a080d";
+  ctx.lineWidth = Math.max(0.8, w * 0.009);
+
+  // Left half of diamond shield + central vertical spine + right half of diamond shield
+  // (Leaving the castle battlement tower & two vertical slits cut out to show the golden sky)
+  ctx.beginPath();
+  // Outer pentagonal diamond shield contour (clockwise)
+  ctx.moveTo(emX - emW * 0.34, emY - emH * 0.47);
+  ctx.lineTo(emX + emW * 0.34, emY - emH * 0.47);
+  ctx.lineTo(emX + emW * 0.5, emY - emH * 0.2);
+  ctx.lineTo(emX + emW * 0.06, emY + emH * 0.47);
+  // Up the right slit into the right tower battlement
+  ctx.lineTo(emX + emW * 0.06, emY - emH * 0.04);
+  ctx.lineTo(emX + emW * 0.14, emY - emH * 0.12);
+  ctx.lineTo(emX + emW * 0.22, emY - emH * 0.12);
+  ctx.lineTo(emX + emW * 0.22, emY - emH * 0.34);
+  // 3 Crenelated Merlons across the top of the castle cutout (right to left)
+  ctx.lineTo(emX + emW * 0.13, emY - emH * 0.34);
+  ctx.lineTo(emX + emW * 0.13, emY - emH * 0.25);
+  ctx.lineTo(emX + emW * 0.05, emY - emH * 0.25);
+  ctx.lineTo(emX + emW * 0.05, emY - emH * 0.34);
+  ctx.lineTo(emX - emW * 0.05, emY - emH * 0.34);
+  ctx.lineTo(emX - emW * 0.05, emY - emH * 0.25);
+  ctx.lineTo(emX - emW * 0.13, emY - emH * 0.25);
+  ctx.lineTo(emX - emW * 0.13, emY - emH * 0.34);
+  ctx.lineTo(emX - emW * 0.22, emY - emH * 0.34);
+  // Down left side of castle tower cutout
+  ctx.lineTo(emX - emW * 0.22, emY - emH * 0.12);
+  ctx.lineTo(emX - emW * 0.14, emY - emH * 0.12);
+  ctx.lineTo(emX - emW * 0.06, emY - emH * 0.04);
+  ctx.lineTo(emX - emW * 0.06, emY + emH * 0.47);
+  // Back up the left diagonal edge of the diamond shield
+  ctx.lineTo(emX - emW * 0.5, emY - emH * 0.2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Central red vertical pillar/spine between the two bottom castle slits
+  ctx.beginPath();
+  ctx.moveTo(emX - emW * 0.025, emY - emH * 0.08);
+  ctx.lineTo(emX + emW * 0.025, emY - emH * 0.08);
+  ctx.lineTo(emX + emW * 0.025, emY + emH * 0.48);
+  ctx.lineTo(emX, emY + emH * 0.53);
+  ctx.lineTo(emX - emW * 0.025, emY + emH * 0.48);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  // 3. Back Wall of the Massive High Flared Crimson Collar (behind neck & shoulders)
+  ctx.save();
+  const innerCollarGrad = ctx.createLinearGradient(0, h * 0.4, w, h * 0.78);
+  innerCollarGrad.addColorStop(0, "#7f0909");
+  innerCollarGrad.addColorStop(0.5, "#450404");
+  innerCollarGrad.addColorStop(1, "#990f0f");
+  ctx.fillStyle = innerCollarGrad;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.11, h * 0.43);
+  ctx.quadraticCurveTo(w * 0.22, h * 0.39, w * 0.35, h * 0.51);
+  ctx.lineTo(w * 0.67, h * 0.51);
+  ctx.quadraticCurveTo(w * 0.82, h * 0.38, w * 0.91, h * 0.41);
+  ctx.quadraticCurveTo(w * 0.96, h * 0.56, w * 0.78, h * 0.78);
+  ctx.lineTo(w * 0.22, h * 0.78);
+  ctx.quadraticCurveTo(w * 0.08, h * 0.58, w * 0.11, h * 0.43);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // 4. Bare Shoulders, Neck, Collarbones (Clavicles) & Broad Square Décolletage
+  ctx.save();
+  const skinChestGrad = ctx.createRadialGradient(
+    w * 0.5,
+    h * 0.68,
+    w * 0.04,
+    w * 0.5,
+    h * 0.66,
+    w * 0.36
+  );
+  skinChestGrad.addColorStop(0, "#fff0e5");
+  skinChestGrad.addColorStop(0.55, "#f0bfa3");
+  skinChestGrad.addColorStop(1, "#b87a5b");
+  ctx.fillStyle = skinChestGrad;
+  ctx.beginPath();
+  // Neck down to wide bare shoulders and chest
+  ctx.moveTo(w * 0.395, h * 0.52);
+  ctx.lineTo(w * 0.39, h * 0.665);
+  ctx.quadraticCurveTo(w * 0.14, h * 0.69, w * 0.04, h * 0.79);
+  ctx.lineTo(w * 0.96, h * 0.82);
+  ctx.quadraticCurveTo(w * 0.86, h * 0.69, w * 0.64, h * 0.67);
+  ctx.lineTo(w * 0.625, h * 0.52);
+  ctx.closePath();
+  ctx.fill();
+
+  // Realistic collarbone (clavicle) shadows & highlights
+  ctx.strokeStyle = "rgba(161, 98, 72, 0.55)";
+  ctx.lineWidth = Math.max(1, w * 0.012);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.33, h * 0.68);
+  ctx.quadraticCurveTo(w * 0.42, h * 0.7, w * 0.468, h * 0.73);
+  ctx.moveTo(w * 0.68, h * 0.69);
+  ctx.quadraticCurveTo(w * 0.57, h * 0.708, w * 0.505, h * 0.732);
+  ctx.stroke();
+
+  // Neck tendon shadow lines
+  ctx.strokeStyle = "rgba(161, 98, 72, 0.38)";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.42, h * 0.575);
+  ctx.lineTo(w * 0.465, h * 0.715);
+  ctx.moveTo(w * 0.59, h * 0.585);
+  ctx.lineTo(w * 0.52, h * 0.715);
+  ctx.stroke();
+  ctx.restore();
+
+  // 5. Front Wings of the Dramatic High Flared Crimson Collar (with 5 Diagonal Raised Ribs) & Brocade Gown
+  ctx.save();
+  const leftWingGrad = ctx.createLinearGradient(
+    w * 0.09,
+    h * 0.42,
+    w * 0.35,
+    h * 0.8
+  );
+  leftWingGrad.addColorStop(0, "#c81616");
+  leftWingGrad.addColorStop(0.55, "#990b0b");
+  leftWingGrad.addColorStop(1, "#5c0404");
+  ctx.fillStyle = leftWingGrad;
+  ctx.strokeStyle = "#ef2323";
+  ctx.lineWidth = Math.max(1.1, w * 0.012);
+
+  // Left High Flared Collar Wing
+  ctx.beginPath();
+  ctx.moveTo(w * 0.11, h * 0.43);
+  ctx.quadraticCurveTo(w * 0.21, h * 0.39, w * 0.32, h * 0.51);
+  ctx.quadraticCurveTo(w * 0.365, h * 0.64, w * 0.325, h * 0.775);
+  ctx.lineTo(w * 0.125, h * 0.805);
+  ctx.quadraticCurveTo(w * 0.095, h * 0.61, w * 0.11, h * 0.43);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // 5 Diagonal Raised Crimson Pleats/Ribs on the Left Collar Wing
+  ctx.strokeStyle = "#ef2b2b";
+  ctx.lineWidth = Math.max(1.3, w * 0.014);
+  for (let i = 0; i < 5; i++) {
+    const t = i / 4;
+    ctx.beginPath();
+    ctx.moveTo(lerp(w * 0.11, w * 0.125, t), lerp(h * 0.595, h * 0.735, t));
+    ctx.lineTo(lerp(w * 0.34, w * 0.255, t), lerp(h * 0.71, h * 0.79, t));
+    ctx.stroke();
+  }
+
+  // Right High Flared Collar Wing
+  const rightWingGrad = ctx.createLinearGradient(
+    w * 0.94,
+    h * 0.41,
+    w * 0.65,
+    h * 0.82
+  );
+  rightWingGrad.addColorStop(0, "#d91818");
+  rightWingGrad.addColorStop(0.55, "#9e0c0c");
+  rightWingGrad.addColorStop(1, "#610505");
+  ctx.fillStyle = rightWingGrad;
+  ctx.strokeStyle = "#ef2323";
+  ctx.lineWidth = Math.max(1.1, w * 0.012);
+
+  ctx.beginPath();
+  ctx.moveTo(w * 0.91, h * 0.41);
+  ctx.quadraticCurveTo(w * 0.81, h * 0.39, w * 0.71, h * 0.54);
+  ctx.quadraticCurveTo(w * 0.655, h * 0.66, w * 0.7, h * 0.815);
+  ctx.lineTo(w * 0.835, h * 0.835);
+  ctx.quadraticCurveTo(w * 0.96, h * 0.61, w * 0.91, h * 0.41);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // 5 Diagonal Raised Crimson Pleats/Ribs on the Right Collar Wing
+  ctx.strokeStyle = "#ef2b2b";
+  ctx.lineWidth = Math.max(1.3, w * 0.014);
+  for (let i = 0; i < 5; i++) {
+    const t = i / 4;
+    ctx.beginPath();
+    ctx.moveTo(lerp(w * 0.825, w * 0.84, t), lerp(h * 0.595, h * 0.745, t));
+    ctx.lineTo(lerp(w * 0.68, w * 0.715, t), lerp(h * 0.725, h * 0.825, t));
+    ctx.stroke();
+  }
+
+  // Deep Crimson Brocade Square-Neck Bodice & Off-Shoulder Crimson Sleeve Cuffs
+  const bodiceGrad = ctx.createLinearGradient(0, h * 0.77, 0, h);
+  bodiceGrad.addColorStop(0, "#8f0d0d");
+  bodiceGrad.addColorStop(0.45, "#5c0505");
+  bodiceGrad.addColorStop(1, "#290101");
+  ctx.fillStyle = bodiceGrad;
+  ctx.beginPath();
+  // Left off-shoulder cuff + square bodice top + right off-shoulder cuff
+  ctx.moveTo(-w * 0.02, h);
+  ctx.lineTo(-w * 0.02, h * 0.82);
+  ctx.quadraticCurveTo(w * 0.06, h * 0.74, w * 0.13, h * 0.8);
+  ctx.lineTo(w * 0.25, h * 0.775);
+  ctx.quadraticCurveTo(w * 0.48, h * 0.79, w * 0.715, h * 0.825);
+  ctx.lineTo(w * 0.82, h * 0.835);
+  ctx.quadraticCurveTo(w * 0.885, h * 0.735, w * 1.02, h * 0.86);
+  ctx.lineTo(w * 1.02, h);
+  ctx.closePath();
+  ctx.fill();
+
+  // Beaded Crimson Trim along the Square Bodice Neckline & Sleeve Edges
+  ctx.strokeStyle = "#d91c1c";
+  ctx.lineWidth = Math.max(1.2, w * 0.014);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.23, h * 0.778);
+  ctx.quadraticCurveTo(w * 0.48, h * 0.792, w * 0.73, h * 0.828);
+  ctx.stroke();
+
+  // Embossed Dark-Crimson Brocade Scrollwork on the Bodice
+  ctx.strokeStyle = "rgba(185, 28, 28, 0.35)";
+  ctx.lineWidth = Math.max(0.8, w * 0.009);
+  for (const bx of [0.35, 0.48, 0.61]) {
+    ctx.beginPath();
+    ctx.arc(w * bx, h * 0.9, w * 0.055, 0, Math.PI * 1.6);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 6. Contessa's Voluminous Pearl-Studded Curly Auburn Hair, Portrait, Forehead Glyph & Nose-Chain
+  ctx.save();
+  const faceCx = w * 0.485;
+  const faceCy = h * 0.445;
+
+  // Back & Upper Crown Clusters of Curly Auburn-Copper Hair
+  const hairClouds: [number, number, number, string][] = [
+    [0.31, 0.33, 0.085, "#6e3112"],
+    [0.68, 0.34, 0.085, "#6e3112"],
+    [0.72, 0.39, 0.068, "#7c3a16"],
+    [0.29, 0.39, 0.068, "#5e270c"],
+    [0.36, 0.245, 0.092, "#9a4d21"],
+    [0.61, 0.255, 0.092, "#8c421a"],
+    [0.48, 0.225, 0.105, "#b35e2a"],
+    [0.41, 0.275, 0.082, "#c26c35"],
+    [0.55, 0.27, 0.082, "#a35223"],
+  ];
+  for (const [hx, hy, hr, col] of hairClouds) {
+    const cg = ctx.createRadialGradient(
+      w * (hx - hr * 0.2),
+      h * (hy - hr * 0.2),
+      w * hr * 0.1,
+      w * hx,
+      h * hy,
+      w * hr
+    );
+    cg.addColorStop(0, "#d9864e");
+    cg.addColorStop(0.55, col);
+    cg.addColorStop(1, "#451a07");
+    ctx.fillStyle = cg;
+    ctx.beginPath();
+    ctx.arc(w * hx, h * hy, w * hr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Left & Right Ears + Long Thin Crimson Needle Earrings with Silver Tips
+  ctx.fillStyle = "#e6ae91";
+  ctx.strokeStyle = "#a66d51";
+  ctx.lineWidth = Math.max(0.7, w * 0.008);
+  // Viewer's left ear
+  ctx.beginPath();
+  ctx.ellipse(
+    w * 0.322,
+    h * 0.468,
+    w * 0.022,
+    h * 0.042,
+    -0.18,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.stroke();
+  // Viewer's right ear
+  ctx.beginPath();
+  ctx.ellipse(
+    w * 0.678,
+    h * 0.468,
+    w * 0.028,
+    h * 0.046,
+    0.22,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.stroke();
+
+  // Long Crimson Needle Drop Earrings on Both Ears
+  for (const ex of [w * 0.346, w * 0.659]) {
+    ctx.strokeStyle = "#dc2626";
+    ctx.lineWidth = Math.max(1.1, w * 0.012);
+    ctx.beginPath();
+    ctx.moveTo(ex, h * 0.505);
+    ctx.lineTo(ex, h * 0.562);
+    ctx.stroke();
+
+    // Tiny silver needle tip at bottom of earring
+    ctx.fillStyle = "#e2e8f0";
+    ctx.beginPath();
+    ctx.moveTo(ex - w * 0.006, h * 0.562);
+    ctx.lineTo(ex + w * 0.006, h * 0.562);
+    ctx.lineTo(ex, h * 0.58);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Sculpted Aristocratic Peach-Ivory Face & Chin
+  const faceGrad = ctx.createRadialGradient(
+    faceCx + w * 0.02,
+    faceCy - h * 0.02,
+    w * 0.02,
+    faceCx,
+    faceCy,
+    w * 0.21
+  );
+  faceGrad.addColorStop(0, "#fff2e8");
+  faceGrad.addColorStop(0.58, "#f0bea2");
+  faceGrad.addColorStop(1, "#bd7d5e");
+  ctx.fillStyle = faceGrad;
+  ctx.strokeStyle = "#9e6347";
+  ctx.lineWidth = Math.max(0.8, w * 0.009);
+
+  ctx.beginPath();
+  ctx.moveTo(w * 0.325, h * 0.385);
+  // Left cheek down to poised chin
+  ctx.quadraticCurveTo(w * 0.33, h * 0.535, w * 0.472, h * 0.582);
+  // Chin up to right jawline & temple
+  ctx.quadraticCurveTo(w * 0.635, h * 0.545, w * 0.655, h * 0.395);
+  // Forehead hairline arch
+  ctx.quadraticCurveTo(w * 0.62, h * 0.285, w * 0.485, h * 0.285);
+  ctx.quadraticCurveTo(w * 0.35, h * 0.295, w * 0.325, h * 0.385);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Soft front auburn curl waves framing upper temples
+  ctx.fillStyle = "#8c421a";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.315, h * 0.41);
+  ctx.quadraticCurveTo(w * 0.36, h * 0.32, w * 0.47, h * 0.285);
+  ctx.quadraticCurveTo(w * 0.35, h * 0.265, w * 0.305, h * 0.36);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(w * 0.485, h * 0.285);
+  ctx.quadraticCurveTo(w * 0.61, h * 0.305, w * 0.665, h * 0.415);
+  ctx.quadraticCurveTo(w * 0.675, h * 0.33, w * 0.58, h * 0.275);
+  ctx.closePath();
+  ctx.fill();
+
+  // Scattered Luminous Silver-White Pearls nestled in her Auburn Curls
+  const hairPearls: [number, number][] = [
+    [0.302, 0.328],
+    [0.353, 0.275],
+    [0.298, 0.388],
+    [0.573, 0.227],
+    [0.625, 0.282],
+    [0.646, 0.29],
+    [0.68, 0.331],
+    [0.713, 0.344],
+    [0.703, 0.391],
+  ];
+  for (const [px, py] of hairPearls) {
+    ctx.fillStyle = "#cbd5e1";
+    ctx.beginPath();
+    ctx.arc(w * px, h * py, w * 0.011, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(w * px - w * 0.003, h * py - h * 0.002, w * 0.005, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // White/Silver Vertical Forehead Stem & Open Circle Glyph
+  ctx.strokeStyle = "#f8fafc";
+  ctx.lineWidth = Math.max(1.2, w * 0.013);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.468, h * 0.295);
+  ctx.lineTo(w * 0.467, h * 0.342);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(w * 0.467, h * 0.352, w * 0.011, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // High-Arched Thin Auburn Eyebrows
+  ctx.strokeStyle = "#7c3a16";
+  ctx.lineWidth = Math.max(0.9, w * 0.011);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.345, h * 0.398);
+  ctx.quadraticCurveTo(w * 0.392, h * 0.375, w * 0.442, h * 0.398);
+  ctx.moveTo(w * 0.505, h * 0.396);
+  ctx.quadraticCurveTo(w * 0.558, h * 0.372, w * 0.612, h * 0.398);
+  ctx.stroke();
+
+  // Warm Hazel-Amber Eyes
+  for (const [ex, ey] of [
+    [w * 0.398, h * 0.422],
+    [w * 0.555, h * 0.421],
+  ] as const) {
+    // Sclera
+    ctx.fillStyle = "#fdf8f5";
+    ctx.beginPath();
+    ctx.ellipse(ex, ey, w * 0.032, h * 0.011, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Hazel-amber iris
+    ctx.fillStyle = "#8c6224";
+    ctx.beginPath();
+    ctx.arc(ex + w * 0.003, ey, w * 0.014, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pupil
+    ctx.fillStyle = "#1c1917";
+    ctx.beginPath();
+    ctx.arc(ex + w * 0.003, ey, w * 0.006, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Catchlight
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(ex - w * 0.002, ey - h * 0.003, w * 0.0035, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Upper eyelid lash line
+    ctx.strokeStyle = "#451a03";
+    ctx.lineWidth = Math.max(0.9, w * 0.01);
+    ctx.beginPath();
+    ctx.arc(ex, ey + h * 0.004, w * 0.032, Math.PI * 1.15, Math.PI * 1.85);
+    ctx.stroke();
+  }
+
+  // Sculpted Nose Bridge & Nostrils
+  ctx.strokeStyle = "#a86c4f";
+  ctx.lineWidth = Math.max(0.9, w * 0.01);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.468, h * 0.41);
+  ctx.lineTo(w * 0.456, h * 0.472);
+  ctx.quadraticCurveTo(w * 0.472, h * 0.486, w * 0.495, h * 0.474);
+  ctx.stroke();
+
+  // Signature Crimson-Red Thread Nose-Chain Draped Across Cheeks & Over Nose Bridge
+  ctx.strokeStyle = "#b91c1c";
+  ctx.lineWidth = Math.max(1.1, w * 0.012);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.322, h * 0.452);
+  ctx.quadraticCurveTo(w * 0.382, h * 0.475, w * 0.442, h * 0.448);
+  // Arch over the nose bridge
+  ctx.quadraticCurveTo(w * 0.464, h * 0.432, w * 0.488, h * 0.448);
+  // Swoop across right cheek to right ear
+  ctx.quadraticCurveTo(w * 0.565, h * 0.482, w * 0.658, h * 0.45);
+  ctx.stroke();
+
+  // 6 Luminous Silver-White Pearl Droplets Hanging from the Red Nose-Chain (3 left, 3 right)
+  const chainPearls: [number, number][] = [
+    [0.332, 0.463],
+    [0.354, 0.47],
+    [0.391, 0.475],
+    [0.514, 0.471],
+    [0.562, 0.479],
+    [0.614, 0.472],
+  ];
+  for (const [px, py] of chainPearls) {
+    ctx.fillStyle = "#94a3b8";
+    ctx.beginPath();
+    ctx.arc(w * px, h * py, w * 0.0125, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#f8fafc";
+    ctx.beginPath();
+    ctx.arc(
+      w * px - w * 0.002,
+      h * py - h * 0.001,
+      w * 0.0095,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // Tiny blue-silver center lustre dot
+    ctx.fillStyle = "#64748b";
+    ctx.beginPath();
+    ctx.arc(w * px + w * 0.002, h * py + h * 0.001, w * 0.003, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Full Sculpted Peach-Terracotta Lips
+  // Upper lip with sharp Cupid's bow
+  ctx.fillStyle = "#c96a4b";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.426, h * 0.52);
+  ctx.quadraticCurveTo(w * 0.45, h * 0.504, w * 0.468, h * 0.512);
+  ctx.quadraticCurveTo(w * 0.486, h * 0.504, w * 0.516, h * 0.522);
+  ctx.quadraticCurveTo(w * 0.47, h * 0.524, w * 0.426, h * 0.52);
+  ctx.closePath();
+  ctx.fill();
+
+  // Full lower lip
+  ctx.fillStyle = "#e69577";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.428, h * 0.521);
+  ctx.quadraticCurveTo(w * 0.47, h * 0.546, w * 0.514, h * 0.522);
+  ctx.quadraticCurveTo(w * 0.47, h * 0.524, w * 0.428, h * 0.521);
+  ctx.closePath();
+  ctx.fill();
+
+  // Lower lip gloss highlight
+  ctx.fillStyle = "rgba(255, 247, 237, 0.55)";
+  ctx.beginPath();
+  ctx.ellipse(w * 0.468, h * 0.53, w * 0.02, h * 0.004, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+  ctx.restore();
+}
+
+/**
  * Draws the 2D vector illustration for one of the 5 Coup Characters inside a card frame.
  */
 function drawCoupCharacterArt2D(
@@ -1407,78 +2127,7 @@ function drawCoupCharacterArt2D(
     ctx.arc(cx, cy, s * 0.28, Math.PI * 0.2, Math.PI * 0.85);
     ctx.stroke();
   } else {
-    // Contessa: Baroque Amber-Burgundy & Venetian Golden Mask + Shield
-    const bg = ctx.createRadialGradient(cx, cy, s * 0.05, cx, cy, s * 0.75);
-    bg.addColorStop(0, "#b45309");
-    bg.addColorStop(0.6, "#7c2d12");
-    bg.addColorStop(1, "#270a04");
-    ctx.fillStyle = bg;
-    ctx.fillRect(x, y, w, h);
-
-    // Golden Protective Shield behind the mask
-    ctx.fillStyle = "rgba(251, 191, 36, 0.22)";
-    ctx.strokeStyle = "#fbbf24";
-    ctx.lineWidth = Math.max(2, s * 0.026);
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - s * 0.26);
-    ctx.lineTo(cx + s * 0.24, cy - s * 0.16);
-    ctx.quadraticCurveTo(cx + s * 0.24, cy + s * 0.14, cx, cy + s * 0.28);
-    ctx.quadraticCurveTo(
-      cx - s * 0.24,
-      cy + s * 0.14,
-      cx - s * 0.24,
-      cy - s * 0.16
-    );
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Venetian Masquerade Mask in Ivory & Gold
-    ctx.fillStyle = "#fef3c7";
-    ctx.strokeStyle = "#b45309";
-    ctx.lineWidth = Math.max(1.5, s * 0.022);
-    ctx.beginPath();
-    ctx.moveTo(cx - s * 0.22, cy - s * 0.04);
-    ctx.quadraticCurveTo(cx - s * 0.12, cy - s * 0.16, cx, cy - s * 0.08);
-    ctx.quadraticCurveTo(
-      cx + s * 0.12,
-      cy - s * 0.16,
-      cx + s * 0.22,
-      cy - s * 0.04
-    );
-    ctx.quadraticCurveTo(
-      cx + s * 0.14,
-      cy + s * 0.1,
-      cx + s * 0.04,
-      cy + s * 0.04
-    );
-    ctx.lineTo(cx, cy + s * 0.08);
-    ctx.lineTo(cx - s * 0.04, cy + s * 0.04);
-    ctx.quadraticCurveTo(
-      cx - s * 0.14,
-      cy + s * 0.1,
-      cx - s * 0.22,
-      cy - s * 0.04
-    );
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Cat-eye mask openings
-    ctx.fillStyle = "#1c1917";
-    for (const dir of [-1, 1]) {
-      ctx.beginPath();
-      ctx.ellipse(
-        cx + dir * s * 0.1,
-        cy - s * 0.03,
-        s * 0.048,
-        s * 0.022,
-        dir * -0.2,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-    }
+    drawContessaCard2D(ctx, x, y, w, h);
   }
 
   ctx.restore();

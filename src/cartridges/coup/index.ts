@@ -36,14 +36,14 @@ export const COUP_CHARACTER_META: Record<
     titleVi: "CÔNG TƯỚC",
     actionVi: "Thu Thuế (+3 xu)",
     blockVi: "Chặn Viện Trợ (2 xu)",
-    accentColor: "#a855f7",
+    accentColor: "#e11d84",
   },
   Assassin: {
     nameVi: "Sát Thủ (Assassin)",
     titleVi: "SÁT THỦ",
     actionVi: "Ám Sát (-3 xu, diệt 1 lá)",
     blockVi: "Không có kỹ năng chặn",
-    accentColor: "#ef4444",
+    accentColor: "#64748b",
   },
   Captain: {
     nameVi: "Thuyền Trưởng (Captain)",
@@ -64,7 +64,7 @@ export const COUP_CHARACTER_META: Record<
     titleVi: "PHU NHÂN",
     actionVi: "Không có hành động chủ động",
     blockVi: "Chặn Ám Sát của Sát Thủ",
-    accentColor: "#f59e0b",
+    accentColor: "#ef232a",
   },
 };
 
