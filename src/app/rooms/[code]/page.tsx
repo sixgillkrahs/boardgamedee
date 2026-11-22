@@ -264,6 +264,17 @@ function RoomPageContent({
         </div>
 
         <div className="flex items-center gap-2 text-xs">
+          {/* Quick Button to Open Chat & Event Log Drawer */}
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            className="rounded-lg border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-2.5 py-1.5 text-xs font-bold text-amber-300 transition cursor-pointer flex items-center gap-1.5"
+            title="Mở Kênh Chat & Nhật Ký"
+          >
+            <span>💬</span>
+            <span className="hidden sm:inline">Chat & Nhật Ký</span>
+          </button>
+
           {/* Gear Icon Button for Configuration */}
           <button
             type="button"
@@ -327,9 +338,9 @@ function RoomPageContent({
         </div>
       )}
 
-      {/* Full-Width Interactive 2D Canvas Tabletop + Bottom Action Bar */}
-      <main className="relative flex-1 flex flex-col gap-3 p-3 md:p-4 max-w-[1600px] w-full mx-auto">
-        <div className="flex-1 min-h-[520px] relative">
+      {/* Full-Width Interactive 2D Canvas Tabletop (Left) + Action Selection Sidebar (Right) */}
+      <main className="relative flex-1 flex flex-col lg:flex-row gap-3 p-3 md:p-4 max-w-[1680px] w-full mx-auto">
+        <div className="flex-1 min-h-[540px] relative">
           {isCoup ? (
             <CoupCanvas
               mode={isLobby ? "lobby" : "match"}
@@ -393,34 +404,22 @@ function RoomPageContent({
               onToggleRoleCard={() => setRoleCardRevealed((prev) => !prev)}
             />
           )}
-
-          {/* Floating Quick-Open Tab on Right Edge when Drawer is closed */}
-          {!drawerOpen && (
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(true)}
-              className="fixed right-0 top-1/2 -translate-y-1/2 z-30 rounded-l-2xl border border-r-0 border-amber-500/40 bg-slate-900/95 hover:bg-slate-800 px-3 py-4 text-xs font-bold text-amber-300 shadow-2xl flex flex-col items-center gap-1.5 cursor-pointer transition"
-              title="Mở Kênh Chat & Nhật Ký"
-            >
-              <span className="text-lg">💬</span>
-              <span className="[writing-mode:vertical-rl] tracking-wider">
-                CHAT & NHẬT KÝ
-              </span>
-            </button>
-          )}
         </div>
 
-        {/* Context Action Bar */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-3.5 shadow-xl">
+        {/* Right-Side Action Selection Panel */}
+        <aside className="w-full lg:w-80 xl:w-88 shrink-0 rounded-2xl border border-slate-800 bg-slate-900/95 p-4 shadow-xl flex flex-col justify-between gap-4">
           {isLobby ? (
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-col gap-3">
               <div>
-                <h2 className="text-sm font-bold text-amber-300">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400">
+                  Bảng Điều Khiển Sảnh Chờ
+                </span>
+                <h2 className="text-sm font-bold text-slate-100 mt-1">
                   {isCoup
-                    ? `Sảnh chờ Coup: Đảo Chính (${snapshot?.seats.length ?? 0}/6 người chơi)`
-                    : `Sảnh chờ Làng Ma Sói (${snapshot?.seats.length ?? 0}/16 người chơi)`}
+                    ? `Coup: Đảo Chính (${snapshot?.seats.length ?? 0}/6 người chơi)`
+                    : `Làng Ma Sói (${snapshot?.seats.length ?? 0}/16 người chơi)`}
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                   {snapshot?.configValidation.valid
                     ? "✓ Đã đủ số lượng người chơi hợp lệ, sẵn sàng bắt đầu ván đấu!"
                     : snapshot?.configValidation.error ??
@@ -430,22 +429,22 @@ function RoomPageContent({
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-col gap-2 pt-1">
                 {snapshot?.isHost && (
                   <>
                     <button
                       type="button"
                       disabled={busy}
                       onClick={() => sendRoomAction({ type: "ADD_BOT" })}
-                      className="rounded-xl border border-sky-500/40 bg-sky-500/15 hover:bg-sky-500/25 px-3.5 py-2 text-xs font-semibold text-sky-200 transition cursor-pointer disabled:opacity-50"
+                      className="w-full rounded-xl border border-sky-500/40 bg-sky-500/15 hover:bg-sky-500/25 px-3.5 py-2.5 text-xs font-semibold text-sky-200 transition cursor-pointer disabled:opacity-50"
                     >
-                      🤖 + Thêm Bot
+                      🤖 + Thêm Bot Vào Bàn
                     </button>
                     <button
                       type="button"
                       disabled={busy || !snapshot?.configValidation.valid}
                       onClick={() => sendRoomAction({ type: "START_MATCH" })}
-                      className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-2 text-xs font-bold text-slate-950 shadow-lg transition cursor-pointer disabled:opacity-40"
+                      className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-2.5 text-xs font-bold text-slate-950 shadow-lg transition cursor-pointer disabled:opacity-40"
                     >
                       🔥 BẮT ĐẦU VÁN ĐẤU
                     </button>
@@ -459,7 +458,7 @@ function RoomPageContent({
               </div>
             </div>
           ) : isCoup && coupView ? (
-            /* Coup: Đảo Chính Action & Reaction Controls */
+            /* Coup: Đảo Chính Right-Side Action & Reaction Controls */
             (() => {
               const mySeat = coupView.seats.find(
                 (s) => s.seatNo === snapshot?.viewerSeatNo
@@ -472,39 +471,43 @@ function RoomPageContent({
               const block = coupView.pendingBlock;
 
               return (
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-3">
+                  <div className="space-y-1.5 border-b border-slate-800 pb-3">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-bold uppercase tracking-wider text-purple-300">
                         {coupView.step === "Finished"
                           ? "Kết thúc ván đấu"
                           : coupView.step === "TurnActionStep"
                             ? isMyTurn
-                              ? "👑 Lượt của bạn: Chọn hành động"
-                              : "Đang chờ đối thủ hành động"
+                              ? "👑 Lượt của bạn"
+                              : "Đang chờ lượt"
                             : coupView.step === "ReactionWindowStep"
-                              ? "⚡ Cửa sổ Phản ứng (Bắt bài / Chặn)"
+                              ? "⚡ Cửa sổ Phản ứng"
                               : coupView.step === "BlockChallengeStep"
-                                ? "🛡️ Phản ứng với tuyên bố Chặn"
+                                ? "🛡️ Phản ứng cú Chặn"
                                 : coupView.step === "LoseInfluenceStep"
-                                  ? "💔 Chọn lá bài quyền lực phải bỏ trên Canvas"
-                                  : "🔄 Đại Sứ đang chọn đổi bài trên Canvas"}
+                                  ? "💔 Lật bỏ 1 lá bài"
+                                  : "🔄 Đại Sứ đổi bài"}
                       </span>
                       {mySeat && (
                         <span className="rounded-md bg-amber-500/15 border border-amber-500/40 px-2 py-0.5 text-xs font-bold text-amber-300">
-                          Kho xu của bạn: {myCoins} xu
+                          {myCoins} ISK
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-300">
+                    <p className="text-xs text-slate-300 leading-relaxed">
                       {coupView.lastChallengeBannerVi ??
                         (targetSeatObj
-                          ? `Mục tiêu đang chọn trên Canvas: ${targetSeatObj.displayName}`
-                          : "Chạm trực tiếp vào đối thủ trên bàn Canvas để chọn mục tiêu cho Đảo Chính / Ám Sát / Cướp Xu.")}
+                          ? `🎯 Mục tiêu đang chọn: ${targetSeatObj.displayName}`
+                          : "Chạm trực tiếp vào đối thủ trên bàn Canvas bên trái để chọn mục tiêu.")}
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                      Chọn Hành Động
+                    </span>
+
                     {/* 1. TurnActionStep Buttons for Active Player */}
                     {coupView.step === "TurnActionStep" &&
                       myAlive &&
@@ -512,38 +515,40 @@ function RoomPageContent({
                         <>
                           {!mustCoup && (
                             <>
-                              <button
-                                type="button"
-                                disabled={busy}
-                                onClick={() =>
-                                  sendRoomAction({
-                                    type: "MATCH_COMMAND",
-                                    command: {
-                                      type: "DECLARE_ACTION",
-                                      action: "INCOME",
-                                    },
-                                  })
-                                }
-                                className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3 py-2 text-xs font-bold text-slate-100 transition cursor-pointer"
-                              >
-                                +1 Thu Nhập
-                              </button>
-                              <button
-                                type="button"
-                                disabled={busy}
-                                onClick={() =>
-                                  sendRoomAction({
-                                    type: "MATCH_COMMAND",
-                                    command: {
-                                      type: "DECLARE_ACTION",
-                                      action: "FOREIGN_AID",
-                                    },
-                                  })
-                                }
-                                className="rounded-xl border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-3 py-2 text-xs font-bold text-amber-200 transition cursor-pointer"
-                              >
-                                +2 Viện Trợ
-                              </button>
+                              <div className="grid grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() =>
+                                    sendRoomAction({
+                                      type: "MATCH_COMMAND",
+                                      command: {
+                                        type: "DECLARE_ACTION",
+                                        action: "INCOME",
+                                      },
+                                    })
+                                  }
+                                  className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3 py-2.5 text-xs font-bold text-slate-100 transition cursor-pointer"
+                                >
+                                  +1 Thu Nhập
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() =>
+                                    sendRoomAction({
+                                      type: "MATCH_COMMAND",
+                                      command: {
+                                        type: "DECLARE_ACTION",
+                                        action: "FOREIGN_AID",
+                                      },
+                                    })
+                                  }
+                                  className="rounded-xl border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-3 py-2.5 text-xs font-bold text-amber-200 transition cursor-pointer"
+                                >
+                                  +2 Viện Trợ
+                                </button>
+                              </div>
                               <button
                                 type="button"
                                 disabled={busy}
@@ -556,9 +561,9 @@ function RoomPageContent({
                                     },
                                   })
                                 }
-                                className="rounded-xl bg-purple-600 hover:bg-purple-500 px-3 py-2 text-xs font-bold text-white transition cursor-pointer"
+                                className="w-full text-left rounded-xl border border-pink-500/50 bg-pink-600/20 hover:bg-pink-600/35 px-3.5 py-2.5 text-xs font-bold text-pink-200 transition cursor-pointer"
                               >
-                                👑 Công Tước: Thu Thuế (+3 xu)
+                                👑 Công Tước (Duke): Thu Thuế (+3 xu)
                               </button>
                               <button
                                 type="button"
@@ -578,9 +583,9 @@ function RoomPageContent({
                                     },
                                   })
                                 }
-                                className="rounded-xl bg-rose-600 hover:bg-rose-500 px-3 py-2 text-xs font-bold text-white transition cursor-pointer disabled:opacity-40"
+                                className="w-full text-left rounded-xl border border-slate-500/60 bg-slate-800/90 hover:bg-slate-700 px-3.5 py-2.5 text-xs font-bold text-cyan-200 transition cursor-pointer disabled:opacity-40"
                               >
-                                🗡️ Sát Thủ: Ám Sát (-3 xu)
+                                🗡️ Sát Thủ (Assassin): Ám Sát (-3 xu)
                               </button>
                               <button
                                 type="button"
@@ -599,9 +604,9 @@ function RoomPageContent({
                                     },
                                   })
                                 }
-                                className="rounded-xl bg-sky-600 hover:bg-sky-500 px-3 py-2 text-xs font-bold text-white transition cursor-pointer disabled:opacity-40"
+                                className="w-full text-left rounded-xl border border-sky-500/50 bg-sky-600/20 hover:bg-sky-600/35 px-3.5 py-2.5 text-xs font-bold text-sky-200 transition cursor-pointer disabled:opacity-40"
                               >
-                                ⚓ Thuyền Trưởng: Cướp (+2 xu)
+                                ⚓ Thuyền Trưởng (Captain): Cướp (+2 xu)
                               </button>
                               <button
                                 type="button"
@@ -615,9 +620,9 @@ function RoomPageContent({
                                     },
                                   })
                                 }
-                                className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-xs font-bold text-white transition cursor-pointer"
+                                className="w-full text-left rounded-xl border border-lime-500/50 bg-lime-600/20 hover:bg-lime-600/35 px-3.5 py-2.5 text-xs font-bold text-lime-200 transition cursor-pointer"
                               >
-                                🔄 Đại Sứ: Đổi Bài
+                                🔄 Đại Sứ (Ambassador): Đổi Bài
                               </button>
                             </>
                           )}
@@ -639,7 +644,7 @@ function RoomPageContent({
                                 },
                               })
                             }
-                            className="rounded-xl bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-400 hover:to-red-400 px-4 py-2 text-xs font-extrabold text-slate-950 shadow transition cursor-pointer disabled:opacity-40"
+                            className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-400 hover:to-red-400 px-4 py-2.5 text-xs font-extrabold text-slate-950 shadow transition cursor-pointer disabled:opacity-40"
                           >
                             ⚡ Đảo Chính (-7 xu)
                             {targetSeatObj
@@ -647,6 +652,15 @@ function RoomPageContent({
                               : ""}
                           </button>
                         </>
+                      )}
+
+                    {coupView.step === "TurnActionStep" &&
+                      (!myAlive || !isMyTurn) && (
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-xs text-slate-400">
+                          {myAlive
+                            ? "Đang chờ người chơi có lượt chọn hành động..."
+                            : "Bạn đã mất hết quyền lực và đang theo dõi ván đấu."}
+                        </div>
                       )}
 
                     {/* 2. ReactionWindowStep Buttons for Non-Acting Living Players */}
@@ -665,7 +679,7 @@ function RoomPageContent({
                                   command: { type: "CHALLENGE" },
                                 })
                               }
-                              className="rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2 text-xs font-bold text-white transition cursor-pointer"
+                              className="w-full rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2.5 text-xs font-bold text-white transition cursor-pointer"
                             >
                               🔍 Bắt Bài (Không tin có{" "}
                               {
@@ -689,7 +703,7 @@ function RoomPageContent({
                                   },
                                 })
                               }
-                              className="rounded-xl bg-purple-600 hover:bg-purple-500 px-3.5 py-2 text-xs font-bold text-white transition cursor-pointer"
+                              className="w-full rounded-xl bg-pink-600 hover:bg-pink-500 px-3.5 py-2.5 text-xs font-bold text-white transition cursor-pointer"
                             >
                               🛡️ Chặn Viện Trợ (Nhận là Công Tước)
                             </button>
@@ -709,7 +723,7 @@ function RoomPageContent({
                                     },
                                   })
                                 }
-                                className="rounded-xl bg-amber-500 hover:bg-amber-400 px-3.5 py-2 text-xs font-bold text-slate-950 transition cursor-pointer"
+                                className="w-full rounded-xl bg-red-600 hover:bg-red-500 px-3.5 py-2.5 text-xs font-bold text-white transition cursor-pointer"
                               >
                                 🛡️ Chặn Ám Sát (Nhận là Phu Nhân)
                               </button>
@@ -730,7 +744,7 @@ function RoomPageContent({
                                       },
                                     })
                                   }
-                                  className="rounded-xl bg-sky-600 hover:bg-sky-500 px-3 py-2 text-xs font-bold text-white transition cursor-pointer"
+                                  className="w-full rounded-xl bg-sky-600 hover:bg-sky-500 px-3 py-2.5 text-xs font-bold text-white transition cursor-pointer"
                                 >
                                   🛡️ Chặn Cướp (Thuyền Trưởng)
                                 </button>
@@ -746,7 +760,7 @@ function RoomPageContent({
                                       },
                                     })
                                   }
-                                  className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-xs font-bold text-white transition cursor-pointer"
+                                  className="w-full rounded-xl bg-lime-600 hover:bg-lime-500 px-3 py-2.5 text-xs font-bold text-slate-950 transition cursor-pointer"
                                 >
                                   🛡️ Chặn Cướp (Đại Sứ)
                                 </button>
@@ -762,7 +776,7 @@ function RoomPageContent({
                                 command: { type: "PASS" },
                               })
                             }
-                            className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 transition cursor-pointer disabled:opacity-50"
+                            className="w-full rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2.5 text-xs font-semibold text-slate-200 transition cursor-pointer disabled:opacity-50"
                           >
                             {mySeat?.hasPassedReaction
                               ? "✓ Đã cho qua"
@@ -786,7 +800,7 @@ function RoomPageContent({
                                 command: { type: "CHALLENGE" },
                               })
                             }
-                            className="rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2 text-xs font-bold text-white transition cursor-pointer"
+                            className="w-full rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2.5 text-xs font-bold text-white transition cursor-pointer"
                           >
                             🔍 Bắt Bài Cú Chặn (Không tin có{" "}
                             {
@@ -804,7 +818,7 @@ function RoomPageContent({
                                 command: { type: "PASS" },
                               })
                             }
-                            className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 transition cursor-pointer disabled:opacity-50"
+                            className="w-full rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2.5 text-xs font-semibold text-slate-200 transition cursor-pointer disabled:opacity-50"
                           >
                             {mySeat?.hasPassedReaction
                               ? "✓ Đã chấp nhận"
@@ -819,7 +833,7 @@ function RoomPageContent({
                         type="button"
                         disabled={busy}
                         onClick={() => sendRoomAction({ type: "REMATCH" })}
-                        className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-2 text-xs font-bold text-slate-950 shadow-lg transition cursor-pointer"
+                        className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-2.5 text-xs font-bold text-slate-950 shadow-lg transition cursor-pointer"
                       >
                         🔄 Chơi Ván Mới (Về Sảnh Chờ)
                       </button>
@@ -829,39 +843,43 @@ function RoomPageContent({
               );
             })()
           ) : pv ? (
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-3">
+              <div className="space-y-1.5 border-b border-slate-800 pb-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
                     {pv.phase === "Finished"
                       ? "Kết quả chung cuộc"
                       : pv.step === "NightActionStep"
-                        ? "Bước Đêm 1: Hành động bí mật"
+                        ? "Bước Đêm 1: Hành động"
                         : pv.step === "WitchStep"
-                          ? "Bước Đêm 2: Lượt của Phù Thủy"
+                          ? "Bước Đêm 2: Phù Thủy"
                           : pv.step === "HunterRevengeStep"
-                            ? "Phát súng cuối của Thợ Săn"
+                            ? "Phát súng Thợ Săn"
                             : pv.step === "DayDiscussionStep"
-                              ? "Ban Ngày: Thảo luận công khai"
-                              : "Ban Ngày: Bỏ phiếu treo cổ"}
+                              ? "Ban Ngày: Thảo luận"
+                              : "Ban Ngày: Bỏ phiếu"}
                   </span>
                   {pv.myRole && (
                     <span className="rounded-md bg-slate-800 border border-slate-700 px-2 py-0.5 text-xs font-semibold text-sky-300">
-                      Vai của bạn: {ROLE_META[pv.myRole].nameVi}
+                      {ROLE_META[pv.myRole].nameVi}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-300">
+                <p className="text-xs text-slate-300 leading-relaxed">
                   {pv.phase === "Finished"
                     ? pv.winReasonVi
                     : targetSeatObj
-                      ? `Đang chọn mục tiêu trên Canvas: ${targetSeatObj.displayName}`
-                      : "Chạm trực tiếp vào thẻ người chơi trên bàn Canvas để chọn mục tiêu."}
+                      ? `🎯 Đang chọn: ${targetSeatObj.displayName}`
+                      : "Chạm trực tiếp vào thẻ người chơi trên bàn Canvas bên trái để chọn mục tiêu."}
                 </p>
               </div>
 
               {/* Role & Phase Specific Buttons */}
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-col gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Chọn Hành Động
+                </span>
+
                 {pv.step === "NightActionStep" &&
                   pv.myAlive &&
                   pv.myRole === "Werewolf" && (
@@ -878,7 +896,7 @@ function RoomPageContent({
                           },
                         })
                       }
-                      className="rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold text-white shadow transition cursor-pointer disabled:opacity-40"
+                      className="w-full rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2.5 text-xs font-bold text-white shadow transition cursor-pointer disabled:opacity-40"
                     >
                       🐺{" "}
                       {targetSeatObj
@@ -903,7 +921,7 @@ function RoomPageContent({
                           },
                         })
                       }
-                      className="rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-2 text-xs font-bold text-white shadow transition cursor-pointer disabled:opacity-40"
+                      className="w-full rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-2.5 text-xs font-bold text-white shadow transition cursor-pointer disabled:opacity-40"
                     >
                       🔮{" "}
                       {targetSeatObj
@@ -928,7 +946,7 @@ function RoomPageContent({
                           },
                         })
                       }
-                      className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow transition cursor-pointer disabled:opacity-40"
+                      className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 text-xs font-bold text-white shadow transition cursor-pointer disabled:opacity-40"
                     >
                       🛡️{" "}
                       {targetSeatObj
@@ -947,7 +965,7 @@ function RoomPageContent({
                           type="button"
                           disabled={busy}
                           onClick={() => setWitchWantHeal((v) => !v)}
-                          className={`rounded-xl px-3.5 py-2 text-xs font-bold transition cursor-pointer border ${
+                          className={`w-full rounded-xl px-3.5 py-2.5 text-xs font-bold transition cursor-pointer border ${
                             witchWantHeal
                               ? "bg-emerald-600 text-white border-emerald-400"
                               : "bg-emerald-950/60 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900/60"
@@ -973,7 +991,7 @@ function RoomPageContent({
                             },
                           })
                         }
-                        className="rounded-xl bg-purple-600 hover:bg-purple-500 px-4 py-2 text-xs font-bold text-white transition cursor-pointer"
+                        className="w-full rounded-xl bg-purple-600 hover:bg-purple-500 px-4 py-2.5 text-xs font-bold text-white transition cursor-pointer"
                       >
                         🧪 Xác nhận Phù Thủy (
                         {witchWantHeal ? "Có Cứu" : "Không Cứu"}
@@ -1000,7 +1018,7 @@ function RoomPageContent({
                             },
                           })
                         }
-                        className="rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2 text-xs font-bold text-slate-950 transition cursor-pointer disabled:opacity-40"
+                        className="w-full rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2.5 text-xs font-bold text-slate-950 transition cursor-pointer disabled:opacity-40"
                       >
                         🏹{" "}
                         {targetSeatObj
@@ -1019,7 +1037,7 @@ function RoomPageContent({
                             },
                           })
                         }
-                        className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 transition cursor-pointer"
+                        className="w-full rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2.5 text-xs font-semibold text-slate-200 transition cursor-pointer"
                       >
                         Không nổ súng
                       </button>
@@ -1036,7 +1054,7 @@ function RoomPageContent({
                         command: { type: "DAY_READY_TO_VOTE" },
                       })
                     }
-                    className="rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2 text-xs font-bold text-slate-950 transition cursor-pointer disabled:opacity-50"
+                    className="w-full rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2.5 text-xs font-bold text-slate-950 transition cursor-pointer disabled:opacity-50"
                   >
                     {pv.hasSubmittedCurrentStep
                       ? "✓ Đã sẵn sàng bỏ phiếu"
@@ -1059,7 +1077,7 @@ function RoomPageContent({
                           },
                         })
                       }
-                      className="rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold text-white transition cursor-pointer disabled:opacity-40"
+                      className="w-full rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2.5 text-xs font-bold text-white transition cursor-pointer disabled:opacity-40"
                     >
                       ⚖️{" "}
                       {targetSeatObj
@@ -1079,7 +1097,7 @@ function RoomPageContent({
                           },
                         })
                       }
-                      className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 transition cursor-pointer"
+                      className="w-full rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2.5 text-xs font-semibold text-slate-200 transition cursor-pointer"
                     >
                       🏳️ Bỏ phiếu trắng (Abstain)
                     </button>
@@ -1091,7 +1109,7 @@ function RoomPageContent({
                     type="button"
                     disabled={busy}
                     onClick={() => sendRoomAction({ type: "REMATCH" })}
-                    className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-2 text-xs font-bold text-slate-950 shadow-lg transition cursor-pointer"
+                    className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-2.5 text-xs font-bold text-slate-950 shadow-lg transition cursor-pointer"
                   >
                     🔄 Chơi Ván Mới (Về Sảnh Chờ)
                   </button>
@@ -1099,7 +1117,22 @@ function RoomPageContent({
               </div>
             </div>
           ) : null}
-        </div>
+
+          {/* Bottom quick button inside Right Action Sidebar to open Chat & Event Log */}
+          <div className="border-t border-slate-800 pt-3">
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="w-full rounded-xl border border-amber-500/30 bg-slate-950/70 hover:bg-slate-800 px-3.5 py-2.5 text-xs font-bold text-amber-300 flex items-center justify-between transition cursor-pointer"
+            >
+              <span>💬 Kênh Chat & Nhật Ký</span>
+              <span className="rounded-md bg-amber-500/20 px-2 py-0.5 text-[11px]">
+                {(snapshot?.messages.length ?? 0) +
+                  (snapshot?.events.length ?? 0)}
+              </span>
+            </button>
+          </div>
+        </aside>
       </main>
 
       {/* Slide-Over Right Drawer: Kênh Chat & Nhật Ký */}
