@@ -87,3 +87,29 @@ _Avoid_: Hunter passive, death trigger, last shot
 **Abstain**:
 An explicit vote choice during `DayVotingStep` (or the automatic fallback when the Phase Timer expires) indicating that no Seat should be executed.
 _Avoid_: Skip vote, blank vote, pass
+
+### Coup Cartridge
+
+**Character**:
+One of the five royal court identities in Coup (`Duke`, `Assassin`, `Captain`, `Ambassador`, `Contessa`), each granting specific active powers and counter-actions.
+_Avoid_: Role, hero, class, job
+
+**Influence**:
+A player's political standing in a Coup Match, represented by their two dealt Character cards; a Seat is eliminated when both of its Influence cards are revealed face-up.
+_Avoid_: Life, health, HP, hand
+
+**Court Deck**:
+The central draw pile of remaining un-dealt Character cards used for Ambassador exchanges and redrawing after a successfully defended Challenge.
+_Avoid_: Draw pile, stock, library
+
+**Treasury**:
+The central bank of unlimited gold Coins from which Income, Foreign Aid, and Tax are drawn and to which Coup and Assassinate costs are paid.
+_Avoid_: Bank, pot, pool
+
+**Challenge**:
+A declaration by any living Seat accusing the acting or blocking Seat of not actually holding the Character card they claimed; whoever is wrong immediately loses one Influence.
+_Avoid_: Call bluff, doubt, accuse
+
+**Block**:
+A counter-claim by a Seat declaring they hold a specific Character (`Duke`, `Contessa`, `Captain`, or `Ambassador`) to prevent `Foreign Aid`, `Assassinate`, or `Steal`.
+_Avoid_: Counter, cancel, shield

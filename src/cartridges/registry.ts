@@ -1,5 +1,6 @@
 import type { GameCartridge } from "@/cartridges/types";
 import { werewolfCartridge } from "@/cartridges/werewolf";
+import { coupCartridge } from "@/cartridges/coup";
 
 export interface CatalogEntry {
   cartridgeId: string;
@@ -16,6 +17,7 @@ export interface CatalogEntry {
 
 const CARTRIDGES = new Map<string, GameCartridge<any, any, any, any>>([
   [werewolfCartridge.cartridgeId, werewolfCartridge],
+  [coupCartridge.cartridgeId, coupCartridge],
 ]);
 
 export function getCartridge(
@@ -58,16 +60,15 @@ export function listCartridges(): CatalogEntry[] {
       accentColor: "#38bdf8",
     },
     {
-      cartridgeId: "coup",
-      title: "Coup: Đảo Chính",
+      cartridgeId: coupCartridge.cartridgeId,
+      title: coupCartridge.title,
       genreVi: "Đấu trí • Thao túng",
-      subtitle: "Đấu trí • Thao túng quyền lực • 2–6 người chơi",
-      description:
-        "Dùng mưu mẹo, nói dối và lật tẩy đối phương trong cuộc chiến giành quyền kiểm soát triều đình.",
-      minSeats: 2,
-      maxSeats: 6,
-      available: false,
-      badgeVi: "Sắp ra mắt",
+      subtitle: coupCartridge.subtitle,
+      description: coupCartridge.description,
+      minSeats: coupCartridge.minSeats,
+      maxSeats: coupCartridge.maxSeats,
+      available: true,
+      badgeVi: "Đang mở • Canvas 2D",
       accentColor: "#a855f7",
     },
     {

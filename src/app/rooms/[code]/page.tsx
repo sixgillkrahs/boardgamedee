@@ -2,12 +2,19 @@
 
 import React, { Suspense, use, useEffect, useRef, useState } from "react";
 import { WerewolfCanvas } from "@/components/werewolf-canvas";
+import { CoupCanvas } from "@/components/coup-canvas";
 import {
   ROLE_META,
   WEREWOLF_ROLES,
   type WerewolfPlayerView,
   type WerewolfRole,
 } from "@/cartridges/werewolf";
+import {
+  ACTION_LABEL_VI,
+  COUP_CHARACTER_META,
+  COUP_CHARACTERS,
+  type CoupPlayerView,
+} from "@/cartridges/coup";
 import type { RoomSnapshotForActor } from "@/platform/coordinator";
 import type { ChannelId } from "@/cartridges/types";
 
@@ -192,11 +199,20 @@ function RoomPageContent({
     });
   };
 
-  const pv: WerewolfPlayerView | null = snapshot?.playerView ?? null;
-  const isLobby = !snapshot || snapshot.room.status === "lobby" || !pv;
+  const isCoup = snapshot?.room.cartridgeId === "coup";
+  const pv: WerewolfPlayerView | null =
+    !isCoup && snapshot?.playerView ? snapshot.playerView : null;
+  const coupView: CoupPlayerView | null =
+    isCoup && snapshot?.playerView ? snapshot.playerView : null;
+  const isLobby =
+    !snapshot ||
+    snapshot.room.status === "lobby" ||
+    (!pv && !coupView);
+
   const targetSeatObj =
     selectedTargetSeatNo !== null
       ? pv?.seats.find((s) => s.seatNo === selectedTargetSeatNo) ??
+        coupView?.seats.find((s) => s.seatNo === selectedTargetSeatNo) ??
         snapshot?.seats.find((s) => s.seatNo === selectedTargetSeatNo) ??
         null
       : null;
@@ -314,51 +330,69 @@ function RoomPageContent({
       {/* Full-Width Interactive 2D Canvas Tabletop + Bottom Action Bar */}
       <main className="relative flex-1 flex flex-col gap-3 p-3 md:p-4 max-w-[1600px] w-full mx-auto">
         <div className="flex-1 min-h-[520px] relative">
-          <WerewolfCanvas
-            mode={isLobby ? "lobby" : "match"}
-            lobbySeats={snapshot?.seats ?? []}
-            viewerSeatNo={snapshot?.viewerSeatNo ?? null}
-            playerView={pv}
-            selectedTargetSeatNo={selectedTargetSeatNo}
-            onSelectSeat={(seatNo) => {
-              setSelectedTargetSeatNo(seatNo);
-              if (!pv || !pv.myAlive) return;
-              const targetSeat = pv.seats.find((s) => s.seatNo === seatNo);
-              if (!targetSeat?.alive) return;
-
-              if (pv.step === "NightActionStep" && pv.myRole === "Werewolf") {
-                void fetch(`/api/rooms/${normalizedCode}/action`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    type: "MATCH_COMMAND",
-                    command: {
-                      type: "WEREWOLF_VOTE",
-                      targetSeatNo: seatNo,
-                      lock: false,
-                    },
-                  }),
-                }).catch(() => {});
+          {isCoup ? (
+            <CoupCanvas
+              mode={isLobby ? "lobby" : "match"}
+              lobbySeats={snapshot?.seats ?? []}
+              viewerSeatNo={snapshot?.viewerSeatNo ?? null}
+              playerView={coupView}
+              selectedTargetSeatNo={selectedTargetSeatNo}
+              onSelectSeat={(seatNo) => setSelectedTargetSeatNo(seatNo)}
+              cardsRevealed={roleCardRevealed}
+              onToggleCardsRevealed={() =>
+                setRoleCardRevealed((prev) => !prev)
               }
-
-              if (pv.step === "DayVotingStep") {
-                void fetch(`/api/rooms/${normalizedCode}/action`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    type: "MATCH_COMMAND",
-                    command: {
-                      type: "DAY_VOTE",
-                      targetSeatNo: seatNo,
-                      lock: false,
-                    },
-                  }),
-                }).catch(() => {});
+              onDispatchCommand={(cmd) =>
+                void sendRoomAction({ type: "MATCH_COMMAND", command: cmd })
               }
-            }}
-            roleCardRevealed={roleCardRevealed}
-            onToggleRoleCard={() => setRoleCardRevealed((prev) => !prev)}
-          />
+            />
+          ) : (
+            <WerewolfCanvas
+              mode={isLobby ? "lobby" : "match"}
+              lobbySeats={snapshot?.seats ?? []}
+              viewerSeatNo={snapshot?.viewerSeatNo ?? null}
+              playerView={pv}
+              selectedTargetSeatNo={selectedTargetSeatNo}
+              onSelectSeat={(seatNo) => {
+                setSelectedTargetSeatNo(seatNo);
+                if (!pv || !pv.myAlive) return;
+                const targetSeat = pv.seats.find((s) => s.seatNo === seatNo);
+                if (!targetSeat?.alive) return;
+
+                if (pv.step === "NightActionStep" && pv.myRole === "Werewolf") {
+                  void fetch(`/api/rooms/${normalizedCode}/action`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      type: "MATCH_COMMAND",
+                      command: {
+                        type: "WEREWOLF_VOTE",
+                        targetSeatNo: seatNo,
+                        lock: false,
+                      },
+                    }),
+                  }).catch(() => {});
+                }
+
+                if (pv.step === "DayVotingStep") {
+                  void fetch(`/api/rooms/${normalizedCode}/action`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      type: "MATCH_COMMAND",
+                      command: {
+                        type: "DAY_VOTE",
+                        targetSeatNo: seatNo,
+                        lock: false,
+                      },
+                    }),
+                  }).catch(() => {});
+                }
+              }}
+              roleCardRevealed={roleCardRevealed}
+              onToggleRoleCard={() => setRoleCardRevealed((prev) => !prev)}
+            />
+          )}
 
           {/* Floating Quick-Open Tab on Right Edge when Drawer is closed */}
           {!drawerOpen && (
@@ -382,14 +416,17 @@ function RoomPageContent({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-sm font-bold text-amber-300">
-                  Sảnh chờ Làng Ma Sói ({snapshot?.seats.length ?? 0}/16 người
-                  chơi)
+                  {isCoup
+                    ? `Sảnh chờ Coup: Đảo Chính (${snapshot?.seats.length ?? 0}/6 người chơi)`
+                    : `Sảnh chờ Làng Ma Sói (${snapshot?.seats.length ?? 0}/16 người chơi)`}
                 </h2>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {snapshot?.configValidation.valid
-                    ? "✓ Cấu hình vai trò đã hợp lệ, sẵn sàng bắt đầu ván đấu!"
+                    ? "✓ Đã đủ số lượng người chơi hợp lệ, sẵn sàng bắt đầu ván đấu!"
                     : snapshot?.configValidation.error ??
-                      "Cần tối thiểu 4 người chơi (hoặc thêm Bot) để bắt đầu."}
+                      (isCoup
+                        ? "Cần từ 3 đến 6 người chơi (hoặc thêm Bot) để bắt đầu Coup."
+                        : "Cần tối thiểu 4 người chơi (hoặc thêm Bot) để bắt đầu.")}
                 </p>
               </div>
 
@@ -402,7 +439,7 @@ function RoomPageContent({
                       onClick={() => sendRoomAction({ type: "ADD_BOT" })}
                       className="rounded-xl border border-sky-500/40 bg-sky-500/15 hover:bg-sky-500/25 px-3.5 py-2 text-xs font-semibold text-sky-200 transition cursor-pointer disabled:opacity-50"
                     >
-                      🤖 + Thêm Bot Làng
+                      🤖 + Thêm Bot
                     </button>
                     <button
                       type="button"
@@ -421,7 +458,377 @@ function RoomPageContent({
                 )}
               </div>
             </div>
-          ) : (
+          ) : isCoup && coupView ? (
+            /* Coup: Đảo Chính Action & Reaction Controls */
+            (() => {
+              const mySeat = coupView.seats.find(
+                (s) => s.seatNo === snapshot?.viewerSeatNo
+              );
+              const myAlive = mySeat?.alive ?? false;
+              const myCoins = mySeat?.coins ?? 0;
+              const isMyTurn = coupView.activeSeatNo === snapshot?.viewerSeatNo;
+              const mustCoup = myCoins >= 10;
+              const pending = coupView.pendingAction;
+              const block = coupView.pendingBlock;
+
+              return (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-purple-300">
+                        {coupView.step === "Finished"
+                          ? "Kết thúc ván đấu"
+                          : coupView.step === "TurnActionStep"
+                            ? isMyTurn
+                              ? "👑 Lượt của bạn: Chọn hành động"
+                              : "Đang chờ đối thủ hành động"
+                            : coupView.step === "ReactionWindowStep"
+                              ? "⚡ Cửa sổ Phản ứng (Bắt bài / Chặn)"
+                              : coupView.step === "BlockChallengeStep"
+                                ? "🛡️ Phản ứng với tuyên bố Chặn"
+                                : coupView.step === "LoseInfluenceStep"
+                                  ? "💔 Chọn lá bài quyền lực phải bỏ trên Canvas"
+                                  : "🔄 Đại Sứ đang chọn đổi bài trên Canvas"}
+                      </span>
+                      {mySeat && (
+                        <span className="rounded-md bg-amber-500/15 border border-amber-500/40 px-2 py-0.5 text-xs font-bold text-amber-300">
+                          Kho xu của bạn: {myCoins} xu
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-300">
+                      {coupView.lastChallengeBannerVi ??
+                        (targetSeatObj
+                          ? `Mục tiêu đang chọn trên Canvas: ${targetSeatObj.displayName}`
+                          : "Chạm trực tiếp vào đối thủ trên bàn Canvas để chọn mục tiêu cho Đảo Chính / Ám Sát / Cướp Xu.")}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* 1. TurnActionStep Buttons for Active Player */}
+                    {coupView.step === "TurnActionStep" &&
+                      myAlive &&
+                      isMyTurn && (
+                        <>
+                          {!mustCoup && (
+                            <>
+                              <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() =>
+                                  sendRoomAction({
+                                    type: "MATCH_COMMAND",
+                                    command: {
+                                      type: "DECLARE_ACTION",
+                                      action: "INCOME",
+                                    },
+                                  })
+                                }
+                                className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3 py-2 text-xs font-bold text-slate-100 transition cursor-pointer"
+                              >
+                                +1 Thu Nhập
+                              </button>
+                              <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() =>
+                                  sendRoomAction({
+                                    type: "MATCH_COMMAND",
+                                    command: {
+                                      type: "DECLARE_ACTION",
+                                      action: "FOREIGN_AID",
+                                    },
+                                  })
+                                }
+                                className="rounded-xl border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-3 py-2 text-xs font-bold text-amber-200 transition cursor-pointer"
+                              >
+                                +2 Viện Trợ
+                              </button>
+                              <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() =>
+                                  sendRoomAction({
+                                    type: "MATCH_COMMAND",
+                                    command: {
+                                      type: "DECLARE_ACTION",
+                                      action: "TAX",
+                                    },
+                                  })
+                                }
+                                className="rounded-xl bg-purple-600 hover:bg-purple-500 px-3 py-2 text-xs font-bold text-white transition cursor-pointer"
+                              >
+                                👑 Công Tước: Thu Thuế (+3 xu)
+                              </button>
+                              <button
+                                type="button"
+                                disabled={
+                                  busy ||
+                                  myCoins < 3 ||
+                                  !targetSeatObj ||
+                                  targetSeatObj.seatNo === snapshot?.viewerSeatNo
+                                }
+                                onClick={() =>
+                                  sendRoomAction({
+                                    type: "MATCH_COMMAND",
+                                    command: {
+                                      type: "DECLARE_ACTION",
+                                      action: "ASSASSINATE",
+                                      targetSeatNo: selectedTargetSeatNo,
+                                    },
+                                  })
+                                }
+                                className="rounded-xl bg-rose-600 hover:bg-rose-500 px-3 py-2 text-xs font-bold text-white transition cursor-pointer disabled:opacity-40"
+                              >
+                                🗡️ Sát Thủ: Ám Sát (-3 xu)
+                              </button>
+                              <button
+                                type="button"
+                                disabled={
+                                  busy ||
+                                  !targetSeatObj ||
+                                  targetSeatObj.seatNo === snapshot?.viewerSeatNo
+                                }
+                                onClick={() =>
+                                  sendRoomAction({
+                                    type: "MATCH_COMMAND",
+                                    command: {
+                                      type: "DECLARE_ACTION",
+                                      action: "STEAL",
+                                      targetSeatNo: selectedTargetSeatNo,
+                                    },
+                                  })
+                                }
+                                className="rounded-xl bg-sky-600 hover:bg-sky-500 px-3 py-2 text-xs font-bold text-white transition cursor-pointer disabled:opacity-40"
+                              >
+                                ⚓ Thuyền Trưởng: Cướp (+2 xu)
+                              </button>
+                              <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() =>
+                                  sendRoomAction({
+                                    type: "MATCH_COMMAND",
+                                    command: {
+                                      type: "DECLARE_ACTION",
+                                      action: "EXCHANGE",
+                                    },
+                                  })
+                                }
+                                className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-xs font-bold text-white transition cursor-pointer"
+                              >
+                                🔄 Đại Sứ: Đổi Bài
+                              </button>
+                            </>
+                          )}
+                          <button
+                            type="button"
+                            disabled={
+                              busy ||
+                              myCoins < 7 ||
+                              !targetSeatObj ||
+                              targetSeatObj.seatNo === snapshot?.viewerSeatNo
+                            }
+                            onClick={() =>
+                              sendRoomAction({
+                                type: "MATCH_COMMAND",
+                                command: {
+                                  type: "DECLARE_ACTION",
+                                  action: "COUP",
+                                  targetSeatNo: selectedTargetSeatNo,
+                                },
+                              })
+                            }
+                            className="rounded-xl bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-400 hover:to-red-400 px-4 py-2 text-xs font-extrabold text-slate-950 shadow transition cursor-pointer disabled:opacity-40"
+                          >
+                            ⚡ Đảo Chính (-7 xu)
+                            {targetSeatObj
+                              ? ` → ${targetSeatObj.displayName}`
+                              : ""}
+                          </button>
+                        </>
+                      )}
+
+                    {/* 2. ReactionWindowStep Buttons for Non-Acting Living Players */}
+                    {coupView.step === "ReactionWindowStep" &&
+                      myAlive &&
+                      pending &&
+                      pending.actorSeatNo !== snapshot?.viewerSeatNo && (
+                        <>
+                          {pending.claimedCharacter && (
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() =>
+                                sendRoomAction({
+                                  type: "MATCH_COMMAND",
+                                  command: { type: "CHALLENGE" },
+                                })
+                              }
+                              className="rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2 text-xs font-bold text-white transition cursor-pointer"
+                            >
+                              🔍 Bắt Bài (Không tin có{" "}
+                              {
+                                COUP_CHARACTER_META[pending.claimedCharacter]
+                                  .titleVi
+                              }
+                              !)
+                            </button>
+                          )}
+
+                          {pending.type === "FOREIGN_AID" && (
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() =>
+                                sendRoomAction({
+                                  type: "MATCH_COMMAND",
+                                  command: {
+                                    type: "BLOCK",
+                                    character: "Duke",
+                                  },
+                                })
+                              }
+                              className="rounded-xl bg-purple-600 hover:bg-purple-500 px-3.5 py-2 text-xs font-bold text-white transition cursor-pointer"
+                            >
+                              🛡️ Chặn Viện Trợ (Nhận là Công Tước)
+                            </button>
+                          )}
+
+                          {pending.type === "ASSASSINATE" &&
+                            pending.targetSeatNo === snapshot?.viewerSeatNo && (
+                              <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() =>
+                                  sendRoomAction({
+                                    type: "MATCH_COMMAND",
+                                    command: {
+                                      type: "BLOCK",
+                                      character: "Contessa",
+                                    },
+                                  })
+                                }
+                                className="rounded-xl bg-amber-500 hover:bg-amber-400 px-3.5 py-2 text-xs font-bold text-slate-950 transition cursor-pointer"
+                              >
+                                🛡️ Chặn Ám Sát (Nhận là Phu Nhân)
+                              </button>
+                            )}
+
+                          {pending.type === "STEAL" &&
+                            pending.targetSeatNo === snapshot?.viewerSeatNo && (
+                              <>
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() =>
+                                    sendRoomAction({
+                                      type: "MATCH_COMMAND",
+                                      command: {
+                                        type: "BLOCK",
+                                        character: "Captain",
+                                      },
+                                    })
+                                  }
+                                  className="rounded-xl bg-sky-600 hover:bg-sky-500 px-3 py-2 text-xs font-bold text-white transition cursor-pointer"
+                                >
+                                  🛡️ Chặn Cướp (Thuyền Trưởng)
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() =>
+                                    sendRoomAction({
+                                      type: "MATCH_COMMAND",
+                                      command: {
+                                        type: "BLOCK",
+                                        character: "Ambassador",
+                                      },
+                                    })
+                                  }
+                                  className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-xs font-bold text-white transition cursor-pointer"
+                                >
+                                  🛡️ Chặn Cướp (Đại Sứ)
+                                </button>
+                              </>
+                            )}
+
+                          <button
+                            type="button"
+                            disabled={busy || mySeat?.hasPassedReaction}
+                            onClick={() =>
+                              sendRoomAction({
+                                type: "MATCH_COMMAND",
+                                command: { type: "PASS" },
+                              })
+                            }
+                            className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 transition cursor-pointer disabled:opacity-50"
+                          >
+                            {mySeat?.hasPassedReaction
+                              ? "✓ Đã cho qua"
+                              : "✓ Cho Qua"}
+                          </button>
+                        </>
+                      )}
+
+                    {/* 3. BlockChallengeStep Buttons */}
+                    {coupView.step === "BlockChallengeStep" &&
+                      myAlive &&
+                      block &&
+                      block.blockerSeatNo !== snapshot?.viewerSeatNo && (
+                        <>
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() =>
+                              sendRoomAction({
+                                type: "MATCH_COMMAND",
+                                command: { type: "CHALLENGE" },
+                              })
+                            }
+                            className="rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2 text-xs font-bold text-white transition cursor-pointer"
+                          >
+                            🔍 Bắt Bài Cú Chặn (Không tin có{" "}
+                            {
+                              COUP_CHARACTER_META[block.claimedCharacter]
+                                .titleVi
+                            }
+                            !)
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy || mySeat?.hasPassedReaction}
+                            onClick={() =>
+                              sendRoomAction({
+                                type: "MATCH_COMMAND",
+                                command: { type: "PASS" },
+                              })
+                            }
+                            className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 transition cursor-pointer disabled:opacity-50"
+                          >
+                            {mySeat?.hasPassedReaction
+                              ? "✓ Đã chấp nhận"
+                              : "✓ Chấp nhận bị Chặn"}
+                          </button>
+                        </>
+                      )}
+
+                    {/* 4. Finished / Rematch Button */}
+                    {coupView.step === "Finished" && snapshot?.isHost && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => sendRoomAction({ type: "REMATCH" })}
+                        className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-2 text-xs font-bold text-slate-950 shadow-lg transition cursor-pointer"
+                      >
+                        🔄 Chơi Ván Mới (Về Sảnh Chờ)
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()
+          ) : pv ? (
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
@@ -691,7 +1098,7 @@ function RoomPageContent({
                 )}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </main>
 
@@ -916,8 +1323,39 @@ function RoomPageContent({
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              <div className="space-y-2">
-                {WEREWOLF_ROLES.map((role) => {
+              {isCoup ? (
+                <div className="space-y-3">
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 space-y-2">
+                    <p className="font-bold text-amber-300">
+                      Bộ Bài Triều Đình (15 Lá • 5 Nhân vật x 3)
+                    </p>
+                    {COUP_CHARACTERS.map((ch) => {
+                      const meta = COUP_CHARACTER_META[ch];
+                      return (
+                        <div
+                          key={ch}
+                          className="rounded-lg border border-slate-800/80 bg-slate-900/70 p-2 flex items-center justify-between gap-2"
+                        >
+                          <div>
+                            <p className="font-bold text-slate-100">
+                              {meta.nameVi}
+                            </p>
+                            <p className="text-[11px] text-slate-400">
+                              Chủ động: {meta.actionVi} • Chặn: {meta.blockVi}
+                            </p>
+                          </div>
+                          <span className="font-mono font-bold text-amber-300">
+                            3 lá
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    {WEREWOLF_ROLES.map((role) => {
                   const meta = ROLE_META[role];
                   const count =
                     snapshot?.room.config?.roleCounts?.[role] ?? 0;
@@ -1081,6 +1519,8 @@ function RoomPageContent({
                     })}
                   </div>
                 </div>
+              )}
+                </>
               )}
             </div>
           </div>
