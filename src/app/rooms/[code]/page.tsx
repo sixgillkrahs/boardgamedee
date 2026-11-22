@@ -259,24 +259,6 @@ function RoomPageContent({
             ⚙️
           </button>
 
-          {/* Drawer Toggle Button for Chat & Events */}
-          <button
-            type="button"
-            onClick={() => setDrawerOpen((v) => !v)}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
-              drawerOpen
-                ? "border-amber-500/60 bg-amber-500/20 text-amber-300"
-                : "border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
-            }`}
-          >
-            <span>💬 Chat & Nhật ký</span>
-            {(snapshot?.messages.length ?? 0) > 0 && (
-              <span className="rounded-full bg-amber-500 px-1.5 py-0.2 text-[10px] font-bold text-slate-950">
-                {snapshot?.messages.length}
-              </span>
-            )}
-          </button>
-
           <button
             type="button"
             onClick={() => setSoundEnabled((v) => !v)}
@@ -301,20 +283,6 @@ function RoomPageContent({
           >
             ⛶
           </button>
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-medium ${
-              connected
-                ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
-                : "bg-amber-500/15 text-amber-300 border border-amber-500/30"
-            }`}
-          >
-            <span
-              className={`h-2 w-2 rounded-full ${
-                connected ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
-              }`}
-            />
-            {connected ? "Trực tuyến" : "Đang kết nối..."}
-          </span>
 
           {actor && (
             <div className="flex items-center gap-2 rounded-lg bg-slate-800/90 border border-slate-700 px-3 py-1">
