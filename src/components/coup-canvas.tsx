@@ -668,6 +668,69 @@ export function CoupCanvas({
         }
       }
 
+      // 7.5. Bottom-Left Large 2D Hand Dock (Shows Viewer's 2 Influence Cards in High Detail)
+      if (curMode === "match" && pv && curViewerSeatNo !== null) {
+        const mySeat = pv.seats.find((s) => s.seatNo === curViewerSeatNo);
+        if (mySeat) {
+          const bigW = width < 560 ? 64 : 84;
+          const bigH = width < 560 ? 92 : 120;
+          const dockPad = 10;
+          const dockW = bigW * 2 + dockPad * 3;
+          const dockH = bigH + 34;
+          const dockX = 14;
+          const dockY = height - dockH - 14;
+
+          newHitRegions.push({
+            id: "my-hand-dock",
+            shape: "rect",
+            x: dockX,
+            y: dockY,
+            width: dockW,
+            height: dockH,
+            cursor: "pointer",
+            data: { type: "toggle-my-cards" },
+          });
+
+          ctx.save();
+          drawRoundedRect(ctx, dockX, dockY, dockW, dockH, 16);
+          ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
+          ctx.fill();
+          ctx.strokeStyle = "rgba(192, 132, 252, 0.45)";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          ctx.fillStyle = "#e2e8f0";
+          ctx.font = "bold 10.5px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(
+            isCardsOpen
+              ? "2 LÁ BÀI CỦA BẠN (Chạm để úp)"
+              : "2 LÁ BÀI BÍ MẬT (Chạm để xem)",
+            dockX + dockW / 2,
+            dockY + 14
+          );
+
+          mySeat.cards.forEach((c, idx) => {
+            const cxCard = dockX + dockPad + idx * (bigW + dockPad);
+            const cyCard = dockY + 26;
+            const charToDraw =
+              c.revealed || isCardsOpen ? c.character : null;
+            drawCoupCard2D(
+              ctx,
+              cxCard,
+              cyCard,
+              bigW,
+              bigH,
+              charToDraw,
+              c.revealed,
+              false
+            );
+          });
+          ctx.restore();
+        }
+      }
+
       // 8. Interactive 2D Canvas Overlay for `LoseInfluenceStep` (When YOU must pick a card to lose)
       if (
         curMode === "match" &&
