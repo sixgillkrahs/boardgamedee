@@ -12,6 +12,7 @@ import {
 } from "@/canvas/engine";
 import {
   computeCardDealProgress,
+  drawExecutionNooseEffect,
   drawRoleSquareCard,
   drawWerewolfClawSlashes,
 } from "@/canvas/role-cards";
@@ -76,6 +77,12 @@ export function WerewolfCanvas({
   const lastDawnKeyRef = useRef<string>("");
   const dawnAlertDismissedRef = useRef<boolean>(false);
 
+  // Track Day Execution (Hanging) Notification & Noose Drop Animation
+  const execAlertStartRef = useRef<number | null>(null);
+  const lastExecKeyRef = useRef<string>("");
+  const execAlertDismissedRef = useRef<boolean>(false);
+  const activeExecutedSeatNoRef = useRef<number | null>(null);
+
   const stateRef = useRef({
     mode,
     lobbySeats,
@@ -114,7 +121,8 @@ export function WerewolfCanvas({
         (playerView.phase === "DayPhase" ||
           playerView.step === "HunterRevengeStep" ||
           playerView.phase === "Finished") &&
-        playerView.lastDawnDeaths.length > 0
+        playerView.lastDawnDeaths.length > 0 &&
+        playerView.lastExecutedSeatNo === null
       ) {
         const dawnKey = `${playerView.cycle}-${playerView.lastDawnDeaths.join(",")}`;
         if (lastDawnKeyRef.current !== dawnKey) {
@@ -123,11 +131,29 @@ export function WerewolfCanvas({
           dawnAlertDismissedRef.current = false;
         }
       }
+
+      // Detect a new Day Execution (when a player is voted out and hanged)
+      if (playerView.lastExecutedSeatNo !== null) {
+        const execKey = `${playerView.lastExecutedSeatNo}-${
+          playerView.seats.find(
+            (s) => s.seatNo === playerView.lastExecutedSeatNo
+          )?.diedAtCycle ?? playerView.cycle
+        }`;
+        if (lastExecKeyRef.current !== execKey) {
+          lastExecKeyRef.current = execKey;
+          activeExecutedSeatNoRef.current = playerView.lastExecutedSeatNo;
+          execAlertStartRef.current = performance.now();
+          execAlertDismissedRef.current = false;
+        }
+      }
     } else {
       lastMatchKeyRef.current = "";
       dealStartTimeRef.current = null;
       lastDawnKeyRef.current = "";
       dawnAlertStartRef.current = null;
+      lastExecKeyRef.current = "";
+      execAlertStartRef.current = null;
+      activeExecutedSeatNoRef.current = null;
     }
   }, [
     mode,
@@ -773,6 +799,23 @@ export function WerewolfCanvas({
                 cardSize * 0.96,
                 slashProgress
               );
+            } else if (seat.deathCause === "day_execution") {
+              const execElapsed =
+                execAlertStartRef.current !== null &&
+                activeExecutedSeatNoRef.current === seat.seatNo
+                  ? (now - execAlertStartRef.current) / 1000
+                  : 1;
+              const nooseProgress = Math.max(
+                0,
+                Math.min(1, execElapsed / 0.75)
+              );
+              drawExecutionNooseEffect(
+                ctx,
+                pos.x,
+                pos.y,
+                cardSize * 0.95,
+                nooseProgress
+              );
             } else {
               ctx.font = `${Math.round(cardSize * 0.46)}px sans-serif`;
               ctx.textAlign = "center";
@@ -1289,6 +1332,131 @@ export function WerewolfCanvas({
         }
       }
 
+      // 11. Day Execution (Hanging) Notification Overlay & Noose Drop Effect
+      const execElapsedSec =
+        execAlertStartRef.current !== null
+          ? (now - execAlertStartRef.current) / 1000
+          : 999;
+
+      const showExecModal =
+        curMode === "match" &&
+        pv &&
+        activeExecutedSeatNoRef.current !== null &&
+        execElapsedSec < 4.5 &&
+        !execAlertDismissedRef.current;
+
+      if (showExecModal && pv) {
+        const executedSeat = pv.seats.find(
+          (s) => s.seatNo === activeExecutedSeatNoRef.current
+        );
+
+        if (executedSeat) {
+          // Spawn golden-amber judgment embers rising around the gallows during the first 0.9s
+          if (execElapsedSec < 0.9 && Math.random() < 0.65) {
+            particles.spawn({
+              x: centerX + (Math.random() - 0.5) * 150,
+              y: centerY + 60 + (Math.random() - 0.5) * 40,
+              vx: (Math.random() - 0.5) * 35,
+              vy: -55 - Math.random() * 75,
+              radius: 1.8 + Math.random() * 2.4,
+              color: Math.random() > 0.35 ? "#f59e0b" : "#fde68a",
+              life: 0.5 + Math.random() * 0.45,
+              maxLife: 0.95,
+            });
+          }
+
+          ctx.save();
+          ctx.fillStyle = "rgba(12, 10, 5, 0.78)";
+          ctx.fillRect(0, 0, width, height);
+
+          const modalW = Math.min(width - 28, 346);
+          const modalH = 336;
+          const modalX = (width - modalW) / 2;
+          const modalY = (height - modalH) / 2;
+
+          newHitRegions.push({
+            id: "dismiss-exec-alert",
+            shape: "rect",
+            x: modalX,
+            y: modalY,
+            width: modalW,
+            height: modalH,
+            cursor: "pointer",
+            data: { type: "dismiss-exec-alert" },
+          });
+
+          drawRoundedRect(ctx, modalX, modalY, modalW, modalH, 22);
+          ctx.fillStyle = "rgba(24, 18, 10, 0.96)";
+          ctx.fill();
+          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = "#f59e0b";
+          ctx.stroke();
+
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+
+          ctx.fillStyle = "#fde68a";
+          ctx.font = "bold 12px sans-serif";
+          ctx.fillText(
+            "⚖️ PHÁN QUYẾT CỦA DÂN LÀNG",
+            centerX,
+            modalY + 26
+          );
+
+          // Executed Player's Card + Animated Hangman's Noose dropping & tightening around it!
+          const execCardSize = 164;
+          const cardX = centerX - execCardSize / 2;
+          const cardY = modalY + 50;
+
+          drawRoleSquareCard(
+            ctx,
+            cardX,
+            cardY,
+            execCardSize,
+            executedSeat.role,
+            true
+          );
+
+          const nooseProgress = Math.max(
+            0,
+            Math.min(1, execElapsedSec / 0.85)
+          );
+          drawExecutionNooseEffect(
+            ctx,
+            centerX,
+            cardY + execCardSize * 0.48,
+            execCardSize * 1.05,
+            nooseProgress
+          );
+
+          ctx.fillStyle = "#fef3c7";
+          ctx.font = "bold 15px sans-serif";
+          ctx.fillText(
+            `⚖️ ${executedSeat.displayName.toUpperCase()} ĐÃ BỊ TREO CỔ!`,
+            centerX,
+            modalY + 246
+          );
+
+          const roleSub = executedSeat.role
+            ? `Vai trò lộ diện: ${ROLE_META[executedSeat.role].nameVi} (${ROLE_META[executedSeat.role].factionNameVi})`
+            : "Vai trò vẫn được giữ bí mật";
+
+          ctx.fillStyle = "#fbbf24";
+          ctx.font = "600 11.5px sans-serif";
+          ctx.fillText(roleSub, centerX, modalY + 270);
+
+          ctx.fillStyle = "#94a3b8";
+          ctx.font = "11px sans-serif";
+          ctx.fillText(
+            "Chạm vào thông báo để đóng ngay",
+            centerX,
+            modalY + 306
+          );
+
+          ctx.restore();
+        }
+      }
+
       ctx.restore();
       hitRegionsRef.current = newHitRegions;
       animationFrameId = requestAnimationFrame(renderFrame);
@@ -1332,6 +1500,8 @@ export function WerewolfCanvas({
       showcaseDismissedRef.current = true;
     } else if (region.data.type === "dismiss-dawn-alert") {
       dawnAlertDismissedRef.current = true;
+    } else if (region.data.type === "dismiss-exec-alert") {
+      execAlertDismissedRef.current = true;
     } else if (region.data.type === "seat") {
       stateRef.current.onSelectSeat(region.data.seatNo);
     } else if (region.data.type === "role-card") {

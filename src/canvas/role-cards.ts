@@ -2504,3 +2504,111 @@ export function drawWerewolfClawSlashes(
 
   ctx.restore();
 }
+
+/**
+ * Draws an animated Hangman's Rope & Coiled Noose dropping from the top and tightening
+ * over a card centered at (cx, cy). `progress` (0..1) controls the drop, swing, and cinch.
+ */
+export function drawExecutionNooseEffect(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  span: number,
+  progress = 1
+) {
+  const clamped = Math.max(0, Math.min(1, progress));
+  if (clamped <= 0) return;
+
+  // Smooth drop-in during first 0.55 of progress, then tighten & dampened pendulum sway
+  const dropT = Math.min(1, clamped / 0.55);
+  const easeDrop = 1 - Math.pow(1 - dropT, 3);
+  const tightenT = Math.max(0, Math.min(1, (clamped - 0.45) / 0.55));
+  const swayAngle =
+    clamped < 1 ? Math.sin(clamped * Math.PI * 3.5) * (1 - clamped) * 0.16 : 0;
+
+  ctx.save();
+  const anchorY = cy - span * 0.62;
+  ctx.translate(cx, anchorY);
+  ctx.rotate(swayAngle);
+
+  const currentKnotY = lerp(-span * 0.35, span * 0.24, easeDrop);
+  const loopRx = lerp(span * 0.31, span * 0.23, tightenT);
+  const loopRy = lerp(span * 0.34, span * 0.25, tightenT);
+  const loopCy = currentKnotY + span * 0.12 + loopRy;
+
+  ctx.shadowColor = "rgba(245, 158, 11, 0.75)";
+  ctx.shadowBlur = Math.max(5, span * 0.06);
+
+  // 1. Top Horizontal Wooden Gallows Beam fragment
+  ctx.fillStyle = "#451a03";
+  ctx.strokeStyle = "#78350f";
+  ctx.lineWidth = Math.max(1.5, span * 0.02);
+  drawRoundedRect(
+    ctx,
+    -span * 0.44,
+    -span * 0.04,
+    span * 0.88,
+    span * 0.08,
+    span * 0.02
+  );
+  ctx.fill();
+  ctx.stroke();
+
+  // 2. Vertical Braided Hemp Rope from top beam down to the knot
+  const ropeW = Math.max(3, span * 0.055);
+  ctx.strokeStyle = "#d97706";
+  ctx.lineWidth = ropeW;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(0, span * 0.03);
+  ctx.lineTo(0, currentKnotY);
+  ctx.stroke();
+
+  // Diagonal braid hash marks along vertical rope
+  ctx.strokeStyle = "#78350f";
+  ctx.lineWidth = Math.max(1, span * 0.014);
+  const ropeSteps = 6;
+  for (let r = 0; r < ropeSteps; r++) {
+    const ry = lerp(span * 0.05, currentKnotY - span * 0.02, r / ropeSteps);
+    ctx.beginPath();
+    ctx.moveTo(-ropeW * 0.45, ry - span * 0.015);
+    ctx.lineTo(ropeW * 0.45, ry + span * 0.015);
+    ctx.stroke();
+  }
+
+  // 3. The Noose Loop (thick braided golden-amber oval loop)
+  ctx.strokeStyle = "#b45309";
+  ctx.lineWidth = ropeW * 1.18;
+  ctx.beginPath();
+  ctx.ellipse(0, loopCy, loopRx, loopRy, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#fbbf24";
+  ctx.lineWidth = ropeW * 0.62;
+  ctx.beginPath();
+  ctx.ellipse(0, loopCy, loopRx, loopRy, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // 4. Coiled Hangman's Knot Collar (6 stacked horizontal rope coils above the loop)
+  const coilCount = 6;
+  const coilW = ropeW * 1.85;
+  const coilH = Math.max(2, span * 0.024);
+  for (let c = 0; c < coilCount; c++) {
+    const cyCoil = currentKnotY + c * (coilH * 0.92);
+    ctx.fillStyle = c % 2 === 0 ? "#f59e0b" : "#d97706";
+    ctx.strokeStyle = "#451a03";
+    ctx.lineWidth = Math.max(1, span * 0.012);
+    drawRoundedRect(
+      ctx,
+      -coilW * 0.5,
+      cyCoil,
+      coilW,
+      coilH,
+      coilH * 0.45
+    );
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
