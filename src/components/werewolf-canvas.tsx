@@ -13,6 +13,7 @@ import {
 import {
   computeCardDealProgress,
   drawRoleSquareCard,
+  drawWerewolfClawSlashes,
 } from "@/canvas/role-cards";
 import {
   ROLE_META,
@@ -70,6 +71,11 @@ export function WerewolfCanvas({
   const lastMatchKeyRef = useRef<string>("");
   const showcaseDismissedRef = useRef<boolean>(false);
 
+  // Track Dawn Werewolf Bite Notification & Claw Slash Animation
+  const dawnAlertStartRef = useRef<number | null>(null);
+  const lastDawnKeyRef = useRef<string>("");
+  const dawnAlertDismissedRef = useRef<boolean>(false);
+
   const stateRef = useRef({
     mode,
     lobbySeats,
@@ -99,10 +105,29 @@ export function WerewolfCanvas({
         lastMatchKeyRef.current = matchKey;
         dealStartTimeRef.current = performance.now();
         showcaseDismissedRef.current = false;
+        lastDawnKeyRef.current = "";
+        dawnAlertStartRef.current = null;
+      }
+
+      // Detect a new Dawn with overnight casualties
+      if (
+        (playerView.phase === "DayPhase" ||
+          playerView.step === "HunterRevengeStep" ||
+          playerView.phase === "Finished") &&
+        playerView.lastDawnDeaths.length > 0
+      ) {
+        const dawnKey = `${playerView.cycle}-${playerView.lastDawnDeaths.join(",")}`;
+        if (lastDawnKeyRef.current !== dawnKey) {
+          lastDawnKeyRef.current = dawnKey;
+          dawnAlertStartRef.current = performance.now();
+          dawnAlertDismissedRef.current = false;
+        }
       }
     } else {
       lastMatchKeyRef.current = "";
       dealStartTimeRef.current = null;
+      lastDawnKeyRef.current = "";
+      dawnAlertStartRef.current = null;
     }
   }, [
     mode,
@@ -456,7 +481,7 @@ export function WerewolfCanvas({
 
       // 7. Seats around the table + Dealt Role Cards
       const newHitRegions: HitRegion[] = [];
-        const seatsToRender =
+      const seatsToRender =
         curMode === "match" && pv
           ? pv.seats.map((s) => {
               const lobbyMeta = curLobbySeats.find(
@@ -467,6 +492,8 @@ export function WerewolfCanvas({
                 displayName: s.displayName,
                 alive: s.alive,
                 role: s.role,
+                deathCause: s.deathCause,
+                diedAtCycle: s.diedAtCycle,
                 readyToVote: s.readyToVote,
                 dayVoteTarget: s.dayVoteTarget,
                 dayVoteLocked: s.dayVoteLocked,
@@ -481,6 +508,8 @@ export function WerewolfCanvas({
               displayName: s.displayName,
               alive: true,
               role: null as WerewolfRole | null,
+              deathCause: undefined,
+              diedAtCycle: undefined,
               readyToVote: false,
               dayVoteTarget: null as number | "abstain" | null,
               dayVoteLocked: false,
@@ -727,10 +756,29 @@ export function WerewolfCanvas({
           ctx.restore();
 
           if (!seat.alive) {
-            ctx.font = `${Math.round(cardSize * 0.48)}px sans-serif`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText("🪦", pos.x, pos.y);
+            if (seat.deathCause === "werewolf_bite") {
+              const dawnElapsed =
+                dawnAlertStartRef.current !== null &&
+                seat.diedAtCycle === pv?.cycle
+                  ? (now - dawnAlertStartRef.current) / 1000
+                  : 1;
+              const slashProgress = Math.max(
+                0,
+                Math.min(1, dawnElapsed / 0.55)
+              );
+              drawWerewolfClawSlashes(
+                ctx,
+                pos.x,
+                pos.y,
+                cardSize * 0.96,
+                slashProgress
+              );
+            } else {
+              ctx.font = `${Math.round(cardSize * 0.46)}px sans-serif`;
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillText("🪦", pos.x, pos.y);
+            }
           }
         } else {
           // Lobby Seat Box
@@ -926,8 +974,16 @@ export function WerewolfCanvas({
           subLabel = "✓ Sẵn sàng bầu";
           subColor = "#34d399";
         } else if (!seat.alive) {
-          subLabel = "Đã chết";
-          subColor = "#64748b";
+          subLabel =
+            seat.deathCause === "werewolf_bite"
+              ? "🐺 Bị Sói cắn"
+              : seat.deathCause === "witch_poison"
+                ? "🧪 Trúng độc"
+                : seat.deathCause === "hunter_shot"
+                  ? "🏹 Trúng đạn"
+                  : "⚖️ Bị treo cổ";
+          subColor =
+            seat.deathCause === "werewolf_bite" ? "#f87171" : "#64748b";
         }
 
         if (subLabel) {
@@ -1099,6 +1155,140 @@ export function WerewolfCanvas({
         }
       }
 
+      // 10. Dawn Werewolf Bite Notification Overlay & Giant Claw Slash Effect
+      const dawnElapsedSec =
+        dawnAlertStartRef.current !== null
+          ? (now - dawnAlertStartRef.current) / 1000
+          : 999;
+
+      const showDawnAttackModal =
+        curMode === "match" &&
+        pv &&
+        pv.lastDawnDeaths.length > 0 &&
+        dawnElapsedSec < 4.5 &&
+        !dawnAlertDismissedRef.current;
+
+      if (showDawnAttackModal && pv) {
+        const deadSeats = pv.lastDawnDeaths
+          .map((no) => pv.seats.find((s) => s.seatNo === no))
+          .filter((s): s is NonNullable<typeof s> => Boolean(s));
+
+        const wolfVictims = deadSeats.filter(
+          (s) => s.deathCause === "werewolf_bite" || !s.deathCause
+        );
+        const primaryVictim = wolfVictims[0] ?? deadSeats[0];
+
+        if (primaryVictim) {
+          // Spawn crimson slash sparks during the initial claw strike (0..0.6s)
+          if (dawnElapsedSec < 0.65 && Math.random() < 0.75) {
+            particles.spawn({
+              x: centerX + (Math.random() - 0.5) * 140,
+              y: centerY - 15 + (Math.random() - 0.5) * 140,
+              vx: -60 - Math.random() * 90,
+              vy: 50 + Math.random() * 90,
+              radius: 2 + Math.random() * 2.8,
+              color: Math.random() > 0.3 ? "#ef4444" : "#fecaca",
+              life: 0.45 + Math.random() * 0.35,
+              maxLife: 0.8,
+            });
+          }
+
+          ctx.save();
+          ctx.fillStyle = "rgba(15, 5, 10, 0.76)";
+          ctx.fillRect(0, 0, width, height);
+
+          const modalW = Math.min(width - 28, 340);
+          const modalH = 330;
+          const modalX = (width - modalW) / 2;
+          const modalY = (height - modalH) / 2;
+
+          newHitRegions.push({
+            id: "dismiss-dawn-alert",
+            shape: "rect",
+            x: modalX,
+            y: modalY,
+            width: modalW,
+            height: modalH,
+            cursor: "pointer",
+            data: { type: "dismiss-dawn-alert" },
+          });
+
+          drawRoundedRect(ctx, modalX, modalY, modalW, modalH, 22);
+          ctx.fillStyle = "rgba(24, 10, 14, 0.96)";
+          ctx.fill();
+          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = "#dc2626";
+          ctx.stroke();
+
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+
+          ctx.fillStyle = "#fca5a5";
+          ctx.font = "bold 12px sans-serif";
+          ctx.fillText(
+            `☀️ TRỜI SÁNG • ĐÊM THỨ ${pv.cycle}`,
+            centerX,
+            modalY + 26
+          );
+
+          // Victim Card in center + Animated 4-Mark Werewolf Claw Slash ripping across it!
+          const victimCardSize = 164;
+          const cardX = centerX - victimCardSize / 2;
+          const cardY = modalY + 46;
+
+          drawRoleSquareCard(
+            ctx,
+            cardX,
+            cardY,
+            victimCardSize,
+            primaryVictim.role,
+            true
+          );
+
+          const slashProgress = Math.max(
+            0,
+            Math.min(1, (dawnElapsedSec - 0.08) / 0.52)
+          );
+          drawWerewolfClawSlashes(
+            ctx,
+            centerX,
+            cardY + victimCardSize / 2,
+            victimCardSize * 1.16,
+            slashProgress
+          );
+
+          // Headline & Victim list
+          const victimNames = deadSeats.map((s) => s.displayName).join(", ");
+          const headline =
+            primaryVictim.deathCause === "witch_poison" &&
+            wolfVictims.length === 0
+              ? `${victimNames} ĐÃ TRÚNG ĐỘC!`
+              : `🐺 ${victimNames.toUpperCase()} BỊ MA SÓI CẮN!`;
+
+          ctx.fillStyle = "#fef2f2";
+          ctx.font = "bold 15px sans-serif";
+          ctx.fillText(headline, centerX, modalY + 242);
+
+          const roleSub = primaryVictim.role
+            ? `Vai trò lộ diện: ${ROLE_META[primaryVictim.role].nameVi} (${ROLE_META[primaryVictim.role].factionNameVi})`
+            : "Vai trò vẫn được giữ bí mật";
+
+          ctx.fillStyle = "#fda4af";
+          ctx.font = "600 11.5px sans-serif";
+          ctx.fillText(roleSub, centerX, modalY + 266);
+
+          ctx.fillStyle = "#94a3b8";
+          ctx.font = "11px sans-serif";
+          ctx.fillText(
+            "Chạm vào thông báo để đóng ngay",
+            centerX,
+            modalY + 302
+          );
+
+          ctx.restore();
+        }
+      }
+
       ctx.restore();
       hitRegionsRef.current = newHitRegions;
       animationFrameId = requestAnimationFrame(renderFrame);
@@ -1140,6 +1330,8 @@ export function WerewolfCanvas({
 
     if (region.data.type === "dismiss-showcase") {
       showcaseDismissedRef.current = true;
+    } else if (region.data.type === "dismiss-dawn-alert") {
+      dawnAlertDismissedRef.current = true;
     } else if (region.data.type === "seat") {
       stateRef.current.onSelectSeat(region.data.seatNo);
     } else if (region.data.type === "role-card") {

@@ -2410,3 +2410,97 @@ export function drawRoleSquareCard(
 
   ctx.restore();
 }
+
+/**
+ * Draws 4 ferocious diagonal werewolf claw slash marks across a region centered at (cx, cy).
+ * `progress` (0..1) animates the 4 claws slashing from top-right to bottom-left in staggered succession.
+ */
+export function drawWerewolfClawSlashes(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  span: number,
+  progress = 1
+) {
+  const clamped = Math.max(0, Math.min(1, progress));
+  if (clamped <= 0) return;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  // 4 parallel diagonal claw tracks offset perpendicular to the slash angle (-42 deg)
+  const offsets = [-0.27, -0.09, 0.09, 0.27];
+  const lengths = [0.88, 1.0, 0.96, 0.82];
+
+  for (let i = 0; i < 4; i++) {
+    // Stagger each claw slightly during the slash animation
+    const clawStart = i * 0.1;
+    const clawT = Math.max(0, Math.min(1, (clamped - clawStart) / 0.65));
+    if (clawT <= 0) continue;
+
+    const perpOffset = offsets[i] * span;
+    const totalLen = lengths[i] * span;
+
+    // Slash direction: from top-right (+0.48, -0.48) to bottom-left (-0.48, +0.48)
+    const dirX = -0.72;
+    const dirY = 0.69;
+    const perpX = -dirY;
+    const perpY = dirX;
+
+    const startX = -dirX * totalLen * 0.5 + perpX * perpOffset;
+    const startY = -dirY * totalLen * 0.5 + perpY * perpOffset;
+    const curEndX =
+      startX + dirX * totalLen * clawT + perpX * (Math.sin(i * 1.7) * span * 0.02);
+    const curEndY =
+      startY + dirY * totalLen * clawT + perpY * (Math.cos(i * 1.7) * span * 0.02);
+
+    const midX = (startX + curEndX) * 0.5 + perpX * span * 0.03;
+    const midY = (startY + curEndY) * 0.5 + perpY * span * 0.03;
+    const maxHalfWidth = Math.max(2, span * 0.042);
+
+    // Outer dark blood-red shadow/tear
+    ctx.save();
+    ctx.shadowColor = "rgba(220, 38, 38, 0.95)";
+    ctx.shadowBlur = Math.max(6, span * 0.08);
+    ctx.fillStyle = "#dc2626";
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.quadraticCurveTo(
+      midX + perpX * maxHalfWidth,
+      midY + perpY * maxHalfWidth,
+      curEndX,
+      curEndY
+    );
+    ctx.quadraticCurveTo(
+      midX - perpX * maxHalfWidth,
+      midY - perpY * maxHalfWidth,
+      startX,
+      startY
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Hot glowing pale-crimson inner slash core
+    const coreHalfW = maxHalfWidth * 0.42;
+    ctx.fillStyle = "#fecaca";
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.quadraticCurveTo(
+      midX + perpX * coreHalfW,
+      midY + perpY * coreHalfW,
+      curEndX,
+      curEndY
+    );
+    ctx.quadraticCurveTo(
+      midX - perpX * coreHalfW,
+      midY - perpY * coreHalfW,
+      startX,
+      startY
+    );
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
