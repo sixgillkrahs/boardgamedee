@@ -736,62 +736,561 @@ export function drawDukeCard2D(
   ctx.fill();
   ctx.restore();
 
-  // 7. Bottom-Left Cyberpunk Hot-Pink HUD Glyph + "Duke" + Ability Text (matches reference card layout)
+  ctx.restore();
+}
+
+/**
+ * Draws the detailed 2D illustration for the Coup "Assassin" card matching the reference artwork
+ * (without any text on the card):
+ * - Circular cathedral/atrium window backdrop with dark teal-slate vertical columns & misty light shafts
+ * - Top-right dark gunmetal skull faction emblem with an 'X' forehead cutout and 4 jagged bottom fangs
+ * - Blonde female assassin with black-cord-wrapped high ponytail, straight blunt bangs,
+ *   ice-blue splatter war-paint across the eyes, black ear stud + crescent claw earring, and dark plum lips
+ * - High flared black collar lined in electric cyan, rectangular cyan gem, 3D silver skull brooch
+ *   with glowing blue eyes, cyan-piped lapels, and vertical cyan ladder-segmented chest strip
+ */
+export function drawAssassinCard2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
   ctx.save();
-  // Dark bottom vignette for crisp text readability
-  const botGrad = ctx.createLinearGradient(0, h * 0.72, 0, h);
-  botGrad.addColorStop(0, "rgba(9, 5, 15, 0)");
-  botGrad.addColorStop(0.45, "rgba(9, 5, 15, 0.68)");
-  botGrad.addColorStop(1, "rgba(9, 5, 15, 0.92)");
-  ctx.fillStyle = botGrad;
-  ctx.fillRect(0, h * 0.72, w, h * 0.28);
+  ctx.translate(x, y);
 
-  // "Duke" Title at lower-left
-  ctx.fillStyle = "#ffffff";
-  ctx.font = `bold ${Math.max(9, Math.round(w * 0.135))}px sans-serif`;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "bottom";
-  ctx.fillText("Duke", w * 0.18, h * 0.825);
+  // 1. Misty Silver-Grey Outer Wall & Circular Cathedral Atrium Window Backdrop
+  const wallGrad = ctx.createLinearGradient(0, 0, 0, h);
+  wallGrad.addColorStop(0, "#9ca3af");
+  wallGrad.addColorStop(0.55, "#e2e8f0");
+  wallGrad.addColorStop(1, "#090d16");
+  ctx.fillStyle = wallGrad;
+  ctx.fillRect(0, 0, w, h);
 
-  // Hot-Pink Futuristic Angular Cyber-Chevron Glyph under "Duke"
-  ctx.fillStyle = "#ec1c8c";
-  ctx.strokeStyle = "#ec1c8c";
-  ctx.lineWidth = Math.max(1, w * 0.015);
+  // Large Circular Window Portal behind the Assassin's upper body
+  const portalCx = w * 0.5;
+  const portalCy = h * 0.25;
+  const portalR = w * 0.54;
 
+  ctx.save();
   ctx.beginPath();
-  ctx.moveTo(w * 0.03, h * 0.84);
-  ctx.lineTo(w * 0.38, h * 0.84);
-  ctx.lineTo(w * 0.27, h * 0.935);
-  ctx.lineTo(w * 0.23, h * 0.91);
-  ctx.lineTo(w * 0.14, h * 0.91);
-  ctx.lineTo(w * 0.18, h * 0.88);
-  ctx.lineTo(w * 0.3, h * 0.88);
-  ctx.lineTo(w * 0.33, h * 0.855);
-  ctx.lineTo(w * 0.05, h * 0.855);
-  ctx.closePath();
-  ctx.fill();
+  ctx.arc(portalCx, portalCy, portalR, 0, Math.PI * 2);
+  ctx.clip();
 
-  // Diagonal hatch bars inside the pink glyph
-  if (w >= 64) {
-    ctx.lineWidth = Math.max(0.8, w * 0.01);
-    for (let k = 0; k < 6; k++) {
-      const hx = w * (0.11 + k * 0.032);
-      ctx.beginPath();
-      ctx.moveTo(hx, h * 0.872);
-      ctx.lineTo(hx + w * 0.018, h * 0.855);
-      ctx.stroke();
-    }
+  const portalBg = ctx.createLinearGradient(0, 0, w, 0);
+  portalBg.addColorStop(0, "#3b5254");
+  portalBg.addColorStop(0.25, "#94a3a6");
+  portalBg.addColorStop(0.36, "#f1f5f9");
+  portalBg.addColorStop(0.5, "#1f3a3d");
+  portalBg.addColorStop(0.66, "#f1f5f9");
+  portalBg.addColorStop(0.78, "#94a3a6");
+  portalBg.addColorStop(1, "#3b5254");
+  ctx.fillStyle = portalBg;
+  ctx.fillRect(0, 0, w, h * 0.65);
 
-    // Two-line ability text on the bottom-right of the pink glyph
-    ctx.fillStyle = "#f8fafc";
-    ctx.font = `600 ${Math.max(7, Math.round(w * 0.068))}px sans-serif`;
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
-    ctx.fillText("Take 3 coins from Treasury.", w * 0.38, h * 0.855);
-    ctx.fillText("Blocks Foreign Aid.", w * 0.38, h * 0.91);
+  // Vertical Gothic/Sci-Fi Atrium Ribs inside the circular window
+  ctx.strokeStyle = "rgba(30, 48, 50, 0.55)";
+  ctx.lineWidth = Math.max(0.8, w * 0.01);
+  for (const vx of [0.14, 0.24, 0.34, 0.68, 0.78, 0.88]) {
+    ctx.beginPath();
+    ctx.moveTo(w * vx, 0);
+    ctx.lineTo(w * vx, h * 0.6);
+    ctx.stroke();
   }
   ctx.restore();
 
+  // Subtle rim around the circular window
+  ctx.strokeStyle = "rgba(100, 116, 139, 0.45)";
+  ctx.lineWidth = Math.max(1, w * 0.012);
+  ctx.beginPath();
+  ctx.arc(portalCx, portalCy, portalR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // 2. Top-Right Gunmetal Skull Faction Emblem (with 'X' Forehead Cutout & 4 Jagged Fangs)
+  ctx.save();
+  const skX = w * 0.76;
+  const skY = h * 0.175;
+  const skS = w * 0.22;
+
+  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+  ctx.shadowBlur = Math.max(2, w * 0.03);
+
+  const skullGrad = ctx.createLinearGradient(
+    skX - skS * 0.5,
+    skY - skS * 0.5,
+    skX + skS * 0.5,
+    skY + skS * 0.5
+  );
+  skullGrad.addColorStop(0, "#52565c");
+  skullGrad.addColorStop(0.5, "#383b40");
+  skullGrad.addColorStop(1, "#1f2124");
+  ctx.fillStyle = skullGrad;
+  ctx.strokeStyle = "#181a1c";
+  ctx.lineWidth = Math.max(0.9, w * 0.01);
+
+  ctx.beginPath();
+  // Top flat cranium
+  ctx.moveTo(skX - skS * 0.25, skY - skS * 0.44);
+  ctx.lineTo(skX + skS * 0.25, skY - skS * 0.44);
+  // Upper-right chamfer
+  ctx.lineTo(skX + skS * 0.46, skY - skS * 0.14);
+  ctx.lineTo(skX + skS * 0.42, skY + skS * 0.04);
+  // Cheekbone flare out & in
+  ctx.lineTo(skX + skS * 0.5, skY + skS * 0.12);
+  ctx.lineTo(skX + skS * 0.36, skY + skS * 0.26);
+  ctx.lineTo(skX + skS * 0.26, skY + skS * 0.26);
+  // 4 Jagged Bottom Fang Prongs (right to left)
+  ctx.lineTo(skX + skS * 0.22, skY + skS * 0.48);
+  ctx.lineTo(skX + skS * 0.13, skY + skS * 0.28);
+  ctx.lineTo(skX + skS * 0.09, skY + skS * 0.52);
+  ctx.lineTo(skX + skS * 0.02, skY + skS * 0.28);
+  ctx.lineTo(skX - skS * 0.02, skY + skS * 0.28);
+  ctx.lineTo(skX - skS * 0.09, skY + skS * 0.52);
+  ctx.lineTo(skX - skS * 0.13, skY + skS * 0.28);
+  ctx.lineTo(skX - skS * 0.22, skY + skS * 0.48);
+  // Left cheek & cranium
+  ctx.lineTo(skX - skS * 0.26, skY + skS * 0.26);
+  ctx.lineTo(skX - skS * 0.36, skY + skS * 0.26);
+  ctx.lineTo(skX - skS * 0.5, skY + skS * 0.12);
+  ctx.lineTo(skX - skS * 0.42, skY + skS * 0.04);
+  ctx.lineTo(skX - skS * 0.46, skY - skS * 0.14);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.shadowBlur = 0;
+
+  // 'X' Cutout on the Skull Emblem's Forehead
+  ctx.strokeStyle = "#b8c4c8";
+  ctx.lineWidth = Math.max(1.5, skS * 0.095);
+  ctx.lineCap = "butt";
+  const xCy = skY - skS * 0.18;
+  const xR = skS * 0.12;
+  ctx.beginPath();
+  ctx.moveTo(skX - xR, xCy - xR);
+  ctx.lineTo(skX + xR, xCy + xR);
+  ctx.moveTo(skX + xR, xCy - xR);
+  ctx.lineTo(skX - xR, xCy + xR);
+  ctx.stroke();
+
+  // Angular Eye Sockets & Nasal Triangle on the Skull Emblem
+  ctx.fillStyle = "#94a3a8";
+  for (const dir of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(skX + dir * skS * 0.1, skY + skS * 0.06);
+    ctx.lineTo(skX + dir * skS * 0.34, skY + skS * 0.06);
+    ctx.lineTo(skX + dir * skS * 0.26, skY + skS * 0.16);
+    ctx.lineTo(skX + dir * skS * 0.14, skY + skS * 0.16);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.moveTo(skX, skY + skS * 0.15);
+  ctx.lineTo(skX + skS * 0.06, skY + skS * 0.24);
+  ctx.lineTo(skX - skS * 0.06, skY + skS * 0.24);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // 3. Lower Black Cloak, High Flared Electric-Cyan-Lined Collar, Silver Skull Clasp & Cyan Ladder Chest
+  ctx.save();
+  const neckCx = w * 0.49;
+
+  // Back of the High Flared Collar (Electric-Cyan Inner Lining)
+  const cyanGrad = ctx.createLinearGradient(
+    w * 0.28,
+    h * 0.44,
+    w * 0.68,
+    h * 0.58
+  );
+  cyanGrad.addColorStop(0, "#0284c7");
+  cyanGrad.addColorStop(0.5, "#38bdf8");
+  cyanGrad.addColorStop(1, "#0369a1");
+  ctx.fillStyle = cyanGrad;
+  ctx.strokeStyle = "#38bdf8";
+  ctx.lineWidth = Math.max(1.2, w * 0.014);
+
+  ctx.beginPath();
+  ctx.moveTo(w * 0.34, h * 0.56);
+  ctx.quadraticCurveTo(w * 0.26, h * 0.48, w * 0.31, h * 0.44);
+  ctx.quadraticCurveTo(w * 0.48, h * 0.46, w * 0.66, h * 0.51);
+  ctx.quadraticCurveTo(w * 0.68, h * 0.55, w * 0.6, h * 0.58);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Sweeping Black Cloak Shoulders & Body
+  const cloakGrad = ctx.createLinearGradient(0, h * 0.55, w, h);
+  cloakGrad.addColorStop(0, "#090c14");
+  cloakGrad.addColorStop(0.5, "#111726");
+  cloakGrad.addColorStop(1, "#05070b");
+  ctx.fillStyle = cloakGrad;
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.04, h);
+  ctx.quadraticCurveTo(w * 0.04, h * 0.66, w * 0.33, h * 0.6);
+  ctx.lineTo(w * 0.34, h * 0.54);
+  ctx.quadraticCurveTo(neckCx, h * 0.61, w * 0.61, h * 0.56);
+  ctx.lineTo(w * 0.63, h * 0.6);
+  ctx.quadraticCurveTo(w * 0.94, h * 0.66, w * 1.04, h);
+  ctx.closePath();
+  ctx.fill();
+
+  // Cyan-piped Black Collar Neckband & Triangular Lapels
+  ctx.fillStyle = "#0e131f";
+  ctx.strokeStyle = "#0ea5e9";
+  ctx.lineWidth = Math.max(1, w * 0.012);
+
+  // Left triangular lapel
+  ctx.beginPath();
+  ctx.moveTo(neckCx - w * 0.01, h * 0.63);
+  ctx.lineTo(w * 0.34, h * 0.59);
+  ctx.lineTo(w * 0.27, h * 0.71);
+  ctx.lineTo(w * 0.39, h * 0.82);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Right triangular lapel
+  ctx.beginPath();
+  ctx.moveTo(neckCx + w * 0.01, h * 0.63);
+  ctx.lineTo(w * 0.61, h * 0.6);
+  ctx.lineTo(w * 0.71, h * 0.73);
+  ctx.lineTo(w * 0.58, h * 0.83);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Vertical Cyan Ladder Panel down the center of the bodice
+  const ladderW = w * 0.042;
+  const ladderX = neckCx - ladderW * 0.5;
+  for (let rung = 0; rung < 5; rung++) {
+    const ry = h * (0.73 + rung * 0.025);
+    ctx.fillStyle = rung % 2 === 0 ? "#38bdf8" : "#0284c7";
+    ctx.strokeStyle = "#94a3b8";
+    ctx.lineWidth = Math.max(0.7, w * 0.008);
+    ctx.fillRect(ladderX, ry, ladderW, h * 0.022);
+    ctx.strokeRect(ladderX, ry, ladderW, h * 0.022);
+  }
+
+  // Rectangular White-Rimmed Electric-Blue Gem at the throat
+  ctx.fillStyle = "#0284c7";
+  ctx.strokeStyle = "#f8fafc";
+  ctx.lineWidth = Math.max(1, w * 0.011);
+  ctx.fillRect(neckCx - w * 0.015, h * 0.625, w * 0.03, h * 0.052);
+  ctx.strokeRect(neckCx - w * 0.015, h * 0.625, w * 0.03, h * 0.052);
+
+  // 3D Silver Skull Brooch below the throat gem (with glowing cyan eyes)
+  const broochY = h * 0.708;
+  const broochR = w * 0.032;
+  ctx.fillStyle = "#e2e8f0";
+  ctx.strokeStyle = "#475569";
+  ctx.lineWidth = Math.max(0.8, w * 0.008);
+  ctx.beginPath();
+  ctx.arc(neckCx, broochY, broochR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Glowing cyan eyes on the silver skull brooch
+  ctx.fillStyle = "#0ea5e9";
+  ctx.beginPath();
+  ctx.arc(
+    neckCx - broochR * 0.38,
+    broochY - broochR * 0.05,
+    broochR * 0.24,
+    0,
+    Math.PI * 2
+  );
+  ctx.arc(
+    neckCx + broochR * 0.38,
+    broochY - broochR * 0.05,
+    broochR * 0.24,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.restore();
+
+  // 4. The Assassin's Neck, Head, Blonde Ponytail, Blunt Bangs & Ice-Blue War-Paint Mask
+  ctx.save();
+  const faceCx = w * 0.51;
+  const faceCy = h * 0.39;
+
+  // Slender porcelain neck
+  const neckGrad = ctx.createLinearGradient(
+    w * 0.36,
+    h * 0.45,
+    w * 0.6,
+    h * 0.58
+  );
+  neckGrad.addColorStop(0, "#ebd3c3");
+  neckGrad.addColorStop(0.6, "#f7e7dc");
+  neckGrad.addColorStop(1, "#b89c8d");
+  ctx.fillStyle = neckGrad;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.37, h * 0.45);
+  ctx.lineTo(w * 0.37, h * 0.57);
+  ctx.quadraticCurveTo(neckCx, h * 0.61, w * 0.58, h * 0.56);
+  ctx.lineTo(w * 0.59, h * 0.48);
+  ctx.closePath();
+  ctx.fill();
+
+  // High Blonde Ponytail & Black Leather Cord Wrap at top of head
+  // Curled golden-blonde ponytail plume sweeping left
+  const ponyGrad = ctx.createRadialGradient(
+    w * 0.37,
+    h * 0.16,
+    w * 0.02,
+    w * 0.4,
+    h * 0.16,
+    w * 0.14
+  );
+  ponyGrad.addColorStop(0, "#fef3c7");
+  ponyGrad.addColorStop(0.55, "#d6ab72");
+  ponyGrad.addColorStop(1, "#7c582c");
+  ctx.fillStyle = ponyGrad;
+  ctx.strokeStyle = "#6b4c24";
+  ctx.lineWidth = Math.max(0.8, w * 0.009);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.46, h * 0.17);
+  ctx.bezierCurveTo(
+    w * 0.38,
+    h * 0.1,
+    w * 0.27,
+    h * 0.12,
+    w * 0.29,
+    h * 0.19
+  );
+  ctx.bezierCurveTo(
+    w * 0.31,
+    h * 0.24,
+    w * 0.42,
+    h * 0.22,
+    w * 0.48,
+    h * 0.18
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Tall Black Cord Hair Wrap binding the ponytail base
+  ctx.save();
+  ctx.translate(w * 0.475, h * 0.192);
+  ctx.rotate(-0.14);
+  ctx.fillStyle = "#181a20";
+  ctx.strokeStyle = "#3f3f46";
+  ctx.lineWidth = Math.max(0.7, w * 0.008);
+  drawRoundedRect(ctx, -w * 0.024, -h * 0.032, w * 0.048, h * 0.064, 3);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  // Right Ear (on viewer's left) + Black Gauge Stud + Black Crescent Claw Earring
+  ctx.fillStyle = "#ebd0bf";
+  ctx.strokeStyle = "#a38372";
+  ctx.lineWidth = Math.max(0.8, w * 0.009);
+  ctx.beginPath();
+  ctx.ellipse(
+    w * 0.335,
+    h * 0.405,
+    w * 0.028,
+    h * 0.042,
+    -0.2,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.stroke();
+
+  // Black round ear stud
+  ctx.fillStyle = "#090b10";
+  ctx.beginPath();
+  ctx.arc(w * 0.362, h * 0.438, w * 0.013, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Curved black crescent talon earring hanging below ear
+  ctx.beginPath();
+  ctx.moveTo(w * 0.348, h * 0.445);
+  ctx.quadraticCurveTo(w * 0.328, h * 0.472, w * 0.365, h * 0.49);
+  ctx.quadraticCurveTo(w * 0.345, h * 0.468, w * 0.358, h * 0.445);
+  ctx.closePath();
+  ctx.fill();
+
+  // Porcelain-Ivory Face & Jawline Contour
+  const faceGrad = ctx.createRadialGradient(
+    faceCx - w * 0.03,
+    faceCy,
+    w * 0.02,
+    faceCx,
+    faceCy,
+    w * 0.22
+  );
+  faceGrad.addColorStop(0, "#fff8f2");
+  faceGrad.addColorStop(0.65, "#ecd3c4");
+  faceGrad.addColorStop(1, "#b8998a");
+  ctx.fillStyle = faceGrad;
+  ctx.strokeStyle = "#9c7e70";
+  ctx.lineWidth = Math.max(0.8, w * 0.009);
+
+  ctx.beginPath();
+  ctx.moveTo(w * 0.34, h * 0.35);
+  // Left cheek down to jawline & chin (tilted three-quarter right)
+  ctx.quadraticCurveTo(w * 0.35, h * 0.49, w * 0.56, h * 0.535);
+  // Chin rounding up to right cheek
+  ctx.quadraticCurveTo(w * 0.65, h * 0.54, w * 0.68, h * 0.43);
+  ctx.quadraticCurveTo(w * 0.71, h * 0.35, w * 0.67, h * 0.27);
+  // Top of crown back to left temple
+  ctx.quadraticCurveTo(w * 0.5, h * 0.21, w * 0.34, h * 0.35);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Pulled-up Golden-Blonde Hair on Crown & Left Temple
+  const hairGrad = ctx.createLinearGradient(
+    w * 0.33,
+    h * 0.22,
+    w * 0.7,
+    h * 0.36
+  );
+  hairGrad.addColorStop(0, "#d4ac76");
+  hairGrad.addColorStop(0.5, "#fbe6b2");
+  hairGrad.addColorStop(1, "#b5854b");
+  ctx.fillStyle = hairGrad;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.335, h * 0.365);
+  ctx.quadraticCurveTo(w * 0.33, h * 0.24, w * 0.48, h * 0.22);
+  ctx.quadraticCurveTo(w * 0.66, h * 0.22, w * 0.71, h * 0.34);
+  ctx.lineTo(w * 0.43, h * 0.32);
+  ctx.closePath();
+  ctx.fill();
+
+  // Ice-Blue & White Splatter Eye War-Paint Mask across both eyes and left cheek
+  ctx.fillStyle = "rgba(104, 156, 194, 0.75)";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.39, h * 0.41);
+  ctx.quadraticCurveTo(w * 0.42, h * 0.355, w * 0.58, h * 0.365);
+  ctx.quadraticCurveTo(w * 0.69, h * 0.38, w * 0.695, h * 0.435);
+  ctx.quadraticCurveTo(w * 0.64, h * 0.42, w * 0.56, h * 0.395);
+  ctx.quadraticCurveTo(w * 0.47, h * 0.42, w * 0.39, h * 0.41);
+  ctx.closePath();
+  ctx.fill();
+
+  // Paint-splatter droplets extending left toward the ear
+  for (const [dx, dy, dr] of [
+    [0.41, 0.405, 0.022],
+    [0.43, 0.422, 0.016],
+    [0.395, 0.424, 0.012],
+    [0.455, 0.395, 0.018],
+  ] as const) {
+    ctx.beginPath();
+    ctx.arc(w * dx, h * dy, w * dr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // White inner war-paint highlight around the eyelids
+  ctx.fillStyle = "rgba(240, 249, 255, 0.85)";
+  ctx.beginPath();
+  ctx.ellipse(
+    w * 0.52,
+    h * 0.375,
+    w * 0.055,
+    h * 0.016,
+    0.1,
+    0,
+    Math.PI * 2
+  );
+  ctx.ellipse(
+    w * 0.655,
+    h * 0.395,
+    w * 0.036,
+    h * 0.014,
+    0.25,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Icy Blue Eyes looking down-right
+  for (const [ex, ey, ew] of [
+    [w * 0.53, h * 0.376, w * 0.026],
+    [w * 0.662, h * 0.4, w * 0.02],
+  ] as const) {
+    ctx.fillStyle = "#0f172a";
+    ctx.beginPath();
+    ctx.ellipse(ex, ey, ew, h * 0.008, 0.14, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#38bdf8";
+    ctx.beginPath();
+    ctx.arc(ex, ey, ew * 0.48, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(ex - ew * 0.2, ey - h * 0.002, ew * 0.18, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Razor-Straight Blunt Golden-Blonde Bangs (Fringe) cut cleanly across the forehead
+  const bangsGrad = ctx.createLinearGradient(
+    w * 0.43,
+    h * 0.26,
+    w * 0.72,
+    h * 0.38
+  );
+  bangsGrad.addColorStop(0, "#fdf2d0");
+  bangsGrad.addColorStop(0.5, "#e0b375");
+  bangsGrad.addColorStop(1, "#ead09c");
+  ctx.fillStyle = bangsGrad;
+  ctx.strokeStyle = "#a1743c";
+  ctx.lineWidth = Math.max(0.7, w * 0.008);
+
+  ctx.beginPath();
+  ctx.moveTo(w * 0.445, h * 0.345);
+  ctx.quadraticCurveTo(w * 0.48, h * 0.25, w * 0.6, h * 0.255);
+  ctx.quadraticCurveTo(w * 0.71, h * 0.27, w * 0.725, h * 0.382);
+  // Razor-straight blunt cut edge across the brow
+  ctx.lineTo(w * 0.445, h * 0.345);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Sculpted Nose & Nostrils
+  ctx.strokeStyle = "#9c7a69";
+  ctx.lineWidth = Math.max(0.9, w * 0.011);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.615, h * 0.375);
+  ctx.lineTo(w * 0.648, h * 0.43);
+  ctx.quadraticCurveTo(w * 0.625, h * 0.445, w * 0.595, h * 0.435);
+  ctx.stroke();
+
+  // Dark Plum-Purple Parted Lips
+  ctx.fillStyle = "#3b0a2e";
+  ctx.strokeStyle = "#1f0418";
+  ctx.lineWidth = Math.max(0.7, w * 0.008);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.555, h * 0.48);
+  ctx.quadraticCurveTo(w * 0.595, h * 0.462, w * 0.62, h * 0.472);
+  ctx.quadraticCurveTo(w * 0.64, h * 0.464, w * 0.652, h * 0.486);
+  ctx.quadraticCurveTo(w * 0.605, h * 0.504, w * 0.555, h * 0.48);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Tiny white teeth glint inside parted plum lips
+  ctx.fillStyle = "#f8fafc";
+  ctx.beginPath();
+  ctx.ellipse(
+    w * 0.61,
+    h * 0.482,
+    w * 0.018,
+    h * 0.004,
+    0.08,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  ctx.restore();
   ctx.restore();
 }
 
@@ -815,82 +1314,7 @@ function drawCoupCharacterArt2D(
   if (character === "Duke") {
     drawDukeCard2D(ctx, x, y, w, h);
   } else if (character === "Assassin") {
-    // Deep Blood-Crimson & Shadow Black Backdrop
-    const bg = ctx.createRadialGradient(cx, cy, s * 0.05, cx, cy, s * 0.75);
-    bg.addColorStop(0, "#7f1d1d");
-    bg.addColorStop(0.6, "#270909");
-    bg.addColorStop(1, "#09090b");
-    ctx.fillStyle = bg;
-    ctx.fillRect(x, y, w, h);
-
-    // Dark Hooded Cowl Silhouette
-    ctx.fillStyle = "#09090b";
-    ctx.strokeStyle = "#dc2626";
-    ctx.lineWidth = Math.max(1.2, s * 0.018);
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - s * 0.28);
-    ctx.quadraticCurveTo(cx + s * 0.28, cy - s * 0.1, cx + s * 0.26, cy + s * 0.18);
-    ctx.lineTo(cx - s * 0.26, cy + s * 0.18);
-    ctx.quadraticCurveTo(cx - s * 0.28, cy - s * 0.1, cx, cy - s * 0.28);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Glowing Crimson Eyes inside the Hood
-    ctx.fillStyle = "#ef4444";
-    for (const dir of [-1, 1]) {
-      ctx.beginPath();
-      ctx.moveTo(cx + dir * s * 0.04, cy - s * 0.06);
-      ctx.lineTo(cx + dir * s * 0.13, cy - s * 0.09);
-      ctx.lineTo(cx + dir * s * 0.09, cy - s * 0.04);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // Crossed Silver Daggers in the foreground
-    for (const dir of [-1, 1]) {
-      ctx.save();
-      ctx.translate(cx, cy + s * 0.1);
-      ctx.rotate(dir * 0.68);
-
-      // Steel blade
-      const bladeGrad = ctx.createLinearGradient(-s * 0.04, 0, s * 0.04, 0);
-      bladeGrad.addColorStop(0, "#f8fafc");
-      bladeGrad.addColorStop(0.5, "#94a3b8");
-      bladeGrad.addColorStop(1, "#475569");
-      ctx.fillStyle = bladeGrad;
-      ctx.strokeStyle = "#0f172a";
-      ctx.lineWidth = Math.max(1, s * 0.014);
-      ctx.beginPath();
-      ctx.moveTo(0, -s * 0.3);
-      ctx.lineTo(s * 0.045, s * 0.06);
-      ctx.lineTo(-s * 0.045, s * 0.06);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // Crimson blood tip on blade
-      ctx.fillStyle = "#dc2626";
-      ctx.beginPath();
-      ctx.moveTo(0, -s * 0.3);
-      ctx.lineTo(s * 0.02, -s * 0.18);
-      ctx.lineTo(-s * 0.02, -s * 0.18);
-      ctx.closePath();
-      ctx.fill();
-
-      // Golden crossguard & hilt
-      ctx.fillStyle = "#eab308";
-      drawRoundedRect(ctx, -s * 0.09, s * 0.05, s * 0.18, s * 0.035, 3);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = "#7f1d1d";
-      drawRoundedRect(ctx, -s * 0.026, s * 0.085, s * 0.052, s * 0.12, 3);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.restore();
-    }
+    drawAssassinCard2D(ctx, x, y, w, h);
   } else if (character === "Captain") {
     // Deep Maritime Navy-Cyan Backdrop
     const bg = ctx.createRadialGradient(cx, cy, s * 0.05, cx, cy, s * 0.75);
@@ -1125,31 +1549,6 @@ export function drawCoupCard2D(
     ctx.fill();
   } else {
     drawCoupCharacterArt2D(ctx, x, y, w, h, character);
-
-    // For non-Duke cards (or small thumbnail Duke cards), draw the compact title ribbon if needed
-    if (character !== "Duke" || w < 64) {
-      const meta = COUP_CHARACTER_META[character];
-      const bannerH = Math.max(15, h * 0.22);
-      ctx.fillStyle = "rgba(9, 9, 11, 0.86)";
-      ctx.fillRect(x, y + h - bannerH, w, bannerH);
-
-      ctx.strokeStyle = meta.accentColor;
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.moveTo(x, y + h - bannerH);
-      ctx.lineTo(x + w, y + h - bannerH);
-      ctx.stroke();
-
-      ctx.fillStyle = "#fef3c7";
-      ctx.font = `bold ${Math.max(7.5, Math.round(w * 0.14))}px sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(
-        meta.titleVi,
-        x + w * 0.5,
-        y + h - bannerH * 0.5
-      );
-    }
   }
 
   // If the card has been revealed (lost Influence), draw a dark crimson wash and 2D diagonal slash stamp
