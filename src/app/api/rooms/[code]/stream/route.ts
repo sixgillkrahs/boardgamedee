@@ -6,8 +6,6 @@ import {
 import { subscribeToRoom } from "@/platform/event-bus";
 import { ensureCurrentActor } from "@/platform/session";
 
-export const dynamic = "force-dynamic";
-
 export async function GET(
   request: Request,
   context: { params: Promise<{ code: string }> }

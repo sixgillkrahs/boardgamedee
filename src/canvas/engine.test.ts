@@ -7,6 +7,7 @@ import {
   ParticleSystem,
   type HitRegion,
 } from "@/canvas/engine";
+import { computeCardDealProgress } from "@/canvas/role-cards";
 
 describe("2D Canvas Scene Engine Primitives", () => {
   it("interpolates numbers and hex colors smoothly for Day/Night transitions", () => {
@@ -68,5 +69,19 @@ describe("2D Canvas Scene Engine Primitives", () => {
     expect(sys.particles[0].y).toBeCloseTo(95);
     sys.update(0.3);
     expect(sys.particles).toHaveLength(0);
+  });
+
+  it("computes staggered card-dealing flight progress from the center deck to each Seat", () => {
+    const start = computeCardDealProgress(0, 0, 6);
+    expect(start.flightT).toBe(0);
+    expect(start.allDealt).toBe(false);
+
+    const mid = computeCardDealProgress(0.3, 0, 6);
+    expect(mid.flightT).toBeGreaterThan(0.5);
+    expect(mid.flightT).toBeLessThan(1);
+
+    const done = computeCardDealProgress(2.0, 5, 6);
+    expect(done.flightT).toBe(1);
+    expect(done.allDealt).toBe(true);
   });
 });

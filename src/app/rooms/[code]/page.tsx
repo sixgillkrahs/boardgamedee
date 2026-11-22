@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use, useEffect, useRef, useState } from "react";
+import React, { Suspense, use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { WerewolfCanvas } from "@/components/werewolf-canvas";
 import {
@@ -13,6 +13,24 @@ import type { RoomSnapshotForActor } from "@/platform/coordinator";
 import type { ChannelId } from "@/cartridges/types";
 
 export default function RoomPage({
+  params,
+}: {
+  params: Promise<{ code: string }>;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-950 text-slate-300 flex items-center justify-center text-sm">
+          Đang tải bàn chơi...
+        </div>
+      }
+    >
+      <RoomPageContent params={params} />
+    </Suspense>
+  );
+}
+
+function RoomPageContent({
   params,
 }: {
   params: Promise<{ code: string }>;

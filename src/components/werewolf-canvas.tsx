@@ -11,6 +11,10 @@ import {
   type HitRegion,
 } from "@/canvas/engine";
 import {
+  computeCardDealProgress,
+  drawRoleSquareCard,
+} from "@/canvas/role-cards";
+import {
   ROLE_META,
   type WerewolfPlayerView,
   type WerewolfRole,
@@ -45,15 +49,6 @@ const ROLE_COLORS: Record<WerewolfRole, string> = {
   Villager: "#94a3b8",
 };
 
-const ROLE_ICONS: Record<WerewolfRole, string> = {
-  Werewolf: "🐺",
-  Seer: "🔮",
-  Bodyguard: "🛡️",
-  Witch: "🧪",
-  Hunter: "🏹",
-  Villager: "🌾",
-};
-
 export function WerewolfCanvas({
   mode,
   lobbySeats,
@@ -68,9 +63,13 @@ export function WerewolfCanvas({
   const hitRegionsRef = useRef<HitRegion[]>([]);
   const hoveredRegionIdRef = useRef<string | null>(null);
   const particlesRef = useRef<ParticleSystem>(new ParticleSystem());
-  const dayMixRef = useRef<number>(0); // 0 = Night, 1 = Day
+  const dayMixRef = useRef<number>(0);
 
-  // Keep latest props in a ref so the 60fps loop always reads fresh state without re-creating the RAF loop
+  // Track when the current Match started / entered Cycle 1 so we play the Card Dealing animation
+  const dealStartTimeRef = useRef<number | null>(null);
+  const lastMatchKeyRef = useRef<string>("");
+  const showcaseDismissedRef = useRef<boolean>(false);
+
   const stateRef = useRef({
     mode,
     lobbySeats,
@@ -93,6 +92,18 @@ export function WerewolfCanvas({
       roleCardRevealed,
       onToggleRoleCard,
     };
+
+    if (mode === "match" && playerView) {
+      const matchKey = `${playerView.seats.length}-${playerView.myRole ?? "spec"}`;
+      if (lastMatchKeyRef.current !== matchKey) {
+        lastMatchKeyRef.current = matchKey;
+        dealStartTimeRef.current = performance.now();
+        showcaseDismissedRef.current = false;
+      }
+    } else {
+      lastMatchKeyRef.current = "";
+      dealStartTimeRef.current = null;
+    }
   }, [
     mode,
     lobbySeats,
@@ -119,7 +130,7 @@ export function WerewolfCanvas({
       const rect = parent.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       canvas.width = Math.max(320, Math.floor(rect.width * dpr));
-      canvas.height = Math.max(420, Math.floor(rect.height * dpr));
+      canvas.height = Math.max(440, Math.floor(rect.height * dpr));
     };
 
     resize();
@@ -175,14 +186,14 @@ export function WerewolfCanvas({
       ctx.fillRect(0, 0, width, height);
 
       const centerX = width * 0.5;
-      const centerY = height * 0.47;
+      const centerY = height * 0.46;
 
       // 2. Celestial body (Moon at night / Sun in day)
       const moonAlpha = 1 - dayMix;
       if (moonAlpha > 0.05) {
         ctx.save();
         ctx.globalAlpha = moonAlpha * 0.85;
-        const moonX = width * 0.84;
+        const moonX = width * 0.85;
         const moonY = height * 0.14;
         const moonGlow = ctx.createRadialGradient(
           moonX,
@@ -212,7 +223,7 @@ export function WerewolfCanvas({
       if (dayMix > 0.05) {
         ctx.save();
         ctx.globalAlpha = dayMix * 0.85;
-        const sunX = width * 0.16;
+        const sunX = width * 0.15;
         const sunY = height * 0.14;
         const sunGlow = ctx.createRadialGradient(
           sunX,
@@ -237,8 +248,8 @@ export function WerewolfCanvas({
       }
 
       // 3. Village Plaza Table Ring
-      const tableRx = Math.min(width * 0.37, 290);
-      const tableRy = Math.min(height * 0.32, 210);
+      const tableRx = Math.min(width * 0.36, 285);
+      const tableRy = Math.min(height * 0.31, 200);
 
       const plazaGrad = ctx.createRadialGradient(
         centerX,
@@ -279,10 +290,9 @@ export function WerewolfCanvas({
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // 4. Spawn & Update Ambient / Campfire Particles
+      // 4. Particles (Campfire embers & Night fireflies)
       const particles = particlesRef.current;
       if (Math.random() < 0.45) {
-        // Campfire embers rising from center
         particles.spawn({
           x: centerX + (Math.random() - 0.5) * 28,
           y: centerY + (Math.random() - 0.5) * 14,
@@ -299,7 +309,6 @@ export function WerewolfCanvas({
         });
       }
       if (dayMix < 0.5 && Math.random() < 0.18) {
-        // Night fireflies
         particles.spawn({
           x: Math.random() * width,
           y: Math.random() * height * 0.85,
@@ -315,7 +324,7 @@ export function WerewolfCanvas({
       particles.draw(ctx);
 
       // 5. Central Campfire & Phase Timer Ring
-      const timerRadius = 56;
+      const timerRadius = 54;
       ctx.save();
       ctx.fillStyle = "rgba(15, 23, 42, 0.78)";
       ctx.beginPath();
@@ -367,7 +376,6 @@ export function WerewolfCanvas({
         ctx.stroke();
       }
 
-      // Central Icon / Countdown Text
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       if (curMode === "lobby") {
@@ -403,28 +411,35 @@ export function WerewolfCanvas({
       }
       ctx.restore();
 
-      // 6. Top Phase Banner on Canvas
+      // 6. Top Phase Banner
+      const dealElapsedSec =
+        dealStartTimeRef.current !== null
+          ? (now - dealStartTimeRef.current) / 1000
+          : 999;
+
       const bannerTitle =
         curMode === "lobby"
           ? `Làng Ma Sói • Đang chờ người chơi (${curLobbySeats.length} ghế)`
-          : pv?.phase === "Finished"
-            ? pv.winReasonVi ?? "Ván đấu đã kết thúc!"
-            : pv?.step === "NightActionStep"
-              ? `Đêm thứ ${pv.cycle} • Ma Sói, Tiên Tri & Bảo Vệ đang hành động`
-              : pv?.step === "WitchStep"
-                ? `Đêm thứ ${pv.cycle} • Phù Thủy đang chọn bình thuốc`
-                : pv?.step === "HunterRevengeStep"
-                  ? "Khẩn cấp • Thợ Săn đang nhắm bắn phát đạn cuối cùng!"
-                  : pv?.step === "DayDiscussionStep"
-                    ? `Ngày thứ ${pv?.cycle} • Thảo luận tìm ra Ma Sói`
-                    : `Ngày thứ ${pv?.cycle} • Bỏ phiếu biểu quyết treo cổ`;
+          : dealElapsedSec < 1.8
+            ? "🎴 Quản trò đang chia thẻ bài vai trò cho từng người chơi..."
+            : pv?.phase === "Finished"
+              ? pv.winReasonVi ?? "Ván đấu đã kết thúc!"
+              : pv?.step === "NightActionStep"
+                ? `Đêm thứ ${pv.cycle} • Ma Sói, Tiên Tri & Bảo Vệ đang hành động`
+                : pv?.step === "WitchStep"
+                  ? `Đêm thứ ${pv.cycle} • Phù Thủy đang chọn bình thuốc`
+                  : pv?.step === "HunterRevengeStep"
+                    ? "Khẩn cấp • Thợ Săn đang nhắm bắn phát đạn cuối cùng!"
+                    : pv?.step === "DayDiscussionStep"
+                      ? `Ngày thứ ${pv?.cycle} • Thảo luận tìm ra Ma Sói`
+                      : `Ngày thứ ${pv?.cycle} • Bỏ phiếu biểu quyết treo cổ`;
 
       ctx.save();
-      const bannerW = Math.min(width - 28, 520);
+      const bannerW = Math.min(width - 28, 540);
       const bannerX = (width - bannerW) / 2;
       const bannerY = 14;
       drawRoundedRect(ctx, bannerX, bannerY, bannerW, 38, 19);
-      ctx.fillStyle = "rgba(15, 23, 42, 0.82)";
+      ctx.fillStyle = "rgba(15, 23, 42, 0.84)";
       ctx.fill();
       ctx.lineWidth = 1;
       ctx.strokeStyle = isHunterStep
@@ -439,7 +454,7 @@ export function WerewolfCanvas({
       ctx.fillText(bannerTitle, width / 2, bannerY + 19);
       ctx.restore();
 
-      // 7. Seats around the table + HitRegions
+      // 7. Seats around the table + Dealt Role Cards
       const newHitRegions: HitRegion[] = [];
       const seatsToRender =
         curMode === "match" && pv
@@ -484,7 +499,7 @@ export function WerewolfCanvas({
         seatPositions.set(seat.seatNo, pos);
       });
 
-      // Draw targeting beam if a target Seat is selected
+      // Targeting beam if a target Seat is selected
       if (curTarget !== null && seatPositions.has(curTarget)) {
         const targetPos = seatPositions.get(curTarget)!;
         const originPos =
@@ -509,7 +524,6 @@ export function WerewolfCanvas({
         ctx.restore();
       }
 
-      // Compute vote counts against each seat during DayVotingStep
       const dayVoteCounts = new Map<number, number>();
       if (curMode === "match" && pv) {
         for (const s of pv.seats) {
@@ -529,9 +543,10 @@ export function WerewolfCanvas({
         }
       }
 
-      const seatRadius = width < 520 ? 29 : 35;
+      const cardSize = width < 520 ? 54 : 66;
+      let allCardsDealt = true;
 
-      seatsToRender.forEach((seat) => {
+      seatsToRender.forEach((seat, seatIdx) => {
         const pos = seatPositions.get(seat.seatNo)!;
         const isMe = seat.seatNo === curViewerSeatNo;
         const isSelected = seat.seatNo === curTarget;
@@ -542,82 +557,137 @@ export function WerewolfCanvas({
 
         newHitRegions.push({
           id: `seat-${seat.seatNo}`,
-          shape: "circle",
-          x: pos.x,
-          y: pos.y,
-          radius: seatRadius + 8,
+          shape: "rect",
+          x: pos.x - cardSize * 0.6,
+          y: pos.y - cardSize * 0.6,
+          width: cardSize * 1.2,
+          height: cardSize * 1.4,
           cursor: "pointer",
           data: { type: "seat", seatNo: seat.seatNo },
         });
 
         ctx.save();
 
+        // Determine dealt card position (flying from center deck to Seat during initial deal)
+        let cardCenterX = pos.x;
+        let cardCenterY = pos.y;
+        let cardRot = 0;
+        let cardScale = 1;
+
+        if (curMode === "match") {
+          const deal = computeCardDealProgress(
+            dealElapsedSec,
+            seatIdx,
+            seatsToRender.length
+          );
+          if (!deal.allDealt) {
+            allCardsDealt = false;
+          }
+          cardCenterX = lerp(centerX, pos.x, deal.flightT);
+          cardCenterY = lerp(centerY, pos.y, deal.flightT);
+          cardRot = deal.rotationRad;
+          cardScale = deal.scale;
+        }
+
         // Outer halo for viewer / selected / witch victim
         if (isSelected || isWolfVictimForWitch) {
-          const pulse = 1 + Math.sin(now / 160) * 0.12;
+          const pulse = 1 + Math.sin(now / 160) * 0.1;
           ctx.strokeStyle = isWolfVictimForWitch ? "#ef4444" : "#fbbf24";
           ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.arc(pos.x, pos.y, (seatRadius + 7) * pulse, 0, Math.PI * 2);
+          drawRoundedRect(
+            ctx,
+            pos.x - (cardSize * 0.56) * pulse,
+            pos.y - (cardSize * 0.56) * pulse,
+            cardSize * 1.12 * pulse,
+            cardSize * 1.12 * pulse,
+            10
+          );
           ctx.stroke();
         } else if (isMe) {
-          ctx.strokeStyle = "rgba(56, 189, 248, 0.7)";
+          ctx.strokeStyle = "rgba(56, 189, 248, 0.75)";
           ctx.lineWidth = 2.5;
-          ctx.beginPath();
-          ctx.arc(pos.x, pos.y, seatRadius + 5, 0, Math.PI * 2);
+          drawRoundedRect(
+            ctx,
+            pos.x - cardSize * 0.55,
+            pos.y - cardSize * 0.55,
+            cardSize * 1.1,
+            cardSize * 1.1,
+            10
+          );
           ctx.stroke();
         }
 
-        // Medallion circle
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, seatRadius, 0, Math.PI * 2);
-        ctx.fillStyle = !seat.alive
-          ? "rgba(30, 41, 59, 0.85)"
-          : isHovered
-            ? "#1e293b"
-            : "#0f172a";
-        ctx.fill();
+        // Draw the Seat's Square Role Card (or Lobby Avatar Slot)
+        if (curMode === "match") {
+          const visibleRoleForCard: WerewolfRole | null =
+            seat.role && (!isMe || isRoleOpen || pv?.phase === "Finished")
+              ? seat.role
+              : null;
 
-        const roleBorderColor =
-          seat.role && ( !isMe || isRoleOpen || pv?.phase === "Finished")
-            ? ROLE_COLORS[seat.role]
-            : isMe
-              ? "#38bdf8"
-              : "#475569";
+          ctx.save();
+          ctx.translate(cardCenterX, cardCenterY);
+          ctx.rotate(cardRot);
+          ctx.scale(cardScale, cardScale);
+          if (!seat.alive) {
+            ctx.globalAlpha = 0.45;
+          }
+          drawRoleSquareCard(
+            ctx,
+            -cardSize / 2,
+            -cardSize / 2,
+            cardSize,
+            visibleRoleForCard,
+            false
+          );
+          ctx.restore();
 
-        ctx.lineWidth = isSelected ? 3.5 : 2.5;
-        ctx.strokeStyle = !seat.alive ? "#475569" : roleBorderColor;
-        ctx.stroke();
-
-        // Seat Avatar Icon / Gravestone
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.font = `${Math.round(seatRadius * 0.78)}px sans-serif`;
-        if (!seat.alive) {
-          ctx.fillText("🪦", pos.x, pos.y - 2);
-        } else if (
-          seat.role &&
-          (!isMe || isRoleOpen || pv?.phase === "Finished")
-        ) {
-          ctx.fillText(ROLE_ICONS[seat.role], pos.x, pos.y - 2);
+          if (!seat.alive) {
+            ctx.font = `${Math.round(cardSize * 0.48)}px sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("🪦", pos.x, pos.y);
+          }
         } else {
-          ctx.fillText(seat.isBot ? "🤖" : "🧑", pos.x, pos.y - 2);
+          // Lobby Seat Box
+          drawRoundedRect(
+            ctx,
+            pos.x - cardSize / 2,
+            pos.y - cardSize / 2,
+            cardSize,
+            cardSize,
+            12
+          );
+          ctx.fillStyle = isHovered ? "#1e293b" : "#0f172a";
+          ctx.fill();
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = isMe ? "#38bdf8" : "#475569";
+          ctx.stroke();
+
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.font = `${Math.round(cardSize * 0.45)}px sans-serif`;
+          ctx.fillText(seat.isBot ? "🤖" : "🧑", pos.x, pos.y);
         }
 
-        // Seat Number pill (top-left of medallion)
-        const badgeX = pos.x - seatRadius * 0.72;
-        const badgeY = pos.y - seatRadius * 0.72;
-        ctx.fillStyle = isMe ? "#0284c7" : "#334155";
+        // Seat Number pill (top-left of card)
+        const badgeX = pos.x - cardSize * 0.46;
+        const badgeY = pos.y - cardSize * 0.46;
+        ctx.fillStyle = isMe ? "#0284c7" : "#1e293b";
         ctx.beginPath();
         ctx.arc(badgeX, badgeY, 11, 0, Math.PI * 2);
         ctx.fill();
+        ctx.strokeStyle = "#475569";
+        ctx.lineWidth = 1;
+        ctx.stroke();
         ctx.fillStyle = "#f8fafc";
         ctx.font = "bold 10px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         ctx.fillText(`#${seat.seatNo}`, badgeX, badgeY + 0.5);
 
-        // Connection status dot (bottom-left of medallion)
-        const connX = pos.x - seatRadius * 0.72;
-        const connY = pos.y + seatRadius * 0.68;
+        // Connection status dot (bottom-left of card)
+        const connX = pos.x - cardSize * 0.46;
+        const connY = pos.y + cardSize * 0.46;
         ctx.fillStyle = seat.connected ? "#10b981" : "#64748b";
         ctx.beginPath();
         ctx.arc(connX, connY, 4.5, 0, Math.PI * 2);
@@ -626,11 +696,11 @@ export function WerewolfCanvas({
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // Vote tally badge (top-right of medallion)
+        // Vote tally badge (top-right of card)
         const votesAgainst = dayVoteCounts.get(seat.seatNo) ?? 0;
         if (votesAgainst > 0) {
-          const vX = pos.x + seatRadius * 0.75;
-          const vY = pos.y - seatRadius * 0.72;
+          const vX = pos.x + cardSize * 0.46;
+          const vY = pos.y - cardSize * 0.46;
           ctx.fillStyle = "#dc2626";
           ctx.beginPath();
           ctx.arc(vX, vY, 12, 0, Math.PI * 2);
@@ -640,11 +710,11 @@ export function WerewolfCanvas({
           ctx.fillText(`${votesAgainst}`, vX, vY + 0.5);
         }
 
-        // Seer private inspection badge
+        // Seer private inspection badge (bottom-right of card)
         const seerResult = seerMap.get(seat.seatNo);
         if (seerResult) {
-          const sX = pos.x + seatRadius * 0.75;
-          const sY = pos.y + seatRadius * 0.65;
+          const sX = pos.x + cardSize * 0.36;
+          const sY = pos.y + cardSize * 0.44;
           drawRoundedRect(ctx, sX - 18, sY - 9, 36, 18, 9);
           ctx.fillStyle =
             seerResult === "WerewolfFaction" ? "#dc2626" : "#059669";
@@ -658,16 +728,16 @@ export function WerewolfCanvas({
           );
         }
 
-        // Name Plate under medallion
+        // Name Plate under card
         const labelText = isMe
           ? `${seat.displayName} (Bạn)`
           : seat.displayName;
-        const plateW = Math.max(84, Math.min(132, labelText.length * 6.8 + 18));
+        const plateW = Math.max(86, Math.min(136, labelText.length * 6.8 + 18));
         const plateX = pos.x - plateW / 2;
-        const plateY = pos.y + seatRadius + 6;
+        const plateY = pos.y + cardSize * 0.5 + 6;
 
-        drawRoundedRect(ctx, plateX, plateY, plateW, 22, 7);
-        ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
+        drawRoundedRect(ctx, plateX, plateY, plateW, 21, 7);
+        ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
         ctx.fill();
         ctx.fillStyle = !seat.alive
           ? "#64748b"
@@ -678,10 +748,10 @@ export function WerewolfCanvas({
         ctx.fillText(
           labelText.length > 16 ? `${labelText.slice(0, 15)}…` : labelText,
           pos.x,
-          plateY + 11
+          plateY + 10.5
         );
 
-        // Status subtitle (Role name when revealed, or Ready status, or Wolf victim warning)
+        // Status subtitle
         let subLabel: string | null = null;
         let subColor = "#94a3b8";
         if (isWolfVictimForWitch) {
@@ -708,26 +778,26 @@ export function WerewolfCanvas({
         if (subLabel) {
           ctx.fillStyle = subColor;
           ctx.font = "bold 10px sans-serif";
-          ctx.fillText(subLabel, pos.x, plateY + 31);
+          ctx.fillText(subLabel, pos.x, plateY + 30);
         }
 
         ctx.restore();
       });
 
-      // 8. Interactive Role Card on Canvas (Bottom-Left) during a Match
+      // 8. Bottom-Left Docked Square Role Card + Button to Re-Deal / Inspect Card
       if (curMode === "match" && pv?.myRole) {
-        const cardW = width < 520 ? 195 : 236;
-        const cardH = width < 520 ? 86 : 96;
-        const cardX = 14;
-        const cardY = height - cardH - 14;
+        const dockW = width < 520 ? 220 : 264;
+        const dockH = width < 520 ? 88 : 98;
+        const dockX = 14;
+        const dockY = height - dockH - 14;
 
         newHitRegions.push({
           id: "my-role-card",
           shape: "rect",
-          x: cardX,
-          y: cardY,
-          width: cardW,
-          height: cardH,
+          x: dockX,
+          y: dockY,
+          width: dockW,
+          height: dockH,
           cursor: "pointer",
           data: { type: "role-card" },
         });
@@ -736,54 +806,142 @@ export function WerewolfCanvas({
         const accent = ROLE_COLORS[pv.myRole];
 
         ctx.save();
-        drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 14);
+        drawRoundedRect(ctx, dockX, dockY, dockW, dockH, 14);
         ctx.fillStyle = isRoleOpen
-          ? "rgba(15, 23, 42, 0.94)"
-          : "rgba(30, 41, 59, 0.92)";
+          ? "rgba(15, 23, 42, 0.95)"
+          : "rgba(30, 41, 59, 0.94)";
         ctx.fill();
         ctx.lineWidth = 2;
         ctx.strokeStyle = isRoleOpen ? accent : "rgba(148, 163, 184, 0.4)";
         ctx.stroke();
 
+        // Draw miniature square Thiercelieux card inside the left side of the dock
+        const thumbSize = dockH - 16;
+        drawRoleSquareCard(
+          ctx,
+          dockX + 8,
+          dockY + 8,
+          thumbSize,
+          isRoleOpen ? pv.myRole : null,
+          false
+        );
+
         ctx.textAlign = "left";
         ctx.textBaseline = "middle";
+        const textX = dockX + thumbSize + 16;
 
         if (isRoleOpen) {
-          ctx.font = "28px sans-serif";
-          ctx.fillText(ROLE_ICONS[pv.myRole], cardX + 12, cardY + 30);
-
           ctx.fillStyle = accent;
           ctx.font = "bold 13px sans-serif";
-          ctx.fillText(roleInfo.nameVi.toUpperCase(), cardX + 48, cardY + 21);
+          ctx.fillText(roleInfo.nameVi.toUpperCase(), textX, dockY + 21);
 
           ctx.fillStyle = "#cbd5e1";
           ctx.font = "600 10px sans-serif";
-          ctx.fillText(roleInfo.factionNameVi, cardX + 48, cardY + 37);
+          ctx.fillText(roleInfo.factionNameVi, textX, dockY + 36);
 
           const desc = roleInfo.shortDescriptionVi;
           ctx.fillStyle = "#94a3b8";
           ctx.font = "10px sans-serif";
-          ctx.fillText(desc.slice(0, 34), cardX + 14, cardY + 58);
-          if (desc.length > 34) {
+          ctx.fillText(desc.slice(0, 26), textX, dockY + 56);
+          if (desc.length > 26) {
             ctx.fillText(
-              desc.length > 68 ? `${desc.slice(34, 67)}…` : desc.slice(34),
-              cardX + 14,
-              cardY + 72
+              desc.length > 52 ? `${desc.slice(26, 51)}…` : desc.slice(26),
+              textX,
+              dockY + 70
             );
           }
         } else {
-          ctx.font = "26px sans-serif";
-          ctx.fillText("🎴", cardX + 14, cardY + cardH / 2);
-
           ctx.fillStyle = "#f8fafc";
           ctx.font = "bold 12px sans-serif";
-          ctx.fillText("THẺ VAI TRÒ BÍ MẬT", cardX + 48, cardY + 32);
+          ctx.fillText("THẺ VAI TRÒ BÍ MẬT", textX, dockY + 34);
 
           ctx.fillStyle = "#38bdf8";
           ctx.font = "600 11px sans-serif";
-          ctx.fillText("Chạm để lật xem bài", cardX + 48, cardY + 54);
+          ctx.fillText("Chạm để lật xem thẻ", textX, dockY + 54);
         }
         ctx.restore();
+
+        // 9. Post-Deal Center Card Reveal Modal (shows automatically for 4s right after cards are dealt)
+        const showCenterReveal =
+          allCardsDealt &&
+          dealElapsedSec < 5.2 &&
+          !showcaseDismissedRef.current &&
+          isRoleOpen;
+
+        if (showCenterReveal) {
+          ctx.save();
+          ctx.fillStyle = "rgba(2, 6, 23, 0.72)";
+          ctx.fillRect(0, 0, width, height);
+
+          const modalW = 270;
+          const modalH = 340;
+          const modalX = (width - modalW) / 2;
+          const modalY = (height - modalH) / 2;
+
+          newHitRegions.push({
+            id: "dismiss-reveal-modal",
+            shape: "rect",
+            x: modalX,
+            y: modalY,
+            width: modalW,
+            height: modalH,
+            cursor: "pointer",
+            data: { type: "dismiss-showcase" },
+          });
+
+          drawRoundedRect(ctx, modalX, modalY, modalW, modalH, 20);
+          ctx.fillStyle = "#0f172a";
+          ctx.fill();
+          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = accent;
+          ctx.stroke();
+
+          ctx.fillStyle = "#fde047";
+          ctx.font = "bold 12px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(
+            "THẺ VAI TRÒ CỦA BẠN",
+            centerX,
+            modalY + 24
+          );
+
+          // Big 190x190 Thiercelieux Square Card Art!
+          const bigCardSize = 190;
+          drawRoleSquareCard(
+            ctx,
+            centerX - bigCardSize / 2,
+            modalY + 42,
+            bigCardSize,
+            pv.myRole,
+            true
+          );
+
+          ctx.fillStyle = "#f8fafc";
+          ctx.font = "bold 15px sans-serif";
+          ctx.fillText(
+            `${roleInfo.nameVi} • ${roleInfo.factionNameVi}`,
+            centerX,
+            modalY + 255
+          );
+
+          ctx.fillStyle = "#94a3b8";
+          ctx.font = "11px sans-serif";
+          const line1 = roleInfo.shortDescriptionVi.slice(0, 42);
+          const line2 = roleInfo.shortDescriptionVi.slice(42, 88);
+          ctx.fillText(line1, centerX, modalY + 278);
+          if (line2) {
+            ctx.fillText(line2, centerX, modalY + 294);
+          }
+
+          ctx.fillStyle = "#38bdf8";
+          ctx.font = "bold 11px sans-serif";
+          ctx.fillText(
+            "Chạm vào thẻ để thu về góc bàn",
+            centerX,
+            modalY + 320
+          );
+          ctx.restore();
+        }
       }
 
       ctx.restore();
@@ -825,7 +983,9 @@ export function WerewolfCanvas({
     const region = findHitRegionAtPoint(hitRegionsRef.current, x, y);
     if (!region || !region.data) return;
 
-    if (region.data.type === "seat") {
+    if (region.data.type === "dismiss-showcase") {
+      showcaseDismissedRef.current = true;
+    } else if (region.data.type === "seat") {
       stateRef.current.onSelectSeat(region.data.seatNo);
     } else if (region.data.type === "role-card") {
       stateRef.current.onToggleRoleCard();
