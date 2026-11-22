@@ -597,10 +597,24 @@ export async function checkAndAdvanceExpiredMatch(input: {
   const cartridge = getCartridge(match.cartridgeId);
   if (!cartridge) return false;
 
-  const transition = cartridge.onPhaseTimeout({
+  let transition = cartridge.onPhaseTimeout({
     state: match.state,
     nowMs,
   });
+
+  const roomSeats = await db
+    .select()
+    .from(seats)
+    .where(eq(seats.roomId, room.id))
+    .orderBy(asc(seats.seatNo));
+  const botSeatNos = roomSeats.filter((s) => s.isBot).map((s) => s.seatNo);
+  if (cartridge.autoActBots && botSeatNos.length > 0) {
+    transition = cartridge.autoActBots({
+      current: transition,
+      botSeatNos,
+      nowMs,
+    });
+  }
 
   const nextVersion = match.version + 1;
   const isOver = cartridge.isMatchOver(transition.state);

@@ -339,8 +339,26 @@ describe("Werewolf Cartridge - Seam 1 (GameCartridge Interface)", () => {
     });
     expect(s5.step).toBe("DayVotingStep");
 
-    // Tie vote: Seat 1 votes Seat 2, Seat 2 votes Seat 1, others abstain -> no one executed, advances to Cycle 2 NightActionStep
-    let cur = s5;
+    // Live public vote preview (lock: false): Seat 1 points vote at Seat 2 -> every player's projectView sees Seat 1 voting Seat 2 while DayVotingStep stays open
+    const { state: s5Aim } = werewolfCartridge.reduce({
+      state: s5,
+      actorSeatNo: 1,
+      command: { type: "DAY_VOTE", targetSeatNo: 2, lock: false },
+      nowMs: 65_500,
+    });
+    expect(s5Aim.step).toBe("DayVotingStep");
+    for (const viewer of [1, 2, 3, 4, 5, 6]) {
+      const view = werewolfCartridge.projectView({
+        state: s5Aim,
+        viewerSeatNo: viewer,
+      });
+      const seat1InView = view.seats.find((s) => s.seatNo === 1);
+      expect(seat1InView?.dayVoteTarget).toBe(2);
+      expect(seat1InView?.dayVoteLocked).toBe(false);
+    }
+
+    // Tie vote: Seat 1 locks Seat 2, Seat 2 locks Seat 1, others abstain -> no one executed, advances to Cycle 2 NightActionStep
+    let cur = s5Aim;
     cur = werewolfCartridge.reduce({
       state: cur,
       actorSeatNo: 1,

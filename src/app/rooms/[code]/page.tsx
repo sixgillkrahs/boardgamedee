@@ -320,28 +320,43 @@ function RoomPageContent({
               selectedTargetSeatNo={selectedTargetSeatNo}
               onSelectSeat={(seatNo) => {
                 setSelectedTargetSeatNo(seatNo);
-                // If viewer is a living Werewolf during NightActionStep, broadcast their live target vote (lock: false) immediately so fellow Werewolves see their vote arrow on Canvas!
+                if (!pv || !pv.myAlive) return;
+                const targetSeat = pv.seats.find((s) => s.seatNo === seatNo);
+                if (!targetSeat?.alive) return;
+
+                // 1. NightActionStep: Werewolf broadcasts live target vote to fellow Werewolves
                 if (
-                  pv &&
                   pv.step === "NightActionStep" &&
-                  pv.myAlive &&
                   pv.myRole === "Werewolf"
                 ) {
-                  const targetSeat = pv.seats.find((s) => s.seatNo === seatNo);
-                  if (targetSeat?.alive) {
-                    void fetch(`/api/rooms/${normalizedCode}/action`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        type: "MATCH_COMMAND",
-                        command: {
-                          type: "WEREWOLF_VOTE",
-                          targetSeatNo: seatNo,
-                          lock: false,
-                        },
-                      }),
-                    }).catch(() => {});
-                  }
+                  void fetch(`/api/rooms/${normalizedCode}/action`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      type: "MATCH_COMMAND",
+                      command: {
+                        type: "WEREWOLF_VOTE",
+                        targetSeatNo: seatNo,
+                        lock: false,
+                      },
+                    }),
+                  }).catch(() => {});
+                }
+
+                // 2. DayVotingStep: Every living player broadcasts their live public vote so everyone sees each other's votes in real time!
+                if (pv.step === "DayVotingStep") {
+                  void fetch(`/api/rooms/${normalizedCode}/action`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      type: "MATCH_COMMAND",
+                      command: {
+                        type: "DAY_VOTE",
+                        targetSeatNo: seatNo,
+                        lock: false,
+                      },
+                    }),
+                  }).catch(() => {});
                 }
               }}
               roleCardRevealed={roleCardRevealed}

@@ -456,7 +456,7 @@ export function WerewolfCanvas({
 
       // 7. Seats around the table + Dealt Role Cards
       const newHitRegions: HitRegion[] = [];
-      const seatsToRender =
+        const seatsToRender =
         curMode === "match" && pv
           ? pv.seats.map((s) => {
               const lobbyMeta = curLobbySeats.find(
@@ -469,7 +469,9 @@ export function WerewolfCanvas({
                 role: s.role,
                 readyToVote: s.readyToVote,
                 dayVoteTarget: s.dayVoteTarget,
+                dayVoteLocked: s.dayVoteLocked,
                 werewolfVoteTarget: s.werewolfVoteTarget,
+                werewolfVoteLocked: s.werewolfVoteLocked,
                 isBot: lobbyMeta?.isBot ?? false,
                 connected: lobbyMeta?.connected ?? true,
               };
@@ -480,8 +482,10 @@ export function WerewolfCanvas({
               alive: true,
               role: null as WerewolfRole | null,
               readyToVote: false,
-              dayVoteTarget: null as number | "abstain" | "voted" | null,
+              dayVoteTarget: null as number | "abstain" | null,
+              dayVoteLocked: false,
               werewolfVoteTarget: null as number | null,
+              werewolfVoteLocked: false,
               isBot: s.isBot,
               connected: s.connected,
             }));
@@ -881,17 +885,20 @@ export function WerewolfCanvas({
           pv?.phase === "NightPhase" &&
           typeof seat.werewolfVoteTarget === "number"
         ) {
-          subLabel = `🐺 Vote cắn #${seat.werewolfVoteTarget}`;
-          subColor = "#f87171";
+          subLabel = seat.werewolfVoteLocked
+            ? `🐺 ✓ Chốt cắn #${seat.werewolfVoteTarget}`
+            : `🐺 Đang chọn #${seat.werewolfVoteTarget}`;
+          subColor = seat.werewolfVoteLocked ? "#ef4444" : "#fca5a5";
         } else if (
           curMode === "match" &&
           pv?.step === "DayVotingStep" &&
           seat.dayVoteTarget !== null
         ) {
+          const lockMark = seat.dayVoteLocked ? "✓ " : "";
           subLabel =
             seat.dayVoteTarget === "abstain"
-              ? "🏳️ Phiếu trắng"
-              : `🗳️ Vote #${seat.dayVoteTarget}`;
+              ? `🏳️ ${lockMark}Phiếu trắng`
+              : `🗳️ ${lockMark}Vote #${seat.dayVoteTarget}`;
           subColor =
             seat.dayVoteTarget === "abstain" ? "#cbd5e1" : "#fbbf24";
         } else if (

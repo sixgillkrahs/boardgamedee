@@ -161,6 +161,7 @@ export interface WerewolfMatchState {
   lastExecutedSeatNo: number | null;
   readyToVoteSeatNos: number[];
   dayVotes: Record<number, number | "abstain">; // voterSeatNo -> targetSeatNo | 'abstain'
+  dayVoteSubmitted: Record<number, boolean>; // voterSeatNo -> locked
 
   // Outcome
   winningFaction: WerewolfFaction | null;
@@ -178,7 +179,7 @@ export type WerewolfCommand =
     }
   | { type: "HUNTER_SHOOT"; targetSeatNo: number | null }
   | { type: "DAY_READY_TO_VOTE" }
-  | { type: "DAY_VOTE"; targetSeatNo: number | "abstain" };
+  | { type: "DAY_VOTE"; targetSeatNo: number | "abstain"; lock?: boolean };
 
 export interface WerewolfProjectedSeat {
   seatNo: number;
@@ -190,8 +191,10 @@ export interface WerewolfProjectedSeat {
   deathCause?: WerewolfSeatState["deathCause"];
   diedAtCycle?: number;
   readyToVote: boolean;
-  dayVoteTarget: number | "abstain" | "voted" | null;
+  dayVoteTarget: number | "abstain" | null;
+  dayVoteLocked: boolean;
   werewolfVoteTarget: number | null;
+  werewolfVoteLocked: boolean;
 }
 
 export interface WerewolfPlayerView {
@@ -344,6 +347,7 @@ function enterNightPhase(
     witchSubmitted: false,
     readyToVoteSeatNos: [],
     dayVotes: {},
+    dayVoteSubmitted: {},
   };
 
   const events: MatchEventRecord[] = [
@@ -883,6 +887,7 @@ export const werewolfCartridge: GameCartridge<
       lastExecutedSeatNo: null,
       readyToVoteSeatNos: [],
       dayVotes: {},
+      dayVoteSubmitted: {},
       winningFaction: null,
       winReasonVi: null,
     };
@@ -1240,6 +1245,7 @@ export const werewolfCartridge: GameCartridge<
           phaseDeadlineMs: deadline,
           readyToVoteSeatNos: updatedReady,
           dayVotes: {},
+          dayVoteSubmitted: {},
         };
         return {
           state: votingState,
@@ -1279,14 +1285,23 @@ export const werewolfCartridge: GameCartridge<
         }
       }
 
+      const shouldLock = command.lock !== false;
       const updatedVotes: WerewolfMatchState["dayVotes"] = {
         ...state.dayVotes,
         [actorSeatNo]: command.targetSeatNo,
       };
+      const updatedSubmitted: WerewolfMatchState["dayVoteSubmitted"] =
+        shouldLock
+          ? {
+              ...(state.dayVoteSubmitted ?? {}),
+              [actorSeatNo]: true,
+            }
+          : state.dayVoteSubmitted ?? {};
 
       const nextState: WerewolfMatchState = {
         ...state,
         dayVotes: updatedVotes,
+        dayVoteSubmitted: updatedSubmitted,
       };
 
       const targetLabel =
@@ -1296,27 +1311,30 @@ export const werewolfCartridge: GameCartridge<
               ?.displayName ?? `#${command.targetSeatNo}`;
 
       const voteEvent: MatchEventRecord = {
-        eventType: "DAY_VOTE_CAST",
-        message: `${actorSeat.displayName} đã bỏ phiếu: ${targetLabel}.`,
+        eventType: shouldLock ? "DAY_VOTE_CAST" : "DAY_VOTE_AIMED",
+        message: shouldLock
+          ? `${actorSeat.displayName} đã chốt phiếu: ${targetLabel}.`
+          : `${actorSeat.displayName} đang chỉ phiếu vào: ${targetLabel}.`,
         visibleToSeatNos: "all",
         payload: {
           voterSeatNo: actorSeatNo,
           targetSeatNo: command.targetSeatNo,
+          locked: shouldLock,
         },
       };
 
       const living = getLivingSeats(nextState);
-      const allVoted = living.every(
-        (s) => nextState.dayVotes[s.seatNo] !== undefined
+      const allLocked = living.every((s) =>
+        Boolean(nextState.dayVoteSubmitted?.[s.seatNo])
       );
 
-      if (allVoted) {
+      if (shouldLock && allLocked) {
         return resolveDayVoting(nextState, nowMs, [voteEvent]);
       }
 
       return {
         state: nextState,
-        events: [voteEvent],
+        events: shouldLock ? [voteEvent] : [],
         phaseDeadlineMs: nextState.phaseDeadlineMs,
       };
     }
@@ -1362,6 +1380,7 @@ export const werewolfCartridge: GameCartridge<
         step: "DayVotingStep",
         phaseDeadlineMs: deadline,
         dayVotes: {},
+        dayVoteSubmitted: {},
       };
       return {
         state: votingState,
@@ -1413,9 +1432,14 @@ export const werewolfCartridge: GameCartridge<
         state.step === "DayVotingStep" || state.phase === "DayPhase"
           ? dayVoteRaw ?? null
           : null;
+      const dayVoteLocked = Boolean(state.dayVoteSubmitted?.[s.seatNo]);
 
       const werewolfVoteTarget =
         myRole === "Werewolf" ? state.werewolfVotes[s.seatNo] ?? null : null;
+      const werewolfVoteLocked =
+        myRole === "Werewolf"
+          ? Boolean(state.werewolfSubmitted[s.seatNo])
+          : false;
 
       return {
         seatNo: s.seatNo,
@@ -1428,7 +1452,9 @@ export const werewolfCartridge: GameCartridge<
         diedAtCycle: s.diedAtCycle,
         readyToVote: state.readyToVoteSeatNos.includes(s.seatNo),
         dayVoteTarget,
+        dayVoteLocked,
         werewolfVoteTarget,
+        werewolfVoteLocked,
       };
     });
 
@@ -1483,7 +1509,9 @@ export const werewolfCartridge: GameCartridge<
         hasSubmittedCurrentStep =
           state.readyToVoteSeatNos.includes(viewerSeatNo);
       } else if (state.step === "DayVotingStep") {
-        hasSubmittedCurrentStep = state.dayVotes[viewerSeatNo] !== undefined;
+        hasSubmittedCurrentStep = Boolean(
+          state.dayVoteSubmitted?.[viewerSeatNo]
+        );
       }
     }
 
@@ -1719,24 +1747,36 @@ export const werewolfCartridge: GameCartridge<
         }
       } else if (state.step === "DayVotingStep") {
         const humansLiving = livingSeats.filter((s) => !botSet.has(s.seatNo));
-        const anyHumanVoted =
+        const allHumansLocked =
           humansLiving.length === 0 ||
-          humansLiving.some((h) => state.dayVotes[h.seatNo] !== undefined);
-        if (anyHumanVoted) {
-          const unvotedBot = livingBots.find(
-            (b) => state.dayVotes[b.seatNo] === undefined
-          );
-          if (unvotedBot) {
+          humansLiving.every((h) => Boolean(state.dayVoteSubmitted?.[h.seatNo]));
+
+        for (const bot of livingBots) {
+          const alreadyAimed = state.dayVotes[bot.seatNo] !== undefined;
+          const alreadyLocked = Boolean(state.dayVoteSubmitted?.[bot.seatNo]);
+
+          if (!alreadyLocked && (allHumansLocked || !alreadyAimed)) {
+            // Bots publicly show their vote (either abstain or a suspect seat) while humans are still deciding, and only lock once all humans have locked!
+            const suspect = livingSeats.find((s) => s.seatNo !== bot.seatNo);
+            const botChoice: number | "abstain" =
+              state.dayVotes[bot.seatNo] ??
+              (bot.seatNo % 2 === 0 && suspect ? suspect.seatNo : "abstain");
+
             const res = this.reduce({
               state,
-              actorSeatNo: unvotedBot.seatNo,
-              command: { type: "DAY_VOTE", targetSeatNo: "abstain" },
+              actorSeatNo: bot.seatNo,
+              command: {
+                type: "DAY_VOTE",
+                targetSeatNo: botChoice,
+                lock: allHumansLocked,
+              },
               nowMs,
             });
             state = res.state;
             events.push(...res.events);
             phaseDeadlineMs = res.phaseDeadlineMs;
             botActed = true;
+            break;
           }
         }
       }
