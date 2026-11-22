@@ -4228,3 +4228,419 @@ export function drawCoupActionIcon2D(
 
   ctx.restore();
 }
+
+/**
+ * Draws the full 2D Dystopian Universe (Indie Boards & Cards Coup) background and High-Council Command Table:
+ * - Twilight megacity sky with upper-right orbital lunar globe & tactical HUD radar rings (Captain theme)
+ *   and upper-left warm amber sun-haze orb (Contessa/Ambassador theme)
+ * - 2D futuristic megacity skyline along the horizon featuring the Golden-Domed Cylindrical Tower,
+ *   Angled Silver Spire, Elevated Sky-Pads, Neo-Baroque Senate Arch, and animated flying sci-fi shuttles
+ * - Left & right 45° sci-fi circuit-board trace borders (matching the Coup PLAY reference card)
+ * - Central 2D Brushed-Steel & Obsidian High-Council Command Table with wavy moiré damask surface,
+ *   tactical telemetry ring, and 5 glowing Faction Inlay Medallions (Duke, Assassin, Ambassador, Captain, Contessa)
+ */
+export function drawCoupDystopianBackgroundAndTable2D(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  centerX: number,
+  centerY: number,
+  tableRx: number,
+  tableRy: number,
+  nowMs: number
+) {
+  ctx.save();
+
+  // 1. Dystopian Megacity Twilight Sky & Senate Floor Gradient
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+  skyGrad.addColorStop(0, "#071120");
+  skyGrad.addColorStop(0.22, "#12263a");
+  skyGrad.addColorStop(0.42, "#382433");
+  skyGrad.addColorStop(0.54, "#542d26");
+  skyGrad.addColorStop(0.7, "#111624");
+  skyGrad.addColorStop(1, "#04070e");
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, width, height);
+
+  // Upper-Left Warm Amber Dystopian Sun Haze Orb (Contessa / Ambassador motif)
+  const sunX = width * 0.14;
+  const sunY = height * 0.16;
+  const sunR = Math.min(width, height) * 0.16;
+  const sunGrad = ctx.createRadialGradient(sunX, sunY, 4, sunX, sunY, sunR);
+  sunGrad.addColorStop(0, "rgba(251, 146, 60, 0.32)");
+  sunGrad.addColorStop(0.55, "rgba(234, 88, 12, 0.14)");
+  sunGrad.addColorStop(1, "rgba(234, 88, 12, 0)");
+  ctx.fillStyle = sunGrad;
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Upper-Right Orbital Lunar Globe & Tactical HUD Telemetry Rings (Captain motif)
+  const moonX = width * 0.84;
+  const moonY = height * 0.17;
+  const moonR = Math.min(width, height) * 0.15;
+  const moonGrad = ctx.createRadialGradient(
+    moonX - moonR * 0.3,
+    moonY - moonR * 0.3,
+    4,
+    moonX,
+    moonY,
+    moonR
+  );
+  moonGrad.addColorStop(0, "rgba(186, 230, 253, 0.24)");
+  moonGrad.addColorStop(0.65, "rgba(56, 189, 248, 0.1)");
+  moonGrad.addColorStop(1, "rgba(14, 165, 233, 0)");
+  ctx.fillStyle = moonGrad;
+  ctx.beginPath();
+  ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Dashed orbital telemetry rings around upper-right moon
+  ctx.save();
+  ctx.strokeStyle = "rgba(125, 211, 252, 0.22)";
+  ctx.lineWidth = 1;
+  ctx.setLineDash([6, 5]);
+  ctx.beginPath();
+  ctx.arc(moonX, moonY, moonR * 1.18, -Math.PI * 0.85, Math.PI * 0.35);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.arc(moonX, moonY, moonR * 0.72, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+
+  // 2. Futuristic Dystopian Megacity Skyline Silhouette along the Mid-Horizon
+  const horizonY = height * 0.43;
+
+  // Distant city blocks & megastructure towers
+  ctx.fillStyle = "rgba(15, 23, 42, 0.78)";
+  const towers: [number, number, number][] = [
+    [0.01, 0.035, 0.18],
+    [0.05, 0.04, 0.13],
+    [0.16, 0.045, 0.15],
+    [0.22, 0.038, 0.11],
+    [0.27, 0.05, 0.16],
+    [0.68, 0.048, 0.15],
+    [0.74, 0.036, 0.12],
+    [0.79, 0.052, 0.17],
+    [0.93, 0.045, 0.16],
+  ];
+  for (const [tx, tw, th] of towers) {
+    ctx.fillRect(width * tx, horizonY - height * th, width * tw, height * th);
+  }
+
+  // Iconic Left Cylindrical Skyscraper with Glowing Golden Ribbed Dome (Contessa card landmark)
+  const domTowX = width * 0.095;
+  const domTowW = width * 0.055;
+  const domTowTop = horizonY - height * 0.21;
+  const domGrad = ctx.createLinearGradient(domTowX, 0, domTowX + domTowW, 0);
+  domGrad.addColorStop(0, "#1e1b24");
+  domGrad.addColorStop(0.5, "#3b2f26");
+  domGrad.addColorStop(1, "#17161f");
+  ctx.fillStyle = domGrad;
+  ctx.fillRect(domTowX, domTowTop, domTowW, horizonY - domTowTop);
+
+  // Golden dome roof on the left cylindrical skyscraper
+  const domeRoofGrad = ctx.createRadialGradient(
+    domTowX + domTowW * 0.4,
+    domTowTop - 4,
+    2,
+    domTowX + domTowW * 0.5,
+    domTowTop,
+    domTowW * 0.55
+  );
+  domeRoofGrad.addColorStop(0, "rgba(254, 240, 138, 0.75)");
+  domeRoofGrad.addColorStop(0.6, "rgba(217, 119, 6, 0.65)");
+  domeRoofGrad.addColorStop(1, "rgba(120, 53, 15, 0.5)");
+  ctx.fillStyle = domeRoofGrad;
+  ctx.beginPath();
+  ctx.arc(
+    domTowX + domTowW * 0.5,
+    domTowTop,
+    domTowW * 0.5,
+    Math.PI,
+    0
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Tiny warm lit window grid on the cylindrical tower
+  ctx.strokeStyle = "rgba(253, 224, 71, 0.22)";
+  ctx.lineWidth = 1;
+  for (let r = 1; r <= 7; r++) {
+    const wy = domTowTop + r * ((horizonY - domTowTop) / 8);
+    ctx.beginPath();
+    ctx.moveTo(domTowX + 4, wy);
+    ctx.lineTo(domTowX + domTowW - 4, wy);
+    ctx.stroke();
+  }
+
+  // Iconic Right Angled Silver-White Spire Skyscraper (Contessa card landmark)
+  const spX = width * 0.865;
+  const spW = width * 0.044;
+  const spTop = horizonY - height * 0.24;
+  ctx.fillStyle = "rgba(148, 163, 184, 0.35)";
+  ctx.beginPath();
+  ctx.moveTo(spX, horizonY);
+  ctx.lineTo(spX, spTop + height * 0.04);
+  ctx.lineTo(spX + spW * 0.35, spTop);
+  ctx.lineTo(spX + spW * 0.65, spTop);
+  ctx.lineTo(spX + spW, spTop + height * 0.08);
+  ctx.lineTo(spX + spW, horizonY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Central Neo-Baroque Spiked Senate Arch Silhouette behind the High-Council Table (Duke card landmark)
+  ctx.save();
+  ctx.strokeStyle = "rgba(226, 232, 240, 0.14)";
+  ctx.lineWidth = 2;
+  const archR = Math.min(tableRx * 0.58, 210);
+  const archCy = horizonY - 6;
+  ctx.beginPath();
+  ctx.arc(centerX, archCy, archR, Math.PI * 1.08, Math.PI * 1.92);
+  ctx.stroke();
+
+  // 7 Diamond Finial Spikes radiating from the central Senate Arch
+  ctx.fillStyle = "rgba(226, 232, 240, 0.15)";
+  for (let i = -3; i <= 3; i++) {
+    const a = -Math.PI / 2 + i * 0.22;
+    const bx = centerX + Math.cos(a) * (archR + 4);
+    const by = archCy + Math.sin(a) * (archR + 4);
+    const tx = centerX + Math.cos(a) * (archR + 24);
+    const ty = archCy + Math.sin(a) * (archR + 24);
+    const px = -Math.sin(a) * 4;
+    const py = Math.cos(a) * 4;
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.lineTo((bx + tx) * 0.5 + px, (by + ty) * 0.5 + py);
+    ctx.lineTo(tx, ty);
+    ctx.lineTo((bx + tx) * 0.5 - px, (by + ty) * 0.5 - py);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Animated Flying Sci-Fi Shuttles / Speeders gliding across the Dystopian Sky
+  for (const [speed, yFrac, dir, scale] of [
+    [0.018, 0.18, 1, 1],
+    [0.012, 0.25, -1, 0.8],
+  ] as const) {
+    const rawT = ((nowMs * 0.001 * speed) % 1.2) - 0.1;
+    const sx = dir === 1 ? width * rawT : width * (1 - rawT);
+    const sy = height * yFrac;
+
+    ctx.save();
+    ctx.translate(sx, sy);
+    if (dir === -1) ctx.scale(-1, 1);
+    ctx.scale(scale, scale);
+
+    // Glowing cyan contrail
+    const trailGrad = ctx.createLinearGradient(-34, 0, 0, 0);
+    trailGrad.addColorStop(0, "rgba(56, 189, 248, 0)");
+    trailGrad.addColorStop(1, "rgba(56, 189, 248, 0.55)");
+    ctx.strokeStyle = trailGrad;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(-34, 0);
+    ctx.lineTo(-4, 0);
+    ctx.stroke();
+
+    // Delta-wing shuttle body
+    ctx.fillStyle = "#1e293b";
+    ctx.strokeStyle = "#94a3b8";
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(10, 0);
+    ctx.lineTo(-4, -4);
+    ctx.lineTo(-8, 0);
+    ctx.lineTo(-4, 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Glowing blue thruster dot
+    ctx.fillStyle = "#38bdf8";
+    ctx.beginPath();
+    ctx.arc(-6, 0, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 3. Left & Right 45° Sci-Fi Circuit-Board Trace Borders (Matching the Coup PLAY Summary Card)
+  ctx.save();
+  ctx.strokeStyle = "rgba(148, 163, 184, 0.18)";
+  ctx.fillStyle = "rgba(56, 189, 248, 0.28)";
+  ctx.lineWidth = 1.2;
+  for (const side of [-1, 1]) {
+    const edgeX = side === -1 ? 10 : width - 10;
+    const in1 = edgeX - side * 12;
+    const in2 = edgeX - side * 24;
+
+    ctx.beginPath();
+    ctx.moveTo(edgeX, height * 0.12);
+    ctx.lineTo(edgeX, height * 0.28);
+    ctx.lineTo(in1, height * 0.28 + 12);
+    ctx.lineTo(in1, height * 0.52);
+    ctx.lineTo(in2, height * 0.52 + 12);
+    ctx.lineTo(in2, height * 0.72);
+    ctx.lineTo(in1, height * 0.72 + 12);
+    ctx.lineTo(in1, height * 0.88);
+    ctx.stroke();
+
+    // Circuit trace terminal nodes
+    for (const ny of [0.28, 0.52, 0.72]) {
+      ctx.beginPath();
+      ctx.arc(in1, height * ny + 12, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+
+  // 4. Central 2D Dystopian High-Council Command Table
+  // Outer dark metallic table shadow & bevelled steel rim
+  ctx.save();
+  ctx.fillStyle = "rgba(2, 6, 23, 0.75)";
+  ctx.beginPath();
+  ctx.ellipse(
+    centerX,
+    centerY + 8,
+    tableRx * 1.07,
+    tableRy * 1.07,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Outer brushed-gunmetal rim
+  const rimGrad = ctx.createLinearGradient(
+    centerX - tableRx,
+    centerY - tableRy,
+    centerX + tableRx,
+    centerY + tableRy
+  );
+  rimGrad.addColorStop(0, "#334155");
+  rimGrad.addColorStop(0.5, "#1e293b");
+  rimGrad.addColorStop(1, "#0f172a");
+  ctx.fillStyle = rimGrad;
+  ctx.strokeStyle = "rgba(148, 163, 184, 0.42)";
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  ctx.ellipse(
+    centerX,
+    centerY,
+    tableRx * 1.04,
+    tableRy * 1.04,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.stroke();
+
+  // Inner Command Table Surface (clipped for moiré damask texture & holographic faction grid)
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(
+    centerX,
+    centerY,
+    tableRx * 0.985,
+    tableRy * 0.985,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.clip();
+
+  const surfaceGrad = ctx.createRadialGradient(
+    centerX,
+    centerY,
+    18,
+    centerX,
+    centerY,
+    Math.max(tableRx, tableRy)
+  );
+  surfaceGrad.addColorStop(0, "#172036");
+  surfaceGrad.addColorStop(0.62, "#0d1424");
+  surfaceGrad.addColorStop(1, "#070b14");
+  ctx.fillStyle = surfaceGrad;
+  ctx.fillRect(
+    centerX - tableRx,
+    centerY - tableRy,
+    tableRx * 2,
+    tableRy * 2
+  );
+
+  // Subtle Wavy Moiré Damask Texture across the Table Surface (matching the Coup Card Back!)
+  ctx.strokeStyle = "rgba(148, 163, 184, 0.055)";
+  ctx.lineWidth = 1.4;
+  const waveStepY = 14;
+  for (
+    let wy = centerY - tableRy;
+    wy <= centerY + tableRy;
+    wy += waveStepY
+  ) {
+    ctx.beginPath();
+    for (let wx = centerX - tableRx; wx <= centerX + tableRx; wx += 18) {
+      const sy = wy + Math.sin((wx - centerX) * 0.045) * 3.2;
+      if (wx === centerX - tableRx) ctx.moveTo(wx, sy);
+      else ctx.lineTo(wx, sy);
+    }
+    ctx.stroke();
+  }
+
+  // 5 Translucent Faction Emblem Inlays Embedded in a Ring around the Command Table
+  const factionRing: CoupCharacter[] = [
+    "Duke",
+    "Assassin",
+    "Ambassador",
+    "Captain",
+    "Contessa",
+  ];
+  factionRing.forEach((ch, idx) => {
+    const ang = -Math.PI / 2 + (idx * Math.PI * 2) / 5;
+    const fx = centerX + Math.cos(ang) * (tableRx * 0.62);
+    const fy = centerY + Math.sin(ang) * (tableRy * 0.62);
+
+    ctx.save();
+    ctx.globalAlpha = 0.22;
+    drawCoupActionIcon2D(ctx, fx, fy, 34, ch);
+    ctx.restore();
+  });
+
+  ctx.restore(); // End inner table clip
+
+  // Golden & Cyan Tactical Inner Filigree Rings on the Command Table
+  ctx.strokeStyle = "rgba(245, 158, 11, 0.42)";
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.ellipse(
+    centerX,
+    centerY,
+    tableRx * 0.985,
+    tableRy * 0.985,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(56, 189, 248, 0.22)";
+  ctx.lineWidth = 1.1;
+  ctx.setLineDash([10, 7]);
+  ctx.beginPath();
+  ctx.ellipse(
+    centerX,
+    centerY,
+    tableRx * 0.78,
+    tableRy * 0.78,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.restore();
+  ctx.restore();
+}

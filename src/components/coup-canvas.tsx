@@ -15,6 +15,7 @@ import {
   drawCoupCenterTreasuryAndDeck2D,
   drawCoupCoin2D,
   drawCoupCoinStack2D,
+  drawCoupDystopianBackgroundAndTable2D,
   type CoupIconKind,
 } from "@/canvas/coup-cards";
 import { computeCardDealProgress } from "@/canvas/role-cards";
@@ -251,72 +252,22 @@ export function CoupCanvas({
       ctx.save();
       ctx.scale(dpr, dpr);
 
-      // 1. Royal Court Background Gradient
-      const bgGrad = ctx.createRadialGradient(
-        width * 0.5,
-        height * 0.46,
-        30,
-        width * 0.5,
-        height * 0.46,
-        Math.max(width, height) * 0.78
-      );
-      bgGrad.addColorStop(0, "#1e1b4b");
-      bgGrad.addColorStop(0.55, "#0f172a");
-      bgGrad.addColorStop(1, "#020617");
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, width, height);
-
       const centerX = width * 0.5;
       const centerY = height * 0.47;
       const tableRx = Math.min(width * 0.39, 510);
       const tableRy = Math.min(height * 0.36, 330);
 
-      // 2. Royal Velvet Table Oval & Double Gold Filigree Rim
-      const tableGrad = ctx.createRadialGradient(
+      // 1 & 2. 2D Dystopian Universe Megacity Skyline Backdrop & High-Council Command Table
+      drawCoupDystopianBackgroundAndTable2D(
+        ctx,
+        width,
+        height,
         centerX,
         centerY,
-        15,
-        centerX,
-        centerY,
-        Math.max(tableRx, tableRy)
+        tableRx,
+        tableRy,
+        now
       );
-      tableGrad.addColorStop(0, "rgba(88, 28, 135, 0.34)");
-      tableGrad.addColorStop(0.75, "rgba(15, 23, 42, 0.72)");
-      tableGrad.addColorStop(1, "rgba(15, 23, 42, 0)");
-      ctx.fillStyle = tableGrad;
-      ctx.beginPath();
-      ctx.ellipse(
-        centerX,
-        centerY,
-        tableRx * 1.04,
-        tableRy * 1.04,
-        0,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-
-      ctx.strokeStyle = "rgba(245, 158, 11, 0.36)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.ellipse(centerX, centerY, tableRx, tableRy, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.strokeStyle = "rgba(251, 191, 36, 0.16)";
-      ctx.lineWidth = 1;
-      ctx.setLineDash([8, 6]);
-      ctx.beginPath();
-      ctx.ellipse(
-        centerX,
-        centerY,
-        tableRx * 0.86,
-        tableRy * 0.86,
-        0,
-        0,
-        Math.PI * 2
-      );
-      ctx.stroke();
-      ctx.setLineDash([]);
 
       // 3. Ambient Gold Spark Particles
       const particles = particlesRef.current;
