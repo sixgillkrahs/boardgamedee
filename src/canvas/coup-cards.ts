@@ -3833,3 +3833,398 @@ export function drawCoupCenterTreasuryAndDeck2D(
 
   ctx.restore();
 }
+
+export type CoupIconKind =
+  | CoupCharacter
+  | "INCOME"
+  | "FOREIGN_AID"
+  | "COUP"
+  | "TAX"
+  | "ASSASSINATE"
+  | "EXCHANGE"
+  | "STEAL"
+  | "CHALLENGE"
+  | "PASS";
+
+/**
+ * Draws the official 2D Coup Faction / Action Icon at center `(cx, cy)` with bounding diameter `size`,
+ * matching the official Coup Play Summary reference card:
+ * - Duke / TAX: Neon-magenta 5-pointed star overlapping a circular ring with an inner 5-pointed star
+ * - Assassin / ASSASSINATE: Dark gunmetal skull with 'X' forehead cutout, angular eyes & 4 bottom fangs
+ * - Ambassador / EXCHANGE: Chartreuse hollow diamond + 3 inward triangles (Top/Left/Right) + 2 stacked Bottom triangles
+ * - Captain / STEAL: Sky-blue upward arrow with V-wings above 2 nested V-chevrons
+ * - Contessa: Crimson-red pentagonal diamond shield with 3-merlon castle tower cutout & twin vertical slits
+ * - INCOME / FOREIGN_AID / COUP / CHALLENGE / PASS: 2D octagonal ISK coin(s) & tactical emblems
+ */
+export function drawCoupActionIcon2D(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  size: number,
+  kind: CoupIconKind
+) {
+  ctx.save();
+  const s = size;
+
+  if (kind === "Duke" || kind === "TAX") {
+    const outerR = s * 0.46;
+    const innerR = outerR * 0.38;
+
+    const grad = ctx.createLinearGradient(
+      cx - outerR,
+      cy - outerR,
+      cx + outerR,
+      cy + outerR
+    );
+    grad.addColorStop(0, "#ff2e93");
+    grad.addColorStop(0.55, "#e11d84");
+    grad.addColorStop(1, "#9d0b58");
+
+    // Circular ring behind the 5 star points
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = Math.max(1.8, s * 0.11);
+    ctx.beginPath();
+    ctx.arc(cx, cy + s * 0.02, outerR * 0.62, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Outer 5-pointed star with center pentagon hole (even-odd)
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 === 0 ? outerR : innerR;
+      const a = -Math.PI / 2 + (i * Math.PI) / 5;
+      const px = cx + Math.cos(a) * r;
+      const py = cy + Math.sin(a) * r;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+
+    const holeR = innerR * 0.72;
+    for (let i = 0; i < 5; i++) {
+      const a = -Math.PI / 2 + Math.PI / 5 + (i * Math.PI * 2) / 5;
+      const px = cx + Math.cos(a) * holeR;
+      const py = cy + Math.sin(a) * holeR;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill("evenodd");
+
+    // Inner small 5-pointed star
+    const smOut = holeR * 0.86;
+    const smIn = smOut * 0.4;
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 === 0 ? smOut : smIn;
+      const a = -Math.PI / 2 + (i * Math.PI) / 5;
+      const px = cx + Math.cos(a) * r;
+      const py = cy + Math.sin(a) * r;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+  } else if (kind === "Assassin" || kind === "ASSASSINATE") {
+    const skS = s * 0.88;
+    const grad = ctx.createLinearGradient(
+      cx - skS * 0.5,
+      cy - skS * 0.5,
+      cx + skS * 0.5,
+      cy + skS * 0.5
+    );
+    grad.addColorStop(0, "#4b5057");
+    grad.addColorStop(0.5, "#2d3136");
+    grad.addColorStop(1, "#16181a");
+    ctx.fillStyle = grad;
+    ctx.strokeStyle = "#94a3b8";
+    ctx.lineWidth = Math.max(0.8, s * 0.035);
+
+    ctx.beginPath();
+    ctx.moveTo(cx - skS * 0.25, cy - skS * 0.44);
+    ctx.lineTo(cx + skS * 0.25, cy - skS * 0.44);
+    ctx.lineTo(cx + skS * 0.46, cy - skS * 0.14);
+    ctx.lineTo(cx + skS * 0.42, cy + skS * 0.04);
+    ctx.lineTo(cx + skS * 0.5, cy + skS * 0.12);
+    ctx.lineTo(cx + skS * 0.36, cy + skS * 0.26);
+    ctx.lineTo(cx + skS * 0.26, cy + skS * 0.26);
+    // 4 Jagged Bottom Fangs
+    ctx.lineTo(cx + skS * 0.22, cy + skS * 0.48);
+    ctx.lineTo(cx + skS * 0.13, cy + skS * 0.28);
+    ctx.lineTo(cx + skS * 0.09, cy + skS * 0.52);
+    ctx.lineTo(cx + skS * 0.02, cy + skS * 0.28);
+    ctx.lineTo(cx - skS * 0.02, cy + skS * 0.28);
+    ctx.lineTo(cx - skS * 0.09, cy + skS * 0.52);
+    ctx.lineTo(cx - skS * 0.13, cy + skS * 0.28);
+    ctx.lineTo(cx - skS * 0.22, cy + skS * 0.48);
+    ctx.lineTo(cx - skS * 0.26, cy + skS * 0.26);
+    ctx.lineTo(cx - skS * 0.36, cy + skS * 0.26);
+    ctx.lineTo(cx - skS * 0.5, cy + skS * 0.12);
+    ctx.lineTo(cx - skS * 0.42, cy + skS * 0.04);
+    ctx.lineTo(cx - skS * 0.46, cy - skS * 0.14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // 'X' Forehead Cutout
+    ctx.strokeStyle = "#cbd5e1";
+    ctx.lineWidth = Math.max(1.4, skS * 0.095);
+    const xCy = cy - skS * 0.18;
+    const xR = skS * 0.115;
+    ctx.beginPath();
+    ctx.moveTo(cx - xR, xCy - xR);
+    ctx.lineTo(cx + xR, xCy + xR);
+    ctx.moveTo(cx + xR, xCy - xR);
+    ctx.lineTo(cx - xR, xCy + xR);
+    ctx.stroke();
+
+    // Eye Sockets & Nasal Triangle
+    ctx.fillStyle = "#cbd5e1";
+    for (const dir of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(cx + dir * skS * 0.1, cy + skS * 0.06);
+      ctx.lineTo(cx + dir * skS * 0.33, cy + skS * 0.06);
+      ctx.lineTo(cx + dir * skS * 0.25, cy + skS * 0.16);
+      ctx.lineTo(cx + dir * skS * 0.14, cy + skS * 0.16);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + skS * 0.14);
+    ctx.lineTo(cx + skS * 0.055, cy + skS * 0.24);
+    ctx.lineTo(cx - skS * 0.055, cy + skS * 0.24);
+    ctx.closePath();
+    ctx.fill();
+  } else if (kind === "Ambassador" || kind === "EXCHANGE") {
+    const emS = s * 0.88;
+    const grad = ctx.createLinearGradient(
+      cx - emS * 0.5,
+      cy - emS * 0.5,
+      cx + emS * 0.5,
+      cy + emS * 0.5
+    );
+    grad.addColorStop(0, "#d9f928");
+    grad.addColorStop(0.55, "#b5db18");
+    grad.addColorStop(1, "#7c9e09");
+    ctx.fillStyle = grad;
+    ctx.strokeStyle = "#4d6304";
+    ctx.lineWidth = Math.max(0.7, s * 0.03);
+
+    const dOut = emS * 0.22;
+    const dIn = emS * 0.09;
+    // Central Hollow Diamond
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - dOut);
+    ctx.lineTo(cx + dOut, cy);
+    ctx.lineTo(cx, cy + dOut);
+    ctx.lineTo(cx - dOut, cy);
+    ctx.closePath();
+    ctx.moveTo(cx, cy - dIn);
+    ctx.lineTo(cx - dIn, cy);
+    ctx.lineTo(cx, cy + dIn);
+    ctx.lineTo(cx + dIn, cy);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    const triW = emS * 0.15;
+    const triH = emS * 0.115;
+    // Top triangle pointing DOWN
+    ctx.beginPath();
+    ctx.moveTo(cx - triW, cy - dOut - emS * 0.2);
+    ctx.lineTo(cx + triW, cy - dOut - emS * 0.2);
+    ctx.lineTo(cx, cy - dOut - emS * 0.2 + triH);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Left triangle pointing RIGHT
+    ctx.beginPath();
+    ctx.moveTo(cx - dOut - emS * 0.24, cy - triW);
+    ctx.lineTo(cx - dOut - emS * 0.24, cy + triW);
+    ctx.lineTo(cx - dOut - emS * 0.24 + triH, cy);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Right triangle pointing LEFT
+    ctx.beginPath();
+    ctx.moveTo(cx + dOut + emS * 0.24, cy - triW);
+    ctx.lineTo(cx + dOut + emS * 0.24, cy + triW);
+    ctx.lineTo(cx + dOut + emS * 0.24 - triH, cy);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Bottom TWO stacked triangles pointing UP
+    for (const offset of [0.05, 0.175]) {
+      const tipY = cy + dOut + emS * offset;
+      ctx.beginPath();
+      ctx.moveTo(cx, tipY);
+      ctx.lineTo(cx + triW, tipY + triH);
+      ctx.lineTo(cx - triW, tipY + triH);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+  } else if (kind === "Captain" || kind === "STEAL") {
+    const emS = s * 0.88;
+    const grad = ctx.createLinearGradient(
+      cx - emS * 0.5,
+      cy - emS * 0.45,
+      cx + emS * 0.5,
+      cy + emS * 0.45
+    );
+    grad.addColorStop(0, "#7dd3fc");
+    grad.addColorStop(0.5, "#38bdf8");
+    grad.addColorStop(1, "#0284c7");
+    ctx.fillStyle = grad;
+    ctx.strokeStyle = "#0369a1";
+    ctx.lineWidth = Math.max(0.7, s * 0.03);
+
+    // Upper Arrow + V-Wing Anchor Base
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - emS * 0.45);
+    ctx.lineTo(cx + emS * 0.15, cy - emS * 0.25);
+    ctx.lineTo(cx + emS * 0.06, cy - emS * 0.25);
+    ctx.lineTo(cx + emS * 0.06, cy - emS * 0.04);
+    ctx.lineTo(cx + emS * 0.23, cy - emS * 0.21);
+    ctx.lineTo(cx + emS * 0.37, cy - emS * 0.21);
+    ctx.lineTo(cx + emS * 0.1, cy + emS * 0.06);
+    ctx.lineTo(cx - emS * 0.1, cy + emS * 0.06);
+    ctx.lineTo(cx - emS * 0.37, cy - emS * 0.21);
+    ctx.lineTo(cx - emS * 0.23, cy - emS * 0.21);
+    ctx.lineTo(cx - emS * 0.06, cy - emS * 0.04);
+    ctx.lineTo(cx - emS * 0.06, cy - emS * 0.25);
+    ctx.lineTo(cx - emS * 0.15, cy - emS * 0.25);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Middle Nested V-Chevron
+    ctx.beginPath();
+    ctx.moveTo(cx - emS * 0.28, cy - emS * 0.02);
+    ctx.lineTo(cx - emS * 0.22, cy - emS * 0.07);
+    ctx.lineTo(cx, cy + emS * 0.15);
+    ctx.lineTo(cx + emS * 0.22, cy - emS * 0.07);
+    ctx.lineTo(cx + emS * 0.28, cy - emS * 0.02);
+    ctx.lineTo(cx, cy + emS * 0.25);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Outer Bottom V-Chevron
+    ctx.beginPath();
+    ctx.moveTo(cx - emS * 0.5, cy - emS * 0.04);
+    ctx.lineTo(cx - emS * 0.41, cy - emS * 0.11);
+    ctx.lineTo(cx, cy + emS * 0.3);
+    ctx.lineTo(cx + emS * 0.41, cy - emS * 0.11);
+    ctx.lineTo(cx + emS * 0.5, cy - emS * 0.04);
+    ctx.lineTo(cx, cy + emS * 0.45);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  } else if (kind === "Contessa") {
+    const emW = s * 0.9;
+    const emH = s * 0.78;
+    const grad = ctx.createLinearGradient(
+      cx - emW * 0.5,
+      cy - emH * 0.5,
+      cx + emW * 0.5,
+      cy + emH * 0.5
+    );
+    grad.addColorStop(0, "#ff333b");
+    grad.addColorStop(0.55, "#e1161e");
+    grad.addColorStop(1, "#9e0910");
+    ctx.fillStyle = grad;
+    ctx.strokeStyle = "#7f060b";
+    ctx.lineWidth = Math.max(0.7, s * 0.03);
+
+    ctx.beginPath();
+    ctx.moveTo(cx - emW * 0.34, cy - emH * 0.46);
+    ctx.lineTo(cx + emW * 0.34, cy - emH * 0.46);
+    ctx.lineTo(cx + emW * 0.5, cy - emH * 0.18);
+    ctx.lineTo(cx + emW * 0.07, cy + emH * 0.46);
+    ctx.lineTo(cx + emW * 0.07, cy - emH * 0.04);
+    ctx.lineTo(cx + emW * 0.15, cy - emH * 0.12);
+    ctx.lineTo(cx + emW * 0.22, cy - emH * 0.12);
+    ctx.lineTo(cx + emW * 0.22, cy - emH * 0.33);
+    // 3 Castle Merlons
+    ctx.lineTo(cx + emW * 0.13, cy - emH * 0.33);
+    ctx.lineTo(cx + emW * 0.13, cy - emH * 0.23);
+    ctx.lineTo(cx + emW * 0.05, cy - emH * 0.23);
+    ctx.lineTo(cx + emW * 0.05, cy - emH * 0.33);
+    ctx.lineTo(cx - emW * 0.05, cy - emH * 0.33);
+    ctx.lineTo(cx - emW * 0.05, cy - emH * 0.23);
+    ctx.lineTo(cx - emW * 0.13, cy - emH * 0.23);
+    ctx.lineTo(cx - emW * 0.13, cy - emH * 0.33);
+    ctx.lineTo(cx - emW * 0.22, cy - emH * 0.33);
+    ctx.lineTo(cx - emW * 0.22, cy - emH * 0.12);
+    ctx.lineTo(cx - emW * 0.15, cy - emH * 0.12);
+    ctx.lineTo(cx - emW * 0.07, cy - emH * 0.04);
+    ctx.lineTo(cx - emW * 0.07, cy + emH * 0.46);
+    ctx.lineTo(cx - emW * 0.5, cy - emH * 0.18);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Central red vertical spine between the two bottom castle slits
+    ctx.beginPath();
+    ctx.moveTo(cx - emW * 0.026, cy - emH * 0.08);
+    ctx.lineTo(cx + emW * 0.026, cy - emH * 0.08);
+    ctx.lineTo(cx + emW * 0.026, cy + emH * 0.48);
+    ctx.lineTo(cx, cy + emH * 0.53);
+    ctx.lineTo(cx - emW * 0.026, cy + emH * 0.48);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  } else if (kind === "INCOME") {
+    drawCoupCoin2D(ctx, cx, cy, s * 0.42);
+  } else if (kind === "FOREIGN_AID") {
+    drawCoupCoin2D(ctx, cx - s * 0.13, cy + s * 0.06, s * 0.34);
+    drawCoupCoin2D(ctx, cx + s * 0.13, cy - s * 0.06, s * 0.34);
+  } else if (kind === "COUP") {
+    // Crimson-gold target crosshair + stiletto dagger emblem
+    ctx.strokeStyle = "#f59e0b";
+    ctx.lineWidth = Math.max(1.5, s * 0.09);
+    ctx.beginPath();
+    ctx.arc(cx, cy, s * 0.36, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = "#ef4444";
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - s * 0.46);
+    ctx.lineTo(cx + s * 0.11, cy + s * 0.08);
+    ctx.lineTo(cx, cy + s * 0.46);
+    ctx.lineTo(cx - s * 0.11, cy + s * 0.08);
+    ctx.closePath();
+    ctx.fill();
+  } else if (kind === "CHALLENGE") {
+    // Tactical interrogation reticle
+    ctx.strokeStyle = "#fb7185";
+    ctx.lineWidth = Math.max(1.5, s * 0.09);
+    ctx.beginPath();
+    ctx.arc(cx, cy, s * 0.34, 0, Math.PI * 2);
+    ctx.moveTo(cx - s * 0.46, cy);
+    ctx.lineTo(cx - s * 0.2, cy);
+    ctx.moveTo(cx + s * 0.2, cy);
+    ctx.lineTo(cx + s * 0.46, cy);
+    ctx.moveTo(cx, cy - s * 0.46);
+    ctx.lineTo(cx, cy - s * 0.2);
+    ctx.moveTo(cx, cy + s * 0.2);
+    ctx.lineTo(cx, cy + s * 0.46);
+    ctx.stroke();
+  } else if (kind === "PASS") {
+    ctx.strokeStyle = "#34d399";
+    ctx.lineWidth = Math.max(1.8, s * 0.11);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(cx - s * 0.26, cy + s * 0.02);
+    ctx.lineTo(cx - s * 0.06, cy + s * 0.22);
+    ctx.lineTo(cx + s * 0.28, cy - s * 0.18);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}

@@ -2,7 +2,7 @@
 
 import React, { Suspense, use, useEffect, useRef, useState } from "react";
 import { WerewolfCanvas } from "@/components/werewolf-canvas";
-import { CoupCanvas } from "@/components/coup-canvas";
+import { CoupActionIconCanvas, CoupCanvas } from "@/components/coup-canvas";
 import {
   ROLE_META,
   WEREWOLF_ROLES,
@@ -528,9 +528,10 @@ function RoomPageContent({
                                       },
                                     })
                                   }
-                                  className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3 py-2.5 text-xs font-bold text-slate-100 transition cursor-pointer"
+                                  className="flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3 py-2.5 text-xs font-bold text-slate-100 transition cursor-pointer"
                                 >
-                                  +1 Thu Nhập
+                                  <CoupActionIconCanvas kind="INCOME" size={20} />
+                                  <span>+1 Thu Nhập</span>
                                 </button>
                                 <button
                                   type="button"
@@ -544,9 +545,13 @@ function RoomPageContent({
                                       },
                                     })
                                   }
-                                  className="rounded-xl border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-3 py-2.5 text-xs font-bold text-amber-200 transition cursor-pointer"
+                                  className="flex items-center justify-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-3 py-2.5 text-xs font-bold text-amber-200 transition cursor-pointer"
                                 >
-                                  +2 Viện Trợ
+                                  <CoupActionIconCanvas
+                                    kind="FOREIGN_AID"
+                                    size={22}
+                                  />
+                                  <span>+2 Viện Trợ</span>
                                 </button>
                               </div>
                               <button
@@ -561,9 +566,10 @@ function RoomPageContent({
                                     },
                                   })
                                 }
-                                className="w-full text-left rounded-xl border border-pink-500/50 bg-pink-600/20 hover:bg-pink-600/35 px-3.5 py-2.5 text-xs font-bold text-pink-200 transition cursor-pointer"
+                                className="w-full flex items-center gap-2.5 text-left rounded-xl border border-pink-500/50 bg-pink-600/20 hover:bg-pink-600/35 px-3 py-2.5 text-xs font-bold text-pink-100 transition cursor-pointer"
                               >
-                                👑 Công Tước (Duke): Thu Thuế (+3 xu)
+                                <CoupActionIconCanvas kind="Duke" size={22} />
+                                <span>Duke: Thu Thuế (+3 xu)</span>
                               </button>
                               <button
                                 type="button"
@@ -583,9 +589,33 @@ function RoomPageContent({
                                     },
                                   })
                                 }
-                                className="w-full text-left rounded-xl border border-slate-500/60 bg-slate-800/90 hover:bg-slate-700 px-3.5 py-2.5 text-xs font-bold text-cyan-200 transition cursor-pointer disabled:opacity-40"
+                                className="w-full flex items-center gap-2.5 text-left rounded-xl border border-slate-500/60 bg-slate-800/90 hover:bg-slate-700 px-3 py-2.5 text-xs font-bold text-slate-100 transition cursor-pointer disabled:opacity-40"
                               >
-                                🗡️ Sát Thủ (Assassin): Ám Sát (-3 xu)
+                                <CoupActionIconCanvas
+                                  kind="Assassin"
+                                  size={22}
+                                />
+                                <span>Assassin: Ám Sát (-3 xu)</span>
+                              </button>
+                              <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() =>
+                                  sendRoomAction({
+                                    type: "MATCH_COMMAND",
+                                    command: {
+                                      type: "DECLARE_ACTION",
+                                      action: "EXCHANGE",
+                                    },
+                                  })
+                                }
+                                className="w-full flex items-center gap-2.5 text-left rounded-xl border border-lime-500/50 bg-lime-600/20 hover:bg-lime-600/35 px-3 py-2.5 text-xs font-bold text-lime-100 transition cursor-pointer"
+                              >
+                                <CoupActionIconCanvas
+                                  kind="Ambassador"
+                                  size={22}
+                                />
+                                <span>Ambassador: Đổi Bài</span>
                               </button>
                               <button
                                 type="button"
@@ -604,25 +634,13 @@ function RoomPageContent({
                                     },
                                   })
                                 }
-                                className="w-full text-left rounded-xl border border-sky-500/50 bg-sky-600/20 hover:bg-sky-600/35 px-3.5 py-2.5 text-xs font-bold text-sky-200 transition cursor-pointer disabled:opacity-40"
+                                className="w-full flex items-center gap-2.5 text-left rounded-xl border border-sky-500/50 bg-sky-600/20 hover:bg-sky-600/35 px-3 py-2.5 text-xs font-bold text-sky-100 transition cursor-pointer disabled:opacity-40"
                               >
-                                ⚓ Thuyền Trưởng (Captain): Cướp (+2 xu)
-                              </button>
-                              <button
-                                type="button"
-                                disabled={busy}
-                                onClick={() =>
-                                  sendRoomAction({
-                                    type: "MATCH_COMMAND",
-                                    command: {
-                                      type: "DECLARE_ACTION",
-                                      action: "EXCHANGE",
-                                    },
-                                  })
-                                }
-                                className="w-full text-left rounded-xl border border-lime-500/50 bg-lime-600/20 hover:bg-lime-600/35 px-3.5 py-2.5 text-xs font-bold text-lime-200 transition cursor-pointer"
-                              >
-                                🔄 Đại Sứ (Ambassador): Đổi Bài
+                                <CoupActionIconCanvas
+                                  kind="Captain"
+                                  size={22}
+                                />
+                                <span>Captain: Cướp (+2 xu)</span>
                               </button>
                             </>
                           )}
@@ -644,12 +662,15 @@ function RoomPageContent({
                                 },
                               })
                             }
-                            className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-400 hover:to-red-400 px-4 py-2.5 text-xs font-extrabold text-slate-950 shadow transition cursor-pointer disabled:opacity-40"
+                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-400 hover:to-red-400 px-4 py-2.5 text-xs font-extrabold text-slate-950 shadow transition cursor-pointer disabled:opacity-40"
                           >
-                            ⚡ Đảo Chính (-7 xu)
-                            {targetSeatObj
-                              ? ` → ${targetSeatObj.displayName}`
-                              : ""}
+                            <CoupActionIconCanvas kind="COUP" size={20} />
+                            <span>
+                              Đảo Chính (-7 xu)
+                              {targetSeatObj
+                                ? ` → ${targetSeatObj.displayName}`
+                                : ""}
+                            </span>
                           </button>
                         </>
                       )}
@@ -679,14 +700,20 @@ function RoomPageContent({
                                   command: { type: "CHALLENGE" },
                                 })
                               }
-                              className="w-full rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2.5 text-xs font-bold text-white transition cursor-pointer"
+                              className="w-full flex items-center justify-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2.5 text-xs font-bold text-white transition cursor-pointer"
                             >
-                              🔍 Bắt Bài (Không tin có{" "}
-                              {
-                                COUP_CHARACTER_META[pending.claimedCharacter]
-                                  .titleVi
-                              }
-                              !)
+                              <CoupActionIconCanvas
+                                kind="CHALLENGE"
+                                size={20}
+                              />
+                              <span>
+                                Bắt Bài (Không tin có{" "}
+                                {
+                                  COUP_CHARACTER_META[pending.claimedCharacter]
+                                    .titleVi
+                                }
+                                !)
+                              </span>
                             </button>
                           )}
 
@@ -703,9 +730,10 @@ function RoomPageContent({
                                   },
                                 })
                               }
-                              className="w-full rounded-xl bg-pink-600 hover:bg-pink-500 px-3.5 py-2.5 text-xs font-bold text-white transition cursor-pointer"
+                              className="w-full flex items-center gap-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 px-3.5 py-2.5 text-xs font-bold text-white transition cursor-pointer"
                             >
-                              🛡️ Chặn Viện Trợ (Nhận là Công Tước)
+                              <CoupActionIconCanvas kind="Duke" size={22} />
+                              <span>Chặn Viện Trợ (Nhận là Duke)</span>
                             </button>
                           )}
 
@@ -723,9 +751,13 @@ function RoomPageContent({
                                     },
                                   })
                                 }
-                                className="w-full rounded-xl bg-red-600 hover:bg-red-500 px-3.5 py-2.5 text-xs font-bold text-white transition cursor-pointer"
+                                className="w-full flex items-center gap-2.5 rounded-xl bg-red-600 hover:bg-red-500 px-3.5 py-2.5 text-xs font-bold text-white transition cursor-pointer"
                               >
-                                🛡️ Chặn Ám Sát (Nhận là Phu Nhân)
+                                <CoupActionIconCanvas
+                                  kind="Contessa"
+                                  size={22}
+                                />
+                                <span>Chặn Ám Sát (Nhận là Contessa)</span>
                               </button>
                             )}
 
@@ -744,9 +776,13 @@ function RoomPageContent({
                                       },
                                     })
                                   }
-                                  className="w-full rounded-xl bg-sky-600 hover:bg-sky-500 px-3 py-2.5 text-xs font-bold text-white transition cursor-pointer"
+                                  className="w-full flex items-center gap-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 px-3 py-2.5 text-xs font-bold text-white transition cursor-pointer"
                                 >
-                                  🛡️ Chặn Cướp (Thuyền Trưởng)
+                                  <CoupActionIconCanvas
+                                    kind="Captain"
+                                    size={22}
+                                  />
+                                  <span>Chặn Cướp (Captain)</span>
                                 </button>
                                 <button
                                   type="button"
@@ -760,9 +796,13 @@ function RoomPageContent({
                                       },
                                     })
                                   }
-                                  className="w-full rounded-xl bg-lime-600 hover:bg-lime-500 px-3 py-2.5 text-xs font-bold text-slate-950 transition cursor-pointer"
+                                  className="w-full flex items-center gap-2.5 rounded-xl bg-lime-600 hover:bg-lime-500 px-3 py-2.5 text-xs font-bold text-slate-950 transition cursor-pointer"
                                 >
-                                  🛡️ Chặn Cướp (Đại Sứ)
+                                  <CoupActionIconCanvas
+                                    kind="Ambassador"
+                                    size={22}
+                                  />
+                                  <span>Chặn Cướp (Ambassador)</span>
                                 </button>
                               </>
                             )}
@@ -776,11 +816,14 @@ function RoomPageContent({
                                 command: { type: "PASS" },
                               })
                             }
-                            className="w-full rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2.5 text-xs font-semibold text-slate-200 transition cursor-pointer disabled:opacity-50"
+                            className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2.5 text-xs font-semibold text-slate-200 transition cursor-pointer disabled:opacity-50"
                           >
-                            {mySeat?.hasPassedReaction
-                              ? "✓ Đã cho qua"
-                              : "✓ Cho Qua"}
+                            <CoupActionIconCanvas kind="PASS" size={18} />
+                            <span>
+                              {mySeat?.hasPassedReaction
+                                ? "Đã cho qua"
+                                : "Cho Qua"}
+                            </span>
                           </button>
                         </>
                       )}
@@ -800,14 +843,17 @@ function RoomPageContent({
                                 command: { type: "CHALLENGE" },
                               })
                             }
-                            className="w-full rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2.5 text-xs font-bold text-white transition cursor-pointer"
+                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2.5 text-xs font-bold text-white transition cursor-pointer"
                           >
-                            🔍 Bắt Bài Cú Chặn (Không tin có{" "}
-                            {
-                              COUP_CHARACTER_META[block.claimedCharacter]
-                                .titleVi
-                            }
-                            !)
+                            <CoupActionIconCanvas kind="CHALLENGE" size={20} />
+                            <span>
+                              Bắt Bài Cú Chặn (Không tin có{" "}
+                              {
+                                COUP_CHARACTER_META[block.claimedCharacter]
+                                  .titleVi
+                              }
+                              !)
+                            </span>
                           </button>
                           <button
                             type="button"
@@ -818,11 +864,14 @@ function RoomPageContent({
                                 command: { type: "PASS" },
                               })
                             }
-                            className="w-full rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2.5 text-xs font-semibold text-slate-200 transition cursor-pointer disabled:opacity-50"
+                            className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3.5 py-2.5 text-xs font-semibold text-slate-200 transition cursor-pointer disabled:opacity-50"
                           >
-                            {mySeat?.hasPassedReaction
-                              ? "✓ Đã chấp nhận"
-                              : "✓ Chấp nhận bị Chặn"}
+                            <CoupActionIconCanvas kind="PASS" size={18} />
+                            <span>
+                              {mySeat?.hasPassedReaction
+                                ? "Đã chấp nhận"
+                                : "Chấp nhận bị Chặn"}
+                            </span>
                           </button>
                         </>
                       )}
@@ -838,6 +887,68 @@ function RoomPageContent({
                         🔄 Chơi Ván Mới (Về Sảnh Chờ)
                       </button>
                     )}
+
+                    {/* 5. Official Coup 2D Play Summary Table (Matching Reference Card) */}
+                    <div className="mt-2 rounded-xl border border-slate-800 bg-slate-950/80 p-2.5 space-y-1.5">
+                      <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1">
+                        <span>Nhân vật / Action</span>
+                        <span>Hiệu ứng & Chặn</span>
+                      </div>
+
+                      {(
+                        [
+                          {
+                            char: "Duke" as const,
+                            badgeBg: "bg-pink-700/80 border-pink-500/60 text-white",
+                            action: "Tax (+3 xu)",
+                            block: "Chặn Viện Trợ",
+                          },
+                          {
+                            char: "Assassin" as const,
+                            badgeBg: "bg-slate-700/90 border-slate-500/60 text-white",
+                            action: "Ám Sát (-3 xu)",
+                            block: "✕",
+                          },
+                          {
+                            char: "Ambassador" as const,
+                            badgeBg:
+                              "bg-lime-500/85 border-lime-300/70 text-slate-950",
+                            action: "Đổi Bài (2 lá)",
+                            block: "Chặn Cướp Xu",
+                          },
+                          {
+                            char: "Captain" as const,
+                            badgeBg: "bg-sky-600/85 border-sky-400/60 text-white",
+                            action: "Cướp (+2 xu)",
+                            block: "Chặn Cướp Xu",
+                          },
+                          {
+                            char: "Contessa" as const,
+                            badgeBg: "bg-red-700/85 border-red-500/60 text-white",
+                            action: "✕",
+                            block: "Chặn Ám Sát",
+                          },
+                        ] as const
+                      ).map((row) => (
+                        <div
+                          key={row.char}
+                          className="flex items-center justify-between gap-2 text-[11px]"
+                        >
+                          <div
+                            className={`flex items-center gap-1.5 rounded-md border px-2 py-0.5 font-extrabold w-31 shrink-0 ${row.badgeBg}`}
+                          >
+                            <CoupActionIconCanvas kind={row.char} size={18} />
+                            <span className="truncate">{row.char}</span>
+                          </div>
+                          <div className="text-right text-[10.5px] text-slate-300 leading-tight">
+                            <div className="font-semibold text-slate-100">
+                              {row.action}
+                            </div>
+                            <div className="text-slate-400">{row.block}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               );

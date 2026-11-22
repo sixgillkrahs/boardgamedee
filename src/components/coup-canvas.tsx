@@ -10,10 +10,12 @@ import {
   type HitRegion,
 } from "@/canvas/engine";
 import {
+  drawCoupActionIcon2D,
   drawCoupCard2D,
   drawCoupCenterTreasuryAndDeck2D,
   drawCoupCoin2D,
   drawCoupCoinStack2D,
+  type CoupIconKind,
 } from "@/canvas/coup-cards";
 import { computeCardDealProgress } from "@/canvas/role-cards";
 import {
@@ -23,6 +25,43 @@ import {
   type CoupPlayerView,
 } from "@/cartridges/coup";
 import type { LobbySeatItem } from "@/components/werewolf-canvas";
+
+export function CoupActionIconCanvas({
+  kind,
+  size = 24,
+  className = "",
+}: {
+  kind: CoupIconKind;
+  size?: number;
+  className?: string;
+}) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(size * dpr);
+    canvas.height = Math.round(size * dpr);
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, size, size);
+    drawCoupActionIcon2D(ctx, size * 0.5, size * 0.5, size * 0.9, kind);
+    ctx.restore();
+  }, [kind, size]);
+
+  return (
+    <canvas
+      ref={ref}
+      style={{ width: size, height: size }}
+      className={`inline-block shrink-0 ${className}`}
+    />
+  );
+}
 
 interface CoupCanvasProps {
   mode: "lobby" | "match";
@@ -634,6 +673,31 @@ export function CoupCanvas({
           pos.x,
           plateY + 10.5
         );
+
+        // Floating 2D Action / Block Faction Emblem Medallion above the acting or blocking seat
+        const seatClaimIcon: CoupIconKind | null =
+          curMode === "match" && pv
+            ? pv.pendingBlock?.blockerSeatNo === seat.seatNo
+              ? pv.pendingBlock.claimedCharacter
+              : pv.pendingAction?.actorSeatNo === seat.seatNo
+                ? (pv.pendingAction.claimedCharacter ?? pv.pendingAction.type)
+                : null
+            : null;
+
+        if (seatClaimIcon) {
+          const emCx = pos.x - 10;
+          const emCy = pos.y - cardH / 2 - 20;
+          ctx.save();
+          ctx.fillStyle = "rgba(15, 23, 42, 0.94)";
+          ctx.strokeStyle = "#fde047";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(emCx, emCy, 15, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          drawCoupActionIcon2D(ctx, emCx, emCy, 22, seatClaimIcon);
+          ctx.restore();
+        }
 
         // Sub-status tag (e.g. "ĐANG ĐẾN LƯỢT", "✓ Đã cho qua", "Đã bị loại")
         let subTag: string | null = null;
