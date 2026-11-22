@@ -179,8 +179,8 @@ export function WerewolfCanvas({
       if (!parent) return;
       const rect = parent.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = Math.max(320, Math.floor(rect.width * dpr));
-      canvas.height = Math.max(440, Math.floor(rect.height * dpr));
+      canvas.width = Math.max(300, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(380, Math.floor(rect.height * dpr));
     };
 
     resize();
@@ -298,8 +298,15 @@ export function WerewolfCanvas({
       }
 
       // 3. Village Plaza Table Ring
-      const tableRx = Math.min(width * 0.39, 490);
-      const tableRy = Math.min(height * 0.35, 320);
+      const isCompact = width < 560 || height < 480;
+      const tableRx = Math.max(
+        105,
+        Math.min(width * (isCompact ? 0.35 : 0.39), 490)
+      );
+      const tableRy = Math.max(
+        78,
+        Math.min(height * (isCompact ? 0.28 : 0.35), 320)
+      );
 
       const plazaGrad = ctx.createRadialGradient(
         centerX,
@@ -1561,7 +1568,7 @@ export function WerewolfCanvas({
   };
 
   return (
-    <div className="relative w-full h-full min-h-[640px] select-none overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl">
+    <div className="relative w-full h-full min-h-[380px] sm:min-h-[500px] lg:min-h-[620px] select-none overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl">
       <canvas
         ref={canvasRef}
         onMouseMove={handleMouseMove}

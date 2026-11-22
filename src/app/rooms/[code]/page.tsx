@@ -235,36 +235,36 @@ function RoomPageContent({
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col overflow-x-hidden">
       {/* Top Platform Header Bar */}
-      <header className="border-b border-slate-800/80 bg-slate-900/85 backdrop-blur px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 z-30">
-        <div className="flex items-center gap-3">
+      <header className="border-b border-slate-800/80 bg-slate-900/85 backdrop-blur px-2.5 py-2 sm:px-4 sm:py-2.5 flex flex-wrap items-center justify-between gap-2 z-30">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
             onClick={async () => {
               await sendRoomAction({ type: "LEAVE" });
               window.location.href = "/";
             }}
-            className="rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition cursor-pointer"
+            className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition cursor-pointer"
           >
-            ← Rời Phòng
+            ← <span className="hidden xs:inline">Rời Phòng</span>
           </button>
-          <div className="flex items-center gap-2">
-            <span className="text-xs uppercase tracking-wider text-slate-400">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="hidden md:inline text-xs uppercase tracking-wider text-slate-400">
               Mã phòng:
             </span>
-            <span className="rounded-lg bg-amber-500/15 border border-amber-500/40 px-2.5 py-1 font-mono text-sm font-bold text-amber-300">
+            <span className="rounded-lg bg-amber-500/15 border border-amber-500/40 px-2 py-1 font-mono text-xs sm:text-sm font-bold text-amber-300">
               {normalizedCode}
             </span>
             <button
               type="button"
               onClick={handleCopyCode}
-              className="rounded-lg bg-slate-800 hover:bg-slate-700 px-2.5 py-1 text-xs font-medium text-slate-200 border border-slate-700 transition cursor-pointer"
+              className="rounded-lg bg-slate-800 hover:bg-slate-700 px-2 sm:px-2.5 py-1 text-xs font-medium text-slate-200 border border-slate-700 transition cursor-pointer"
             >
-              {copied ? "✓ Đã chép link" : "Sao chép link mời"}
+              {copied ? "✓ Đã chép" : "Sao chép link"}
             </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex items-center gap-1.5 sm:gap-2 text-xs">
           {/* Quick Button to Open Chat & Event Log Drawer */}
           <button
             type="button"
@@ -301,7 +301,7 @@ function RoomPageContent({
           <button
             type="button"
             onClick={() => setSoundEnabled((v) => !v)}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-slate-200 hover:bg-slate-700 transition cursor-pointer"
+            className="rounded-lg border border-slate-700 bg-slate-800 px-2 sm:px-2.5 py-1.5 text-xs text-slate-200 hover:bg-slate-700 transition cursor-pointer"
             title="Bật/Tắt âm thanh"
           >
             {soundEnabled ? "🔊" : "🔇"}
@@ -317,15 +317,15 @@ function RoomPageContent({
                 void document.exitFullscreen().catch(() => {});
               }
             }}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-slate-200 hover:bg-slate-700 transition cursor-pointer"
+            className="hidden sm:inline-flex rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-slate-200 hover:bg-slate-700 transition cursor-pointer"
             title="Toàn màn hình"
           >
             ⛶
           </button>
 
           {actor && (
-            <div className="flex items-center gap-2 rounded-lg bg-slate-800/90 border border-slate-700 px-3 py-1">
-              <span className="font-semibold text-sky-300">
+            <div className="hidden sm:flex items-center gap-2 rounded-lg bg-slate-800/90 border border-slate-700 px-2.5 py-1">
+              <span className="font-semibold text-sky-300 max-w-28 truncate">
                 {actor.displayName}
               </span>
               <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] text-slate-300">
@@ -338,7 +338,7 @@ function RoomPageContent({
 
       {/* Error Toast if any */}
       {errorMsg && (
-        <div className="mx-4 mt-3 rounded-xl border border-rose-500/40 bg-rose-950/70 px-4 py-2.5 text-xs font-medium text-rose-200 flex items-center justify-between">
+        <div className="mx-3 mt-2 rounded-xl border border-rose-500/40 bg-rose-950/70 px-3.5 py-2 text-xs font-medium text-rose-200 flex items-center justify-between">
           <span>⚠️ {errorMsg}</span>
           <button
             type="button"
@@ -351,8 +351,8 @@ function RoomPageContent({
       )}
 
       {/* Full-Width Interactive 2D Canvas Tabletop (Left) + Action Selection Sidebar (Right) */}
-      <main className="relative flex-1 flex flex-col lg:flex-row gap-2.5 p-2 md:p-2.5 w-full">
-        <div className="flex-1 min-h-[680px] lg:min-h-[calc(100vh-64px)] relative">
+      <main className="relative flex-1 flex flex-col lg:flex-row gap-2 sm:gap-2.5 p-2 sm:p-2.5 w-full">
+        <div className="flex-1 h-[54vh] min-h-[380px] sm:h-[62vh] sm:min-h-[500px] lg:h-[calc(100vh-62px)] lg:min-h-[620px] relative">
           {isCoup ? (
             <CoupCanvas
               mode={isLobby ? "lobby" : "match"}
@@ -419,7 +419,7 @@ function RoomPageContent({
         </div>
 
         {/* Right-Side Action Selection Panel */}
-        <aside className="w-full lg:w-80 xl:w-88 shrink-0 rounded-2xl border border-slate-800 bg-slate-900/95 p-4 shadow-xl flex flex-col justify-between gap-4">
+        <aside className="w-full lg:w-76 xl:w-84 lg:max-h-[calc(100vh-62px)] lg:overflow-y-auto shrink-0 rounded-2xl border border-slate-800 bg-slate-900/95 p-3 sm:p-4 shadow-xl flex flex-col justify-between gap-3 sm:gap-4">
           {isLobby ? (
             <div className="flex flex-col gap-3">
               <div>
@@ -1682,7 +1682,7 @@ function RoomPageContent({
 
                   {/* 2. Official PLAY Action Reference Table */}
                   <div className="rounded-xl border border-slate-800 bg-slate-950/75 overflow-hidden">
-                    <div className="bg-slate-900/90 px-3.5 py-2.5 border-b border-slate-800 flex items-center justify-between">
+                    <div className="bg-slate-900/90 px-3.5 py-2.5 border-b border-slate-800 flex flex-wrap items-center justify-between gap-1">
                       <span className="font-extrabold text-amber-300 uppercase tracking-wider">
                         2. Bảng Tham Chiếu Hành Động (PLAY — Take One Action)
                       </span>
@@ -1691,128 +1691,130 @@ function RoomPageContent({
                       </span>
                     </div>
 
-                    <div className="divide-y divide-slate-800/80">
-                      <div className="grid grid-cols-12 gap-2 px-3.5 py-2 bg-slate-900/40 font-bold text-[11px] uppercase tracking-wider text-slate-400">
-                        <div className="col-span-3">Nhân vật</div>
-                        <div className="col-span-3">Hành động</div>
-                        <div className="col-span-3">Hiệu ứng</div>
-                        <div className="col-span-3">Chặn (Counter)</div>
-                      </div>
-
-                      {/* 3 General Actions */}
-                      {(
-                        [
-                          {
-                            icon: "INCOME" as const,
-                            action: "Income (Thu Nhập)",
-                            effect: "Lấy +1 xu từ Kho Bạc",
-                            counter: "✕ Không thể chặn / bắt bài",
-                          },
-                          {
-                            icon: "FOREIGN_AID" as const,
-                            action: "Foreign Aid (Viện Trợ)",
-                            effect: "Lấy +2 xu từ Kho Bạc",
-                            counter: "Bị chặn bởi Duke",
-                          },
-                          {
-                            icon: "COUP" as const,
-                            action: "Coup (Đảo Chính)",
-                            effect:
-                              "Trả 7 xu • Chọn 1 người mất ngay 1 lá bài",
-                            counter: "✕ Không thể chặn / bắt bài",
-                          },
-                        ] as const
-                      ).map((g) => (
-                        <div
-                          key={g.action}
-                          className="grid grid-cols-12 gap-2 px-3.5 py-2.5 items-center text-slate-200"
-                        >
-                          <div className="col-span-3 flex items-center gap-2 text-slate-400 font-mono">
-                            <CoupActionIconCanvas kind={g.icon} size={20} />
-                            <span>— Chung —</span>
-                          </div>
-                          <div className="col-span-3 font-bold text-slate-100">
-                            {g.action}
-                          </div>
-                          <div className="col-span-3 text-slate-300">
-                            {g.effect}
-                          </div>
-                          <div className="col-span-3 text-slate-400">
-                            {g.counter}
-                          </div>
+                    <div className="overflow-x-auto">
+                      <div className="min-w-[520px] divide-y divide-slate-800/80">
+                        <div className="grid grid-cols-12 gap-2 px-3.5 py-2 bg-slate-900/40 font-bold text-[11px] uppercase tracking-wider text-slate-400">
+                          <div className="col-span-3">Nhân vật</div>
+                          <div className="col-span-3">Hành động</div>
+                          <div className="col-span-3">Hiệu ứng</div>
+                          <div className="col-span-3">Chặn (Counter)</div>
                         </div>
-                      ))}
 
-                      {/* 5 Character Actions */}
-                      {(
-                        [
-                          {
-                            char: "Duke" as const,
-                            badgeBg:
-                              "bg-pink-700/85 border-pink-500/60 text-white",
-                            action: "Tax (Thu Thuế)",
-                            effect: "Lấy +3 xu từ Kho Bạc",
-                            counter: "Chặn Foreign Aid (Viện Trợ)",
-                          },
-                          {
-                            char: "Assassin" as const,
-                            badgeBg:
-                              "bg-slate-700/90 border-slate-500/60 text-white",
-                            action: "Assassinate (Ám Sát)",
-                            effect:
-                              "Trả 3 xu • Chọn 1 người mất 1 lá bài",
-                            counter: "✕ Không có kỹ năng chặn",
-                          },
-                          {
-                            char: "Ambassador" as const,
-                            badgeBg:
-                              "bg-lime-500/85 border-lime-300/70 text-slate-950",
-                            action: "Exchange (Đổi Bài)",
-                            effect:
-                              "Rút 2 lá từ Bộ bài, chọn lá giữ lại rồi trả 2 lá về Bộ bài",
-                            counter: "Chặn Steal (Cướp Xu)",
-                          },
-                          {
-                            char: "Captain" as const,
-                            badgeBg:
-                              "bg-sky-600/85 border-sky-400/60 text-white",
-                            action: "Steal (Cướp Xu)",
-                            effect: "Cướp tối đa 2 xu từ 1 người chơi khác",
-                            counter: "Chặn Steal (Cướp Xu)",
-                          },
-                          {
-                            char: "Contessa" as const,
-                            badgeBg:
-                              "bg-red-700/85 border-red-500/60 text-white",
-                            action: "✕ Không có",
-                            effect: "✕",
-                            counter: "Chặn Assassinate (Ám Sát)",
-                          },
-                        ] as const
-                      ).map((row) => (
-                        <div
-                          key={row.char}
-                          className="grid grid-cols-12 gap-2 px-3.5 py-2.5 items-center"
-                        >
-                          <div className="col-span-3">
-                            <div
-                              className={`inline-flex items-center gap-2 rounded-lg border px-2.5 py-1 font-extrabold ${row.badgeBg}`}
-                            >
-                              <CoupActionIconCanvas kind={row.char} size={20} />
-                              <span>{row.char}</span>
+                        {/* 3 General Actions */}
+                        {(
+                          [
+                            {
+                              icon: "INCOME" as const,
+                              action: "Income (Thu Nhập)",
+                              effect: "Lấy +1 xu từ Kho Bạc",
+                              counter: "✕ Không thể chặn / bắt bài",
+                            },
+                            {
+                              icon: "FOREIGN_AID" as const,
+                              action: "Foreign Aid (Viện Trợ)",
+                              effect: "Lấy +2 xu từ Kho Bạc",
+                              counter: "Bị chặn bởi Duke",
+                            },
+                            {
+                              icon: "COUP" as const,
+                              action: "Coup (Đảo Chính)",
+                              effect:
+                                "Trả 7 xu • Chọn 1 người mất ngay 1 lá bài",
+                              counter: "✕ Không thể chặn / bắt bài",
+                            },
+                          ] as const
+                        ).map((g) => (
+                          <div
+                            key={g.action}
+                            className="grid grid-cols-12 gap-2 px-3.5 py-2.5 items-center text-slate-200"
+                          >
+                            <div className="col-span-3 flex items-center gap-2 text-slate-400 font-mono">
+                              <CoupActionIconCanvas kind={g.icon} size={20} />
+                              <span>— Chung —</span>
+                            </div>
+                            <div className="col-span-3 font-bold text-slate-100">
+                              {g.action}
+                            </div>
+                            <div className="col-span-3 text-slate-300">
+                              {g.effect}
+                            </div>
+                            <div className="col-span-3 text-slate-400">
+                              {g.counter}
                             </div>
                           </div>
-                          <div className="col-span-3 font-bold text-slate-100">
-                            {row.action}
+                        ))}
+
+                        {/* 5 Character Actions */}
+                        {(
+                          [
+                            {
+                              char: "Duke" as const,
+                              badgeBg:
+                                "bg-pink-700/85 border-pink-500/60 text-white",
+                              action: "Tax (Thu Thuế)",
+                              effect: "Lấy +3 xu từ Kho Bạc",
+                              counter: "Chặn Foreign Aid (Viện Trợ)",
+                            },
+                            {
+                              char: "Assassin" as const,
+                              badgeBg:
+                                "bg-slate-700/90 border-slate-500/60 text-white",
+                              action: "Assassinate (Ám Sát)",
+                              effect:
+                                "Trả 3 xu • Chọn 1 người mất 1 lá bài",
+                              counter: "✕ Không có kỹ năng chặn",
+                            },
+                            {
+                              char: "Ambassador" as const,
+                              badgeBg:
+                                "bg-lime-500/85 border-lime-300/70 text-slate-950",
+                              action: "Exchange (Đổi Bài)",
+                              effect:
+                                "Rút 2 lá từ Bộ bài, chọn lá giữ lại rồi trả 2 lá về Bộ bài",
+                              counter: "Chặn Steal (Cướp Xu)",
+                            },
+                            {
+                              char: "Captain" as const,
+                              badgeBg:
+                                "bg-sky-600/85 border-sky-400/60 text-white",
+                              action: "Steal (Cướp Xu)",
+                              effect: "Cướp tối đa 2 xu từ 1 người chơi khác",
+                              counter: "Chặn Steal (Cướp Xu)",
+                            },
+                            {
+                              char: "Contessa" as const,
+                              badgeBg:
+                                "bg-red-700/85 border-red-500/60 text-white",
+                              action: "✕ Không có",
+                              effect: "✕",
+                              counter: "Chặn Assassinate (Ám Sát)",
+                            },
+                          ] as const
+                        ).map((row) => (
+                          <div
+                            key={row.char}
+                            className="grid grid-cols-12 gap-2 px-3.5 py-2.5 items-center"
+                          >
+                            <div className="col-span-3">
+                              <div
+                                className={`inline-flex items-center gap-2 rounded-lg border px-2.5 py-1 font-extrabold ${row.badgeBg}`}
+                              >
+                                <CoupActionIconCanvas kind={row.char} size={20} />
+                                <span>{row.char}</span>
+                              </div>
+                            </div>
+                            <div className="col-span-3 font-bold text-slate-100">
+                              {row.action}
+                            </div>
+                            <div className="col-span-3 text-slate-300">
+                              {row.effect}
+                            </div>
+                            <div className="col-span-3 text-amber-200 font-medium">
+                              {row.counter}
+                            </div>
                           </div>
-                          <div className="col-span-3 text-slate-300">
-                            {row.effect}
-                          </div>
-                          <div className="col-span-3 text-amber-200 font-medium">
-                            {row.counter}
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
 

@@ -3757,21 +3757,22 @@ export function drawCoupCenterTreasuryAndDeck2D(
   centerX: number,
   centerY: number,
   courtDeckCount: number,
-  nowMs: number
+  nowMs: number,
+  scale = 1
 ) {
   ctx.save();
 
   // 1. Left of center: Stacked 2D Court Deck
-  const deckW = 58;
-  const deckH = 80;
-  const deckX = centerX - 114;
+  const deckW = Math.round(58 * scale);
+  const deckH = Math.round(80 * scale);
+  const deckX = centerX - Math.round(114 * scale);
   const deckY = centerY - deckH / 2;
 
   for (let layer = 2; layer >= 0; layer--) {
     drawCoupCard2D(
       ctx,
-      deckX - layer * 2.5,
-      deckY - layer * 2.5,
+      deckX - layer * 2.5 * scale,
+      deckY - layer * 2.5 * scale,
       deckW,
       deckH,
       null,
@@ -3781,7 +3782,15 @@ export function drawCoupCenterTreasuryAndDeck2D(
   }
 
   // Deck count pill
-  drawRoundedRect(ctx, deckX - 8, deckY + deckH + 5, deckW + 16, 18, 9);
+  const pillH = Math.max(15, Math.round(18 * scale));
+  drawRoundedRect(
+    ctx,
+    deckX - 8 * scale,
+    deckY + deckH + 4 * scale,
+    deckW + 16 * scale,
+    pillH,
+    pillH / 2
+  );
   ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
   ctx.fill();
   ctx.strokeStyle = "#38bdf8";
@@ -3789,14 +3798,19 @@ export function drawCoupCenterTreasuryAndDeck2D(
   ctx.stroke();
 
   ctx.fillStyle = "#e0f2fe";
-  ctx.font = "bold 9.5px sans-serif";
+  ctx.font = `bold ${Math.max(8, Math.round(9.5 * scale))}px sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(`Bộ bài: ${courtDeckCount}`, deckX + deckW / 2, deckY + deckH + 14);
+  ctx.fillText(
+    `Bộ bài: ${courtDeckCount}`,
+    deckX + deckW / 2,
+    deckY + deckH + 4 * scale + pillH / 2
+  );
 
   // 2. Right of center: Central Treasury 2D Gold Coin Pile
-  const treasX = centerX + 86;
-  const treasY = centerY + 6;
+  const treasX = centerX + Math.round(86 * scale);
+  const treasY = centerY + Math.round(6 * scale);
+  const coinR = Math.max(8.5, 13 * scale);
   const coinOffsets: [number, number][] = [
     [-16, 7],
     [14, 9],
@@ -3808,17 +3822,30 @@ export function drawCoupCenterTreasuryAndDeck2D(
     [7, -14],
   ];
   for (const [ox, oy] of coinOffsets) {
-    drawCoupCoin2D(ctx, treasX + ox, treasY + oy, 13);
+    drawCoupCoin2D(
+      ctx,
+      treasX + ox * scale,
+      treasY + oy * scale,
+      coinR
+    );
   }
 
   // Subtle shimmer pulse on top coin
   const pulse = 0.5 + 0.5 * Math.sin(nowMs / 260);
   ctx.fillStyle = `rgba(254, 249, 195, ${0.25 * pulse})`;
   ctx.beginPath();
-  ctx.arc(treasX, treasY - 8, 16, 0, Math.PI * 2);
+  ctx.arc(treasX, treasY - 8 * scale, 16 * scale, 0, Math.PI * 2);
   ctx.fill();
 
-  drawRoundedRect(ctx, treasX - 34, deckY + deckH + 5, 68, 18, 9);
+  const treasPillW = Math.round(68 * scale);
+  drawRoundedRect(
+    ctx,
+    treasX - treasPillW / 2,
+    deckY + deckH + 4 * scale,
+    treasPillW,
+    pillH,
+    pillH / 2
+  );
   ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
   ctx.fill();
   ctx.strokeStyle = "#f59e0b";
@@ -3826,10 +3853,14 @@ export function drawCoupCenterTreasuryAndDeck2D(
   ctx.stroke();
 
   ctx.fillStyle = "#fde047";
-  ctx.font = "bold 9.5px sans-serif";
+  ctx.font = `bold ${Math.max(8, Math.round(9.5 * scale))}px sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("Kho Bạc", treasX, deckY + deckH + 14);
+  ctx.fillText(
+    "Kho Bạc",
+    treasX,
+    deckY + deckH + 4 * scale + pillH / 2
+  );
 
   ctx.restore();
 }

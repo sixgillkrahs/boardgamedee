@@ -221,8 +221,8 @@ export function CoupCanvas({
       if (!parent) return;
       const rect = parent.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = Math.max(320, Math.floor(rect.width * dpr));
-      canvas.height = Math.max(460, Math.floor(rect.height * dpr));
+      canvas.width = Math.max(300, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(380, Math.floor(rect.height * dpr));
     };
 
     resize();
@@ -238,6 +238,11 @@ export function CoupCanvas({
       const dpr = window.devicePixelRatio || 1;
       const width = canvas.width / dpr;
       const height = canvas.height / dpr;
+      const isCompact = width < 560 || height < 480;
+      const uiScale = Math.max(
+        0.58,
+        Math.min(1.06, Math.min(width / 940, height / 620))
+      );
 
       const {
         mode: curMode,
@@ -253,9 +258,15 @@ export function CoupCanvas({
       ctx.scale(dpr, dpr);
 
       const centerX = width * 0.5;
-      const centerY = height * 0.47;
-      const tableRx = Math.min(width * 0.39, 510);
-      const tableRy = Math.min(height * 0.36, 330);
+      const centerY = isCompact ? height * 0.42 : height * 0.46;
+      const tableRx = Math.max(
+        108,
+        Math.min(width * (isCompact ? 0.35 : 0.39), 510)
+      );
+      const tableRy = Math.max(
+        78,
+        Math.min(height * (isCompact ? 0.28 : 0.35), 330)
+      );
 
       // 1 & 2. 2D Dystopian Universe Megacity Skyline Backdrop & High-Council Command Table
       drawCoupDystopianBackgroundAndTable2D(
@@ -292,11 +303,12 @@ export function CoupCanvas({
         centerX,
         centerY,
         pv?.courtDeckCount ?? 15,
-        now
+        now,
+        uiScale
       );
 
       // Central Phase Timer Ring
-      const timerR = 42;
+      const timerR = Math.round(42 * uiScale);
       ctx.save();
       ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
       ctx.beginPath();
@@ -489,11 +501,11 @@ export function CoupCanvas({
           ? (now - dealStartRef.current) / 1000
           : 999;
 
-      const cardW = width < 560 ? 46 : width < 960 ? 58 : 68;
-      const cardH = width < 560 ? 64 : width < 960 ? 82 : 96;
-      const deckOriginX = centerX - 88;
+      const cardW = Math.round(66 * uiScale);
+      const cardH = Math.round(92 * uiScale);
+      const deckOriginX = centerX - Math.round(88 * uiScale);
       const deckOriginY = centerY;
-      const treasOriginX = centerX + 86;
+      const treasOriginX = centerX + Math.round(86 * uiScale);
       const treasOriginY = centerY;
 
       seatsToRender.forEach((seat, seatIdx) => {
@@ -506,8 +518,8 @@ export function CoupCanvas({
           curMode === "match" &&
           pv?.pendingAction?.targetSeatNo === seat.seatNo;
 
-        const stationW = cardW * 2 + 54;
-        const stationH = cardH + 36;
+        const stationW = cardW * 2 + Math.round(52 * uiScale);
+        const stationH = cardH + Math.round(36 * uiScale);
 
         newHitRegions.push({
           id: `seat-${seat.seatNo}`,
@@ -588,9 +600,15 @@ export function CoupCanvas({
         }
 
         // Draw the Seat's 2D Gold Coin Stack right beside their 2 Influence Cards
-        const coinStackX = pos.x + cardW + 20;
-        const coinStackY = pos.y + 6;
-        drawCoupCoinStack2D(ctx, coinStackX, coinStackY, seat.coins, 12);
+        const coinStackX = pos.x + cardW + Math.round(18 * uiScale);
+        const coinStackY = pos.y + Math.round(5 * uiScale);
+        drawCoupCoinStack2D(
+          ctx,
+          coinStackX,
+          coinStackY,
+          seat.coins,
+          Math.max(8, Math.round(12 * uiScale))
+        );
 
         // Name Plate below the 2 cards
         const nameText = isMe
@@ -1013,13 +1031,13 @@ export function CoupCanvas({
       if (curMode === "match" && pv && curViewerSeatNo !== null) {
         const mySeat = pv.seats.find((s) => s.seatNo === curViewerSeatNo);
         if (mySeat) {
-          const bigW = width < 560 ? 74 : 98;
-          const bigH = width < 560 ? 104 : 138;
-          const dockPad = 10;
+          const bigW = width < 480 ? 52 : width < 768 ? 68 : 92;
+          const bigH = width < 480 ? 74 : width < 768 ? 96 : 130;
+          const dockPad = width < 480 ? 7 : 10;
           const dockW = bigW * 2 + dockPad * 3;
-          const dockH = bigH + 34;
-          const dockX = 14;
-          const dockY = height - dockH - 14;
+          const dockH = bigH + (width < 480 ? 26 : 34);
+          const dockX = width < 480 ? 8 : 14;
+          const dockY = height - dockH - (width < 480 ? 8 : 14);
 
           newHitRegions.push({
             id: "my-hand-dock",
@@ -1041,7 +1059,7 @@ export function CoupCanvas({
           ctx.stroke();
 
           ctx.fillStyle = "#e2e8f0";
-          ctx.font = "bold 10.5px sans-serif";
+          ctx.font = `bold ${width < 480 ? 9 : 10.5}px sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText(
@@ -1049,12 +1067,12 @@ export function CoupCanvas({
               ? "2 LÁ BÀI CỦA BẠN (Chạm để úp)"
               : "2 LÁ BÀI BÍ MẬT (Chạm để xem)",
             dockX + dockW / 2,
-            dockY + 14
+            dockY + (width < 480 ? 11 : 14)
           );
 
           mySeat.cards.forEach((c, idx) => {
             const cxCard = dockX + dockPad + idx * (bigW + dockPad);
-            const cyCard = dockY + 26;
+            const cyCard = dockY + (width < 480 ? 20 : 26);
             const charToDraw =
               c.revealed || isCardsOpen ? c.character : null;
             drawCoupCard2D(
@@ -1084,8 +1102,8 @@ export function CoupCanvas({
           ctx.fillStyle = "rgba(2, 6, 23, 0.82)";
           ctx.fillRect(0, 0, width, height);
 
-          const modalW = Math.min(width - 24, 380);
-          const modalH = 290;
+          const modalW = Math.min(width - 16, 380);
+          const modalH = Math.min(height - 20, 290);
           const modalX = (width - modalW) / 2;
           const modalY = (height - modalH) / 2;
 
@@ -1099,26 +1117,26 @@ export function CoupCanvas({
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillStyle = "#fca5a5";
-          ctx.font = "bold 13px sans-serif";
+          ctx.font = `bold ${width < 420 ? 11.5 : 13}px sans-serif`;
           ctx.fillText(
             "CHỌN 1 LÁ BÀI QUYỀN LỰC ĐỂ LẬT BỎ",
             centerX,
-            modalY + 28
+            modalY + 26
           );
 
           ctx.fillStyle = "#cbd5e1";
-          ctx.font = "11.5px sans-serif";
+          ctx.font = `${width < 420 ? 10.5 : 11.5}px sans-serif`;
           ctx.fillText(
             pv.activeLossTarget.reasonVi,
             centerX,
-            modalY + 50
+            modalY + 46
           );
 
-          const bigW = 104;
-          const bigH = 144;
-          const gap = 28;
+          const bigW = Math.min(104, Math.floor((modalW - 56) / 2));
+          const bigH = Math.round(bigW * 1.38);
+          const gap = Math.min(28, Math.max(12, modalW - bigW * 2 - 28));
           const startX = centerX - (bigW * 2 + gap) / 2;
-          const cardY = modalY + 74;
+          const cardY = modalY + 68;
 
           mySeat.cards.forEach((card, idx) => {
             const cxCard = startX + idx * (bigW + gap);
@@ -1174,8 +1192,8 @@ export function CoupCanvas({
 
         const pool = pv.exchangePool;
         const keepCount = pv.exchangeKeepCount;
-        const modalW = Math.min(width - 20, 510);
-        const modalH = 336;
+        const modalW = Math.min(width - 14, 510);
+        const modalH = Math.min(height - 16, 336);
         const modalX = (width - modalW) / 2;
         const modalY = (height - modalH) / 2;
 
@@ -1194,27 +1212,30 @@ export function CoupCanvas({
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillStyle = "#d9f99d";
-        ctx.font = "bold 13px sans-serif";
+        ctx.font = `bold ${width < 440 ? 11.5 : 13}px sans-serif`;
         ctx.fillText(
           `🔄 ĐẠI SỨ ĐỔI BÀI • CHỌN GIỮ LẠI ĐÚNG ${keepCount} LÁ BÀI`,
           centerX,
-          modalY + 26
+          modalY + 24
         );
 
         ctx.fillStyle = "#94a3b8";
-        ctx.font = "11px sans-serif";
+        ctx.font = `${width < 440 ? 9.5 : 11}px sans-serif`;
         ctx.fillText(
           "Chạm vào lá bài để chuyển đổi giữa [Giữ trên tay] và [Trả về Bộ bài]",
           centerX,
-          modalY + 45
+          modalY + 43
         );
 
-        const cW = width < 520 ? 74 : 92;
-        const cH = width < 520 ? 106 : 128;
-        const gap = 16;
+        const gap = width < 440 ? 8 : 16;
+        const maxCardW = Math.floor(
+          (modalW - 24 - (pool.length - 1) * gap) / Math.max(1, pool.length)
+        );
+        const cW = Math.max(54, Math.min(92, maxCardW));
+        const cH = Math.round(cW * 1.4);
         const totalRowW = pool.length * cW + (pool.length - 1) * gap;
         const startX = centerX - totalRowW / 2;
-        const baseCardY = modalY + 76;
+        const baseCardY = modalY + 72;
 
         // Origin point at top-center of modal for initial card deal & flip
         const dealFromX = centerX - cW / 2;
@@ -1413,7 +1434,7 @@ export function CoupCanvas({
   };
 
   return (
-    <div className="relative w-full h-full min-h-[640px] select-none overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl">
+    <div className="relative w-full h-full min-h-[380px] sm:min-h-[500px] lg:min-h-[620px] select-none overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl">
       <canvas
         ref={canvasRef}
         onMouseMove={handleMouseMove}
