@@ -686,6 +686,13 @@ export function WerewolfCanvas({
       const cardSize = width < 520 ? 54 : 66;
       let allCardsDealt = true;
 
+      const isBodyguardTurn =
+        curMode === "match" &&
+        pv?.step === "NightActionStep" &&
+        pv?.myAlive &&
+        pv?.myRole === "Bodyguard" &&
+        !pv?.hasSubmittedCurrentStep;
+
       seatsToRender.forEach((seat, seatIdx) => {
         const pos = seatPositions.get(seat.seatNo)!;
         const isMe = seat.seatNo === curViewerSeatNo;
@@ -695,6 +702,13 @@ export function WerewolfCanvas({
           pv?.step === "WitchStep" &&
           pv?.witchState?.pendingWolfVictimSeatNo === seat.seatNo;
 
+        const isLastNightProtected =
+          isBodyguardTurn && seat.seatNo === pv?.lastProtectedSeatNo;
+        const canBodyguardProtect =
+          isBodyguardTurn && seat.alive && !isLastNightProtected;
+        const isDimmedByBodyguardRule =
+          isBodyguardTurn && !canBodyguardProtect;
+
         newHitRegions.push({
           id: `seat-${seat.seatNo}`,
           shape: "rect",
@@ -702,8 +716,12 @@ export function WerewolfCanvas({
           y: pos.y - cardSize * 0.6,
           width: cardSize * 1.2,
           height: cardSize * 1.4,
-          cursor: "pointer",
-          data: { type: "seat", seatNo: seat.seatNo },
+          cursor: isDimmedByBodyguardRule ? "not-allowed" : "pointer",
+          data: {
+            type: "seat",
+            seatNo: seat.seatNo,
+            disabled: isDimmedByBodyguardRule,
+          },
         });
 
         ctx.save();
@@ -729,7 +747,7 @@ export function WerewolfCanvas({
           cardScale = deal.scale;
         }
 
-        // Outer halo for viewer / selected / witch victim
+        // Outer halo for viewer / selected / witch victim / protectable targets during Bodyguard turn
         if (isSelected || isWolfVictimForWitch) {
           const pulse = 1 + Math.sin(now / 160) * 0.1;
           ctx.strokeStyle = isWolfVictimForWitch ? "#ef4444" : "#fbbf24";
@@ -743,7 +761,25 @@ export function WerewolfCanvas({
             10
           );
           ctx.stroke();
-        } else if (isMe) {
+        } else if (canBodyguardProtect) {
+          // Bright glowing emerald-green aura around every Seat the Bodyguard CAN protect tonight!
+          const pulse = 1 + Math.sin(now / 220) * 0.05;
+          ctx.save();
+          ctx.shadowColor = "rgba(16, 185, 129, 0.9)";
+          ctx.shadowBlur = 14;
+          ctx.strokeStyle = "#34d399";
+          ctx.lineWidth = 2.8;
+          drawRoundedRect(
+            ctx,
+            pos.x - (cardSize * 0.55) * pulse,
+            pos.y - (cardSize * 0.55) * pulse,
+            cardSize * 1.1 * pulse,
+            cardSize * 1.1 * pulse,
+            10
+          );
+          ctx.stroke();
+          ctx.restore();
+        } else if (isMe && !isDimmedByBodyguardRule) {
           ctx.strokeStyle = "rgba(56, 189, 248, 0.75)";
           ctx.lineWidth = 2.5;
           drawRoundedRect(
@@ -768,8 +804,8 @@ export function WerewolfCanvas({
           ctx.translate(cardCenterX, cardCenterY);
           ctx.rotate(cardRot);
           ctx.scale(cardScale, cardScale);
-          if (!seat.alive) {
-            ctx.globalAlpha = 0.45;
+          if (!seat.alive || isDimmedByBodyguardRule) {
+            ctx.globalAlpha = isDimmedByBodyguardRule ? 0.24 : 0.45;
           }
           drawRoleSquareCard(
             ctx,
@@ -779,6 +815,18 @@ export function WerewolfCanvas({
             visibleRoleForCard,
             false
           );
+          if (isDimmedByBodyguardRule) {
+            drawRoundedRect(
+              ctx,
+              -cardSize / 2,
+              -cardSize / 2,
+              cardSize,
+              cardSize,
+              Math.max(4, cardSize * 0.07)
+            );
+            ctx.fillStyle = "rgba(2, 6, 23, 0.6)";
+            ctx.fill();
+          }
           ctx.restore();
 
           if (!seat.alive) {
@@ -972,7 +1020,10 @@ export function WerewolfCanvas({
         // Status subtitle (includes live Werewolf teammate vote & Day vote choice!)
         let subLabel: string | null = null;
         let subColor = "#94a3b8";
-        if (isWolfVictimForWitch) {
+        if (isLastNightProtected && seat.alive) {
+          subLabel = "🛡️ Đã bảo vệ đêm qua";
+          subColor = "#64748b";
+        } else if (isWolfVictimForWitch) {
           subLabel = "⚠️ Bị Sói cắn!";
           subColor = "#fca5a5";
         } else if (
@@ -1503,6 +1554,7 @@ export function WerewolfCanvas({
     } else if (region.data.type === "dismiss-exec-alert") {
       execAlertDismissedRef.current = true;
     } else if (region.data.type === "seat") {
+      if (region.data.disabled) return;
       stateRef.current.onSelectSeat(region.data.seatNo);
     } else if (region.data.type === "role-card") {
       stateRef.current.onToggleRoleCard();
