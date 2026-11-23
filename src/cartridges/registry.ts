@@ -88,6 +88,7 @@ export function listCartridges(): CatalogEntry[] {
       available: true,
       badgeVi: "Đang mở • Pixel 2D",
       accentColor: "#10b981",
+      coverImage: "/covers/splendor-pixel.png",
     },
     {
       cartridgeId: splendorDuelCartridge.cartridgeId,
