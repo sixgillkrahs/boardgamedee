@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import {
+  canvasFont,
   drawRoundedRect,
   findHitRegionAtPoint,
   ParticleSystem,
@@ -377,15 +378,15 @@ function drawDuelLobbyScene(
   ctx.save();
   const compact = width < 580;
 
-  // Title Banner
+  // Title Banner (VT323 16-bit Pixel Font with full Vietnamese support)
   ctx.fillStyle = "#fef08a";
-  ctx.font = `900 ${compact ? 18 : 26}px monospace`;
+  ctx.font = canvasFont(400, compact ? 22 : 30, "pixel");
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("SPLENDOR DUEL — 1v1", width / 2, height * 0.14);
 
   ctx.fillStyle = "#cbd5e1";
-  ctx.font = `600 ${compact ? 11 : 13}px sans-serif`;
+  ctx.font = canvasFont(600, compact ? 11.5 : 13.5, "sans");
   ctx.fillText(
     "Bàn Đá Quý Xoắn Ốc 5×5 • 3 Điều Kiện Chiến Thắng Tức Thì",
     width / 2,
@@ -442,7 +443,7 @@ function drawDuelLobbyScene(
     ctx.stroke();
 
     ctx.fillStyle = idx === 0 ? "#fca5a5" : "#93c5fd";
-    ctx.font = `800 ${compact ? 10 : 12}px monospace`;
+    ctx.font = canvasFont(700, compact ? 10 : 12, "sans");
     ctx.textAlign = "center";
     ctx.fillText(
       idx === 0 ? "GHẾ 1 • ĐI TRƯỚC" : "GHẾ 2 • +1 ĐẶC QUYỀN 📜",
@@ -451,7 +452,7 @@ function drawDuelLobbyScene(
     );
 
     ctx.fillStyle = seat ? "#f8fafc" : "#64748b";
-    ctx.font = `700 ${compact ? 13 : 16}px sans-serif`;
+    ctx.font = canvasFont(700, compact ? 13 : 16, "sans");
     ctx.fillText(
       seat ? `${seat.displayName}${isMe ? " (Bạn)" : ""}` : "Đang chờ đối thủ...",
       bx + boxW / 2,
@@ -459,7 +460,7 @@ function drawDuelLobbyScene(
     );
 
     ctx.fillStyle = "#94a3b8";
-    ctx.font = "11px sans-serif";
+    ctx.font = canvasFont(500, 11.5, "sans");
     ctx.fillText(
       seat ? "Sẵn sàng đối kháng" : "Mời bạn hoặc thêm Bot",
       bx + boxW / 2,
@@ -469,13 +470,13 @@ function drawDuelLobbyScene(
 
   // VS badge between seats
   ctx.fillStyle = "#fde047";
-  ctx.font = `900 ${compact ? 14 : 20}px monospace`;
+  ctx.font = canvasFont(400, compact ? 18 : 24, "pixel");
   ctx.textAlign = "center";
   ctx.fillText("VS", width / 2, boxY + boxH / 2);
 
   // Victory reminder footer
   ctx.fillStyle = "#94a3b8";
-  ctx.font = `600 ${compact ? 10 : 12}px sans-serif`;
+  ctx.font = canvasFont(600, compact ? 10.5 : 12.5, "sans");
   ctx.fillText(
     "Thắng ngay lập tức khi đạt: ★ 20 Điểm  |  👑 10 Vương Miện  |  💎 10 Điểm cùng 1 Màu",
     width / 2,
@@ -526,10 +527,10 @@ function drawDuelMatchScene(
   ctx.stroke();
 
   ctx.fillStyle = "#fde68a";
-  ctx.font = `800 ${compact ? 9 : 10}px monospace`;
+  ctx.font = canvasFont(700, compact ? 10 : 11, "sans");
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  ctx.fillText(`ĐẶC QUYỀN (${pv.privilegeSupply})`, rightHudX + 8, topY + 16);
+  ctx.fillText(`ĐẶC QUYỀN (${pv.privilegeSupply})`, rightHudX + 8, topY + 15);
 
   for (let i = 0; i < 3; i++) {
     const sx = rightHudX + 10 + i * 26;
@@ -545,15 +546,15 @@ function drawDuelMatchScene(
   }
 
   ctx.fillStyle = "#cbd5e1";
-  ctx.font = `700 ${compact ? 9 : 11}px monospace`;
-  ctx.fillText(`🎒 Túi: ${pv.bagCount}`, rightHudX + 8, topY + 56);
+  ctx.font = canvasFont(700, compact ? 10 : 11.5, "sans");
+  ctx.fillText(`🎒 Túi: ${pv.bagCount}`, rightHudX + 8, topY + 57);
 
   if (pv.phaseDeadlineMs && pv.step !== "Finished") {
     const secLeft = Math.max(0, Math.ceil((pv.phaseDeadlineMs - Date.now()) / 1000));
     ctx.fillStyle = secLeft <= 15 ? "#f87171" : "#38bdf8";
-    ctx.font = `900 ${compact ? 11 : 13}px monospace`;
+    ctx.font = canvasFont(400, compact ? 14 : 16, "pixel");
     ctx.textAlign = "right";
-    ctx.fillText(`⏱ ${secLeft}s`, rightHudX + rightHudW - 10, topY + 56);
+    ctx.fillText(`⏱ ${secLeft}s`, rightHudX + rightHudW - 10, topY + 57);
   }
 
   // Top-left/center: 4 Royal Cards (clickable in RoyalPickStep)
@@ -634,7 +635,7 @@ function drawDuelMatchScene(
         : null;
   if (activeBoardHint) {
     ctx.fillStyle = st.privilegeMode ? "#fde047" : "#fbbf24";
-    ctx.font = `700 ${compact ? 9 : 11}px monospace`;
+    ctx.font = canvasFont(700, compact ? 10 : 11.5, "sans");
     ctx.textAlign = "center";
     ctx.fillText(activeBoardHint, boardX + boardSize / 2, boardY - 10);
   }
@@ -782,7 +783,7 @@ function drawDuelMatchScene(
 
     // Header Row: Player Name + 3 Victory Progress Counters + Privileges
     ctx.fillStyle = isActive ? "#fde047" : "#f8fafc";
-    ctx.font = `800 ${compact ? 11 : 13}px sans-serif`;
+    ctx.font = canvasFont(700, compact ? 11.5 : 13.5, "sans");
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     ctx.fillText(
@@ -794,7 +795,7 @@ function drawDuelMatchScene(
 
     // 3 Victory Condition Meters on top-right
     ctx.textAlign = "right";
-    ctx.font = `800 ${compact ? 9 : 11}px monospace`;
+    ctx.font = canvasFont(700, compact ? 9.5 : 11.5, "mono");
     ctx.fillStyle = seat.points >= 20 ? "#4ade80" : "#fde047";
     const statsText = `★${seat.points}/20  👑${seat.crowns}/10  💎${seat.maxSingleColorPoints}/10`;
     ctx.fillText(statsText, sx + seatW - 10, botY + 16);
@@ -802,7 +803,7 @@ function drawDuelMatchScene(
     // Second Row: Privileges + Bag/Token Total + Purchased + Royals
     ctx.textAlign = "left";
     ctx.fillStyle = "#cbd5e1";
-    ctx.font = `700 ${compact ? 9 : 10}px monospace`;
+    ctx.font = canvasFont(600, compact ? 9.5 : 10.5, "sans");
     ctx.fillText(
       `📜×${seat.privileges}  •  Xu: ${seat.totalTokens}/10  •  Thẻ: ${seat.purchasedCount}  •  Hoàng gia: ${seat.royals.length}`,
       sx + 10,
@@ -830,14 +831,14 @@ function drawDuelMatchScene(
 
       // Held tokens count
       ctx.fillStyle = tokQty > 0 ? "#ffffff" : "#64748b";
-      ctx.font = `900 ${compact ? 10 : 12}px monospace`;
+      ctx.font = canvasFont(800, compact ? 10.5 : 12.5, "mono");
       ctx.textAlign = "center";
       ctx.fillText(String(tokQty), cx, colStartY + 30);
 
       // Bonus & Color Points underneath (for standard gems)
       if (isStandard) {
         ctx.fillStyle = bonus > 0 ? "#4ade80" : "#475569";
-        ctx.font = `700 ${compact ? 8 : 9}px monospace`;
+        ctx.font = canvasFont(700, compact ? 8.5 : 9.5, "mono");
         ctx.fillText(
           colPts > 0 ? `+${bonus} ★${colPts}` : `+${bonus}`,
           cx,
@@ -845,7 +846,7 @@ function drawDuelMatchScene(
         );
       } else {
         ctx.fillStyle = col === "pearl" ? "#f9a8d4" : "#fde047";
-        ctx.font = `700 ${compact ? 8 : 9}px monospace`;
+        ctx.font = canvasFont(700, compact ? 8.5 : 9.5, "sans");
         ctx.fillText(col === "pearl" ? "Trai" : "Vàng", cx, colStartY + 44);
       }
     });
@@ -854,7 +855,7 @@ function drawDuelMatchScene(
     const resY = botY + 104;
     ctx.textAlign = "left";
     ctx.fillStyle = "#94a3b8";
-    ctx.font = `700 ${compact ? 9 : 10}px sans-serif`;
+    ctx.font = canvasFont(700, compact ? 9.5 : 10.5, "sans");
     ctx.fillText(`Đặt cọc (${seat.reservedCards.length}/3):`, sx + 10, resY + 11);
 
     seat.reservedCards.forEach((rc, rIdx) => {
@@ -886,7 +887,7 @@ function drawDuelMatchScene(
       ctx.stroke();
 
       ctx.fillStyle = "#f8fafc";
-      ctx.font = `700 ${compact ? 8 : 9}px monospace`;
+      ctx.font = canvasFont(700, compact ? 8.5 : 9.5, "mono");
       ctx.textAlign = "center";
       const label = rc.card
         ? `C${rc.tier} ★${rc.card.points}${rc.card.crowns ? "👑" : ""}`
@@ -930,11 +931,11 @@ function drawDuelMatchScene(
 
       drawDuelPixelTokenIcon2D(ctx, bx + btnW / 2, by + 28, 28, gem);
       ctx.fillStyle = "#f8fafc";
-      ctx.font = "800 10px sans-serif";
+      ctx.font = canvasFont(700, 10.5, "sans");
       ctx.textAlign = "center";
       ctx.fillText(DUEL_TOKEN_META[gem].shortVi, bx + btnW / 2, by + 56);
       ctx.fillStyle = "#fde047";
-      ctx.font = "700 10px monospace";
+      ctx.font = canvasFont(700, 10, "mono");
       ctx.fillText(
         `+${viewerSeat.bonuses[gem]} ★${viewerSeat.colorPoints[gem]}`,
         bx + btnW / 2,
@@ -981,7 +982,7 @@ function drawDuelMatchScene(
 
         drawDuelPixelTokenIcon2D(ctx, bx + btnW / 2, by + 28, 28, col);
         ctx.fillStyle = "#ffffff";
-        ctx.font = "800 11px monospace";
+        ctx.font = canvasFont(700, 11.5, "mono");
         ctx.textAlign = "center";
         ctx.fillText(`×${opp.tokens[col]}`, bx + btnW / 2, by + 58);
 
@@ -1014,7 +1015,7 @@ function drawDuelMatchScene(
       const rx = startX + i * (rw + gap);
       drawDuelPixelRoyalCard2D(ctx, rx, ry, rw, rh, royal, true);
       ctx.fillStyle = "#fef08a";
-      ctx.font = "700 10px sans-serif";
+      ctx.font = canvasFont(700, 10.5, "sans");
       ctx.textAlign = "center";
       ctx.fillText(royal.nameVi, rx + rw / 2, ry + rh + 14);
       regions.push({
@@ -1042,7 +1043,7 @@ function drawDuelMatchScene(
     ctx.stroke();
 
     ctx.fillStyle = "#fde047";
-    ctx.font = `900 ${compact ? 16 : 20}px sans-serif`;
+    ctx.font = canvasFont(400, compact ? 19 : 24, "pixel");
     ctx.textAlign = "center";
     ctx.fillText(
       `🏆 ${winner?.displayName ?? "Người chiến thắng"} CHIẾN THẮNG!`,
@@ -1050,7 +1051,7 @@ function drawDuelMatchScene(
       by + 36
     );
     ctx.fillStyle = "#e2e8f0";
-    ctx.font = `600 ${compact ? 11 : 13}px sans-serif`;
+    ctx.font = canvasFont(600, compact ? 11.5 : 13.5, "sans");
     ctx.fillText(pv.winReasonVi ?? "", width / 2, by + 68, boxW - 24);
   }
 
@@ -1082,7 +1083,7 @@ function drawDuelMatchScene(
     ctx.stroke();
 
     ctx.fillStyle = "#fef08a";
-    ctx.font = "700 11px sans-serif";
+    ctx.font = canvasFont(700, 11.5, "sans");
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(pv.lastVisualEffect.bannerVi, width / 2, by + 12, bw - 16);
@@ -1111,7 +1112,7 @@ function drawCanvasModalBackdrop(
   ctx.stroke();
 
   ctx.fillStyle = "#fde047";
-  ctx.font = "800 14px sans-serif";
+  ctx.font = canvasFont(700, 14.5, "sans");
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(title, width / 2, py + 28, panelW - 20);

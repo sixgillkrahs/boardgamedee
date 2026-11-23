@@ -155,3 +155,52 @@ export function drawRoundedRect(
   ctx.arcTo(x, y, x + w, y, radius);
   ctx.closePath();
 }
+
+export type CanvasFontKind = "sans" | "pixel" | "mono";
+
+let cachedCanvasFonts: Record<CanvasFontKind, string> | null = null;
+
+/**
+ * Resolves the real Next.js-loaded Vietnamese-capable 2D game webfonts
+ * (Chakra Petch for crisp 2D UI, VT323 for retro 16-bit Pixel Art titles/HUD,
+ * JetBrains Mono for aligned counters/codes) for use in `ctx.font`.
+ */
+export function getCanvasFontFamilies(): Record<CanvasFontKind, string> {
+  if (cachedCanvasFonts) return cachedCanvasFonts;
+  if (typeof window === "undefined") {
+    return {
+      sans: '"Chakra Petch", sans-serif',
+      pixel: '"VT323", "Chakra Petch", monospace',
+      mono: '"JetBrains Mono", "Chakra Petch", monospace',
+    };
+  }
+  const style = window.getComputedStyle(document.documentElement);
+  const sansVar = style.getPropertyValue("--font-game-sans").trim();
+  const pixelVar = style.getPropertyValue("--font-game-pixel").trim();
+  const monoVar = style.getPropertyValue("--font-game-mono").trim();
+  const resolved: Record<CanvasFontKind, string> = {
+    sans: sansVar ? `${sansVar}, "Chakra Petch", sans-serif` : '"Chakra Petch", sans-serif',
+    pixel: pixelVar ? `${pixelVar}, "VT323", "Chakra Petch", monospace` : '"VT323", "Chakra Petch", monospace',
+    mono: monoVar ? `${monoVar}, "JetBrains Mono", monospace` : '"JetBrains Mono", monospace',
+  };
+  if (sansVar || pixelVar || monoVar) {
+    cachedCanvasFonts = resolved;
+  }
+  return resolved;
+}
+
+/**
+ * Builds a `ctx.font` string using our Vietnamese-ready 2D game fonts.
+ * For `"pixel"` (VT323), scales size slightly (~1.3x) to match visual x-height.
+ */
+export function canvasFont(
+  weight: string | number,
+  sizePx: number,
+  kind: CanvasFontKind = "sans"
+): string {
+  const fams = getCanvasFontFamilies();
+  if (kind === "pixel") {
+    return `400 ${Math.round(sizePx * 1.32)}px ${fams.pixel}`;
+  }
+  return `${weight} ${Math.round(sizePx)}px ${fams[kind]}`;
+}

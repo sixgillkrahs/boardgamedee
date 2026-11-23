@@ -7,8 +7,7 @@ import {
   findHitRegionAtPoint,
   lerp,
   ParticleSystem,
-  type HitRegion,
-} from "@/canvas/engine";
+  type HitRegion, getCanvasFontFamilies } from "@/canvas/engine";
 import {
   drawCoupActionIcon2D,
   drawCoupCard2D,
@@ -356,25 +355,25 @@ export function CoupCanvas({
       ctx.textBaseline = "middle";
       if (curMode === "lobby") {
         ctx.fillStyle = "#fde047";
-        ctx.font = "bold 11px sans-serif";
+        ctx.font = `bold 11px ${getCanvasFontFamilies().sans}`;
         ctx.fillText("SẢNH CHỜ", centerX, centerY - 5);
         ctx.fillStyle = "#cbd5e1";
-        ctx.font = "600 10px sans-serif";
+        ctx.font = `600 10px ${getCanvasFontFamilies().sans}`;
         ctx.fillText(`${curLobbySeats.length}/6`, centerX, centerY + 10);
       } else if (pv?.step === "Finished") {
         ctx.fillStyle = "#fde047";
-        ctx.font = "bold 11px sans-serif";
+        ctx.font = `bold 11px ${getCanvasFontFamilies().sans}`;
         ctx.fillText("THẮNG LỢI", centerX, centerY);
       } else {
         ctx.fillStyle = remSec !== null && remSec <= 4 ? "#fca5a5" : "#f8fafc";
-        ctx.font = "bold 20px sans-serif";
+        ctx.font = `bold 20px ${getCanvasFontFamilies().sans}`;
         ctx.fillText(
           remSec !== null ? `${remSec}s` : "--",
           centerX,
           centerY - 5
         );
         ctx.fillStyle = "#c084fc";
-        ctx.font = "bold 9.5px sans-serif";
+        ctx.font = `bold 9.5px ${getCanvasFontFamilies().sans}`;
         ctx.fillText(`LƯỢT ${pv?.turnNumber ?? 1}`, centerX, centerY + 15);
       }
       ctx.restore();
@@ -428,7 +427,7 @@ export function CoupCanvas({
         ctx.stroke();
 
         ctx.fillStyle = "#f8fafc";
-        ctx.font = "600 12.5px sans-serif";
+        ctx.font = `600 12.5px ${getCanvasFontFamilies().sans}`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(bannerText, width / 2, 30);
@@ -636,7 +635,7 @@ export function CoupCanvas({
             : isMe
               ? "#7dd3fc"
               : "#f8fafc";
-        ctx.font = "bold 11px sans-serif";
+        ctx.font = `bold 11px ${getCanvasFontFamilies().sans}`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(
@@ -693,7 +692,7 @@ export function CoupCanvas({
 
         if (subTag) {
           ctx.fillStyle = subCol;
-          ctx.font = "bold 10px sans-serif";
+          ctx.font = `bold 10px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(subTag, pos.x, plateY + 30);
         }
 
@@ -963,7 +962,7 @@ export function CoupCanvas({
             ctx.stroke();
 
             ctx.fillStyle = "#d9f99d";
-            ctx.font = "bold 10.5px sans-serif";
+            ctx.font = `bold 10.5px ${getCanvasFontFamilies().sans}`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText("🔄 ĐÃ TRÁO BÀI ĐẠI SỨ", deckOriginX, badgeY);
@@ -1059,7 +1058,7 @@ export function CoupCanvas({
           ctx.stroke();
 
           ctx.fillStyle = "#e2e8f0";
-          ctx.font = `bold ${width < 480 ? 9 : 10.5}px sans-serif`;
+          ctx.font = `bold ${width < 480 ? 9 : 10.5}px ${getCanvasFontFamilies().sans}`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText(
@@ -1117,7 +1116,7 @@ export function CoupCanvas({
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillStyle = "#fca5a5";
-          ctx.font = `bold ${width < 420 ? 11.5 : 13}px sans-serif`;
+          ctx.font = `bold ${width < 420 ? 11.5 : 13}px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(
             "CHỌN 1 LÁ BÀI QUYỀN LỰC ĐỂ LẬT BỎ",
             centerX,
@@ -1125,7 +1124,7 @@ export function CoupCanvas({
           );
 
           ctx.fillStyle = "#cbd5e1";
-          ctx.font = `${width < 420 ? 10.5 : 11.5}px sans-serif`;
+          ctx.font = `${width < 420 ? 10.5 : 11.5}px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(
             pv.activeLossTarget.reasonVi,
             centerX,
@@ -1167,7 +1166,7 @@ export function CoupCanvas({
             );
 
             ctx.fillStyle = canPick ? "#fde047" : "#64748b";
-            ctx.font = "bold 11px sans-serif";
+            ctx.font = `bold 11px ${getCanvasFontFamilies().sans}`;
             ctx.fillText(
               canPick ? "Chạm để bỏ lá này" : "Đã mất",
               cxCard + bigW / 2,
@@ -1212,7 +1211,7 @@ export function CoupCanvas({
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillStyle = "#d9f99d";
-        ctx.font = `bold ${width < 440 ? 11.5 : 13}px sans-serif`;
+        ctx.font = `bold ${width < 440 ? 11.5 : 13}px ${getCanvasFontFamilies().sans}`;
         ctx.fillText(
           `🔄 ĐẠI SỨ ĐỔI BÀI • CHỌN GIỮ LẠI ĐÚNG ${keepCount} LÁ BÀI`,
           centerX,
@@ -1220,7 +1219,7 @@ export function CoupCanvas({
         );
 
         ctx.fillStyle = "#94a3b8";
-        ctx.font = `${width < 440 ? 9.5 : 11}px sans-serif`;
+        ctx.font = `${width < 440 ? 9.5 : 11}px ${getCanvasFontFamilies().sans}`;
         ctx.fillText(
           "Chạm vào lá bài để chuyển đổi giữa [Giữ trên tay] và [Trả về Bộ bài]",
           centerX,
@@ -1323,7 +1322,7 @@ export function CoupCanvas({
           ctx.stroke();
 
           ctx.fillStyle = isPicked ? "#ffffff" : "#94a3b8";
-          ctx.font = "bold 10px sans-serif";
+          ctx.font = `bold 10px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(
             isPicked ? "⬆ GIỮ LẠI" : "↩ Trả bộ bài",
             targetX + cW / 2,
@@ -1355,7 +1354,7 @@ export function CoupCanvas({
         ctx.fillStyle = canSubmit ? "#b5db18" : "#334155";
         ctx.fill();
         ctx.fillStyle = canSubmit ? "#1a2e05" : "#94a3b8";
-        ctx.font = "bold 12px sans-serif";
+        ctx.font = `bold 12px ${getCanvasFontFamilies().sans}`;
         ctx.fillText(
           `🔄 XÁC NHẬN ĐỔI BÀI (${curExchangeSel.length}/${keepCount} LÁ)`,
           centerX,

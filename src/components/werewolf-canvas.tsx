@@ -8,8 +8,7 @@ import {
   lerp,
   lerpHexColor,
   ParticleSystem,
-  type HitRegion,
-} from "@/canvas/engine";
+  type HitRegion, getCanvasFontFamilies } from "@/canvas/engine";
 import {
   computeCardDealProgress,
   drawExecutionNooseEffect,
@@ -436,34 +435,34 @@ export function WerewolfCanvas({
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       if (curMode === "lobby") {
-        ctx.font = "24px sans-serif";
+        ctx.font = `24px ${getCanvasFontFamilies().sans}`;
         ctx.fillText("🔥", centerX, centerY - 12);
         ctx.fillStyle = "#f8fafc";
-        ctx.font = "bold 13px sans-serif";
+        ctx.font = `bold 13px ${getCanvasFontFamilies().sans}`;
         ctx.fillText("SẢNH CHỜ", centerX, centerY + 14);
       } else if (pv?.phase === "Finished") {
-        ctx.font = "26px sans-serif";
+        ctx.font = `26px ${getCanvasFontFamilies().sans}`;
         ctx.fillText(
           pv.winningFaction === "VillageFaction" ? "🏆" : "🐺",
           centerX,
           centerY - 10
         );
         ctx.fillStyle = "#fde047";
-        ctx.font = "bold 12px sans-serif";
+        ctx.font = `bold 12px ${getCanvasFontFamilies().sans}`;
         ctx.fillText("KẾT THÚC", centerX, centerY + 16);
       } else {
         ctx.fillStyle =
           remainingSeconds !== null && remainingSeconds <= 5
             ? "#fca5a5"
             : "#f8fafc";
-        ctx.font = "bold 24px sans-serif";
+        ctx.font = `bold 24px ${getCanvasFontFamilies().sans}`;
         ctx.fillText(
           remainingSeconds !== null ? `${remainingSeconds}s` : "--",
           centerX,
           centerY - 6
         );
         ctx.fillStyle = "#94a3b8";
-        ctx.font = "600 11px sans-serif";
+        ctx.font = `600 11px ${getCanvasFontFamilies().sans}`;
         ctx.fillText(`VÒNG ${pv?.cycle ?? 1}`, centerX, centerY + 18);
       }
       ctx.restore();
@@ -505,7 +504,7 @@ export function WerewolfCanvas({
       ctx.stroke();
 
       ctx.fillStyle = "#f8fafc";
-      ctx.font = "600 13px sans-serif";
+      ctx.font = `600 13px ${getCanvasFontFamilies().sans}`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(bannerTitle, width / 2, bannerY + 19);
@@ -871,7 +870,7 @@ export function WerewolfCanvas({
                 nooseProgress
               );
             } else {
-              ctx.font = `${Math.round(cardSize * 0.46)}px sans-serif`;
+              ctx.font = `${Math.round(cardSize * 0.46)}px ${getCanvasFontFamilies().sans}`;
               ctx.textAlign = "center";
               ctx.textBaseline = "middle";
               ctx.fillText("🪦", pos.x, pos.y);
@@ -895,7 +894,7 @@ export function WerewolfCanvas({
 
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.font = `${Math.round(cardSize * 0.45)}px sans-serif`;
+          ctx.font = `${Math.round(cardSize * 0.45)}px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(seat.isBot ? "🤖" : "🧑", pos.x, pos.y);
         }
 
@@ -929,7 +928,7 @@ export function WerewolfCanvas({
           ctx.arc(vX, vY, 12, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = "#ffffff";
-          ctx.font = "bold 11px sans-serif";
+          ctx.font = `bold 11px ${getCanvasFontFamilies().sans}`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText(`${votesAgainst}`, vX, vY + 0.5);
@@ -948,7 +947,7 @@ export function WerewolfCanvas({
           ctx.fillStyle = "rgba(220, 38, 38, 0.92)";
           ctx.fill();
           ctx.fillStyle = "#ffffff";
-          ctx.font = "bold 9.5px sans-serif";
+          ctx.font = `bold 9.5px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(
             tagText.length > 20 ? `${tagText.slice(0, 19)}…` : tagText,
             pos.x,
@@ -972,7 +971,7 @@ export function WerewolfCanvas({
           ctx.lineWidth = 1;
           ctx.stroke();
           ctx.fillStyle = "#fef2f2";
-          ctx.font = "bold 10px sans-serif";
+          ctx.font = `bold 10px ${getCanvasFontFamilies().sans}`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText(
@@ -992,7 +991,7 @@ export function WerewolfCanvas({
             seerResult === "WerewolfFaction" ? "#dc2626" : "#059669";
           ctx.fill();
           ctx.fillStyle = "#ffffff";
-          ctx.font = "bold 9px sans-serif";
+          ctx.font = `bold 9px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(
             seerResult === "WerewolfFaction" ? "SÓI" : "DÂN",
             sX,
@@ -1016,7 +1015,7 @@ export function WerewolfCanvas({
           : isMe
             ? "#7dd3fc"
             : "#f1f5f9";
-        ctx.font = "600 11px sans-serif";
+        ctx.font = `600 11px ${getCanvasFontFamilies().sans}`;
         ctx.fillText(
           labelText.length > 16 ? `${labelText.slice(0, 15)}…` : labelText,
           pos.x,
@@ -1088,7 +1087,7 @@ export function WerewolfCanvas({
 
         if (subLabel) {
           ctx.fillStyle = subColor;
-          ctx.font = "bold 10px sans-serif";
+          ctx.font = `bold 10px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(subLabel, pos.x, plateY + 30);
         }
 
@@ -1143,16 +1142,16 @@ export function WerewolfCanvas({
 
         if (isRoleOpen) {
           ctx.fillStyle = accent;
-          ctx.font = "bold 13px sans-serif";
+          ctx.font = `bold 13px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(roleInfo.nameVi.toUpperCase(), textX, dockY + 21);
 
           ctx.fillStyle = "#cbd5e1";
-          ctx.font = "600 10px sans-serif";
+          ctx.font = `600 10px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(roleInfo.factionNameVi, textX, dockY + 36);
 
           const desc = roleInfo.shortDescriptionVi;
           ctx.fillStyle = "#94a3b8";
-          ctx.font = "10px sans-serif";
+          ctx.font = `10px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(desc.slice(0, 26), textX, dockY + 56);
           if (desc.length > 26) {
             ctx.fillText(
@@ -1163,11 +1162,11 @@ export function WerewolfCanvas({
           }
         } else {
           ctx.fillStyle = "#f8fafc";
-          ctx.font = "bold 12px sans-serif";
+          ctx.font = `bold 12px ${getCanvasFontFamilies().sans}`;
           ctx.fillText("THẺ VAI TRÒ BÍ MẬT", textX, dockY + 34);
 
           ctx.fillStyle = "#38bdf8";
-          ctx.font = "600 11px sans-serif";
+          ctx.font = `600 11px ${getCanvasFontFamilies().sans}`;
           ctx.fillText("Chạm để lật xem thẻ", textX, dockY + 54);
         }
         ctx.restore();
@@ -1208,7 +1207,7 @@ export function WerewolfCanvas({
           ctx.stroke();
 
           ctx.fillStyle = "#fde047";
-          ctx.font = "bold 12px sans-serif";
+          ctx.font = `bold 12px ${getCanvasFontFamilies().sans}`;
           ctx.textAlign = "center";
           ctx.fillText(
             "THẺ VAI TRÒ CỦA BẠN",
@@ -1228,7 +1227,7 @@ export function WerewolfCanvas({
           );
 
           ctx.fillStyle = "#f8fafc";
-          ctx.font = "bold 15px sans-serif";
+          ctx.font = `bold 15px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(
             `${roleInfo.nameVi} • ${roleInfo.factionNameVi}`,
             centerX,
@@ -1236,7 +1235,7 @@ export function WerewolfCanvas({
           );
 
           ctx.fillStyle = "#94a3b8";
-          ctx.font = "11px sans-serif";
+          ctx.font = `11px ${getCanvasFontFamilies().sans}`;
           const line1 = roleInfo.shortDescriptionVi.slice(0, 42);
           const line2 = roleInfo.shortDescriptionVi.slice(42, 88);
           ctx.fillText(line1, centerX, modalY + 278);
@@ -1245,7 +1244,7 @@ export function WerewolfCanvas({
           }
 
           ctx.fillStyle = "#38bdf8";
-          ctx.font = "bold 11px sans-serif";
+          ctx.font = `bold 11px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(
             "Chạm vào thẻ để thu về góc bàn",
             centerX,
@@ -1324,7 +1323,7 @@ export function WerewolfCanvas({
           ctx.textBaseline = "middle";
 
           ctx.fillStyle = "#fca5a5";
-          ctx.font = "bold 12px sans-serif";
+          ctx.font = `bold 12px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(
             `☀️ TRỜI SÁNG • ĐÊM THỨ ${pv.cycle}`,
             centerX,
@@ -1366,7 +1365,7 @@ export function WerewolfCanvas({
               : `🐺 ${victimNames.toUpperCase()} BỊ MA SÓI CẮN!`;
 
           ctx.fillStyle = "#fef2f2";
-          ctx.font = "bold 15px sans-serif";
+          ctx.font = `bold 15px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(headline, centerX, modalY + 242);
 
           const roleSub = primaryVictim.role
@@ -1374,11 +1373,11 @@ export function WerewolfCanvas({
             : "Vai trò vẫn được giữ bí mật";
 
           ctx.fillStyle = "#fda4af";
-          ctx.font = "600 11.5px sans-serif";
+          ctx.font = `600 11.5px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(roleSub, centerX, modalY + 266);
 
           ctx.fillStyle = "#94a3b8";
-          ctx.font = "11px sans-serif";
+          ctx.font = `11px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(
             "Chạm vào thông báo để đóng ngay",
             centerX,
@@ -1453,7 +1452,7 @@ export function WerewolfCanvas({
           ctx.textBaseline = "middle";
 
           ctx.fillStyle = "#fde68a";
-          ctx.font = "bold 12px sans-serif";
+          ctx.font = `bold 12px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(
             "⚖️ PHÁN QUYẾT CỦA DÂN LÀNG",
             centerX,
@@ -1487,7 +1486,7 @@ export function WerewolfCanvas({
           );
 
           ctx.fillStyle = "#fef3c7";
-          ctx.font = "bold 15px sans-serif";
+          ctx.font = `bold 15px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(
             `⚖️ ${executedSeat.displayName.toUpperCase()} ĐÃ BỊ TREO CỔ!`,
             centerX,
@@ -1499,11 +1498,11 @@ export function WerewolfCanvas({
             : "Vai trò vẫn được giữ bí mật";
 
           ctx.fillStyle = "#fbbf24";
-          ctx.font = "600 11.5px sans-serif";
+          ctx.font = `600 11.5px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(roleSub, centerX, modalY + 270);
 
           ctx.fillStyle = "#94a3b8";
-          ctx.font = "11px sans-serif";
+          ctx.font = `11px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(
             "Chạm vào thông báo để đóng ngay",
             centerX,

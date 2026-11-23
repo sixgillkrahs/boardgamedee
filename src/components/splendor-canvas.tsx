@@ -6,8 +6,7 @@ import {
   findHitRegionAtPoint,
   lerp,
   ParticleSystem,
-  type HitRegion,
-} from "@/canvas/engine";
+  type HitRegion, getCanvasFontFamilies } from "@/canvas/engine";
 import {
   drawSplendorPixelBackground2D,
   drawSplendorPixelCard2D,
@@ -241,7 +240,7 @@ export function SplendorCanvas({
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillStyle = "#fde047";
-        ctx.font = `900 ${width < 480 ? 15 : 18}px monospace`;
+        ctx.font = `900 ${width < 480 ? 15 : 18}px ${getCanvasFontFamilies().mono}`;
         ctx.fillText(
           `SẢNH CHỜ SPLENDOR (${curLobbySeats.length}/4)`,
           width / 2,
@@ -268,7 +267,7 @@ export function SplendorCanvas({
           const sy = seatStartY + idx * 24;
           if (sy > boxY + boxH - 14) return;
           ctx.fillStyle = s.seatNo === curViewerSeatNo ? "#6ee7b7" : "#e2e8f0";
-          ctx.font = "bold 12px monospace";
+          ctx.font = `bold 12px ${getCanvasFontFamilies().mono}`;
           ctx.fillText(
             `${s.displayName}${s.seatNo === curViewerSeatNo ? " (Bạn)" : ""}`,
             width / 2,
@@ -379,7 +378,7 @@ export function SplendorCanvas({
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillStyle = pv.finalRoundTriggered ? "#fca5a5" : "#fde047";
-      ctx.font = `bold ${isCompact ? 9 : 10}px monospace`;
+      ctx.font = `bold ${isCompact ? 9 : 10}px ${getCanvasFontFamilies().mono}`;
       ctx.fillText(
         pv.finalRoundTriggered ? "VÒNG CUỐI!" : `VÒNG ${pv.roundNumber}`,
         badgeX + badgeW / 2,
@@ -387,7 +386,7 @@ export function SplendorCanvas({
       );
       ctx.fillStyle =
         remSec !== null && remSec <= 5 ? "#fca5a5" : "#f8fafc";
-      ctx.font = `900 ${isCompact ? 14 : 16}px monospace`;
+      ctx.font = `900 ${isCompact ? 14 : 16}px ${getCanvasFontFamilies().mono}`;
       ctx.fillText(
         pv.step === "Finished" ? "XONG" : remSec !== null ? `${remSec}s` : "--",
         badgeX + badgeW / 2,
@@ -534,7 +533,7 @@ export function SplendorCanvas({
           ctx.fillStyle = "#fde047";
           ctx.fill();
           ctx.fillStyle = "#0f172a";
-          ctx.font = "900 10px monospace";
+          ctx.font = `900 10px ${getCanvasFontFamilies().mono}`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText(`+${selCount}`, supplyCenterX - tokenR + 6, ty - tokenR + 4);
@@ -586,7 +585,7 @@ export function SplendorCanvas({
           : isMe
             ? "#7dd3fc"
             : "#f8fafc";
-        ctx.font = `bold ${isCompact ? 10 : 11.5}px sans-serif`;
+        ctx.font = `bold ${isCompact ? 10 : 11.5}px ${getCanvasFontFamilies().sans}`;
         const label = isMe ? `${seat.displayName} (Bạn)` : seat.displayName;
         ctx.fillText(
           label.length > 14 ? `${label.slice(0, 13)}…` : label,
@@ -596,7 +595,7 @@ export function SplendorCanvas({
 
         ctx.textAlign = "right";
         ctx.fillStyle = "#fde047";
-        ctx.font = `900 ${isCompact ? 11 : 13}px monospace`;
+        ctx.font = `900 ${isCompact ? 11 : 13}px ${getCanvasFontFamilies().mono}`;
         ctx.fillText(
           `★${seat.points}/${pv.targetPoints}`,
           bx + singleBenchW - 8,
@@ -630,7 +629,7 @@ export function SplendorCanvas({
               sqS
             );
             ctx.fillStyle = bonusQty > 0 ? gMeta.textHex : "#64748b";
-            ctx.font = `900 ${isCompact ? 9 : 10}px monospace`;
+            ctx.font = `900 ${isCompact ? 9 : 10}px ${getCanvasFontFamilies().mono}`;
             ctx.textAlign = "center";
             ctx.fillText(
               String(bonusQty),
@@ -651,7 +650,7 @@ export function SplendorCanvas({
           ctx.stroke();
 
           ctx.fillStyle = tokQty > 0 ? gMeta.textHex : "#475569";
-          ctx.font = `900 ${isCompact ? 8.5 : 10}px monospace`;
+          ctx.font = `900 ${isCompact ? 8.5 : 10}px ${getCanvasFontFamilies().mono}`;
           ctx.textAlign = "center";
           ctx.fillText(String(tokQty), cxItem, cyTok + 0.5);
         });
@@ -659,7 +658,7 @@ export function SplendorCanvas({
         // Bottom row of bench: Token total, Nobles count & Clickable Reserved Cards badges
         ctx.textAlign = "left";
         ctx.fillStyle = seat.totalTokens > 10 ? "#fca5a5" : "#94a3b8";
-        ctx.font = `bold ${isCompact ? 8.5 : 10}px monospace`;
+        ctx.font = `bold ${isCompact ? 8.5 : 10}px ${getCanvasFontFamilies().mono}`;
         ctx.fillText(
           `Xu:${seat.totalTokens}/10 • Thẻ:${seat.purchasedCount} • 👑${seat.nobles.length}`,
           bx + 8,
@@ -714,7 +713,7 @@ export function SplendorCanvas({
             ctx.fillStyle = rc.card
               ? SPLENDOR_GEM_META[rc.card.bonus].textHex
               : "#e2e8f0";
-            ctx.font = "900 9px monospace";
+            ctx.font = `900 9px ${getCanvasFontFamilies().mono}`;
             ctx.textAlign = "center";
             ctx.fillText(
               rc.card ? `${rc.card.points}` : "?",
@@ -777,7 +776,7 @@ export function SplendorCanvas({
           ctx.stroke();
 
           ctx.fillStyle = "#fde047";
-          ctx.font = "900 13px monospace";
+          ctx.font = `900 13px ${getCanvasFontFamilies().mono}`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText("👑 QUÝ TỘC GHÉ THĂM! +3 ĐIỂM", width / 2, by);
@@ -813,7 +812,7 @@ export function SplendorCanvas({
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillStyle = "#fde047";
-        ctx.font = "900 13px monospace";
+        ctx.font = `900 13px ${getCanvasFontFamilies().mono}`;
         ctx.fillText(
           "👑 CHỌN 1 QUÝ TỘC GHÉ THĂM (+3 ĐIỂM)",
           width / 2,
@@ -841,7 +840,7 @@ export function SplendorCanvas({
           });
           drawSplendorPixelNoble2D(ctx, nx, ny, nSize, n, true);
           ctx.fillStyle = "#e2e8f0";
-          ctx.font = "bold 10px sans-serif";
+          ctx.font = `bold 10px ${getCanvasFontFamilies().sans}`;
           ctx.fillText(n.nameVi, nx + nSize / 2, ny + nSize + 18);
         });
 

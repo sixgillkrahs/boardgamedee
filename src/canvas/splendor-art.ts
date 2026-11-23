@@ -1,4 +1,4 @@
-import { drawRoundedRect } from "@/canvas/engine";
+import { drawRoundedRect, getCanvasFontFamilies } from "@/canvas/engine";
 import {
   DUEL_CARD_ATLAS_RECTS,
   DUEL_TOKEN_ATLAS_RECTS,
@@ -363,7 +363,7 @@ export function drawSplendorPixelGemToken2D(
     ctx.stroke();
 
     ctx.fillStyle = count > 0 ? "#fef08a" : "#fca5a5";
-    ctx.font = `bold ${Math.max(9, Math.round(br * 1.15))}px monospace`;
+    ctx.font = `bold ${Math.max(9, Math.round(br * 1.15))}px ${getCanvasFontFamilies().mono}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(String(count), bx, by + 0.5);
@@ -492,7 +492,7 @@ export function drawSplendorPixelCard2D(
 
   if (card.points > 0) {
     ctx.fillStyle = "#0f172a";
-    ctx.font = `900 ${Math.max(13, Math.round(headerH * 0.78))}px monospace`;
+    ctx.font = `900 ${Math.max(13, Math.round(headerH * 0.78))}px ${getCanvasFontFamilies().mono}`;
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     ctx.fillText(String(card.points), x + Math.max(5, w * 0.1), y + headerH * 0.52);
@@ -527,7 +527,7 @@ export function drawSplendorPixelCard2D(
     ctx.stroke();
 
     ctx.fillStyle = gMeta.textHex;
-    ctx.font = `900 ${Math.max(8.5, Math.round(circleR * 1.25))}px monospace`;
+    ctx.font = `900 ${Math.max(8.5, Math.round(circleR * 1.25))}px ${getCanvasFontFamilies().mono}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(String(card.cost[gem]), cxCost, cyCost + 0.5);
@@ -644,7 +644,7 @@ export function drawSplendorPixelDeck2D(
     ctx.stroke();
 
     ctx.fillStyle = "#fef08a";
-    ctx.font = `900 ${Math.max(9, Math.round(badgeH * 0.72))}px monospace`;
+    ctx.font = `900 ${Math.max(9, Math.round(badgeH * 0.72))}px ${getCanvasFontFamilies().mono}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(String(count), bx + badgeW / 2, by + badgeH / 2 + 0.5);
@@ -670,7 +670,7 @@ export function drawSplendorPixelDeck2D(
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = "#fef08a";
-  ctx.font = `900 ${Math.max(12, Math.round(w * 0.24))}px monospace`;
+  ctx.font = `900 ${Math.max(12, Math.round(w * 0.24))}px ${getCanvasFontFamilies().mono}`;
   ctx.fillText(
     tier === 1 ? "I" : tier === 2 ? "II" : "III",
     x + w / 2,
@@ -686,7 +686,7 @@ export function drawSplendorPixelDeck2D(
   }
 
   ctx.fillStyle = "#e2e8f0";
-  ctx.font = `bold ${Math.max(9.5, Math.round(w * 0.16))}px monospace`;
+  ctx.font = `bold ${Math.max(9.5, Math.round(w * 0.16))}px ${getCanvasFontFamilies().mono}`;
   ctx.fillText(`${count} lá`, x + w / 2, y + h * 0.78);
 
   ctx.restore();
@@ -773,7 +773,7 @@ export function drawSplendorPixelNoble2D(
 
   // Prestige Points `3` at top-left
   ctx.fillStyle = "#0f172a";
-  ctx.font = `900 ${Math.max(12, Math.round(size * 0.26))}px monospace`;
+  ctx.font = `900 ${Math.max(12, Math.round(size * 0.26))}px ${getCanvasFontFamilies().mono}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(String(noble.points), x + stripW / 2, y + size * 0.19);
@@ -793,7 +793,7 @@ export function drawSplendorPixelNoble2D(
     ctx.strokeRect(Math.round(bx), Math.round(by), boxS, boxS);
 
     ctx.fillStyle = gMeta.textHex;
-    ctx.font = `900 ${Math.max(8, Math.round(boxS * 0.78))}px monospace`;
+    ctx.font = `900 ${Math.max(8, Math.round(boxS * 0.78))}px ${getCanvasFontFamilies().mono}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(
