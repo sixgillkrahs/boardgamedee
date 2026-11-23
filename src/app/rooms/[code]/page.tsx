@@ -1329,9 +1329,7 @@ function RoomPageContent({
                         <button
                           type="button"
                           disabled={busy}
-                          onClick={() =>
-                            sendRoomAction({ type: "RESET_TO_LOBBY" })
-                          }
+                          onClick={() => sendRoomAction({ type: "REMATCH" })}
                           className="w-full rounded-xl bg-amber-500 hover:bg-amber-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 transition cursor-pointer"
                         >
                           🔁 Chơi Ván Mới (Về Sảnh)
