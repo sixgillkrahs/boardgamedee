@@ -688,7 +688,7 @@ export function DeadMansDrawCanvas({
         const oppGap = 10;
         const oppCount = Math.max(1, opponents.length);
         const oppW = Math.min(
-          420,
+          oppCount === 1 ? 560 : 420,
           Math.floor((width - 24 - oppGap * (oppCount - 1)) / oppCount)
         );
         const oppStartX =
@@ -1151,54 +1151,70 @@ export function DeadMansDrawCanvas({
               oy + oppH * 0.48
             );
           } else {
-            const availW = oppW - 22;
+            // Smart overflow-proof spread: cards stay crisp & readable, gently overlapping when many suits are owned!
+            const n = ownedSuits.length;
+            const availW = Math.max(60, oppW - 24);
             const gap = 6;
-            const cardW = Math.max(
-              38,
-              Math.min(
-                62,
-                Math.floor((availW - (ownedSuits.length - 1) * gap) / ownedSuits.length)
-              )
-            );
-            const cardH = Math.min(oppH - 38, Math.round(cardW * 1.42));
-            const stripW = ownedSuits.length * cardW + (ownedSuits.length - 1) * gap;
+            const maxCardH = Math.max(54, oppH - 38);
+            const cardW = Math.min(62, Math.round(maxCardH / 1.42), availW);
+            const cardH = Math.min(maxCardH, Math.round(cardW * 1.42));
+            const stepX =
+              n > 1
+                ? Math.min(cardW + gap, Math.max(14, (availW - cardW) / (n - 1)))
+                : 0;
+            const stripW = cardW + stepX * (n - 1);
             const sx0 = ox + (oppW - stripW) / 2;
             const sy0 = oy + 8;
 
+            // Register accurate hit regions (non-last overlapped cards get exact visible slice width)
+            let hoveredIdx = -1;
             ownedSuits.forEach((suit, sIdx) => {
+              const cxCard = sx0 + sIdx * stepX;
+              const regionId = `opp-bank-${opp.seatNo}-${suit}`;
+              if (hoveredIdRef.current === regionId) hoveredIdx = sIdx;
+              const hitW =
+                sIdx === n - 1 ? cardW : Math.min(cardW, Math.max(14, stepX));
+              newHitRegions.push({
+                id: regionId,
+                shape: "rect",
+                x: cxCard,
+                y: sy0,
+                width: hitW,
+                height: cardH,
+                cursor: isOppTargetStep ? "pointer" : "default",
+                data: isOppTargetStep
+                  ? {
+                      type: isCannon ? "cannon-target" : "sword-target",
+                      targetSeatNo: opp.seatNo,
+                      suit,
+                    }
+                  : undefined,
+              });
+            });
+
+            // Draw non-hovered cards first, then pop hovered card to the very front unobstructed!
+            const drawOrder = ownedSuits
+              .map((_, i) => i)
+              .filter((i) => i !== hoveredIdx);
+            if (hoveredIdx >= 0) drawOrder.push(hoveredIdx);
+
+            for (const sIdx of drawOrder) {
+              const suit = ownedSuits[sIdx];
               const stack = opp.bank[suit];
               const topCard = stack[stack.length - 1];
-              const cxCard = sx0 + sIdx * (cardW + gap);
-              const regionId = `opp-bank-${opp.seatNo}-${suit}`;
-              const hovered = hoveredIdRef.current === regionId;
+              const cxCard = sx0 + sIdx * stepX;
+              const hovered = sIdx === hoveredIdx;
               const willBust = isOppTargetStep && isSword && suitsInPlay.has(suit);
-
-              if (isOppTargetStep) {
-                newHitRegions.push({
-                  id: regionId,
-                  shape: "rect",
-                  x: cxCard,
-                  y: sy0,
-                  width: cardW,
-                  height: cardH,
-                  cursor: "pointer",
-                  data: {
-                    type: isCannon ? "cannon-target" : "sword-target",
-                    targetSeatNo: opp.seatNo,
-                    suit,
-                  },
-                });
-              }
 
               drawDmdCard2D(
                 ctx,
                 cxCard,
-                sy0 + (hovered && isOppTargetStep ? 5 : 0),
+                sy0 + (hovered ? (isOppTargetStep ? 7 : 4) : 0),
                 cardW,
                 cardH,
                 topCard,
                 {
-                  highlighted: isOppTargetStep,
+                  highlighted: isOppTargetStep || hovered,
                   bustRisk: willBust,
                   stackCount: stack.length,
                   badgeText:
@@ -1211,7 +1227,7 @@ export function DeadMansDrawCanvas({
                       : undefined,
                 }
               );
-            });
+            }
           }
 
           // Bottom Lip of Opponent Tray (ALWAYS visible even when 70% tucked!): Name + Score + Card Count
@@ -1302,50 +1318,62 @@ export function DeadMansDrawCanvas({
             botY + bottomH * 0.52
           );
         } else {
-          const availW = botW - 28;
+          // Smart overflow-proof spread for your own Pirate Vault too (hover pops any overlapped card to front!)
+          const n = myOwned.length;
+          const availW = Math.max(80, botW - 28);
           const gap = 8;
-          const cardW = Math.max(
-            44,
-            Math.min(
-              74,
-              Math.floor((availW - (myOwned.length - 1) * gap) / myOwned.length)
-            )
-          );
-          const cardH = Math.min(bottomH - 42, Math.round(cardW * 1.42));
-          const stripW = myOwned.length * cardW + (myOwned.length - 1) * gap;
+          const maxCardH = Math.max(60, bottomH - 42);
+          const cardW = Math.min(74, Math.round(maxCardH / 1.42), availW);
+          const cardH = Math.min(maxCardH, Math.round(cardW * 1.42));
+          const stepX =
+            n > 1
+              ? Math.min(cardW + gap, Math.max(18, (availW - cardW) / (n - 1)))
+              : 0;
+          const stripW = cardW + stepX * (n - 1);
           const sx0 = botX + (botW - stripW) / 2;
           const sy0 = botY + 34;
 
+          let hoveredIdx = -1;
           myOwned.forEach((suit, idx) => {
+            const cxCard = sx0 + idx * stepX;
+            const regionId = `my-bank-${suit}`;
+            if (hoveredIdRef.current === regionId) hoveredIdx = idx;
+            const hitW =
+              idx === n - 1 ? cardW : Math.min(cardW, Math.max(18, stepX));
+            newHitRegions.push({
+              id: regionId,
+              shape: "rect",
+              x: cxCard,
+              y: sy0,
+              width: hitW,
+              height: cardH,
+              cursor: isHookStep ? "pointer" : "default",
+              data: isHookStep ? { type: "hook-pick", suit } : undefined,
+            });
+          });
+
+          const drawOrder = myOwned
+            .map((_, i) => i)
+            .filter((i) => i !== hoveredIdx);
+          if (hoveredIdx >= 0) drawOrder.push(hoveredIdx);
+
+          for (const idx of drawOrder) {
+            const suit = myOwned[idx];
             const stack = mySeat.bank[suit];
             const topCard = stack[stack.length - 1];
-            const cxCard = sx0 + idx * (cardW + gap);
-            const regionId = `my-bank-${suit}`;
-            const hov = hoveredIdRef.current === regionId;
+            const cxCard = sx0 + idx * stepX;
+            const hov = idx === hoveredIdx;
             const willBust = isHookStep && suitsInPlay.has(suit);
-
-            if (isHookStep) {
-              newHitRegions.push({
-                id: regionId,
-                shape: "rect",
-                x: cxCard,
-                y: sy0,
-                width: cardW,
-                height: cardH,
-                cursor: "pointer",
-                data: { type: "hook-pick", suit },
-              });
-            }
 
             drawDmdCard2D(
               ctx,
               cxCard,
-              sy0 - (hov && isHookStep ? 6 : 0),
+              sy0 - (hov ? (isHookStep ? 8 : 5) : 0),
               cardW,
               cardH,
               topCard,
               {
-                highlighted: isHookStep,
+                highlighted: isHookStep || hov,
                 bustRisk: willBust,
                 stackCount: stack.length,
                 badgeText:
@@ -1356,7 +1384,7 @@ export function DeadMansDrawCanvas({
                     : undefined,
               }
             );
-          });
+          }
         }
 
         // 4. INTERACTIVE 2D MAP MODAL OVERLAY (MapPickStep)
