@@ -661,13 +661,33 @@ export function DeadMansDrawCanvas({
         );
         const discardY = deckY;
 
+        // Fixed left-anchored Play Area geometry so drawn cards NEVER shift horizontally!
+        const playLeft = deckX + pileW + 26;
+        const playRight = discardX - 20;
+        const playAvailW = Math.max(140, playRight - playLeft);
+        const playMidX = (playLeft + playRight) / 2;
+        const fixedCardH = Math.min(
+          Math.round(arenaH * 0.62),
+          Math.round(Math.min(84, Math.max(54, width * 0.088)) * 1.42)
+        );
+        const fixedCardW = Math.max(50, Math.round(fixedCardH / 1.42));
+        // Reserve room for up to all 10 suits left-to-right without ever shifting earlier cards
+        const fixedStepX = Math.min(
+          fixedCardW + 8,
+          Math.max(26, Math.floor((playAvailW - fixedCardW) / 9))
+        );
+        const playCardY = arenaMidY - fixedCardH / 2 - 4;
+        const nextSlotIdx = Math.min(9, Math.max(0, pv.playArea.length - 1));
+        const activeSlotCenterX =
+          playLeft + nextSlotIdx * fixedStepX + fixedCardW / 2;
+
         layoutAnchorsRef.current = {
           deckX: deckX + pileW / 2,
           deckY: deckY + pileH / 2,
           discardX: discardX + pileW / 2,
           discardY: discardY + pileH / 2,
-          playCenterX: width * 0.5,
-          playCenterY: arenaMidY,
+          playCenterX: activeSlotCenterX,
+          playCenterY: playCardY + fixedCardH / 2,
           seatPos: seatAnchors,
         };
 
@@ -746,12 +766,12 @@ export function DeadMansDrawCanvas({
           ctx.fillText("0", deckX + pileW / 2, deckY + pileH / 2);
         }
 
-        // Private ORACLE PEEK floating card right above/beside the Draw Pile!
+        // Private ORACLE PEEK floating card peeking right off the top of the Draw Pile (never shifts Play Area!)
         if (pv.oraclePeekedCard) {
-          const pw = Math.round(pileW * 0.78);
+          const pw = Math.round(pileW * 0.72);
           const ph = Math.round(pw * 1.42);
-          const px = deckX + pileW + 10;
-          const py = deckY - 6 + Math.sin(now / 280) * 3;
+          const px = deckX + Math.round(pileW * 0.36);
+          const py = deckY - 14 + Math.sin(now / 280) * 2.5;
           const oracleBust = suitsInPlay.has(pv.oraclePeekedCard.suit);
 
           drawDmdCard2D(ctx, px, py, pw, ph, pv.oraclePeekedCard, {
@@ -800,12 +820,7 @@ export function DeadMansDrawCanvas({
           discardY + pileH + 16
         );
 
-        // --- CENTER: ACTIVE PLAY AREA ---
-        const playLeft = deckX + pileW + (pv.oraclePeekedCard ? pileW + 24 : 20);
-        const playRight = discardX - 20;
-        const playAvailW = Math.max(140, playRight - playLeft);
-        const playMidX = (playLeft + playRight) / 2;
-
+        // --- CENTER: ACTIVE PLAY AREA (fixed left-to-right slots, no center re-shifting) ---
         // Top contextual status banner above Play Area
         const statusText =
           pv.step === "Finished"
@@ -848,15 +863,13 @@ export function DeadMansDrawCanvas({
         ctx.fillText(statusText, playMidX, arenaTop + 14, playAvailW + 60);
 
         if (pv.playArea.length === 0) {
-          // Empty center hint frame
-          const ghostW = Math.min(82, Math.round(playAvailW * 0.25));
-          const ghostH = Math.round(ghostW * 1.42);
+          // Empty slot-0 hint frame anchored at playLeft (exact spot where first drawn card lands)
           drawRoundedRect(
             ctx,
-            playMidX - ghostW / 2,
-            arenaMidY - ghostH / 2,
-            ghostW,
-            ghostH,
+            playLeft,
+            playCardY,
+            fixedCardW,
+            fixedCardH,
             10
           );
           ctx.strokeStyle = "rgba(251, 191, 36, 0.26)";
@@ -866,30 +879,21 @@ export function DeadMansDrawCanvas({
           ctx.setLineDash([]);
           ctx.fillStyle = "rgba(251, 191, 36, 0.5)";
           ctx.font = `700 11px ${fonts.sans}`;
-          ctx.fillText("Khu Vực", playMidX, arenaMidY - 8);
-          ctx.fillText("Lật Bài", playMidX, arenaMidY + 8);
-        } else {
-          const n = pv.playArea.length;
-          const cardW = Math.max(
-            52,
-            Math.min(
-              88,
-              Math.floor((playAvailW - Math.max(0, n - 1) * 8) / Math.max(n, 4))
-            )
+          ctx.fillText(
+            "Khu Vực",
+            playLeft + fixedCardW / 2,
+            playCardY + fixedCardH / 2 - 8
           );
-          const cardH = Math.min(Math.round(arenaH * 0.62), Math.round(cardW * 1.42));
-          const stepX =
-            n > 1
-              ? Math.min(cardW + 10, Math.floor((playAvailW - cardW) / (n - 1)))
-              : 0;
-          const totalW = cardW + stepX * (n - 1);
-          const startCardX = playMidX - totalW / 2;
-          const cardY = arenaMidY - cardH / 2 - 4;
-
+          ctx.fillText(
+            "Lật Bài",
+            playLeft + fixedCardW / 2,
+            playCardY + fixedCardH / 2 + 8
+          );
+        } else {
           pv.playArea.forEach((card, idx) => {
-            const cxCard = startCardX + idx * stepX;
+            const cxCard = playLeft + idx * fixedStepX;
             const isProtected = idx < pv.anchorProtectedCount;
-            drawDmdCard2D(ctx, cxCard, cardY, cardW, cardH, card, {
+            drawDmdCard2D(ctx, cxCard, playCardY, fixedCardW, fixedCardH, card, {
               protectedByAnchor: isProtected,
               highlighted:
                 pv.hasKeyAndChestInPlay &&
