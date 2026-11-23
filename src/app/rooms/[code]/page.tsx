@@ -960,8 +960,8 @@ function RoomPageContent({
                             <div className="flex items-start gap-2.5">
                               <DuelCardPreviewCanvas
                                 card={selectedCard}
-                                width={86}
-                                height={122}
+                                width={96}
+                                height={145}
                                 affordable={!!selectedCardPay?.affordable}
                               />
                               <div className="flex-1 min-w-0 space-y-1.5">

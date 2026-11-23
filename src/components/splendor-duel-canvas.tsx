@@ -17,6 +17,7 @@ import {
   drawDuelPixelTokenIcon2D,
   drawDuelSpiralBoard2D,
 } from "@/canvas/splendor-duel-art";
+import { getDuelCardPixelAtlas } from "@/canvas/splendor-duel-atlas";
 import {
   SPLENDOR_GEMS,
   type SplendorCardTier,
@@ -84,8 +85,8 @@ export function DuelTokenIconCanvas({
  */
 export function DuelCardPreviewCanvas({
   card,
-  width = 104,
-  height = 148,
+  width = 96,
+  height = 145,
   affordable = false,
   className = "",
 }: {
@@ -103,24 +104,30 @@ export function DuelCardPreviewCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.round(width * dpr);
-    canvas.height = Math.round(height * dpr);
+    const draw = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
 
-    ctx.save();
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, width, height);
-    drawDuelPixelCard2D(ctx, 2, 2, width - 6, height - 6, card, {
-      affordable,
-      selected: true,
-    });
-    ctx.restore();
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.imageSmoothingEnabled = false;
+      ctx.clearRect(0, 0, width, height);
+      drawDuelPixelCard2D(ctx, 2, 2, width - 6, height - 6, card, {
+        affordable,
+        selected: true,
+      });
+      ctx.restore();
+    };
+
+    draw();
+    getDuelCardPixelAtlas(draw);
   }, [card, width, height, affordable]);
 
   return (
     <canvas
       ref={ref}
-      style={{ width, height }}
+      style={{ width, height, imageRendering: "pixelated" }}
       className={`shrink-0 ${className}`}
     />
   );
@@ -594,8 +601,9 @@ function drawDuelMatchScene(
   const royalAreaW = Math.max(80, rightHudX - royalAreaX - 8);
   const royalCount = Math.max(1, pv.royals.length);
   const royalGap = 6;
-  const royalW = Math.min(62, (royalAreaW - royalGap * (royalCount - 1)) / Math.max(4, royalCount));
-  const royalH = topH - 6;
+  const royalH = topH - 4;
+  const maxRoyalW = (royalAreaW - royalGap * (royalCount - 1)) / Math.max(4, royalCount);
+  const royalW = Math.min(maxRoyalW, Math.round(royalH * 0.662));
   const totalRoyalW = pv.royals.length * royalW + Math.max(0, pv.royals.length - 1) * royalGap;
   const royalStartX = royalAreaX + (royalAreaW - totalRoyalW) / 2;
 
@@ -705,10 +713,10 @@ function drawDuelMatchScene(
   const rowGap = 6;
   const cardGap = compact ? 5 : 8;
   const rowH = Math.floor((midH - rowGap * 2) / 3);
-  // Fit 1 deck + 5 cards horizontally in Tier 1 using authentic ~0.70 card aspect ratio
+  // Fit 1 deck + 5 cards horizontally using exact 90:136 (0.662) pixel-art aspect ratio
   const maxCardW = Math.floor((pyrW - cardGap * 5) / 6);
-  const cardW = Math.max(40, Math.min(maxCardW, Math.floor(rowH * 0.72)));
-  const cardH = Math.max(56, Math.min(rowH, Math.floor(cardW * 1.42)));
+  const cardW = Math.max(40, Math.min(maxCardW, Math.floor(rowH * 0.662)));
+  const cardH = Math.max(60, Math.min(rowH, Math.floor(cardW * 1.511)));
 
   const tiers: SplendorCardTier[] = [3, 2, 1];
   tiers.forEach((tier, rowIdx) => {
@@ -1040,8 +1048,8 @@ function drawDuelMatchScene(
       height,
       "👑 Đạt Mốc Vương Miện! Chọn 1 Thẻ Hoàng Gia"
     );
-    const rw = compact ? 74 : 92;
-    const rh = compact ? 92 : 112;
+    const rw = compact ? 70 : 88;
+    const rh = compact ? 106 : 133;
     const gap = 12;
     const totalW = pv.royals.length * rw + Math.max(0, pv.royals.length - 1) * gap;
     const startX = width / 2 - totalW / 2;

@@ -1,6 +1,10 @@
 import { drawRoundedRect } from "@/canvas/engine";
 import { drawSplendorPixelGemIcon2D } from "@/canvas/splendor-art";
 import {
+  DUEL_CARD_ATLAS_RECTS,
+  getDuelCardPixelAtlas,
+} from "@/canvas/splendor-duel-atlas";
+import {
   DUEL_SPIRAL_ORDER,
   DUEL_TOKEN_META,
   type DuelCardArtVariant,
@@ -2396,17 +2400,67 @@ export function drawDuelPixelCard2D(
   options?: { affordable?: boolean; selected?: boolean }
 ) {
   ctx.save();
-  const radius = Math.max(5, Math.min(w, h) * 0.08);
+  const rx = Math.round(x);
+  const ry = Math.round(y);
+  const rw = Math.round(w);
+  const rh = Math.round(h);
+  const radius = Math.max(4, Math.min(rw, rh) * 0.065);
+
+  // Drop shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.56)";
+  drawRoundedRect(ctx, rx + 2, ry + 3, rw, rh, radius);
+  ctx.fill();
+
+  // Prefer high-detail 16-bit Pixel Art Sprite Atlas (90x136 crisp pixel art per card!)
+  const atlas = getDuelCardPixelAtlas();
+  const spriteRect = DUEL_CARD_ATLAS_RECTS[card.id];
+  if (atlas && spriteRect) {
+    ctx.save();
+    drawRoundedRect(ctx, rx, ry, rw, rh, radius);
+    ctx.clip();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(
+      atlas,
+      spriteRect.sx,
+      spriteRect.sy,
+      spriteRect.sw,
+      spriteRect.sh,
+      rx,
+      ry,
+      rw,
+      rh
+    );
+    ctx.restore();
+
+    // Crisp 16-bit pixel card border + interactive glow
+    drawRoundedRect(ctx, rx, ry, rw, rh, radius);
+    ctx.strokeStyle = options?.selected
+      ? "#fde047"
+      : options?.affordable
+        ? "#4ade80"
+        : "#0f172a";
+    ctx.lineWidth = options?.selected ? 3 : options?.affordable ? 2.4 : 1.6;
+    ctx.stroke();
+
+    if (options?.selected || options?.affordable) {
+      // Crisp 4px pixel corner glints
+      ctx.fillStyle = options.selected ? "#fef08a" : "#86efac";
+      const csz = Math.max(3, Math.round(rw * 0.055));
+      ctx.fillRect(rx + 2, ry + 2, csz, csz);
+      ctx.fillRect(rx + rw - csz - 2, ry + 2, csz, csz);
+      ctx.fillRect(rx + 2, ry + rh - csz - 2, csz, csz);
+      ctx.fillRect(rx + rw - csz - 2, ry + rh - csz - 2, csz, csz);
+    }
+
+    ctx.restore();
+    return;
+  }
+
   const theme = getCardColorTheme(card.bonus);
   const variant = resolveArtVariant(card);
 
-  // Drop shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.52)";
-  drawRoundedRect(ctx, x + 2, y + 3, w, h, radius);
-  ctx.fill();
-
   ctx.save();
-  drawRoundedRect(ctx, x, y, w, h, radius);
+  drawRoundedRect(ctx, rx, ry, rw, rh, radius);
   ctx.clip();
 
   // 1. Full-Bleed Handcrafted 2D Illustration
@@ -3002,15 +3056,49 @@ export function drawDuelPixelRoyalCard2D(
   selectable = false
 ) {
   ctx.save();
-  const radius = Math.max(5, Math.min(w, h) * 0.09);
+  const rx = Math.round(x);
+  const ry = Math.round(y);
+  const rw = Math.round(w);
+  const rh = Math.round(h);
+  const radius = Math.max(4, Math.min(rw, rh) * 0.075);
 
   // Drop shadow
-  ctx.fillStyle = "rgba(0,0,0,0.5)";
-  drawRoundedRect(ctx, x + 2, y + 3, w, h, radius);
+  ctx.fillStyle = "rgba(0,0,0,0.55)";
+  drawRoundedRect(ctx, rx + 2, ry + 3, rw, rh, radius);
   ctx.fill();
 
+  // Prefer high-detail 16-bit Pixel Art Royal Portrait from sprite atlas
+  const atlas = getDuelCardPixelAtlas();
+  const spriteRect = DUEL_CARD_ATLAS_RECTS[royal.id];
+  if (atlas && spriteRect) {
+    ctx.save();
+    drawRoundedRect(ctx, rx, ry, rw, rh, radius);
+    ctx.clip();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(
+      atlas,
+      spriteRect.sx,
+      spriteRect.sy,
+      spriteRect.sw,
+      spriteRect.sh,
+      rx,
+      ry,
+      rw,
+      rh
+    );
+    ctx.restore();
+
+    drawRoundedRect(ctx, rx, ry, rw, rh, radius);
+    ctx.strokeStyle = selectable ? "#fde047" : "#ca8a04";
+    ctx.lineWidth = selectable ? 3 : 1.8;
+    ctx.stroke();
+
+    ctx.restore();
+    return;
+  }
+
   ctx.save();
-  drawRoundedRect(ctx, x, y, w, h, radius);
+  drawRoundedRect(ctx, rx, ry, rw, rh, radius);
   ctx.clip();
 
   // 1. Handcrafted 2D Royal Portrait
