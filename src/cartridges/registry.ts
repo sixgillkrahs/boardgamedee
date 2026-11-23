@@ -75,6 +75,7 @@ export function listCartridges(): CatalogEntry[] {
       available: true,
       badgeVi: "Đang mở • Canvas 2D",
       accentColor: "#a855f7",
+      coverImage: "/covers/coup-pixel.png",
     },
     {
       cartridgeId: splendorCartridge.cartridgeId,
