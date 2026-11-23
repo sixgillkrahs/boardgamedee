@@ -53,12 +53,17 @@ export function DeadMansDrawCanvas({
   const particlesRef = useRef<ParticleSystem>(new ParticleSystem());
   const fxRef = useRef<DmdFxEngine>(new DmdFxEngine());
   const bannersRef = useRef<FloatingBannerFx[]>([]);
+  const inFlightCardRef = useRef<{ cardId: string; untilMs: number } | null>(
+    null
+  );
   const lastAnimIdRef = useRef<number>(0);
   const layoutAnchorsRef = useRef<{
     deckX: number;
     deckY: number;
     discardX: number;
     discardY: number;
+    playLeft: number;
+    stepX: number;
     playLeftX: number;
     playCenterX: number;
     playCenterY: number;
@@ -70,6 +75,8 @@ export function DeadMansDrawCanvas({
     deckY: 260,
     discardX: 740,
     discardY: 260,
+    playLeft: 214,
+    stepX: 60,
     playLeftX: 250,
     playCenterX: 450,
     playCenterY: 260,
@@ -102,23 +109,37 @@ export function DeadMansDrawCanvas({
       const now = performance.now();
       const anchors = layoutAnchorsRef.current;
       const fx = fxRef.current;
+
+      // Compute the EXACT target slot center from the NEW playerView.playArea (never stale previous-frame slot!)
+      const foundIdx =
+        anim.card && playerView?.playArea
+          ? playerView.playArea.findIndex((c) => c.id === anim.card?.id)
+          : -1;
+      const landedIdx =
+        foundIdx >= 0
+          ? foundIdx
+          : Math.max(0, (playerView?.playArea.length ?? 1) - 1);
+      const landedX =
+        anchors.playLeft + landedIdx * anchors.stepX + anchors.cardW / 2;
+      const landedY = anchors.playCenterY;
+
       const actorPt = anchors.seatPos[anim.actorSeatNo] ?? {
-        x: anchors.playCenterX,
-        y: anchors.playCenterY + 140,
+        x: landedX,
+        y: landedY + 140,
       };
       const targetPt =
         anim.targetSeatNo !== undefined
           ? anchors.seatPos[anim.targetSeatNo] ?? {
-              x: anchors.playCenterX,
-              y: anchors.playCenterY - 140,
+              x: landedX,
+              y: landedY - 140,
             }
           : actorPt;
 
       // Helper: trigger suit-specific signature realistic effect when a card lands in Play Area
       const triggerLandedSuitFx = (card: DmdCard | undefined, landDelayMs: number) => {
         if (!card) return;
-        const lx = anchors.playCenterX;
-        const ly = anchors.playCenterY;
+        const lx = landedX;
+        const ly = landedY;
         const t = now + landDelayMs;
 
         if (card.suit === "Anchor") {
@@ -213,13 +234,19 @@ export function DeadMansDrawCanvas({
       };
 
       if (anim.kind === "DRAW" || anim.kind === "ORACLE" || anim.kind === "KRAKEN") {
-        // True 3D flip from Draw Pile card back -> revealed treasure card!
+        // True 3D flip from Draw Pile card back -> exact new Play Area slot!
+        if (anim.card) {
+          inFlightCardRef.current = {
+            cardId: anim.card.id,
+            untilMs: now + 390,
+          };
+        }
         fx.flyingCards.push({
           card: anim.card ?? null,
           fromX: anchors.deckX,
           fromY: anchors.deckY,
-          toX: anchors.playCenterX,
-          toY: anchors.playCenterY,
+          toX: landedX,
+          toY: landedY,
           startMs: now,
           durationMs: 400,
           w: anchors.cardW,
@@ -227,14 +254,14 @@ export function DeadMansDrawCanvas({
           flipFromBack: true,
           arcHeight: 46,
         });
-        triggerLandedSuitFx(anim.card, 240);
+        triggerLandedSuitFx(anim.card, 260);
       } else if (anim.kind === "BANK" || anim.kind === "CHEST_KEY") {
         const count = Math.min(anim.count ?? 3, 7);
         for (let i = 0; i < count; i++) {
           fx.flyingCards.push({
             card: null,
-            fromX: anchors.playLeftX + i * 38,
-            fromY: anchors.playCenterY,
+            fromX: anchors.playLeft + i * anchors.stepX + anchors.cardW / 2,
+            fromY: landedY,
             toX: actorPt.x,
             toY: actorPt.y,
             startMs: now + i * 55,
@@ -247,7 +274,7 @@ export function DeadMansDrawCanvas({
         // Real gravity-arcing spinning gold pirate doubloons!
         fx.spawnGoldCoins(
           anchors.playCenterX,
-          anchors.playCenterY,
+          landedY,
           actorPt.x,
           actorPt.y,
           anim.kind === "CHEST_KEY" ? 28 : 14
@@ -283,22 +310,24 @@ export function DeadMansDrawCanvas({
           durationMs: 1550,
         });
       } else if (anim.kind === "BUST") {
+        const bustIdx = Math.min(9, Math.max(0, (anim.count ?? 1) - 1));
+        const bustX = anchors.playLeft + bustIdx * anchors.stepX + anchors.cardW / 2;
         fx.triggerShake(now, 12, 460);
-        fx.spawnFireExplosion(anchors.playCenterX, anchors.playCenterY, 34);
+        fx.spawnFireExplosion(bustX, landedY, 34);
         fx.specials.push({
           kind: "bust_vignette",
-          fromX: anchors.playCenterX,
-          fromY: anchors.playCenterY,
-          toX: anchors.playCenterX,
-          toY: anchors.playCenterY,
+          fromX: bustX,
+          fromY: landedY,
+          toX: bustX,
+          toY: landedY,
           startMs: now,
           durationMs: 900,
         });
         // Tumbling shattered bust card flying into Discard Pile
         fx.flyingCards.push({
           card: anim.card ?? null,
-          fromX: anchors.playCenterX,
-          fromY: anchors.playCenterY,
+          fromX: bustX,
+          fromY: landedY,
           toX: anchors.discardX,
           toY: anchors.discardY,
           startMs: now + 60,
@@ -310,10 +339,10 @@ export function DeadMansDrawCanvas({
         });
         if ((anim.savedCount ?? 0) > 0) {
           // Anchor rescued earlier cards with golden-cyan shield sweep into vault!
-          fx.spawnWaterSplash(anchors.playLeftX + 20, anchors.playCenterY, 20, "#38bdf8");
+          fx.spawnWaterSplash(anchors.playLeftX + 20, landedY, 20, "#38bdf8");
           fx.spawnGoldCoins(
             anchors.playLeftX + 24,
-            anchors.playCenterY,
+            landedY,
             actorPt.x,
             actorPt.y,
             12
@@ -325,18 +354,18 @@ export function DeadMansDrawCanvas({
               ? `💥 CHÁY BÀI! ⚓ MỎ NEO CỨU ${anim.savedCount} LÁ!`
               : "💥 CHÁY BÀI! MẤT TRẮNG!",
           color: (anim.savedCount ?? 0) > 0 ? "#7dd3fc" : "#fca5a5",
-          x: anchors.playCenterX,
-          y: anchors.playCenterY - 58,
+          x: bustX,
+          y: landedY - 58,
           startMs: now,
           durationMs: 1700,
         });
       } else if (anim.kind === "CANNON") {
         // Black-powder smoke cloud at launch + arcing heavy iron cannonball + impact detonation!
-        fx.spawnSmokeCloud(anchors.playCenterX, anchors.playCenterY, 12, 42, false);
+        fx.spawnSmokeCloud(landedX, landedY, 12, 42, false);
         fx.specials.push({
           kind: "cannon_shot",
-          fromX: anchors.playCenterX,
-          fromY: anchors.playCenterY,
+          fromX: landedX,
+          fromY: landedY,
           toX: targetPt.x,
           toY: targetPt.y,
           startMs: now,
@@ -365,11 +394,17 @@ export function DeadMansDrawCanvas({
           durationMs: 1400,
         });
       } else if (anim.kind === "SWORD") {
-        // Gleaming curved steel cutlass slash across opponent vault + stolen card arcs to Play Area!
+        // Gleaming curved steel cutlass slash across opponent vault + stolen card arcs to exact slot!
+        if (anim.card) {
+          inFlightCardRef.current = {
+            cardId: anim.card.id,
+            untilMs: now + 540,
+          };
+        }
         fx.specials.push({
           kind: "sword_slash",
-          fromX: anchors.playCenterX,
-          fromY: anchors.playCenterY,
+          fromX: landedX,
+          fromY: landedY,
           toX: targetPt.x,
           toY: targetPt.y,
           startMs: now,
@@ -379,8 +414,8 @@ export function DeadMansDrawCanvas({
           card: anim.card ?? null,
           fromX: targetPt.x,
           fromY: targetPt.y,
-          toX: anchors.playCenterX,
-          toY: anchors.playCenterY,
+          toX: landedX,
+          toY: landedY,
           startMs: now + 130,
           durationMs: 420,
           w: anchors.cardW,
@@ -397,11 +432,17 @@ export function DeadMansDrawCanvas({
           durationMs: 1250,
         });
       } else if (anim.kind === "HOOK") {
-        // Iron chain & grappling hook shoots into player's vault, clinks, and reels card up!
+        // Iron chain & grappling hook shoots into player's vault, clinks, and reels card to exact slot!
+        if (anim.card) {
+          inFlightCardRef.current = {
+            cardId: anim.card.id,
+            untilMs: now + 640,
+          };
+        }
         fx.specials.push({
           kind: "hook_grapple",
-          fromX: anchors.playCenterX,
-          fromY: anchors.playCenterY,
+          fromX: landedX,
+          fromY: landedY,
           toX: actorPt.x,
           toY: actorPt.y,
           startMs: now,
@@ -411,8 +452,8 @@ export function DeadMansDrawCanvas({
           card: anim.card ?? null,
           fromX: actorPt.x,
           fromY: actorPt.y,
-          toX: anchors.playCenterX,
-          toY: anchors.playCenterY,
+          toX: landedX,
+          toY: landedY,
           startMs: now + 240,
           durationMs: 410,
           w: anchors.cardW,
@@ -423,20 +464,26 @@ export function DeadMansDrawCanvas({
         bannersRef.current.push({
           text: "🪝 MÓC SẮT KÉO BÀI!",
           color: "#e2e8f0",
-          x: anchors.playCenterX,
-          y: anchors.playCenterY - 58,
+          x: landedX,
+          y: landedY - 58,
           startMs: now + 220,
           durationMs: 1250,
         });
       } else if (anim.kind === "MAP") {
-        // Glowing red dotted treasure map trail from Discard Pile -> Play Area + bold crimson X!
+        // Glowing red dotted treasure map trail from Discard Pile -> exact new Play Area slot!
+        if (anim.card) {
+          inFlightCardRef.current = {
+            cardId: anim.card.id,
+            untilMs: now + 540,
+          };
+        }
         fx.spawnParchmentDust(anchors.discardX, anchors.discardY, 18, "#fde68a");
         fx.specials.push({
           kind: "map_trail",
           fromX: anchors.discardX,
           fromY: anchors.discardY,
-          toX: anchors.playCenterX,
-          toY: anchors.playCenterY,
+          toX: landedX,
+          toY: landedY,
           startMs: now,
           durationMs: 780,
         });
@@ -444,8 +491,8 @@ export function DeadMansDrawCanvas({
           card: anim.card ?? null,
           fromX: anchors.discardX,
           fromY: anchors.discardY,
-          toX: anchors.playCenterX,
-          toY: anchors.playCenterY,
+          toX: landedX,
+          toY: landedY,
           startMs: now + 110,
           durationMs: 440,
           w: anchors.cardW,
@@ -456,8 +503,8 @@ export function DeadMansDrawCanvas({
         bannersRef.current.push({
           text: "🗺️ ĐÀO KHO TỪ MỘ BÀI!",
           color: "#fde68a",
-          x: anchors.playCenterX,
-          y: anchors.playCenterY - 58,
+          x: landedX,
+          y: landedY - 58,
           startMs: now + 100,
           durationMs: 1250,
         });
@@ -779,6 +826,8 @@ export function DeadMansDrawCanvas({
           deckY: deckY + pileH / 2,
           discardX: discardX + pileW / 2,
           discardY: discardY + pileH / 2,
+          playLeft,
+          stepX: fixedStepX,
           playLeftX: playLeft + fixedCardW / 2,
           playCenterX: activeSlotCenterX,
           playCenterY: playCardY + fixedCardH / 2,
@@ -1023,7 +1072,12 @@ export function DeadMansDrawCanvas({
             ctx.restore();
           }
 
+          const inFlight = inFlightCardRef.current;
           pv.playArea.forEach((card, idx) => {
+            // Hide the static copy of the newly arrived card until its 3D flying animation lands on this exact slot!
+            if (inFlight && inFlight.cardId === card.id && now < inFlight.untilMs) {
+              return;
+            }
             const cxCard = playLeft + idx * fixedStepX;
             const isProtected = idx < pv.anchorProtectedCount;
             drawDmdCard2D(ctx, cxCard, playCardY, fixedCardW, fixedCardH, card, {
