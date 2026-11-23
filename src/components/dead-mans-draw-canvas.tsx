@@ -5,7 +5,6 @@ import {
   drawRoundedRect,
   findHitRegionAtPoint,
   getCanvasFontFamilies,
-  lerp,
   ParticleSystem,
   type HitRegion,
 } from "@/canvas/engine";
@@ -14,9 +13,9 @@ import {
   drawDmdPirateBackground2D,
   getDmdCardPixelAtlas,
 } from "@/canvas/dead-mans-draw-art";
+import { DmdFxEngine } from "@/canvas/dead-mans-draw-fx";
 import {
   DMD_SUITS,
-  DMD_SUIT_META,
   type DmdCard,
   type DmdCommand,
   type DmdPlayerView,
@@ -24,32 +23,11 @@ import {
 } from "@/cartridges/dead-mans-draw";
 import type { LobbySeatItem } from "@/components/werewolf-canvas";
 
-interface FlyingCardFx {
-  card: DmdCard | null;
-  fromX: number;
-  fromY: number;
-  toX: number;
-  toY: number;
-  startMs: number;
-  durationMs: number;
-  w: number;
-  h: number;
-}
-
 interface FloatingBannerFx {
   text: string;
   color: string;
   x: number;
   y: number;
-  startMs: number;
-  durationMs: number;
-}
-
-interface ShockwaveFx {
-  x: number;
-  y: number;
-  maxR: number;
-  color: string;
   startMs: number;
   durationMs: number;
 }
@@ -73,25 +51,30 @@ export function DeadMansDrawCanvas({
   const hitRegionsRef = useRef<HitRegion[]>([]);
   const hoveredIdRef = useRef<string | null>(null);
   const particlesRef = useRef<ParticleSystem>(new ParticleSystem());
-  const flyingCardsRef = useRef<FlyingCardFx[]>([]);
+  const fxRef = useRef<DmdFxEngine>(new DmdFxEngine());
   const bannersRef = useRef<FloatingBannerFx[]>([]);
-  const shockwavesRef = useRef<ShockwaveFx[]>([]);
   const lastAnimIdRef = useRef<number>(0);
   const layoutAnchorsRef = useRef<{
     deckX: number;
     deckY: number;
     discardX: number;
     discardY: number;
+    playLeftX: number;
     playCenterX: number;
     playCenterY: number;
+    cardW: number;
+    cardH: number;
     seatPos: Record<number, { x: number; y: number }>;
   }>({
     deckX: 160,
     deckY: 260,
     discardX: 740,
     discardY: 260,
+    playLeftX: 250,
     playCenterX: 450,
     playCenterY: 260,
+    cardW: 72,
+    cardH: 102,
     seatPos: {},
   });
 
@@ -112,12 +95,13 @@ export function DeadMansDrawCanvas({
       onDispatchCommand,
     };
 
-    // Trigger juicy 60fps 2D pixel animations whenever a new match action arrives
+    // Trigger realistic 60fps 2D physics & suit FX whenever a new match action arrives
     const anim = playerView?.lastAnim;
     if (mode === "match" && anim && anim.id !== lastAnimIdRef.current) {
       lastAnimIdRef.current = anim.id;
       const now = performance.now();
       const anchors = layoutAnchorsRef.current;
+      const fx = fxRef.current;
       const actorPt = anchors.seatPos[anim.actorSeatNo] ?? {
         x: anchors.playCenterX,
         y: anchors.playCenterY + 140,
@@ -130,61 +114,126 @@ export function DeadMansDrawCanvas({
             }
           : actorPt;
 
-      const particles = particlesRef.current;
+      // Helper: trigger suit-specific signature realistic effect when a card lands in Play Area
+      const triggerLandedSuitFx = (card: DmdCard | undefined, landDelayMs: number) => {
+        if (!card) return;
+        const lx = anchors.playCenterX;
+        const ly = anchors.playCenterY;
+        const t = now + landDelayMs;
+
+        if (card.suit === "Anchor") {
+          fx.triggerShake(t, 4.5, 190);
+          fx.spawnWaterSplash(lx, ly + 22, 22, "#7dd3fc");
+          fx.specials.push({
+            kind: "anchor_drop",
+            fromX: lx,
+            fromY: ly,
+            toX: lx,
+            toY: ly,
+            extraX: anchors.playLeftX,
+            startMs: t,
+            durationMs: 760,
+          });
+          bannersRef.current.push({
+            text: "⚓ MỎ NEO BẢO VỆ!",
+            color: "#7dd3fc",
+            x: lx,
+            y: ly - 58,
+            startMs: t,
+            durationMs: 1200,
+          });
+        } else if (card.suit === "Mermaid") {
+          fx.spawnPearlBubbles(lx, ly, 22);
+          fx.spawnWaterSplash(lx, ly + 18, 16, "#5eead4");
+          fx.specials.push({
+            kind: "mermaid_wave",
+            fromX: lx,
+            fromY: ly,
+            toX: lx,
+            toY: ly,
+            startMs: t,
+            durationMs: 820,
+          });
+        } else if (card.suit === "Chest" || card.suit === "Key") {
+          fx.spawnParchmentDust(lx, ly, 18, "#fde047");
+          if (playerView?.hasKeyAndChestInPlay) {
+            fx.specials.push({
+              kind: "chest_key_unlock",
+              fromX: lx,
+              fromY: ly,
+              toX: lx,
+              toY: ly,
+              startMs: t,
+              durationMs: 700,
+            });
+          }
+        } else if (card.suit === "Kraken") {
+          fx.triggerShake(t, 9, 420);
+          fx.spawnWaterSplash(lx, ly + 16, 30, "#fb7185");
+          fx.spawnWaterSplash(anchors.deckX, anchors.deckY + 14, 22, "#67e8f9");
+          fx.specials.push({
+            kind: "kraken_tentacles",
+            fromX: anchors.deckX,
+            fromY: anchors.deckY,
+            toX: lx,
+            toY: ly,
+            startMs: t,
+            durationMs: 1100,
+          });
+          bannersRef.current.push({
+            text: `🐙 KRAKEN! RÚT TIẾP ${anim.count ?? 2} LÁ!`,
+            color: "#fda4af",
+            x: lx,
+            y: ly - 64,
+            startMs: t,
+            durationMs: 1500,
+          });
+        } else if (card.suit === "Oracle") {
+          fx.spawnParchmentDust(anchors.deckX, anchors.deckY, 22, "#d8b4fe");
+          fx.specials.push({
+            kind: "oracle_vision",
+            fromX: lx,
+            fromY: ly,
+            toX: anchors.deckX,
+            toY: anchors.deckY,
+            startMs: t,
+            durationMs: 950,
+          });
+          bannersRef.current.push({
+            text: "🔮 TIÊN TRI SOI BÀI!",
+            color: "#e9d5ff",
+            x: anchors.deckX + 36,
+            y: anchors.deckY - 68,
+            startMs: t,
+            durationMs: 1250,
+          });
+        } else {
+          fx.spawnParchmentDust(lx, ly, 10, "#fde68a");
+        }
+      };
 
       if (anim.kind === "DRAW" || anim.kind === "ORACLE" || anim.kind === "KRAKEN") {
-        flyingCardsRef.current.push({
+        // True 3D flip from Draw Pile card back -> revealed treasure card!
+        fx.flyingCards.push({
           card: anim.card ?? null,
           fromX: anchors.deckX,
           fromY: anchors.deckY,
           toX: anchors.playCenterX,
           toY: anchors.playCenterY,
           startMs: now,
-          durationMs: 360,
-          w: 72,
-          h: 102,
+          durationMs: 400,
+          w: anchors.cardW,
+          h: anchors.cardH,
+          flipFromBack: true,
+          arcHeight: 46,
         });
-        if (anim.kind === "KRAKEN") {
-          shockwavesRef.current.push({
-            x: anchors.playCenterX,
-            y: anchors.playCenterY,
-            maxR: 130,
-            color: "#f43f5e",
-            startMs: now,
-            durationMs: 650,
-          });
-          bannersRef.current.push({
-            text: `🐙 KRAKEN! RÚT TIẾP ${anim.count ?? 2} LÁ!`,
-            color: "#fda4af",
-            x: anchors.playCenterX,
-            y: anchors.playCenterY - 62,
-            startMs: now,
-            durationMs: 1450,
-          });
-        } else if (anim.kind === "ORACLE") {
-          shockwavesRef.current.push({
-            x: anchors.deckX,
-            y: anchors.deckY,
-            maxR: 95,
-            color: "#c084fc",
-            startMs: now,
-            durationMs: 600,
-          });
-          bannersRef.current.push({
-            text: "🔮 TIÊN TRI SOI BÀI!",
-            color: "#e9d5ff",
-            x: anchors.deckX + 40,
-            y: anchors.deckY - 65,
-            startMs: now,
-            durationMs: 1200,
-          });
-        }
+        triggerLandedSuitFx(anim.card, 240);
       } else if (anim.kind === "BANK" || anim.kind === "CHEST_KEY") {
-        const count = Math.min(anim.count ?? 3, 6);
+        const count = Math.min(anim.count ?? 3, 7);
         for (let i = 0; i < count; i++) {
-          flyingCardsRef.current.push({
+          fx.flyingCards.push({
             card: null,
-            fromX: anchors.playCenterX + (i - count / 2) * 30,
+            fromX: anchors.playLeftX + i * 38,
             fromY: anchors.playCenterY,
             toX: actorPt.x,
             toY: actorPt.y,
@@ -192,66 +241,83 @@ export function DeadMansDrawCanvas({
             durationMs: 420,
             w: 58,
             h: 82,
+            arcHeight: 34,
           });
         }
-        for (let i = 0; i < (anim.kind === "CHEST_KEY" ? 36 : 20); i++) {
-          const ang = (Math.PI * 2 * i) / 20 + Math.random() * 0.3;
-          const spd = 45 + Math.random() * 110;
-          particles.spawn({
-            x: actorPt.x,
-            y: actorPt.y,
-            vx: Math.cos(ang) * spd,
-            vy: Math.sin(ang) * spd - 35,
-            radius: 2 + Math.random() * 2.5,
-            color: i % 2 === 0 ? "#fde047" : "#f59e0b",
-            life: 0.9 + Math.random() * 0.5,
-            maxLife: 1.4,
+        // Real gravity-arcing spinning gold pirate doubloons!
+        fx.spawnGoldCoins(
+          anchors.playCenterX,
+          anchors.playCenterY,
+          actorPt.x,
+          actorPt.y,
+          anim.kind === "CHEST_KEY" ? 28 : 14
+        );
+        if (anim.kind === "CHEST_KEY") {
+          fx.triggerShake(now, 5, 240);
+          fx.specials.push({
+            kind: "chest_key_unlock",
+            fromX: anchors.discardX,
+            fromY: anchors.discardY,
+            toX: actorPt.x,
+            toY: actorPt.y,
+            startMs: now,
+            durationMs: 920,
           });
+          fx.spawnGoldCoins(
+            anchors.discardX,
+            anchors.discardY,
+            actorPt.x,
+            actorPt.y,
+            18
+          );
         }
         bannersRef.current.push({
           text:
             anim.kind === "CHEST_KEY"
-              ? `🗝️🧰 COMBO! +${anim.bonusCount ?? 0} LÁ THƯỞNG!`
+              ? `🗝️🧰 COMBO MỞ RƯƠNG! +${anim.bonusCount ?? 0} LÁ THƯỞNG!`
               : `💰 THU ${anim.count ?? 1} LÁ VÀO KHO!`,
           color: "#fde047",
           x: actorPt.x,
-          y: actorPt.y - 34,
+          y: actorPt.y - 38,
           startMs: now,
-          durationMs: 1500,
+          durationMs: 1550,
         });
       } else if (anim.kind === "BUST") {
-        shockwavesRef.current.push({
-          x: anchors.playCenterX,
-          y: anchors.playCenterY,
-          maxR: 165,
-          color: "#ef4444",
+        fx.triggerShake(now, 12, 460);
+        fx.spawnFireExplosion(anchors.playCenterX, anchors.playCenterY, 34);
+        fx.specials.push({
+          kind: "bust_vignette",
+          fromX: anchors.playCenterX,
+          fromY: anchors.playCenterY,
+          toX: anchors.playCenterX,
+          toY: anchors.playCenterY,
           startMs: now,
-          durationMs: 700,
+          durationMs: 900,
         });
-        flyingCardsRef.current.push({
+        // Tumbling shattered bust card flying into Discard Pile
+        fx.flyingCards.push({
           card: anim.card ?? null,
           fromX: anchors.playCenterX,
           fromY: anchors.playCenterY,
           toX: anchors.discardX,
           toY: anchors.discardY,
-          startMs: now,
-          durationMs: 480,
-          w: 72,
-          h: 102,
+          startMs: now + 60,
+          durationMs: 560,
+          w: anchors.cardW,
+          h: anchors.cardH,
+          tumble: true,
+          arcHeight: 62,
         });
-        for (let i = 0; i < 32; i++) {
-          const ang = Math.random() * Math.PI * 2;
-          const spd = 60 + Math.random() * 140;
-          particles.spawn({
-            x: anchors.playCenterX,
-            y: anchors.playCenterY,
-            vx: Math.cos(ang) * spd,
-            vy: Math.sin(ang) * spd,
-            radius: 2.2 + Math.random() * 2.8,
-            color: i % 3 === 0 ? "#fca5a5" : "#ef4444",
-            life: 0.8 + Math.random() * 0.5,
-            maxLife: 1.3,
-          });
+        if ((anim.savedCount ?? 0) > 0) {
+          // Anchor rescued earlier cards with golden-cyan shield sweep into vault!
+          fx.spawnWaterSplash(anchors.playLeftX + 20, anchors.playCenterY, 20, "#38bdf8");
+          fx.spawnGoldCoins(
+            anchors.playLeftX + 24,
+            anchors.playCenterY,
+            actorPt.x,
+            actorPt.y,
+            12
+          );
         }
         bannersRef.current.push({
           text:
@@ -260,119 +326,140 @@ export function DeadMansDrawCanvas({
               : "💥 CHÁY BÀI! MẤT TRẮNG!",
           color: (anim.savedCount ?? 0) > 0 ? "#7dd3fc" : "#fca5a5",
           x: anchors.playCenterX,
-          y: anchors.playCenterY - 56,
+          y: anchors.playCenterY - 58,
           startMs: now,
-          durationMs: 1650,
+          durationMs: 1700,
         });
       } else if (anim.kind === "CANNON") {
-        shockwavesRef.current.push({
-          x: targetPt.x,
-          y: targetPt.y,
-          maxR: 105,
-          color: "#f97316",
+        // Black-powder smoke cloud at launch + arcing heavy iron cannonball + impact detonation!
+        fx.spawnSmokeCloud(anchors.playCenterX, anchors.playCenterY, 12, 42, false);
+        fx.specials.push({
+          kind: "cannon_shot",
+          fromX: anchors.playCenterX,
+          fromY: anchors.playCenterY,
+          toX: targetPt.x,
+          toY: targetPt.y,
           startMs: now,
-          durationMs: 600,
+          durationMs: 820,
         });
-        flyingCardsRef.current.push({
+        // Destroyed opponent card blasts tumbling into Discard Pile right after cannonball hits!
+        fx.flyingCards.push({
           card: anim.card ?? null,
           fromX: targetPt.x,
           fromY: targetPt.y,
           toX: anchors.discardX,
           toY: anchors.discardY,
-          startMs: now,
-          durationMs: 460,
-          w: 60,
-          h: 84,
+          startMs: now + 390,
+          durationMs: 520,
+          w: 62,
+          h: 88,
+          tumble: true,
+          arcHeight: 56,
         });
-        for (let i = 0; i < 24; i++) {
-          const ang = Math.random() * Math.PI * 2;
-          const spd = 50 + Math.random() * 120;
-          particles.spawn({
-            x: targetPt.x,
-            y: targetPt.y,
-            vx: Math.cos(ang) * spd,
-            vy: Math.sin(ang) * spd,
-            radius: 2 + Math.random() * 3,
-            color: i % 2 === 0 ? "#fb923c" : "#fde047",
-            life: 0.7 + Math.random() * 0.4,
-            maxLife: 1.1,
-          });
-        }
         bannersRef.current.push({
           text: "💣 BÙM! ĐẠI BÁC PHÁ KHO!",
           color: "#fdba74",
           x: targetPt.x,
-          y: targetPt.y + 30,
-          startMs: now,
-          durationMs: 1350,
+          y: targetPt.y + 34,
+          startMs: now + 350,
+          durationMs: 1400,
         });
       } else if (anim.kind === "SWORD") {
-        flyingCardsRef.current.push({
+        // Gleaming curved steel cutlass slash across opponent vault + stolen card arcs to Play Area!
+        fx.specials.push({
+          kind: "sword_slash",
+          fromX: anchors.playCenterX,
+          fromY: anchors.playCenterY,
+          toX: targetPt.x,
+          toY: targetPt.y,
+          startMs: now,
+          durationMs: 580,
+        });
+        fx.flyingCards.push({
           card: anim.card ?? null,
           fromX: targetPt.x,
           fromY: targetPt.y,
           toX: anchors.playCenterX,
           toY: anchors.playCenterY,
-          startMs: now,
+          startMs: now + 130,
           durationMs: 420,
-          w: 66,
-          h: 94,
+          w: anchors.cardW,
+          h: anchors.cardH,
+          arcHeight: 44,
         });
-        shockwavesRef.current.push({
-          x: targetPt.x,
-          y: targetPt.y,
-          maxR: 85,
-          color: "#38bdf8",
-          startMs: now,
-          durationMs: 520,
-        });
+        triggerLandedSuitFx(anim.card, 480);
         bannersRef.current.push({
-          text: "⚔️ CƯỚP KHO BÁU!",
+          text: "⚔️ KIẾM CƯỚP KHO BÁU!",
           color: "#93c5fd",
-          x: anchors.playCenterX,
-          y: anchors.playCenterY - 58,
-          startMs: now,
-          durationMs: 1200,
+          x: targetPt.x,
+          y: targetPt.y + 30,
+          startMs: now + 80,
+          durationMs: 1250,
         });
       } else if (anim.kind === "HOOK") {
-        flyingCardsRef.current.push({
+        // Iron chain & grappling hook shoots into player's vault, clinks, and reels card up!
+        fx.specials.push({
+          kind: "hook_grapple",
+          fromX: anchors.playCenterX,
+          fromY: anchors.playCenterY,
+          toX: actorPt.x,
+          toY: actorPt.y,
+          startMs: now,
+          durationMs: 680,
+        });
+        fx.flyingCards.push({
           card: anim.card ?? null,
           fromX: actorPt.x,
           fromY: actorPt.y,
           toX: anchors.playCenterX,
           toY: anchors.playCenterY,
-          startMs: now,
-          durationMs: 400,
-          w: 66,
-          h: 94,
+          startMs: now + 240,
+          durationMs: 410,
+          w: anchors.cardW,
+          h: anchors.cardH,
+          arcHeight: 20,
         });
+        triggerLandedSuitFx(anim.card, 620);
         bannersRef.current.push({
-          text: "🪝 MÓC SẮT KÍCH HOẠT!",
+          text: "🪝 MÓC SẮT KÉO BÀI!",
           color: "#e2e8f0",
           x: anchors.playCenterX,
           y: anchors.playCenterY - 58,
-          startMs: now,
-          durationMs: 1200,
+          startMs: now + 220,
+          durationMs: 1250,
         });
       } else if (anim.kind === "MAP") {
-        flyingCardsRef.current.push({
-          card: anim.card ?? null,
+        // Glowing red dotted treasure map trail from Discard Pile -> Play Area + bold crimson X!
+        fx.spawnParchmentDust(anchors.discardX, anchors.discardY, 18, "#fde68a");
+        fx.specials.push({
+          kind: "map_trail",
           fromX: anchors.discardX,
           fromY: anchors.discardY,
           toX: anchors.playCenterX,
           toY: anchors.playCenterY,
           startMs: now,
-          durationMs: 420,
-          w: 66,
-          h: 94,
+          durationMs: 780,
         });
+        fx.flyingCards.push({
+          card: anim.card ?? null,
+          fromX: anchors.discardX,
+          fromY: anchors.discardY,
+          toX: anchors.playCenterX,
+          toY: anchors.playCenterY,
+          startMs: now + 110,
+          durationMs: 440,
+          w: anchors.cardW,
+          h: anchors.cardH,
+          arcHeight: 48,
+        });
+        triggerLandedSuitFx(anim.card, 500);
         bannersRef.current.push({
           text: "🗺️ ĐÀO KHO TỪ MỘ BÀI!",
           color: "#fde68a",
           x: anchors.playCenterX,
           y: anchors.playCenterY - 58,
-          startMs: now,
-          durationMs: 1200,
+          startMs: now + 100,
+          durationMs: 1250,
         });
       }
     }
@@ -421,6 +508,12 @@ export function DeadMansDrawCanvas({
 
       ctx.save();
       ctx.scale(dpr, dpr);
+
+      // Subtle tactile camera screen-shake on Cannon blasts, Kraken slams, Anchor drops & Busts
+      const shakeOff = fxRef.current.getShakeOffset(now);
+      if (shakeOff.dx !== 0 || shakeOff.dy !== 0) {
+        ctx.translate(shakeOff.dx, shakeOff.dy);
+      }
 
       // 1. Pirate Galleon 16-bit Pixel Background
       drawDmdPirateBackground2D(ctx, width, height, now);
@@ -686,8 +779,11 @@ export function DeadMansDrawCanvas({
           deckY: deckY + pileH / 2,
           discardX: discardX + pileW / 2,
           discardY: discardY + pileH / 2,
+          playLeftX: playLeft + fixedCardW / 2,
           playCenterX: activeSlotCenterX,
           playCenterY: playCardY + fixedCardH / 2,
+          cardW: fixedCardW,
+          cardH: fixedCardH,
           seatPos: seatAnchors,
         };
 
@@ -710,6 +806,24 @@ export function DeadMansDrawCanvas({
             cursor: "pointer",
             data: { type: "draw" },
           });
+        }
+
+        // Live Kraken pulsing crimson abyssal warning ripples around Draw Pile while cursed!
+        if (pv.forcedDrawsRemaining > 0 && pv.drawPileCount > 0) {
+          const rCycle = (now % 1100) / 1100;
+          ctx.save();
+          ctx.strokeStyle = `rgba(244, 63, 94, ${(1 - rCycle) * 0.72})`;
+          ctx.lineWidth = 2.6;
+          ctx.beginPath();
+          ctx.arc(
+            deckX + pileW / 2,
+            deckY + pileH / 2,
+            pileW * 0.45 + rCycle * pileW * 0.55,
+            0,
+            Math.PI * 2
+          );
+          ctx.stroke();
+          ctx.restore();
         }
 
         const deckLayers = Math.min(3, Math.ceil(pv.drawPileCount / 16));
@@ -890,6 +1004,25 @@ export function DeadMansDrawCanvas({
             playCardY + fixedCardH / 2 + 8
           );
         } else {
+          // Live shimmering cyan iron chain linking Anchor to all earlier protected cards
+          if (pv.anchorProtectedCount > 0) {
+            const chainLeft = playLeft + fixedCardW * 0.5;
+            const chainRight =
+              playLeft + pv.anchorProtectedCount * fixedStepX + fixedCardW * 0.5;
+            const chainY = playCardY + fixedCardH + 7;
+            ctx.save();
+            ctx.strokeStyle = "rgba(56, 189, 248, 0.55)";
+            ctx.lineWidth = 2.5;
+            ctx.setLineDash([7, 4]);
+            ctx.lineDashOffset = -(now / 35) % 11;
+            ctx.beginPath();
+            ctx.moveTo(chainLeft, chainY);
+            ctx.lineTo(chainRight, chainY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+          }
+
           pv.playArea.forEach((card, idx) => {
             const cxCard = playLeft + idx * fixedStepX;
             const isProtected = idx < pv.anchorProtectedCount;
@@ -1177,41 +1310,10 @@ export function DeadMansDrawCanvas({
         }
       }
 
-      // 5. Render Active 60fps Action FX (Shockwaves, Flying Cards, Particles, Floating Banners)
-      shockwavesRef.current = shockwavesRef.current.filter((sw) => {
-        const p = (now - sw.startMs) / sw.durationMs;
-        if (p < 0) return true;
-        if (p >= 1) return false;
-        ctx.save();
-        ctx.strokeStyle = sw.color;
-        ctx.globalAlpha = (1 - p) * 0.85;
-        ctx.lineWidth = Math.max(1.5, 6 * (1 - p));
-        ctx.beginPath();
-        ctx.arc(sw.x, sw.y, sw.maxR * p, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.restore();
-        return true;
-      });
-
-      flyingCardsRef.current = flyingCardsRef.current.filter((fc) => {
-        const p = (now - fc.startMs) / fc.durationMs;
-        if (p < 0) return true;
-        if (p >= 1) return false;
-        const ease = 1 - Math.pow(1 - p, 3);
-        const x = lerp(fc.fromX, fc.toX, ease);
-        const y = lerp(fc.fromY, fc.toY, ease) - Math.sin(p * Math.PI) * 34;
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate((1 - ease) * 0.25);
-        drawDmdCard2D(ctx, -fc.w / 2, -fc.h / 2, fc.w, fc.h, fc.card, {
-          highlighted: true,
-        });
-        ctx.restore();
-        return true;
-      });
-
+      // 5. Render Realistic 60fps Suit FX, 3D Flipping Cards, Physics Particles & Floating Banners
       particles.update(dt);
       particles.draw(ctx);
+      fxRef.current.updateAndDraw(ctx, dt, now, width, height);
 
       bannersRef.current = bannersRef.current.filter((bn) => {
         const p = (now - bn.startMs) / bn.durationMs;
