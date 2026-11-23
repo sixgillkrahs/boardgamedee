@@ -19,6 +19,7 @@ import {
   drawDuelSpiralBoard2D,
 } from "@/canvas/splendor-duel-art";
 import {
+  DUEL_CARD_ATLAS_RECTS,
   getDuelCardPixelAtlas,
   getDuelTokenPixelAtlas,
 } from "@/canvas/splendor-duel-atlas";
@@ -30,12 +31,14 @@ import {
 import {
   boardIdx,
   computeDuelCardPayment,
+  DUEL_SPIRAL_ORDER,
   DUEL_TOKEN_COLORS,
   DUEL_TOKEN_META,
   type DuelCommand,
   type DuelJewelCard,
   type DuelPlayerView,
   type DuelTokenColor,
+  type DuelVisualEffect,
 } from "@/cartridges/splendor-duel";
 import type { LobbySeatItem } from "@/components/werewolf-canvas";
 
@@ -156,6 +159,94 @@ interface SplendorDuelCanvasProps {
   onDispatchCommand: (cmd: DuelCommand) => void;
 }
 
+interface FlyingSprite {
+  kind: "token" | "card" | "scroll";
+  tokenColor?: DuelTokenColor;
+  atlasKey?: string;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  arcLift: number;
+  startMs: number;
+  durationMs: number;
+  baseSize: number; // radius for token, width for card, height for scroll
+  peakScale: number;
+  endScale: number;
+  burstColor: string;
+  landed: boolean;
+  targetSeatNo?: number;
+}
+
+interface Shockwave {
+  x: number;
+  y: number;
+  maxR: number;
+  color: string;
+  startMs: number;
+  durationMs: number;
+}
+
+interface FloatingText {
+  x: number;
+  y: number;
+  text: string;
+  color: string;
+  size: number;
+  startMs: number;
+  durationMs: number;
+}
+
+interface DuelAnimStore {
+  lastSeq: number;
+  hoveredHitId: string | null;
+  flyingSprites: FlyingSprite[];
+  shockwaves: Shockwave[];
+  floatingTexts: FloatingText[];
+  spiralWave: { startMs: number; durationMs: number; lastIdx: number } | null;
+  lineFlash: { cells: [number, number][]; startMs: number; durationMs: number } | null;
+  banner: { text: string; startMs: number; durationMs: number } | null;
+  seatPulse: Record<number, { startMs: number; color: string }>;
+}
+
+function createAnimStore(): DuelAnimStore {
+  return {
+    lastSeq: 0,
+    hoveredHitId: null,
+    flyingSprites: [],
+    shockwaves: [],
+    floatingTexts: [],
+    spiralWave: null,
+    lineFlash: null,
+    banner: null,
+    seatPulse: {},
+  };
+}
+
+function emitPixelBurst(
+  particles: ParticleSystem,
+  x: number,
+  y: number,
+  count: number,
+  color: string,
+  speed = 95
+) {
+  for (let i = 0; i < count; i++) {
+    const ang = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.45;
+    const spd = speed * (0.45 + Math.random() * 0.75);
+    particles.spawn({
+      x,
+      y,
+      vx: Math.cos(ang) * spd,
+      vy: Math.sin(ang) * spd - 14,
+      radius: 1.8 + Math.random() * 1.8,
+      color,
+      life: 0.45 + Math.random() * 0.35,
+      maxLife: 0.8,
+    });
+  }
+}
+
 export function SplendorDuelCanvas({
   mode,
   lobbySeats,
@@ -172,9 +263,7 @@ export function SplendorDuelCanvas({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const hitRegionsRef = useRef<HitRegion[]>([]);
   const particlesRef = useRef<ParticleSystem>(new ParticleSystem());
-
-  const lastEffectSeqRef = useRef<number>(0);
-  const effectStartRef = useRef<number | null>(null);
+  const animStoreRef = useRef<DuelAnimStore>(createAnimStore());
 
   const stateRef = useRef({
     mode,
@@ -204,14 +293,6 @@ export function SplendorDuelCanvas({
       onSelectCardOrDeck,
       onDispatchCommand,
     };
-
-    if (
-      playerView?.lastVisualEffect &&
-      playerView.lastVisualEffect.seq !== lastEffectSeqRef.current
-    ) {
-      lastEffectSeqRef.current = playerView.lastVisualEffect.seq;
-      effectStartRef.current = performance.now();
-    }
   }, [
     mode,
     lobbySeats,
@@ -265,7 +346,16 @@ export function SplendorDuelCanvas({
       if (st.mode === "lobby" || !st.playerView) {
         drawDuelLobbyScene(ctx, width, height, st.lobbySeats, st.viewerSeatNo, now);
       } else {
-        drawDuelMatchScene(ctx, width, height, st, regions, now, particlesRef.current);
+        drawDuelMatchScene(
+          ctx,
+          width,
+          height,
+          st,
+          regions,
+          now,
+          particlesRef.current,
+          animStoreRef.current
+        );
       }
 
       // Sparkle particles
@@ -285,6 +375,16 @@ export function SplendorDuelCanvas({
 
       const hit = findHitRegionAtPoint(hitRegionsRef.current, px, py);
       if (!hit) return;
+
+      // Instant tactile click ripple on canvas
+      animStoreRef.current.shockwaves.push({
+        x: px,
+        y: py,
+        maxR: 26,
+        color: "#fde047",
+        startMs: performance.now(),
+        durationMs: 280,
+      });
 
       const st = stateRef.current;
       const d = hit.data as Record<string, any> | undefined;
@@ -346,16 +446,23 @@ export function SplendorDuelCanvas({
       const py = e.clientY - rect.top;
       const hit = findHitRegionAtPoint(hitRegionsRef.current, px, py);
       canvas.style.cursor = hit ? "pointer" : "default";
+      animStoreRef.current.hoveredHitId = hit ? hit.id : null;
+    };
+
+    const handleMouseLeave = () => {
+      animStoreRef.current.hoveredHitId = null;
     };
 
     canvas.addEventListener("click", handleClick);
     canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("mouseleave", handleMouseLeave);
 
     return () => {
       cancelAnimationFrame(animId);
       ro.disconnect();
       canvas.removeEventListener("click", handleClick);
       canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("mouseleave", handleMouseLeave);
     };
   }, []);
 
@@ -500,7 +607,8 @@ function drawDuelMatchScene(
   },
   regions: HitRegion[],
   nowMs: number,
-  particles: ParticleSystem
+  particles: ParticleSystem,
+  anim: DuelAnimStore
 ) {
   const pv = st.playerView;
   if (!pv) return;
@@ -640,8 +748,13 @@ function drawDuelMatchScene(
     ctx.fillText(activeBoardHint, boardX + boardSize / 2, boardY - 10);
   }
 
-  // Register 25 clickable hit regions on the 5x5 board
+  // Register 25 clickable hit regions on the 5x5 board + crisp hover highlight
   const cellS = boardSize / 5;
+  const cellCenter = (r: number, c: number) => ({
+    x: boardX + c * cellS + cellS / 2,
+    y: boardY + r * cellS + cellS / 2,
+  });
+
   if (
     isMyTurn &&
     (pv.step === "TurnActionStep" || pv.step === "TakeMatchingStep")
@@ -650,8 +763,19 @@ function drawDuelMatchScene(
       for (let c = 0; c < 5; c++) {
         const tok = pv.board[boardIdx(r, c)];
         if (!tok) continue;
+        const hitId = `board-${r}-${c}`;
+        if (anim.hoveredHitId === hitId) {
+          const pt = cellCenter(r, c);
+          ctx.save();
+          ctx.strokeStyle = "rgba(254, 240, 138, 0.9)";
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, cellS * 0.43, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
         regions.push({
-          id: `board-${r}-${c}`,
+          id: hitId,
           shape: "rect",
           x: boardX + c * cellS,
           y: boardY + r * cellS,
@@ -674,19 +798,24 @@ function drawDuelMatchScene(
   const cardW = Math.max(40, Math.min(maxCardW, Math.floor(rowH * 0.662)));
   const cardH = Math.max(60, Math.min(rowH, Math.floor(cardW * 1.511)));
 
+  const deckAnchorMap: Record<number, { x: number; y: number }> = {};
+  const pyramidAnchorMap: Record<string, { x: number; y: number }> = {};
+
   const tiers: SplendorCardTier[] = [3, 2, 1];
   tiers.forEach((tier, rowIdx) => {
     const ry = midTop + rowIdx * (rowH + rowGap) + Math.floor((rowH - cardH) / 2);
 
     // Tier Deck on left of row
     const deckX = pyrX;
+    deckAnchorMap[tier] = { x: deckX + cardW / 2, y: ry + cardH / 2 };
     const deckCount = pv.deckCounts[tier];
     const deckSelected =
       st.selection?.kind === "deck" && st.selection.tier === tier;
+    const deckHovered = anim.hoveredHitId === `duel-deck-${tier}`;
     drawSplendorPixelDeck2D(
       ctx,
       deckX,
-      ry,
+      ry - (deckHovered ? 4 : 0),
       cardW,
       cardH,
       tier,
@@ -714,6 +843,10 @@ function drawDuelMatchScene(
 
     slots.forEach((card, slotIdx) => {
       const cx = startSlotX + slotIdx * (cardW + cardGap);
+      pyramidAnchorMap[`${tier}-${slotIdx}`] = {
+        x: cx + cardW / 2,
+        y: ry + cardH / 2,
+      };
       if (!card) {
         drawRoundedRect(ctx, cx, ry, cardW, cardH, 6);
         ctx.fillStyle = "rgba(15, 23, 42, 0.35)";
@@ -731,8 +864,10 @@ function drawDuelMatchScene(
         st.selection?.kind === "pyramid" &&
         st.selection.tier === tier &&
         st.selection.slotIndex === slotIdx;
+      const cardHovered = anim.hoveredHitId === `duel-card-${tier}-${slotIdx}`;
+      const liftY = selected ? -4 : cardHovered ? -5 : 0;
 
-      drawDuelPixelCard2D(ctx, cx, ry, cardW, cardH, card, {
+      drawDuelPixelCard2D(ctx, cx, ry + liftY, cardW, cardH, card, {
         affordable: isMyTurn && affordable,
         selected,
       });
@@ -757,12 +892,16 @@ function drawDuelMatchScene(
   const botY = height - botH - 8;
   const seatGap = 10;
   const seatW = (width - 20 - seatGap) / 2;
+  const seatAnchorMap: Record<number, { x: number; y: number }> = {};
 
   pv.seats.forEach((seat, idx) => {
     const sx = 10 + idx * (seatW + seatGap);
+    seatAnchorMap[seat.seatNo] = { x: sx + seatW / 2, y: botY + botH * 0.45 };
     const isActive = seat.seatNo === pv.activeSeatNo && pv.step !== "Finished";
     const isMe = seat.seatNo === st.viewerSeatNo;
     const isWinner = seat.seatNo === pv.winnerSeatNo;
+    const pulse = anim.seatPulse[seat.seatNo];
+    const pulseT = pulse ? Math.max(0, 1 - (nowMs - pulse.startMs) / 520) : 0;
 
     drawRoundedRect(ctx, sx, botY, seatW, botH, 10);
     ctx.fillStyle = isWinner
@@ -771,14 +910,24 @@ function drawDuelMatchScene(
         ? "rgba(15, 23, 42, 0.9)"
         : "rgba(15, 18, 34, 0.82)";
     ctx.fill();
-    ctx.strokeStyle = isWinner
-      ? "#fde047"
-      : isActive
-        ? "#fbbf24"
-        : isMe
-          ? "#38bdf8"
-          : "#334155";
-    ctx.lineWidth = isActive || isWinner ? 2.4 : 1.4;
+    if (pulseT > 0 && pulse) {
+      ctx.save();
+      ctx.globalAlpha = pulseT * 0.25;
+      ctx.fillStyle = pulse.color;
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.strokeStyle =
+      pulseT > 0 && pulse
+        ? pulse.color
+        : isWinner
+          ? "#fde047"
+          : isActive
+            ? "#fbbf24"
+            : isMe
+              ? "#38bdf8"
+              : "#334155";
+    ctx.lineWidth = pulseT > 0 ? 3.2 : isActive || isWinner ? 2.4 : 1.4;
     ctx.stroke();
 
     // Header Row: Player Name + 3 Victory Progress Counters + Privileges
@@ -1056,37 +1205,726 @@ function drawDuelMatchScene(
   }
 
   // =========================================================================
-  // 5. TRANSIENT VISUAL EFFECT BANNER & SPARKLES
+  // 5. ACTION ANIMATION CHOREOGRAPHY ENGINE (60fps Flying Coins, Cards, Waves)
   // =========================================================================
-  if (pv.lastVisualEffect?.bannerVi) {
-    // Emit gentle sparkle on fresh effect
-    if (Math.random() < 0.08 && pv.step !== "Finished") {
+  if (pv.lastVisualEffect && pv.lastVisualEffect.seq !== anim.lastSeq) {
+    const isFirstSync = anim.lastSeq === 0 && pv.turnNumber > 1;
+    anim.lastSeq = pv.lastVisualEffect.seq;
+    if (!isFirstSync) {
+      triggerDuelVisualEffect(
+        pv.lastVisualEffect,
+        pv,
+        {
+          cellCenter,
+          pyramidAnchorMap,
+          deckAnchorMap,
+          seatAnchorMap,
+          privilegePos: { x: rightHudX + 46, y: topY + 34 },
+          bagPos: { x: rightHudX + 36, y: topY + 57 },
+          royalCenter: { x: royalAreaX + royalAreaW / 2, y: topY + topH / 2 },
+          tokenR: Math.max(11, cellS * 0.37),
+          cardW,
+        },
+        nowMs,
+        particles,
+        anim
+      );
+    }
+  }
+
+  // 5a. Golden Line Flash Beam (TAKE_LINE)
+  if (anim.lineFlash) {
+    const lf = anim.lineFlash;
+    const t = (nowMs - lf.startMs) / lf.durationMs;
+    if (t >= 1) {
+      anim.lineFlash = null;
+    } else if (lf.cells.length >= 1) {
+      const sorted = [...lf.cells].sort((a, b) =>
+        a[0] !== b[0] ? a[0] - b[0] : a[1] - b[1]
+      );
+      const p0 = cellCenter(sorted[0][0], sorted[0][1]);
+      const pEnd = cellCenter(
+        sorted[sorted.length - 1][0],
+        sorted[sorted.length - 1][1]
+      );
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 1 - t);
+      ctx.strokeStyle = "#fef08a";
+      ctx.lineWidth = 6 * (1 - t * 0.5);
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(p0.x, p0.y);
+      ctx.lineTo(pEnd.x, pEnd.y);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // 5b. Outward Golden Spiral Comet Wave (REPLENISH_BOARD)
+  if (anim.spiralWave) {
+    const sw = anim.spiralWave;
+    const t = (nowMs - sw.startMs) / sw.durationMs;
+    if (t >= 1) {
+      anim.spiralWave = null;
+    } else {
+      const headFloat = t * (DUEL_SPIRAL_ORDER.length - 1);
+      const headIdx = Math.min(DUEL_SPIRAL_ORDER.length - 1, Math.floor(headFloat));
+      if (headIdx > sw.lastIdx) {
+        sw.lastIdx = headIdx;
+        const [sr, sc] = DUEL_SPIRAL_ORDER[headIdx];
+        const sp = cellCenter(sr, sc);
+        emitPixelBurst(particles, sp.x, sp.y, 4, "#fde047", 55);
+      }
+      ctx.save();
+      ctx.strokeStyle = `rgba(253, 224, 71, ${0.9 * (1 - t * 0.4)})`;
+      ctx.lineWidth = 3.5;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      const tailStart = Math.max(0, headIdx - 8);
+      for (let i = tailStart; i <= headIdx; i++) {
+        const [r, c] = DUEL_SPIRAL_ORDER[i];
+        const pt = cellCenter(r, c);
+        if (i === tailStart) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
+      }
+      ctx.stroke();
+      const [hr, hc] = DUEL_SPIRAL_ORDER[headIdx];
+      const hpt = cellCenter(hr, hc);
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(hpt.x, hpt.y, 5.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // 5c. Expanding Radiant Shockwaves
+  anim.shockwaves = anim.shockwaves.filter((sw) => {
+    const t = (nowMs - sw.startMs) / sw.durationMs;
+    if (t < 0) return true;
+    if (t >= 1) return false;
+    const eased = 1 - Math.pow(1 - t, 3);
+    ctx.save();
+    ctx.globalAlpha = (1 - t) * 0.85;
+    ctx.strokeStyle = sw.color;
+    ctx.lineWidth = 3 * (1 - t * 0.6);
+    ctx.beginPath();
+    ctx.arc(sw.x, sw.y, sw.maxR * eased, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+    return true;
+  });
+
+  // 5d. Flying 16-bit Pixel Art Coins, Cards & Standing Privilege Scrolls
+  const cardAtlas = getDuelCardPixelAtlas();
+  anim.flyingSprites = anim.flyingSprites.filter((sp) => {
+    const rawT = (nowMs - sp.startMs) / sp.durationMs;
+    if (rawT < 0) return true; // staggered start waiting
+    if (rawT >= 1) {
+      if (!sp.landed) {
+        sp.landed = true;
+        emitPixelBurst(particles, sp.toX, sp.toY, 10, sp.burstColor, 90);
+        anim.shockwaves.push({
+          x: sp.toX,
+          y: sp.toY,
+          maxR: sp.kind === "card" ? 44 : 26,
+          color: sp.burstColor,
+          startMs: nowMs,
+          durationMs: 360,
+        });
+        if (sp.targetSeatNo !== undefined) {
+          anim.seatPulse[sp.targetSeatNo] = {
+            startMs: nowMs,
+            color: sp.burstColor,
+          };
+        }
+      }
+      return false;
+    }
+
+    // Smooth easeInOutCubic along parabolic arc
+    const t =
+      rawT < 0.5
+        ? 4 * rawT * rawT * rawT
+        : 1 - Math.pow(-2 * rawT + 2, 3) / 2;
+    const curX = sp.fromX + (sp.toX - sp.fromX) * t;
+    const arcY = -4 * sp.arcLift * t * (1 - t);
+    const curY = sp.fromY + (sp.toY - sp.fromY) * t + arcY;
+    const scale =
+      t < 0.5
+        ? 1 + (sp.peakScale - 1) * (t * 2)
+        : sp.peakScale + (sp.endScale - sp.peakScale) * ((t - 0.5) * 2);
+
+    // Subtle sparkle trail while flying
+    if (Math.random() < 0.45) {
       particles.spawn({
-        x: boardX + boardSize / 2 + (Math.random() - 0.5) * 80,
-        y: boardY + boardSize / 2,
-        vx: (Math.random() - 0.5) * 28,
-        vy: -18 - Math.random() * 24,
-        radius: 2.2,
-        color: "#fde047",
-        life: 0.9,
-        maxLife: 0.9,
+        x: curX + (Math.random() - 0.5) * 8,
+        y: curY + (Math.random() - 0.5) * 8,
+        vx: (Math.random() - 0.5) * 18,
+        vy: (Math.random() - 0.5) * 18,
+        radius: 1.8,
+        color: sp.burstColor,
+        life: 0.28,
+        maxLife: 0.28,
       });
     }
-    const bw = Math.min(360, width - 40);
-    const bx = width / 2 - bw / 2;
-    const by = midTop - 2;
-    drawRoundedRect(ctx, bx, by, bw, 24, 12);
-    ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
-    ctx.fill();
-    ctx.strokeStyle = "#ca8a04";
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
 
-    ctx.fillStyle = "#fef08a";
-    ctx.font = canvasFont(700, 11.5, "sans");
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    if (sp.kind === "token" && sp.tokenColor) {
+      drawDuelPixelTokenChip2D(
+        ctx,
+        curX,
+        curY,
+        sp.baseSize * scale,
+        sp.tokenColor,
+        true
+      );
+    } else if (sp.kind === "scroll") {
+      const sh = sp.baseSize * scale;
+      const sw = sh * 0.85;
+      drawDuelPixelPrivilegeScroll2D(ctx, curX - sw / 2, curY - sh / 2, sw, sh, true);
+    } else if (sp.kind === "card" && sp.atlasKey && cardAtlas) {
+      const rect = DUEL_CARD_ATLAS_RECTS[sp.atlasKey];
+      if (rect) {
+        const cw = sp.baseSize * scale;
+        const ch = cw * 1.511;
+        // Shadow + golden glow
+        ctx.fillStyle = "rgba(0,0,0,0.45)";
+        drawRoundedRect(ctx, curX - cw / 2 + 4, curY - ch / 2 + 6, cw, ch, 6);
+        ctx.fill();
+        ctx.save();
+        drawRoundedRect(ctx, curX - cw / 2, curY - ch / 2, cw, ch, 6);
+        ctx.clip();
+        ctx.drawImage(
+          cardAtlas,
+          rect.sx,
+          rect.sy,
+          rect.sw,
+          rect.sh,
+          Math.round(curX - cw / 2),
+          Math.round(curY - ch / 2),
+          Math.round(cw),
+          Math.round(ch)
+        );
+        ctx.restore();
+        drawRoundedRect(ctx, curX - cw / 2, curY - ch / 2, cw, ch, 6);
+        ctx.strokeStyle = "#fde047";
+        ctx.lineWidth = 2.6;
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+    return true;
+  });
+
+  // 5e. Floating Pixel Score & Action Popups (+2 ★, +1 👑, 🎯 CƯỚP ĐÁ!)
+  anim.floatingTexts = anim.floatingTexts.filter((ft) => {
+    const t = (nowMs - ft.startMs) / ft.durationMs;
+    if (t < 0) return true;
+    if (t >= 1) return false;
+    const easeOut = 1 - Math.pow(1 - t, 2);
+    const alpha = t > 0.72 ? (1 - t) / 0.28 : 1;
+    const fy = ft.y - easeOut * 44;
+
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+    ctx.font = canvasFont(400, ft.size, "pixel");
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(pv.lastVisualEffect.bannerVi, width / 2, by + 12, bw - 16);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#090d16";
+    ctx.strokeText(ft.text, ft.x, fy);
+    ctx.fillStyle = ft.color;
+    ctx.fillText(ft.text, ft.x, fy);
+    ctx.restore();
+    return true;
+  });
+
+  // 5f. Victory Confetti Fountain
+  if (pv.step === "Finished" && Math.random() < 0.26) {
+    const confColors = ["#fde047", "#4ade80", "#38bdf8", "#f472b6", "#f87171"];
+    particles.spawn({
+      x: width * (0.2 + Math.random() * 0.6),
+      y: midTop + 10,
+      vx: (Math.random() - 0.5) * 70,
+      vy: 35 + Math.random() * 65,
+      radius: 2.5 + Math.random() * 1.8,
+      color: confColors[Math.floor(Math.random() * confColors.length)],
+      life: 1.4,
+      maxLife: 1.4,
+    });
+  }
+
+  // 5g. Smooth Slide-In / Fade-Out Action Toast Banner
+  if (anim.banner) {
+    const b = anim.banner;
+    const elapsed = nowMs - b.startMs;
+    if (elapsed >= b.durationMs) {
+      anim.banner = null;
+    } else {
+      const enterT = Math.min(1, elapsed / 200);
+      const exitT =
+        elapsed > b.durationMs - 450
+          ? Math.max(0, (b.durationMs - elapsed) / 450)
+          : 1;
+      const slideOffset = (1 - Math.pow(1 - enterT, 3)) * 0 + (1 - enterT) * -14;
+
+      const bw = Math.min(360, width - 40);
+      const bx = width / 2 - bw / 2;
+      const by = midTop - 2 + slideOffset;
+      ctx.save();
+      ctx.globalAlpha = enterT * exitT;
+      drawRoundedRect(ctx, bx, by, bw, 25, 12);
+      ctx.fillStyle = "rgba(10, 14, 28, 0.92)";
+      ctx.fill();
+      ctx.strokeStyle = "#eab308";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = "#fef08a";
+      ctx.font = canvasFont(700, 11.5, "sans");
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(b.text, width / 2, by + 12.5, bw - 16);
+      ctx.restore();
+    }
+  }
+}
+
+function triggerDuelVisualEffect(
+  fx: DuelVisualEffect,
+  pv: DuelPlayerView,
+  anchors: {
+    cellCenter: (r: number, c: number) => { x: number; y: number };
+    pyramidAnchorMap: Record<string, { x: number; y: number }>;
+    deckAnchorMap: Record<number, { x: number; y: number }>;
+    seatAnchorMap: Record<number, { x: number; y: number }>;
+    privilegePos: { x: number; y: number };
+    bagPos: { x: number; y: number };
+    royalCenter: { x: number; y: number };
+    tokenR: number;
+    cardW: number;
+  },
+  nowMs: number,
+  particles: ParticleSystem,
+  anim: DuelAnimStore
+) {
+  const actorPt = anchors.seatAnchorMap[fx.seatNo] ?? { x: 200, y: 500 };
+  const oppSeat = pv.seats.find((s) => s.seatNo !== fx.seatNo);
+  const oppPt = oppSeat ? anchors.seatAnchorMap[oppSeat.seatNo] : null;
+
+  if (fx.bannerVi) {
+    anim.banner = { text: fx.bannerVi, startMs: nowMs, durationMs: 2500 };
+  }
+
+  // 1. TAKE_LINE / Take Matching: Golden line flash + staggered flying pixel coins!
+  if (fx.kind === "TAKE_LINE" && fx.cells?.length) {
+    anim.lineFlash = { cells: fx.cells, startMs: nowMs, durationMs: 420 };
+    fx.cells.forEach(([r, c], idx) => {
+      const from = anchors.cellCenter(r, c);
+      const tok = fx.cellTokens?.[idx] ?? "white";
+      const burstCol = DUEL_TOKEN_META[tok].hex;
+      emitPixelBurst(particles, from.x, from.y, 10, burstCol, 85);
+      anim.shockwaves.push({
+        x: from.x,
+        y: from.y,
+        maxR: 28,
+        color: burstCol,
+        startMs: nowMs + idx * 70,
+        durationMs: 360,
+      });
+      anim.flyingSprites.push({
+        kind: "token",
+        tokenColor: tok,
+        fromX: from.x,
+        fromY: from.y,
+        toX: actorPt.x + (idx - 1) * 26,
+        toY: actorPt.y,
+        arcLift: 68,
+        startMs: nowMs + idx * 80,
+        durationMs: 520,
+        baseSize: anchors.tokenR,
+        peakScale: 1.32,
+        endScale: 0.78,
+        burstColor: burstCol,
+        landed: false,
+        targetSeatNo: fx.seatNo,
+      });
+    });
+
+    if (fx.grantedOppPrivilege && oppPt && oppSeat) {
+      anim.flyingSprites.push({
+        kind: "scroll",
+        fromX: anchors.privilegePos.x,
+        fromY: anchors.privilegePos.y,
+        toX: oppPt.x,
+        toY: oppPt.y,
+        arcLift: 55,
+        startMs: nowMs + 220,
+        durationMs: 620,
+        baseSize: 32,
+        peakScale: 1.3,
+        endScale: 0.85,
+        burstColor: "#fde047",
+        landed: false,
+        targetSeatNo: oppSeat.seatNo,
+      });
+      anim.floatingTexts.push({
+        x: oppPt.x,
+        y: oppPt.y - 16,
+        text: "📜 +1 ĐẶC QUYỀN",
+        color: "#fde047",
+        size: 16,
+        startMs: nowMs + 500,
+        durationMs: 1100,
+      });
+    }
+    return;
+  }
+
+  // 2. SPEND_PRIVILEGE: Ivory Scroll flies to supply + chosen coin leaps to player!
+  if (fx.kind === "SPEND_PRIVILEGE") {
+    anim.flyingSprites.push({
+      kind: "scroll",
+      fromX: actorPt.x,
+      fromY: actorPt.y,
+      toX: anchors.privilegePos.x,
+      toY: anchors.privilegePos.y,
+      arcLift: 70,
+      startMs: nowMs,
+      durationMs: 480,
+      baseSize: 32,
+      peakScale: 1.25,
+      endScale: 0.8,
+      burstColor: "#fde047",
+      landed: false,
+    });
+    const cell = fx.cells?.[0];
+    const tok = fx.cellTokens?.[0];
+    if (cell && tok) {
+      const from = anchors.cellCenter(cell[0], cell[1]);
+      const burstCol = DUEL_TOKEN_META[tok].hex;
+      emitPixelBurst(particles, from.x, from.y, 12, "#fde047", 90);
+      anim.flyingSprites.push({
+        kind: "token",
+        tokenColor: tok,
+        fromX: from.x,
+        fromY: from.y,
+        toX: actorPt.x,
+        toY: actorPt.y,
+        arcLift: 72,
+        startMs: nowMs + 140,
+        durationMs: 520,
+        baseSize: anchors.tokenR,
+        peakScale: 1.35,
+        endScale: 0.8,
+        burstColor: burstCol,
+        landed: false,
+        targetSeatNo: fx.seatNo,
+      });
+    }
+    return;
+  }
+
+  // 3. REPLENISH_BOARD: Golden Spiral Comet Wave + Privilege Scroll to opponent!
+  if (fx.kind === "REPLENISH_BOARD") {
+    anim.spiralWave = { startMs: nowMs, durationMs: 760, lastIdx: -1 };
+    const center = anchors.cellCenter(2, 2);
+    anim.shockwaves.push({
+      x: center.x,
+      y: center.y,
+      maxR: anchors.tokenR * 5.2,
+      color: "#fde047",
+      startMs: nowMs,
+      durationMs: 650,
+    });
+    if (oppPt && oppSeat) {
+      anim.flyingSprites.push({
+        kind: "scroll",
+        fromX: anchors.privilegePos.x,
+        fromY: anchors.privilegePos.y,
+        toX: oppPt.x,
+        toY: oppPt.y,
+        arcLift: 58,
+        startMs: nowMs + 180,
+        durationMs: 600,
+        baseSize: 32,
+        peakScale: 1.3,
+        endScale: 0.85,
+        burstColor: "#fde047",
+        landed: false,
+        targetSeatNo: oppSeat.seatNo,
+      });
+      anim.floatingTexts.push({
+        x: oppPt.x,
+        y: oppPt.y - 16,
+        text: "📜 +1 ĐẶC QUYỀN",
+        color: "#fde047",
+        size: 16,
+        startMs: nowMs + 420,
+        durationMs: 1100,
+      });
+    }
+    return;
+  }
+
+  // 4. BUY_CARD: Paid coins fly to Bag + Jewel Card flies to buyer + Score/Crown popups!
+  if (fx.kind === "BUY_CARD") {
+    let coinIdx = 0;
+    if (fx.tokens) {
+      for (const col of DUEL_TOKEN_COLORS) {
+        const qty = fx.tokens[col] ?? 0;
+        for (let k = 0; k < Math.min(qty, 4); k++) {
+          anim.flyingSprites.push({
+            kind: "token",
+            tokenColor: col,
+            fromX: actorPt.x + (coinIdx - 2) * 14,
+            fromY: actorPt.y,
+            toX: anchors.bagPos.x,
+            toY: anchors.bagPos.y,
+            arcLift: 60,
+            startMs: nowMs + coinIdx * 45,
+            durationMs: 420,
+            baseSize: anchors.tokenR * 0.82,
+            peakScale: 1.15,
+            endScale: 0.65,
+            burstColor: DUEL_TOKEN_META[col].hex,
+            landed: false,
+          });
+          coinIdx++;
+        }
+      }
+    }
+
+    const fromCard =
+      fx.tier !== undefined && fx.slotIndex !== undefined
+        ? anchors.pyramidAnchorMap[`${fx.tier}-${fx.slotIndex}`] ?? actorPt
+        : { x: actorPt.x, y: actorPt.y - 40 };
+
+    if (fx.cardId) {
+      anim.shockwaves.push({
+        x: fromCard.x,
+        y: fromCard.y,
+        maxR: 48,
+        color: "#4ade80",
+        startMs: nowMs + 80,
+        durationMs: 420,
+      });
+      anim.flyingSprites.push({
+        kind: "card",
+        atlasKey: fx.cardId,
+        fromX: fromCard.x,
+        fromY: fromCard.y,
+        toX: actorPt.x,
+        toY: actorPt.y,
+        arcLift: 85,
+        startMs: nowMs + 100,
+        durationMs: 620,
+        baseSize: anchors.cardW,
+        peakScale: 1.32,
+        endScale: 0.68,
+        burstColor: "#4ade80",
+        landed: false,
+        targetSeatNo: fx.seatNo,
+      });
+    }
+
+    if ((fx.pointsGained ?? 0) > 0) {
+      anim.floatingTexts.push({
+        x: actorPt.x - 28,
+        y: actorPt.y - 18,
+        text: `+${fx.pointsGained} ★`,
+        color: "#fde047",
+        size: 20,
+        startMs: nowMs + 420,
+        durationMs: 1200,
+      });
+    }
+    if ((fx.crownsGained ?? 0) > 0) {
+      anim.floatingTexts.push({
+        x: actorPt.x + 34,
+        y: actorPt.y - 18,
+        text: `+${fx.crownsGained} 👑`,
+        color: "#fbbf24",
+        size: 20,
+        startMs: nowMs + 500,
+        durationMs: 1200,
+      });
+    }
+    return;
+  }
+
+  // 5. RESERVE_CARD: Gold Coin flies from board + Card (or Deck Back) flies to player!
+  if (fx.kind === "RESERVE_CARD") {
+    const gCell = fx.cells?.[0];
+    if (gCell) {
+      const gPt = anchors.cellCenter(gCell[0], gCell[1]);
+      emitPixelBurst(particles, gPt.x, gPt.y, 14, "#facc15", 100);
+      anim.flyingSprites.push({
+        kind: "token",
+        tokenColor: "gold",
+        fromX: gPt.x,
+        fromY: gPt.y,
+        toX: actorPt.x - 20,
+        toY: actorPt.y,
+        arcLift: 74,
+        startMs: nowMs,
+        durationMs: 540,
+        baseSize: anchors.tokenR,
+        peakScale: 1.38,
+        endScale: 0.8,
+        burstColor: "#facc15",
+        landed: false,
+        targetSeatNo: fx.seatNo,
+      });
+    }
+
+    const fromSlot = fx.fromDeck
+      ? fx.tier !== undefined
+        ? anchors.deckAnchorMap[fx.tier]
+        : null
+      : fx.tier !== undefined && fx.slotIndex !== undefined
+        ? anchors.pyramidAnchorMap[`${fx.tier}-${fx.slotIndex}`]
+        : null;
+    const atlasKey = fx.fromDeck
+      ? `deck-${fx.tier ?? 1}`
+      : fx.cardId ?? `deck-${fx.tier ?? 1}`;
+
+    if (fromSlot) {
+      anim.flyingSprites.push({
+        kind: "card",
+        atlasKey,
+        fromX: fromSlot.x,
+        fromY: fromSlot.y,
+        toX: actorPt.x + 28,
+        toY: actorPt.y + 18,
+        arcLift: 72,
+        startMs: nowMs + 100,
+        durationMs: 580,
+        baseSize: anchors.cardW * 0.92,
+        peakScale: 1.18,
+        endScale: 0.6,
+        burstColor: "#fbbf24",
+        landed: false,
+        targetSeatNo: fx.seatNo,
+      });
+    }
+    return;
+  }
+
+  // 6. STEAL_TOKEN: Crimson target shockwave + stolen coin rockets across workbenches!
+  if (fx.kind === "STEAL_TOKEN" && oppPt) {
+    const stolenCol = DUEL_TOKEN_COLORS.find((c) => (fx.tokens?.[c] ?? 0) > 0) ?? "pearl";
+    anim.shockwaves.push({
+      x: oppPt.x,
+      y: oppPt.y,
+      maxR: 46,
+      color: "#fb7185",
+      startMs: nowMs,
+      durationMs: 420,
+    });
+    emitPixelBurst(particles, oppPt.x, oppPt.y, 14, "#fb7185", 100);
+    anim.flyingSprites.push({
+      kind: "token",
+      tokenColor: stolenCol,
+      fromX: oppPt.x,
+      fromY: oppPt.y,
+      toX: actorPt.x,
+      toY: actorPt.y,
+      arcLift: 90,
+      startMs: nowMs + 60,
+      durationMs: 560,
+      baseSize: anchors.tokenR * 1.05,
+      peakScale: 1.4,
+      endScale: 0.85,
+      burstColor: "#fb7185",
+      landed: false,
+      targetSeatNo: fx.seatNo,
+    });
+    anim.floatingTexts.push({
+      x: actorPt.x,
+      y: actorPt.y - 22,
+      text: "🎯 CƯỚP ĐÁ!",
+      color: "#fda4af",
+      size: 18,
+      startMs: nowMs + 340,
+      durationMs: 1100,
+    });
+    return;
+  }
+
+  // 7. CLAIM_ROYAL: Royal Portrait glides down in golden sunburst!
+  if (fx.kind === "CLAIM_ROYAL") {
+    anim.shockwaves.push({
+      x: anchors.royalCenter.x,
+      y: anchors.royalCenter.y,
+      maxR: 64,
+      color: "#fde047",
+      startMs: nowMs,
+      durationMs: 560,
+    });
+    emitPixelBurst(particles, anchors.royalCenter.x, anchors.royalCenter.y, 20, "#fde047", 120);
+    if (fx.royalId) {
+      anim.flyingSprites.push({
+        kind: "card",
+        atlasKey: fx.royalId,
+        fromX: anchors.royalCenter.x,
+        fromY: anchors.royalCenter.y,
+        toX: actorPt.x,
+        toY: actorPt.y,
+        arcLift: 55,
+        startMs: nowMs + 40,
+        durationMs: 700,
+        baseSize: anchors.cardW * 1.05,
+        peakScale: 1.38,
+        endScale: 0.72,
+        burstColor: "#fde047",
+        landed: false,
+        targetSeatNo: fx.seatNo,
+      });
+    }
+    anim.floatingTexts.push({
+      x: actorPt.x,
+      y: actorPt.y - 24,
+      text: `👑 +${fx.pointsGained ?? 2} ★`,
+      color: "#fde047",
+      size: 22,
+      startMs: nowMs + 420,
+      durationMs: 1300,
+    });
+    return;
+  }
+
+  // 8. EXTRA_TURN: Cyan-gold double shockwave + bold pixel floating banner!
+  if (fx.kind === "EXTRA_TURN") {
+    anim.shockwaves.push({
+      x: actorPt.x,
+      y: actorPt.y,
+      maxR: 72,
+      color: "#38bdf8",
+      startMs: nowMs,
+      durationMs: 560,
+    });
+    anim.shockwaves.push({
+      x: actorPt.x,
+      y: actorPt.y,
+      maxR: 52,
+      color: "#fde047",
+      startMs: nowMs + 140,
+      durationMs: 500,
+    });
+    emitPixelBurst(particles, actorPt.x, actorPt.y, 18, "#38bdf8", 110);
+    anim.seatPulse[fx.seatNo] = { startMs: nowMs, color: "#38bdf8" };
+    anim.floatingTexts.push({
+      x: actorPt.x,
+      y: actorPt.y - 24,
+      text: "🔄 ĐI THÊM LƯỢT!",
+      color: "#7dd3fc",
+      size: 21,
+      startMs: nowMs + 40,
+      durationMs: 1350,
+    });
   }
 }
 

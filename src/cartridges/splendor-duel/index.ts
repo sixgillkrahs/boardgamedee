@@ -145,7 +145,16 @@ export interface DuelVisualEffect {
     | "EXTRA_TURN";
   seatNo: number;
   cells?: [number, number][];
+  cellTokens?: DuelTokenColor[];
   tokens?: Partial<DuelTokenBag>;
+  cardId?: string;
+  tier?: SplendorCardTier;
+  slotIndex?: number;
+  fromDeck?: boolean;
+  royalId?: string;
+  pointsGained?: number;
+  crownsGained?: number;
+  grantedOppPrivilege?: boolean;
   bannerVi?: string;
 }
 
@@ -1187,7 +1196,9 @@ export const splendorDuelCartridge: GameCartridge<
             kind: "TAKE_LINE",
             seatNo: actorSeatNo,
             cells: [[command.row, command.col]],
+            cellTokens: [matchColor],
             tokens: { [matchColor]: 1 },
+            bannerVi: `➕ Lấy thêm 1 ${DUEL_TOKEN_META[matchColor].shortVi}!`,
           },
         },
         nowMs,
@@ -1322,6 +1333,8 @@ export const splendorDuelCartridge: GameCartridge<
             seq: nextFxSeq(state),
             kind: "CLAIM_ROYAL",
             seatNo: actorSeatNo,
+            royalId: royal.id,
+            pointsGained: royal.points,
             bannerVi: `👑 Chiêu mộ ${royal.nameVi} (+${royal.points}đ)!`,
           },
         },
@@ -1378,8 +1391,9 @@ export const splendorDuelCartridge: GameCartridge<
             kind: "SPEND_PRIVILEGE",
             seatNo: actorSeatNo,
             cells: [[command.row, command.col]],
+            cellTokens: [tok],
             tokens: { [tok]: 1 },
-            bannerVi: `📜 Dùng Đặc Quyền lấy ${DUEL_TOKEN_META[tok].nameVi}`,
+            bannerVi: `📜 Dùng Đặc Quyền lấy ${DUEL_TOKEN_META[tok].shortVi}`,
           },
         },
         events: [
@@ -1412,6 +1426,7 @@ export const splendorDuelCartridge: GameCartridge<
           seq: nextFxSeq(state),
           kind: "REPLENISH_BOARD",
           seatNo: actorSeatNo,
+          grantedOppPrivilege: true,
           bannerVi: `🌀 Nạp thêm ${filled.placed} viên đá quý!`,
         },
       };
@@ -1469,7 +1484,10 @@ export const splendorDuelCartridge: GameCartridge<
           kind: "TAKE_LINE",
           seatNo: actorSeatNo,
           cells: command.cells,
+          cellTokens: check.tokens,
           tokens: takenBag,
+          grantedOppPrivilege: tookThreeSame || tookBothPearls,
+          bannerVi: `💎 Lấy ${check.tokens.length} viên đá thẳng hàng`,
         },
       };
 
@@ -1542,7 +1560,13 @@ export const splendorDuelCartridge: GameCartridge<
             kind: "RESERVE_CARD",
             seatNo: actorSeatNo,
             cells: [command.goldCell],
+            cellTokens: ["gold"],
             tokens: { gold: 1 },
+            cardId: card.id,
+            tier: command.tier,
+            slotIndex: command.slotIndex,
+            fromDeck: false,
+            bannerVi: `🔒 Đặt cọc thẻ Cấp ${command.tier} + 1 Xu Vàng`,
           },
         },
         nowMs,
@@ -1595,7 +1619,11 @@ export const splendorDuelCartridge: GameCartridge<
             kind: "RESERVE_CARD",
             seatNo: actorSeatNo,
             cells: [command.goldCell],
+            cellTokens: ["gold"],
             tokens: { gold: 1 },
+            tier: command.tier,
+            fromDeck: true,
+            bannerVi: `🔒 Rút úp đặt cọc Cấp ${command.tier} + 1 Xu Vàng`,
           },
         },
         nowMs,
@@ -1700,6 +1728,12 @@ export const splendorDuelCartridge: GameCartridge<
             kind: "BUY_CARD",
             seatNo: actorSeatNo,
             tokens: pay.payment,
+            cardId: card.id,
+            tier: card.tier,
+            slotIndex: command.type === "BUY_PYRAMID" ? command.slotIndex : undefined,
+            pointsGained: card.points,
+            crownsGained: card.crowns,
+            bannerVi: `✨ Mua thẻ Cấp ${card.tier}${card.points > 0 ? ` (+${card.points}★)` : ""}${card.crowns > 0 ? ` (+${card.crowns}👑)` : ""}!`,
           },
         },
         nowMs,
