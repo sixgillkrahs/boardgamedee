@@ -9,6 +9,7 @@ import {
   type SplendorSelection,
 } from "@/components/splendor-canvas";
 import {
+  DuelCardPreviewCanvas,
   DuelTokenIconCanvas,
   SplendorDuelCanvas,
   type DuelSelection,
@@ -956,39 +957,61 @@ function RoomPageContent({
                           </div>
                         ) : selectedCard ? (
                           <div className="space-y-2">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="font-bold text-white">
-                                Thẻ Cấp {selectedCard.tier} • ★
-                                {selectedCard.points}
-                                {selectedCard.crowns > 0
-                                  ? ` • 👑×${selectedCard.crowns}`
-                                  : ""}
-                              </span>
-                              <span className="text-[11px] text-amber-300 font-semibold">
-                                {selectedCard.bonus === "wild"
-                                  ? "🌈 Đa Sắc"
-                                  : selectedCard.bonus
-                                    ? `+${selectedCard.bonusCount} ${DUEL_TOKEN_META[selectedCard.bonus].shortVi}`
-                                    : "Không màu"}
-                              </span>
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                              {(
-                                [
-                                  ...SPLENDOR_GEMS,
-                                  "pearl",
-                                ] as (SplendorGemColor | "pearl")[]
-                              )
-                                .filter((c) => selectedCard.cost[c] > 0)
-                                .map((c) => (
-                                  <span
-                                    key={c}
-                                    className="inline-flex items-center gap-1 rounded bg-slate-900 border border-slate-800 px-1.5 py-0.5 text-[10px] font-mono text-slate-200"
-                                  >
-                                    <DuelTokenIconCanvas color={c} size={13} />
-                                    {selectedCard.cost[c]}
-                                  </span>
-                                ))}
+                            <div className="flex items-start gap-2.5">
+                              <DuelCardPreviewCanvas
+                                card={selectedCard}
+                                width={86}
+                                height={122}
+                                affordable={!!selectedCardPay?.affordable}
+                              />
+                              <div className="flex-1 min-w-0 space-y-1.5">
+                                <div className="text-xs font-bold text-white">
+                                  Thẻ Cấp {selectedCard.tier} • ★
+                                  {selectedCard.points}
+                                  {selectedCard.crowns > 0
+                                    ? ` • 👑×${selectedCard.crowns}`
+                                    : ""}
+                                </div>
+                                <div className="text-[11px] text-amber-300 font-semibold">
+                                  {selectedCard.bonus === "wild"
+                                    ? "🌈 Thẻ Đa Sắc"
+                                    : selectedCard.bonus
+                                      ? `+${selectedCard.bonusCount} ${DUEL_TOKEN_META[selectedCard.bonus].shortVi}`
+                                      : "Điểm Thuần (Không màu)"}
+                                </div>
+                                {selectedCard.power && (
+                                  <div className="text-[10px] font-bold text-purple-300">
+                                    {selectedCard.power === "EXTRA_TURN"
+                                      ? "🔄 Đi thêm 1 lượt"
+                                      : selectedCard.power === "TAKE_MATCHING"
+                                        ? "➕ Lấy thêm 1 đá cùng màu"
+                                        : selectedCard.power === "PRIVILEGE"
+                                          ? "📜 Nhận 1 Cuộn Đặc Quyền"
+                                          : "🎯 Cướp 1 đá từ đối thủ"}
+                                  </div>
+                                )}
+                                <div className="flex flex-wrap gap-1 pt-0.5">
+                                  {(
+                                    [
+                                      ...SPLENDOR_GEMS,
+                                      "pearl",
+                                    ] as (SplendorGemColor | "pearl")[]
+                                  )
+                                    .filter((c) => selectedCard.cost[c] > 0)
+                                    .map((c) => (
+                                      <span
+                                        key={c}
+                                        className="inline-flex items-center gap-1 rounded bg-slate-900 border border-slate-800 px-1.5 py-0.5 text-[10px] font-mono text-slate-200"
+                                      >
+                                        <DuelTokenIconCanvas
+                                          color={c}
+                                          size={13}
+                                        />
+                                        {selectedCard.cost[c]}
+                                      </span>
+                                    ))}
+                                </div>
+                              </div>
                             </div>
                             <div className="flex flex-col gap-1.5">
                               <button

@@ -165,7 +165,7 @@ describe("Splendor Duel Cartridge - Official 1v1 Rules", () => {
     state = splendorDuelCartridge.reduce({
       state,
       actorSeatNo: 1,
-      command: { type: "PICK_ROYAL", royalId: "royal-queen" },
+      command: { type: "PICK_ROYAL", royalId: "royal-04" },
       nowMs: 3000,
     }).state;
     expect(state.seats[0].points).toBe(5);

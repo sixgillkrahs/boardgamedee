@@ -56,6 +56,15 @@ export type DuelCostMap = Record<SplendorGemColor | "pearl", number>;
 export type DuelTokenBag = Record<DuelTokenColor, number>;
 export type DuelColorCounts = Record<SplendorGemColor, number>;
 
+export type DuelCardArtVariant =
+  | "earring"
+  | "tiara"
+  | "necklace"
+  | "teardrop_gem"
+  | "rapier_hilt"
+  | "artisan_hands"
+  | "goldsmith_chalice";
+
 export interface DuelJewelCard {
   id: string;
   tier: SplendorCardTier;
@@ -65,6 +74,7 @@ export interface DuelJewelCard {
   crowns: number;
   cost: DuelCostMap;
   power: DuelCardPower;
+  artVariant?: DuelCardArtVariant;
 }
 
 export interface DuelRoyalCard {
@@ -411,59 +421,53 @@ export function buildOfficialDuelDecks(): Record<
   const tier2: DuelJewelCard[] = [];
   const tier3: DuelJewelCard[] = [];
 
+  // Official 30 Level 1 Cards (exact match to level1-01.png .. level1-30.png)
+  const officialLevel1: DuelJewelCard[] = [
+    // White (level1-01 .. level1-05)
+    { id: "level1-01", tier: 1, bonus: "white", bonusCount: 1, points: 0, crowns: 0, power: null, artVariant: "earring", cost: makeDuelCost({ blue: 1, green: 1, red: 1, black: 1 }) },
+    { id: "level1-02", tier: 1, bonus: "white", bonusCount: 1, points: 0, crowns: 1, power: null, artVariant: "tiara", cost: makeDuelCost({ blue: 3 }) },
+    { id: "level1-03", tier: 1, bonus: "white", bonusCount: 1, points: 0, crowns: 0, power: "EXTRA_TURN", artVariant: "necklace", cost: makeDuelCost({ blue: 2, green: 2, pearl: 1 }) },
+    { id: "level1-04", tier: 1, bonus: "white", bonusCount: 1, points: 0, crowns: 0, power: "TAKE_MATCHING", artVariant: "teardrop_gem", cost: makeDuelCost({ red: 2, black: 2 }) },
+    { id: "level1-05", tier: 1, bonus: "white", bonusCount: 1, points: 1, crowns: 0, power: null, artVariant: "rapier_hilt", cost: makeDuelCost({ green: 2, red: 3 }) },
+    // Blue (level1-06 .. level1-10)
+    { id: "level1-06", tier: 1, bonus: "blue", bonusCount: 1, points: 0, crowns: 0, power: null, artVariant: "earring", cost: makeDuelCost({ white: 1, green: 1, red: 1, black: 1 }) },
+    { id: "level1-07", tier: 1, bonus: "blue", bonusCount: 1, points: 0, crowns: 1, power: null, artVariant: "tiara", cost: makeDuelCost({ green: 3 }) },
+    { id: "level1-08", tier: 1, bonus: "blue", bonusCount: 1, points: 0, crowns: 0, power: "EXTRA_TURN", artVariant: "necklace", cost: makeDuelCost({ green: 2, red: 2, pearl: 1 }) },
+    { id: "level1-09", tier: 1, bonus: "blue", bonusCount: 1, points: 0, crowns: 0, power: "TAKE_MATCHING", artVariant: "teardrop_gem", cost: makeDuelCost({ white: 2, black: 2 }) },
+    { id: "level1-10", tier: 1, bonus: "blue", bonusCount: 1, points: 1, crowns: 0, power: null, artVariant: "rapier_hilt", cost: makeDuelCost({ red: 2, black: 3 }) },
+    // Green (level1-11 .. level1-15)
+    { id: "level1-11", tier: 1, bonus: "green", bonusCount: 1, points: 0, crowns: 0, power: null, artVariant: "earring", cost: makeDuelCost({ white: 1, blue: 1, red: 1, black: 1 }) },
+    { id: "level1-12", tier: 1, bonus: "green", bonusCount: 1, points: 0, crowns: 1, power: null, artVariant: "tiara", cost: makeDuelCost({ red: 3 }) },
+    { id: "level1-13", tier: 1, bonus: "green", bonusCount: 1, points: 0, crowns: 0, power: "EXTRA_TURN", artVariant: "necklace", cost: makeDuelCost({ red: 2, black: 2, pearl: 1 }) },
+    { id: "level1-14", tier: 1, bonus: "green", bonusCount: 1, points: 0, crowns: 0, power: "TAKE_MATCHING", artVariant: "teardrop_gem", cost: makeDuelCost({ white: 2, blue: 2 }) },
+    { id: "level1-15", tier: 1, bonus: "green", bonusCount: 1, points: 1, crowns: 0, power: null, artVariant: "rapier_hilt", cost: makeDuelCost({ white: 3, black: 2 }) },
+    // Black (level1-16 .. level1-20)
+    { id: "level1-16", tier: 1, bonus: "black", bonusCount: 1, points: 0, crowns: 0, power: null, artVariant: "earring", cost: makeDuelCost({ white: 1, blue: 1, green: 1, red: 1 }) },
+    { id: "level1-17", tier: 1, bonus: "black", bonusCount: 1, points: 0, crowns: 1, power: null, artVariant: "tiara", cost: makeDuelCost({ white: 3 }) },
+    { id: "level1-18", tier: 1, bonus: "black", bonusCount: 1, points: 0, crowns: 0, power: "EXTRA_TURN", artVariant: "necklace", cost: makeDuelCost({ white: 2, blue: 2, pearl: 1 }) },
+    { id: "level1-19", tier: 1, bonus: "black", bonusCount: 1, points: 0, crowns: 0, power: "TAKE_MATCHING", artVariant: "teardrop_gem", cost: makeDuelCost({ green: 2, red: 2 }) },
+    { id: "level1-20", tier: 1, bonus: "black", bonusCount: 1, points: 1, crowns: 0, power: null, artVariant: "rapier_hilt", cost: makeDuelCost({ blue: 2, green: 3 }) },
+    // Red (level1-21 .. level1-25)
+    { id: "level1-21", tier: 1, bonus: "red", bonusCount: 1, points: 0, crowns: 0, power: null, artVariant: "earring", cost: makeDuelCost({ white: 1, blue: 1, green: 1, black: 1 }) },
+    { id: "level1-22", tier: 1, bonus: "red", bonusCount: 1, points: 0, crowns: 1, power: null, artVariant: "tiara", cost: makeDuelCost({ black: 3 }) },
+    { id: "level1-23", tier: 1, bonus: "red", bonusCount: 1, points: 0, crowns: 0, power: "EXTRA_TURN", artVariant: "necklace", cost: makeDuelCost({ white: 2, black: 2, pearl: 1 }) },
+    { id: "level1-24", tier: 1, bonus: "red", bonusCount: 1, points: 0, crowns: 0, power: "TAKE_MATCHING", artVariant: "teardrop_gem", cost: makeDuelCost({ blue: 2, green: 2 }) },
+    { id: "level1-25", tier: 1, bonus: "red", bonusCount: 1, points: 1, crowns: 0, power: null, artVariant: "rapier_hilt", cost: makeDuelCost({ white: 2, blue: 3 }) },
+    // Special Wild & Colorless Goldsmith (level1-26 .. level1-30)
+    { id: "level1-26", tier: 1, bonus: "wild", bonusCount: 1, points: 1, crowns: 0, power: null, artVariant: "artisan_hands", cost: makeDuelCost({ black: 4, pearl: 1 }) },
+    { id: "level1-27", tier: 1, bonus: "wild", bonusCount: 1, points: 0, crowns: 1, power: null, artVariant: "artisan_hands", cost: makeDuelCost({ white: 4, pearl: 1 }) },
+    { id: "level1-28", tier: 1, bonus: null, bonusCount: 0, points: 3, crowns: 0, power: null, artVariant: "goldsmith_chalice", cost: makeDuelCost({ red: 4, pearl: 1 }) },
+    { id: "level1-29", tier: 1, bonus: "wild", bonusCount: 1, points: 1, crowns: 0, power: null, artVariant: "artisan_hands", cost: makeDuelCost({ blue: 2, red: 2, black: 1, pearl: 1 }) },
+    { id: "level1-30", tier: 1, bonus: "wild", bonusCount: 1, points: 1, crowns: 0, power: null, artVariant: "artisan_hands", cost: makeDuelCost({ white: 2, green: 2, black: 1, pearl: 1 }) },
+  ];
+  tier1.push(...officialLevel1);
+
   SPLENDOR_GEMS.forEach((bonus, i) => {
     const c0 = SPLENDOR_GEMS[i];
     const c1 = SPLENDOR_GEMS[(i + 1) % 5];
     const c2 = SPLENDOR_GEMS[(i + 2) % 5];
     const c3 = SPLENDOR_GEMS[(i + 3) % 5];
     const c4 = SPLENDOR_GEMS[(i + 4) % 5];
-
-    // 5 colored Tier 1 cards per color (25) + 5 special/wild Tier 1 = 30 Tier 1 cards
-    const t1Specs: Omit<DuelJewelCard, "id" | "tier">[] = [
-      {
-        bonus,
-        bonusCount: 1,
-        points: 0,
-        crowns: 0,
-        cost: makeDuelCost({ [c1]: 3 }),
-        power: null,
-      },
-      {
-        bonus,
-        bonusCount: 1,
-        points: 0,
-        crowns: 0,
-        cost: makeDuelCost({ [c1]: 2, [c2]: 2 }),
-        power: "TAKE_MATCHING",
-      },
-      {
-        bonus,
-        bonusCount: 1,
-        points: 0,
-        crowns: 1,
-        cost: makeDuelCost({ [c2]: 2, [c3]: 1, pearl: 1 }),
-        power: null,
-      },
-      {
-        bonus,
-        bonusCount: 1,
-        points: 1,
-        crowns: 0,
-        cost: makeDuelCost({ [c1]: 1, [c2]: 1, [c3]: 1, [c4]: 1 }),
-        power: "PRIVILEGE",
-      },
-      {
-        bonus,
-        bonusCount: 1,
-        points: 1,
-        crowns: 0,
-        cost: makeDuelCost({ [c3]: 3, [c4]: 2 }),
-        power: null,
-      },
-    ];
-    t1Specs.forEach((spec, idx) => {
-      tier1.push({ id: `dt1-${bonus}-${idx}`, tier: 1, ...spec });
-    });
 
     // 4 colored Tier 2 cards per color (20) + 4 wild/power Tier 2 = 24 Tier 2 cards
     const t2Specs: Omit<DuelJewelCard, "id" | "tier">[] = [
@@ -474,6 +478,7 @@ export function buildOfficialDuelDecks(): Record<
         crowns: 0,
         cost: makeDuelCost({ [c1]: 4, [c2]: 2, pearl: 1 }),
         power: null,
+        artVariant: "necklace",
       },
       {
         bonus,
@@ -482,6 +487,7 @@ export function buildOfficialDuelDecks(): Record<
         crowns: 1,
         cost: makeDuelCost({ [c2]: 4, [c3]: 3 }),
         power: "PRIVILEGE",
+        artVariant: "tiara",
       },
       {
         bonus,
@@ -490,6 +496,7 @@ export function buildOfficialDuelDecks(): Record<
         crowns: 1,
         cost: makeDuelCost({ [c0]: 2, [c1]: 3, [c4]: 2 }),
         power: "STEAL",
+        artVariant: "earring",
       },
       {
         bonus,
@@ -498,6 +505,7 @@ export function buildOfficialDuelDecks(): Record<
         crowns: 0,
         cost: makeDuelCost({ [c3]: 5, pearl: 1 }),
         power: "EXTRA_TURN",
+        artVariant: "rapier_hilt",
       },
     ];
     t2Specs.forEach((spec, idx) => {
@@ -513,6 +521,7 @@ export function buildOfficialDuelDecks(): Record<
         crowns: 2,
         cost: makeDuelCost({ [c1]: 3, [c2]: 3, [c3]: 5, pearl: 1 }),
         power: "STEAL",
+        artVariant: "tiara",
       },
       {
         bonus,
@@ -521,66 +530,13 @@ export function buildOfficialDuelDecks(): Record<
         crowns: 2,
         cost: makeDuelCost({ [c0]: 3, [c4]: 6, pearl: 1 }),
         power: "EXTRA_TURN",
+        artVariant: "rapier_hilt",
       },
     ];
     t3Specs.forEach((spec, idx) => {
       tier3.push({ id: `dt3-${bonus}-${idx}`, tier: 3, ...spec });
     });
   });
-
-  // 5 Extra Tier 1 Special / Wild / Crown cards -> 30 total
-  tier1.push(
-    {
-      id: "dt1-wild-0",
-      tier: 1,
-      bonus: "wild",
-      bonusCount: 1,
-      points: 0,
-      crowns: 1,
-      cost: makeDuelCost({ white: 2, blue: 2, pearl: 1 }),
-      power: null,
-    },
-    {
-      id: "dt1-wild-1",
-      tier: 1,
-      bonus: "wild",
-      bonusCount: 1,
-      points: 1,
-      crowns: 0,
-      cost: makeDuelCost({ green: 2, red: 2, pearl: 1 }),
-      power: "PRIVILEGE",
-    },
-    {
-      id: "dt1-pure-0",
-      tier: 1,
-      bonus: null,
-      bonusCount: 0,
-      points: 3,
-      crowns: 0,
-      cost: makeDuelCost({ black: 4, white: 1 }),
-      power: null,
-    },
-    {
-      id: "dt1-extra-0",
-      tier: 1,
-      bonus: "blue",
-      bonusCount: 1,
-      points: 0,
-      crowns: 0,
-      cost: makeDuelCost({ red: 2, black: 2, green: 1 }),
-      power: "EXTRA_TURN",
-    },
-    {
-      id: "dt1-steal-0",
-      tier: 1,
-      bonus: "red",
-      bonusCount: 1,
-      points: 0,
-      crowns: 1,
-      cost: makeDuelCost({ white: 2, green: 2, blue: 1 }),
-      power: "STEAL",
-    }
-  );
 
   // 4 Extra Tier 2 Wild / High-Crown cards -> 24 total
   tier2.push(
@@ -669,31 +625,31 @@ export function buildOfficialDuelDecks(): Record<
 export function buildOfficialDuelRoyals(): DuelRoyalCard[] {
   return [
     {
-      id: "royal-queen",
-      nameVi: "Nữ Hoàng Tối Cao",
-      points: 3,
-      power: null,
+      id: "royal-01",
+      nameVi: "Điệp Viên Hoàng Gia",
+      points: 2,
+      power: "STEAL",
       portraitVariant: 0,
     },
     {
-      id: "royal-emperor",
-      nameVi: "Hoàng Đế Đặc Quyền",
+      id: "royal-02",
+      nameVi: "Công Nương Turban",
       points: 2,
-      power: "PRIVILEGE",
+      power: "EXTRA_TURN",
       portraitVariant: 1,
     },
     {
-      id: "royal-duke",
-      nameVi: "Công Tước Thời Gian",
+      id: "royal-03",
+      nameVi: "Phán Quan Triều Đình",
       points: 2,
-      power: "EXTRA_TURN",
+      power: "PRIVILEGE",
       portraitVariant: 2,
     },
     {
-      id: "royal-countess",
-      nameVi: "Nữ Bá Tước Đạo Chích",
-      points: 2,
-      power: "STEAL",
+      id: "royal-04",
+      nameVi: "Nữ Hoàng Đỏ",
+      points: 3,
+      power: null,
       portraitVariant: 3,
     },
   ];

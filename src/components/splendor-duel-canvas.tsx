@@ -28,6 +28,7 @@ import {
   DUEL_TOKEN_COLORS,
   DUEL_TOKEN_META,
   type DuelCommand,
+  type DuelJewelCard,
   type DuelPlayerView,
   type DuelTokenColor,
 } from "@/cartridges/splendor-duel";
@@ -73,6 +74,54 @@ export function DuelTokenIconCanvas({
       ref={ref}
       style={{ width: size, height: size }}
       className={`inline-block shrink-0 ${className}`}
+    />
+  );
+}
+
+/**
+ * High-resolution 2D Canvas preview of a selected Splendor Duel Jewel Card
+ * (renders the full official-style 2D illustration, pennant, power badge & cost tokens).
+ */
+export function DuelCardPreviewCanvas({
+  card,
+  width = 104,
+  height = 148,
+  affordable = false,
+  className = "",
+}: {
+  card: DuelJewelCard;
+  width?: number;
+  height?: number;
+  affordable?: boolean;
+  className?: string;
+}) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, width, height);
+    drawDuelPixelCard2D(ctx, 2, 2, width - 6, height - 6, card, {
+      affordable,
+      selected: true,
+    });
+    ctx.restore();
+  }, [card, width, height, affordable]);
+
+  return (
+    <canvas
+      ref={ref}
+      style={{ width, height }}
+      className={`shrink-0 ${className}`}
     />
   );
 }
@@ -653,13 +702,13 @@ function drawDuelMatchScene(
   // Right: 3-Tier Jewel Card Pyramid (Tier 3 = 3 cards, Tier 2 = 4 cards, Tier 1 = 5 cards)
   const pyrX = boardX + boardSize + 18;
   const pyrW = Math.max(160, width - pyrX - 14);
-  const rowGap = 7;
+  const rowGap = 6;
   const cardGap = compact ? 5 : 8;
   const rowH = Math.floor((midH - rowGap * 2) / 3);
-  // Fit 1 deck + 5 cards horizontally in Tier 1
+  // Fit 1 deck + 5 cards horizontally in Tier 1 using authentic ~0.70 card aspect ratio
   const maxCardW = Math.floor((pyrW - cardGap * 5) / 6);
-  const cardW = Math.max(38, Math.min(maxCardW, Math.floor(rowH * 0.78)));
-  const cardH = Math.max(54, Math.min(rowH, Math.floor(cardW * 1.32)));
+  const cardW = Math.max(40, Math.min(maxCardW, Math.floor(rowH * 0.72)));
+  const cardH = Math.max(56, Math.min(rowH, Math.floor(cardW * 1.42)));
 
   const tiers: SplendorCardTier[] = [3, 2, 1];
   tiers.forEach((tier, rowIdx) => {
