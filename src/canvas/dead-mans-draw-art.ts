@@ -6,8 +6,8 @@ import {
 } from "@/cartridges/dead-mans-draw";
 
 export const DMD_CARD_ATLAS_URL = "/sprites/dead-mans-draw-cards-pixel.png";
-export const DMD_CARD_TILE_W = 96;
-export const DMD_CARD_TILE_H = 136;
+export const DMD_CARD_TILE_W = 120;
+export const DMD_CARD_TILE_H = 170;
 
 export type DmdSpriteKey = DmdSuit | "Back";
 
@@ -19,17 +19,31 @@ export interface DmdAtlasRect {
 }
 
 export const DMD_CARD_ATLAS_RECTS: Record<DmdSpriteKey, DmdAtlasRect> = {
-  Anchor: { sx: 0, sy: 0, sw: 96, sh: 136 },
-  Cannon: { sx: 96, sy: 0, sw: 96, sh: 136 },
-  Chest: { sx: 192, sy: 0, sw: 96, sh: 136 },
-  Hook: { sx: 288, sy: 0, sw: 96, sh: 136 },
-  Key: { sx: 384, sy: 0, sw: 96, sh: 136 },
-  Map: { sx: 480, sy: 0, sw: 96, sh: 136 },
-  Mermaid: { sx: 576, sy: 0, sw: 96, sh: 136 },
-  Oracle: { sx: 672, sy: 0, sw: 96, sh: 136 },
-  Sword: { sx: 768, sy: 0, sw: 96, sh: 136 },
-  Kraken: { sx: 864, sy: 0, sw: 96, sh: 136 },
-  Back: { sx: 960, sy: 0, sw: 96, sh: 136 },
+  Anchor: { sx: 0, sy: 0, sw: 120, sh: 170 },
+  Cannon: { sx: 120, sy: 0, sw: 120, sh: 170 },
+  Chest: { sx: 240, sy: 0, sw: 120, sh: 170 },
+  Hook: { sx: 360, sy: 0, sw: 120, sh: 170 },
+  Key: { sx: 480, sy: 0, sw: 120, sh: 170 },
+  Map: { sx: 600, sy: 0, sw: 120, sh: 170 },
+  Mermaid: { sx: 720, sy: 0, sw: 120, sh: 170 },
+  Oracle: { sx: 840, sy: 0, sw: 120, sh: 170 },
+  Sword: { sx: 960, sy: 0, sw: 120, sh: 170 },
+  Kraken: { sx: 1080, sy: 0, sw: 120, sh: 170 },
+  Back: { sx: 1200, sy: 0, sw: 120, sh: 170 },
+};
+
+/** Official woodcut corner-digit ink colors matching the printed Dead Man's Draw deck */
+const DMD_INK_COLOR: Record<DmdSuit, string> = {
+  Anchor: "#f8fafc",
+  Cannon: "#dc2626",
+  Chest: "#f59e0b",
+  Hook: "#5eead4",
+  Key: "#facc15",
+  Map: "#9a7348",
+  Mermaid: "#84cc16",
+  Oracle: "#c084fc",
+  Sword: "#60a5fa",
+  Kraken: "#94a3b8",
 };
 
 let cachedDmdAtlas: HTMLImageElement | null = null;
@@ -225,38 +239,30 @@ export function drawDmdCard2D(
   }
 
   if (card) {
-    const meta = DMD_SUIT_META[card.suit];
     const fonts = getCanvasFontFamilies();
-
-    // Top-left crisp numeric loot value medal (2..9)
-    const valR = Math.max(9, Math.round(w * 0.175));
-    const vx = x + valR + Math.max(3, w * 0.05);
-    const vy = y + valR + Math.max(3, h * 0.04);
-    ctx.fillStyle = "rgba(10, 12, 18, 0.88)";
-    ctx.beginPath();
-    ctx.arc(vx, vy, valR, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = meta.color;
-    ctx.lineWidth = Math.max(1.2, w * 0.022);
-    ctx.stroke();
-
-    ctx.fillStyle = "#fef9c3";
-    ctx.font = `900 ${Math.max(10, Math.round(valR * 1.25))}px ${fonts.mono}`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(String(card.value), vx, vy + 0.5);
-
-    // Bottom Vietnamese suit nameplate (readable on medium & large cards)
-    if (w >= 46) {
-      const labelPx = Math.max(7.5, Math.min(12, Math.round(w * 0.135)));
-      ctx.font = `800 ${labelPx}px ${fonts.sans}`;
+    const inkColor = DMD_INK_COLOR[card.suit];
+    const numFontPx = Math.max(12, Math.round(w * 0.255));
+    const drawCornerDigit = (cx: number, cy: number, rotated: boolean) => {
+      ctx.save();
+      ctx.translate(cx, cy);
+      if (rotated) ctx.rotate(Math.PI);
+      ctx.font = `900 ${numFontPx}px ${fonts.sans}`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      const ty = y + h * 0.88;
-      ctx.fillStyle = "rgba(2, 6, 23, 0.92)";
-      ctx.fillText(meta.shortVi, x + w * 0.5 + 1, ty + 1, w * 0.88);
-      ctx.fillStyle = "#f8fafc";
-      ctx.fillText(meta.shortVi, x + w * 0.5, ty, w * 0.88);
+      // Deep woodcut dark-brown ink outline matching the printed card art
+      ctx.lineJoin = "round";
+      ctx.lineWidth = Math.max(2.2, numFontPx * 0.2);
+      ctx.strokeStyle = "#1c130b";
+      ctx.strokeText(String(card.value), 0, 0);
+      ctx.fillStyle = inkColor;
+      ctx.fillText(String(card.value), 0, 0);
+      ctx.restore();
+    };
+
+    // Top-left & Bottom-right inverted official pirate card numbers (aligned right above/below the mini suit icons!)
+    drawCornerDigit(x + w * 0.125, y + h * 0.105, false);
+    if (w >= 46) {
+      drawCornerDigit(x + w * 0.875, y + h * 0.895, true);
     }
   }
 
