@@ -356,7 +356,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
             {cartridges.map((item) => {
               const isSelected = selectedCartridgeId === item.cartridgeId;
               return (
@@ -367,28 +367,49 @@ export default function HomePage() {
                     setSelectedCartridgeId(item.cartridgeId);
                     void handleCreateRoom(item.cartridgeId);
                   }}
-                  className={`rounded-2xl border p-5 transition flex flex-col justify-between gap-3 ${
+                  className={`group rounded-2xl border overflow-hidden transition flex flex-col justify-between ${
+                    item.coverImage ? "p-0" : "p-5 gap-3"
+                  } ${
                     item.available
                       ? isSelected
-                        ? "border-amber-500/70 bg-slate-900/95 shadow-lg shadow-amber-500/5 hover:border-amber-400 cursor-pointer"
-                        : "border-slate-800 bg-slate-900/70 hover:border-slate-700 cursor-pointer"
+                        ? "border-amber-500/70 bg-slate-900/95 shadow-lg shadow-amber-500/10 hover:border-amber-400 cursor-pointer"
+                        : "border-slate-800 bg-slate-900/70 hover:border-amber-500/50 cursor-pointer"
                       : "border-slate-800/60 bg-slate-900/40 opacity-65"
                   }`}
                 >
-                  <div className="space-y-1.5">
-                    <h4 className="text-base font-extrabold text-white">
-                      {item.title}
-                    </h4>
-                    <p className="text-xs font-medium text-amber-300/90">
-                      {item.genreVi}
-                    </p>
-                  </div>
+                  {item.coverImage && (
+                    <div className="relative w-full aspect-[3/4] overflow-hidden bg-slate-950 border-b border-slate-800/80">
+                      <img
+                        src={item.coverImage}
+                        alt={item.title}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                        style={{ imageRendering: "pixelated" }}
+                      />
+                    </div>
+                  )}
 
-                  <div className="pt-2.5 border-t border-slate-800/80 text-xs text-slate-400 font-medium">
-                    👥{" "}
-                    {item.minSeats === item.maxSeats
-                      ? `${item.minSeats} người chơi (1v1)`
-                      : `${item.minSeats}–${item.maxSeats} người chơi`}
+                  <div
+                    className={
+                      item.coverImage
+                        ? "p-4 flex flex-col justify-between gap-2.5"
+                        : "contents"
+                    }
+                  >
+                    <div className="space-y-1.5">
+                      <h4 className="text-base font-extrabold text-white">
+                        {item.title}
+                      </h4>
+                      <p className="text-xs font-medium text-amber-300/90">
+                        {item.genreVi}
+                      </p>
+                    </div>
+
+                    <div className="pt-2.5 border-t border-slate-800/80 text-xs text-slate-400 font-medium">
+                      👥{" "}
+                      {item.minSeats === item.maxSeats
+                        ? `${item.minSeats} người chơi (1v1)`
+                        : `${item.minSeats}–${item.maxSeats} người chơi`}
+                    </div>
                   </div>
                 </div>
               );

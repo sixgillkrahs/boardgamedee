@@ -15,6 +15,7 @@ export interface CatalogEntry {
   available: boolean;
   badgeVi: string;
   accentColor: string;
+  coverImage?: string;
 }
 
 const CARTRIDGES = new Map<string, GameCartridge<any, any, any, any>>([
@@ -98,6 +99,7 @@ export function listCartridges(): CatalogEntry[] {
       available: true,
       badgeVi: "Đang mở • Pixel 2D",
       accentColor: "#ec4899",
+      coverImage: "/covers/splendor-duel-pixel.png",
     },
     {
       cartridgeId: "secret-hitler",
