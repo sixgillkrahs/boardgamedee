@@ -402,14 +402,14 @@ function drawDuelLobbyScene(
     drawDuelPixelTokenChip2D(ctx, startX + i * spacing, tokY + bob, tokR, col);
   });
 
-  // 3 Privilege Scrolls in center
-  const scrollW = compact ? 28 : 36;
-  const scrollH = compact ? 16 : 20;
+  // 3 Standing Sculpted Privilege Scroll Figurines in center (like official tabletop!)
+  const scrollW = compact ? 26 : 34;
+  const scrollH = compact ? 32 : 42;
   for (let i = 0; i < 3; i++) {
     drawDuelPixelPrivilegeScroll2D(
       ctx,
-      width / 2 - (3 * (scrollW + 10) - 10) / 2 + i * (scrollW + 10),
-      height * 0.45,
+      width / 2 - (3 * (scrollW + 4) - 4) / 2 + i * (scrollW + 4),
+      height * 0.43 + (i === 1 ? 4 : 0),
       scrollW,
       scrollH,
       i === 1
@@ -580,13 +580,13 @@ function drawDuelMatchScene(
   ctx.fillText(`ĐẶC QUYỀN (${pv.privilegeSupply})`, rightHudX + 8, topY + 16);
 
   for (let i = 0; i < 3; i++) {
-    const sx = rightHudX + 10 + i * 28;
-    const sy = topY + 26;
+    const sx = rightHudX + 10 + i * 26;
+    const sy = topY + 21;
     if (i < pv.privilegeSupply) {
-      drawDuelPixelPrivilegeScroll2D(ctx, sx, sy, 22, 14, true);
+      drawDuelPixelPrivilegeScroll2D(ctx, sx, sy, 22, 26, false);
     } else {
-      drawRoundedRect(ctx, sx, sy, 22, 14, 3);
-      ctx.strokeStyle = "rgba(148, 163, 184, 0.3)";
+      drawRoundedRect(ctx, sx + 3, sy + 2, 16, 22, 4);
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.28)";
       ctx.lineWidth = 1;
       ctx.stroke();
     }

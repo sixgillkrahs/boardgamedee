@@ -299,12 +299,13 @@ export function drawDuelPixelPrivilegeScroll2D(
   const tokenAtlas = getDuelTokenPixelAtlas();
   if (tokenAtlas) {
     const rect = DUEL_TOKEN_ATLAS_RECTS.privilege;
-    const drawS = Math.round(Math.max(w, h) * 1.18);
+    const drawS = Math.round(Math.max(w, h) * 1.08);
     const cx = x + w / 2;
     const cy = y + h / 2;
     if (active) {
-      ctx.fillStyle = "rgba(253, 224, 71, 0.24)";
-      drawRoundedRect(ctx, x - 3, y - 3, w + 6, h + 6, 5);
+      ctx.fillStyle = "rgba(253, 224, 71, 0.18)";
+      ctx.beginPath();
+      ctx.arc(cx, cy, drawS * 0.48, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.drawImage(
