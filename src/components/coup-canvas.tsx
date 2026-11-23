@@ -17,6 +17,7 @@ import {
   drawCoupDystopianBackgroundAndTable2D,
   type CoupIconKind,
 } from "@/canvas/coup-cards";
+import { getCoupCoinPixelSprite } from "@/canvas/coup-atlas";
 import { computeCardDealProgress } from "@/canvas/role-cards";
 import {
   ACTION_LABEL_VI,
@@ -43,15 +44,20 @@ export function CoupActionIconCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.round(size * dpr);
-    canvas.height = Math.round(size * dpr);
+    const renderIcon = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(size * dpr);
+      canvas.height = Math.round(size * dpr);
 
-    ctx.save();
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, size, size);
-    drawCoupActionIcon2D(ctx, size * 0.5, size * 0.5, size * 0.9, kind);
-    ctx.restore();
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, size, size);
+      drawCoupActionIcon2D(ctx, size * 0.5, size * 0.5, size * 0.9, kind);
+      ctx.restore();
+    };
+
+    renderIcon();
+    getCoupCoinPixelSprite(renderIcon);
   }, [kind, size]);
 
   return (

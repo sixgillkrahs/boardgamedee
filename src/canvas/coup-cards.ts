@@ -1,4 +1,9 @@
-import { drawRoundedRect, lerp } from "@/canvas/engine";
+import { drawRoundedRect, getCanvasFontFamilies, lerp } from "@/canvas/engine";
+import {
+  COUP_CARD_ATLAS_RECTS,
+  getCoupCardPixelAtlas,
+  getCoupCoinPixelSprite,
+} from "@/canvas/coup-atlas";
 import {
   COUP_CHARACTER_META,
   type CoupCharacter,
@@ -18,6 +23,38 @@ export function drawCoupCoin2D(
   cy: number,
   r: number
 ) {
+  const coinSprite = getCoupCoinPixelSprite();
+  if (coinSprite) {
+    ctx.save();
+    // Grounded drop shadow matching coin scale
+    ctx.fillStyle = "rgba(0, 0, 0, 0.48)";
+    ctx.beginPath();
+    ctx.arc(
+      cx + Math.max(0.8, r * 0.08),
+      cy + Math.max(1.2, r * 0.14),
+      r * 0.96,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // Render crisp 64x64 16-bit pixel-art official octagonal '1 ISK' metal coin
+    const drawSize = r * 2.12;
+    ctx.imageSmoothingEnabled = r < 18;
+    if (ctx.imageSmoothingEnabled) {
+      ctx.imageSmoothingQuality = "high";
+    }
+    ctx.drawImage(
+      coinSprite,
+      cx - drawSize / 2,
+      cy - drawSize / 2,
+      drawSize,
+      drawSize
+    );
+    ctx.restore();
+    return;
+  }
+
   ctx.save();
   ctx.translate(cx, cy);
 
@@ -241,7 +278,7 @@ export function drawCoupCoinStack2D(
   ctx.stroke();
 
   ctx.fillStyle = coins >= 10 ? "#fca5a5" : "#e2e8f0";
-  ctx.font = "bold 10px sans-serif";
+  ctx.font = `bold 10px ${getCanvasFontFamilies().sans}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(`${coins} ISK`, cx, cy + coinRadius + 14);
@@ -3713,7 +3750,35 @@ export function drawCoupCard2D(
   drawRoundedRect(ctx, x, y, w, h, radius);
   ctx.clip();
 
-  if (character === null) {
+  const cardAtlas = getCoupCardPixelAtlas();
+  if (cardAtlas) {
+    const key = character ?? "back";
+    const rect = COUP_CARD_ATLAS_RECTS[key];
+    ctx.imageSmoothingEnabled = w < 72;
+    if (ctx.imageSmoothingEnabled) {
+      ctx.imageSmoothingQuality = "high";
+    }
+    ctx.drawImage(cardAtlas, rect.sx, rect.sy, rect.sw, rect.sh, x, y, w, h);
+
+    // Render crisp Vietnamese role title in the dystopian HUD band on readable cards
+    if (character !== null && w >= 54) {
+      const meta = COUP_CHARACTER_META[character];
+      const titleFontPx = Math.max(8, Math.min(13, Math.round(w * 0.118)));
+      const labelY = y + h * 0.806;
+
+      ctx.save();
+      ctx.font = `800 ${titleFontPx}px ${getCanvasFontFamilies().sans}`;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      const labelX = x + w * 0.085;
+      // Dark pixel drop shadow for razor-sharp contrast over any portrait
+      ctx.fillStyle = "rgba(2, 6, 23, 0.92)";
+      ctx.fillText(meta.titleVi, labelX + 1, labelY + 1, w * 0.84);
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillText(meta.titleVi, labelX, labelY, w * 0.84);
+      ctx.restore();
+    }
+  } else if (character === null) {
     drawCoupCardBack2D(ctx, x, y, w, h);
   } else {
     drawCoupCharacterArt2D(ctx, x, y, w, h, character);
@@ -3798,7 +3863,7 @@ export function drawCoupCenterTreasuryAndDeck2D(
   ctx.stroke();
 
   ctx.fillStyle = "#e0f2fe";
-  ctx.font = `bold ${Math.max(8, Math.round(9.5 * scale))}px sans-serif`;
+  ctx.font = `bold ${Math.max(8, Math.round(9.5 * scale))}px ${getCanvasFontFamilies().sans}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(
@@ -3853,7 +3918,7 @@ export function drawCoupCenterTreasuryAndDeck2D(
   ctx.stroke();
 
   ctx.fillStyle = "#fde047";
-  ctx.font = `bold ${Math.max(8, Math.round(9.5 * scale))}px sans-serif`;
+  ctx.font = `bold ${Math.max(8, Math.round(9.5 * scale))}px ${getCanvasFontFamilies().sans}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(
