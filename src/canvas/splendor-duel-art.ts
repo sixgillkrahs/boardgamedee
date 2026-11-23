@@ -587,7 +587,8 @@ function drawDuelPowerBadge2D(
 }
 
 /**
- * Draws the official Golden Crown Crest (used on Level 1/2/3 cards with crowns).
+ * Draws the official Golden Crown Crest (used on Level 1/2/3 cards with crowns;
+ * 3 crowns render in the official 1-over-2 pyramid like level3-12.png).
  */
 function drawDuelCrownBadge2D(
   ctx: CanvasRenderingContext2D,
@@ -598,24 +599,36 @@ function drawDuelCrownBadge2D(
 ) {
   ctx.save();
   const count = Math.min(3, crowns);
-  const gap = size * 0.12;
-  const totalW = count * size + (count - 1) * gap;
-  const startX = cx - totalW / 2 + size / 2;
+  const s = count === 3 ? size * 0.84 : size;
+  const gap = s * 0.14;
 
-  for (let i = 0; i < count; i++) {
-    const bx = startX + i * (size + gap);
-    const half = size * 0.5;
+  const positions: [number, number][] =
+    count === 1
+      ? [[cx, cy]]
+      : count === 2
+        ? [
+            [cx - (s + gap) / 2, cy],
+            [cx + (s + gap) / 2, cy],
+          ]
+        : [
+            [cx, cy - s * 0.42],
+            [cx - (s + gap) * 0.56, cy + s * 0.36],
+            [cx + (s + gap) * 0.56, cy + s * 0.36],
+          ];
+
+  for (const [bx, by] of positions) {
+    const half = s * 0.5;
 
     // Gold arched shield
     ctx.fillStyle = "#f59e0b";
     ctx.strokeStyle = "#fef08a";
     ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(bx - half, cy + half * 0.85);
-    ctx.lineTo(bx - half, cy - half * 0.35);
-    ctx.lineTo(bx, cy - half * 0.95);
-    ctx.lineTo(bx + half, cy - half * 0.35);
-    ctx.lineTo(bx + half, cy + half * 0.85);
+    ctx.moveTo(bx - half, by + half * 0.85);
+    ctx.lineTo(bx - half, by - half * 0.35);
+    ctx.lineTo(bx, by - half * 0.95);
+    ctx.lineTo(bx + half, by - half * 0.35);
+    ctx.lineTo(bx + half, by + half * 0.85);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
@@ -623,13 +636,13 @@ function drawDuelCrownBadge2D(
     // Crisp white 3-spire royal crown inside
     ctx.fillStyle = "#ffffff";
     ctx.beginPath();
-    ctx.moveTo(bx - half * 0.62, cy + half * 0.55);
-    ctx.lineTo(bx - half * 0.68, cy - half * 0.15);
-    ctx.lineTo(bx - half * 0.25, cy + half * 0.12);
-    ctx.lineTo(bx, cy - half * 0.4);
-    ctx.lineTo(bx + half * 0.25, cy + half * 0.12);
-    ctx.lineTo(bx + half * 0.68, cy - half * 0.15);
-    ctx.lineTo(bx + half * 0.62, cy + half * 0.55);
+    ctx.moveTo(bx - half * 0.62, by + half * 0.55);
+    ctx.lineTo(bx - half * 0.68, by - half * 0.15);
+    ctx.lineTo(bx - half * 0.25, by + half * 0.12);
+    ctx.lineTo(bx, by - half * 0.4);
+    ctx.lineTo(bx + half * 0.25, by + half * 0.12);
+    ctx.lineTo(bx + half * 0.68, by - half * 0.15);
+    ctx.lineTo(bx + half * 0.62, by + half * 0.55);
     ctx.closePath();
     ctx.fill();
   }
@@ -1889,8 +1902,465 @@ function drawDuelArtGoldenOrbSeal2D(
   }
 }
 
+// ============================================================================
+// ALL 5 HANDCRAFTED 2D LEVEL-3 GRAND MASTERWORK SCENES (level3-01 .. level3-13)
+// ============================================================================
+
+/** L3-1. Majestic Imperial Golden Crown on Blue Satin Cushion (01, 03, 05, 07, 09) */
+function drawDuelArtImperialCrown2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  theme: CardColorTheme
+) {
+  // Deep royal charcoal-violet gallery backdrop + dark tabletop
+  const bg = ctx.createLinearGradient(x, y, x, y + h);
+  bg.addColorStop(0, "#2f2c38");
+  bg.addColorStop(0.75, "#423a47");
+  bg.addColorStop(1, "#1e1a24");
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, y, w, h);
+
+  // Royal Blue Satin Display Cushion with Gold Cord Trim
+  const cushGrad = ctx.createLinearGradient(x, y + h * 0.68, x, y + h * 0.92);
+  cushGrad.addColorStop(0, "#5e86b0");
+  cushGrad.addColorStop(0.6, "#2c4c70");
+  cushGrad.addColorStop(1, "#16263b");
+  ctx.fillStyle = cushGrad;
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.52, y + h * 0.8, w * 0.64, h * 0.14, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#d99b38";
+  ctx.lineWidth = Math.max(1.5, w * 0.022);
+  ctx.beginPath();
+  ctx.moveTo(x, y + h * 0.82);
+  ctx.quadraticCurveTo(x + w * 0.52, y + h * 0.89, x + w, y + h * 0.82);
+  ctx.stroke();
+
+  // Inner Black Velvet Crown Cap
+  const cx = x + w * 0.52;
+  ctx.fillStyle = "#171a21";
+  ctx.strokeStyle = "#475569";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(cx, y + h * 0.54, w * 0.39, h * 0.14, 0, Math.PI, Math.PI * 2);
+  ctx.lineTo(cx + w * 0.39, y + h * 0.64);
+  ctx.lineTo(cx - w * 0.39, y + h * 0.64);
+  ctx.closePath();
+  ctx.fill();
+
+  // Sweeping Golden Imperial Crown Arches
+  ctx.strokeStyle = "#7c3f12";
+  ctx.lineWidth = Math.max(4, w * 0.065);
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.09, y + h * 0.6);
+  ctx.bezierCurveTo(x + w * 0.04, y + h * 0.28, x + w * 0.35, y + h * 0.3, cx, y + h * 0.38);
+  ctx.bezierCurveTo(x + w * 0.69, y + h * 0.3, x + w * 0.98, y + h * 0.28, x + w * 0.94, y + h * 0.6);
+  ctx.stroke();
+  ctx.strokeStyle = "#facc15";
+  ctx.lineWidth = Math.max(2.2, w * 0.036);
+  ctx.stroke();
+
+  // Inner front arches meeting central gold finial crest
+  ctx.strokeStyle = "#eab308";
+  ctx.lineWidth = Math.max(2.6, w * 0.04);
+  ctx.beginPath();
+  ctx.moveTo(cx - w * 0.18, y + h * 0.6);
+  ctx.quadraticCurveTo(cx - w * 0.14, y + h * 0.26, cx, y + h * 0.32);
+  ctx.quadraticCurveTo(cx + w * 0.18, y + h * 0.26, cx + w * 0.2, y + h * 0.6);
+  ctx.stroke();
+
+  // Top Golden Shell Finial
+  ctx.fillStyle = "#f3be50";
+  ctx.strokeStyle = "#6e380e";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.ellipse(cx, y + h * 0.33, w * 0.11, h * 0.06, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Ornate Golden Crown Base Band
+  const bandGrad = ctx.createLinearGradient(x + w * 0.1, y + h * 0.62, x + w * 0.92, y + h * 0.76);
+  bandGrad.addColorStop(0, "#b45309");
+  bandGrad.addColorStop(0.5, "#fde047");
+  bandGrad.addColorStop(1, "#92400e");
+  ctx.fillStyle = bandGrad;
+  ctx.strokeStyle = "#4d2308";
+  ctx.lineWidth = 1.5;
+  drawRoundedRect(ctx, x + w * 0.1, y + h * 0.61, w * 0.84, h * 0.14, 10);
+  ctx.fill();
+  ctx.stroke();
+
+  // Twin Ornate Filigree Settings + Sparkling Bonus-Colored Gems
+  for (const gx of [cx - w * 0.18, cx + w * 0.2]) {
+    ctx.fillStyle = "#e8ab4f";
+    ctx.strokeStyle = "#78350f";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(gx, y + h * 0.54, w * 0.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    drawFacetedGem2D(ctx, gx, y + h * 0.54, w * 0.056, h * 0.044, theme);
+  }
+  // Tiny teardrop accent gem centered on front band
+  drawFacetedGem2D(ctx, cx, y + h * 0.69, w * 0.032, h * 0.03, theme, true);
+}
+
+/** L3-2. Noblewoman's Neckline Wearing Grand Golden Gem Collar Necklace (02, 04, 06, 08, 10) */
+function drawDuelArtRoyalCollarNecklace2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  theme: CardColorTheme
+) {
+  // Soft teal-grey gallery backdrop
+  ctx.fillStyle = "#4e6d73";
+  ctx.fillRect(x, y, w, h);
+
+  // Flowing Auburn-Chestnut Hair framing both sides of neck
+  ctx.fillStyle = "#753a3a";
+  ctx.strokeStyle = "#3b1919";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.08, y + h * 0.34, w * 0.17, h * 0.16, 0.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.85, y + h * 0.34, w * 0.16, h * 0.16, -0.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Warm rose-beige chin, graceful neck, and collarbone
+  const skin = ctx.createLinearGradient(x, y + h * 0.2, x, y + h * 0.72);
+  skin.addColorStop(0, "#cf9f97");
+  skin.addColorStop(0.45, "#a3706a");
+  skin.addColorStop(1, "#d9afa8");
+  ctx.fillStyle = skin;
+  ctx.fillRect(x, y + h * 0.2, w, h * 0.6);
+
+  // Chin & subtle smile peeking below top wave banner
+  ctx.fillStyle = "#d4a49c";
+  ctx.strokeStyle = "#5c3532";
+  ctx.lineWidth = 1.3;
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.2, y + h * 0.18);
+  ctx.quadraticCurveTo(x + w * 0.48, y + h * 0.38, x + w * 0.74, y + h * 0.18);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // Gentle smile line
+  ctx.strokeStyle = "#4a2426";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.32, y + h * 0.22);
+  ctx.quadraticCurveTo(x + w * 0.46, y + h * 0.25, x + w * 0.6, y + h * 0.23);
+  ctx.stroke();
+
+  // Ivory Lace Chemise Bodice & Dark Velvet Straps / Corset
+  ctx.fillStyle = "#e6dce0";
+  ctx.beginPath();
+  ctx.moveTo(x, y + h * 0.56);
+  ctx.quadraticCurveTo(x + w * 0.5, y + h * 0.74, x + w, y + h * 0.54);
+  ctx.lineTo(x + w, y + h * 0.9);
+  ctx.lineTo(x, y + h * 0.9);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#262c38";
+  ctx.fillRect(x, y + h * 0.87, w, h * 0.13);
+  // Black ribbon collar straps on left & right shoulders
+  ctx.strokeStyle = "#1f2430";
+  ctx.lineWidth = Math.max(4, w * 0.08);
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.04, y + h * 0.5);
+  ctx.lineTo(x + w * 0.16, y + h * 0.64);
+  ctx.moveTo(x + w * 0.96, y + h * 0.48);
+  ctx.lineTo(x + w * 0.88, y + h * 0.62);
+  ctx.stroke();
+
+  // Grand Golden Collar Necklace Strung with 6 Cabochon Bonus Gems
+  const cx = x + w * 0.55;
+  const cy = y + h * 0.76;
+  ctx.strokeStyle = "#b45309";
+  ctx.lineWidth = Math.max(3, w * 0.045);
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.14, y + h * 0.62);
+  ctx.quadraticCurveTo(cx, y + h * 0.84, x + w * 0.92, y + h * 0.6);
+  ctx.stroke();
+
+  // 6 Gold-Bezel Cabochon Gems along the collar
+  const beadCoords: [number, number][] = [
+    [0.24, 0.68],
+    [0.34, 0.72],
+    [0.43, 0.74],
+    [0.72, 0.72],
+    [0.81, 0.67],
+    [0.89, 0.62],
+  ];
+  for (const [bx, by] of beadCoords) {
+    ctx.fillStyle = "#eab308";
+    ctx.beginPath();
+    ctx.arc(x + w * bx, y + h * by, w * 0.055, 0, Math.PI * 2);
+    ctx.fill();
+    drawFacetedGem2D(ctx, x + w * bx, y + h * by, w * 0.038, h * 0.028, theme);
+  }
+
+  // Monumental Carved Gold Lotus Medallion Centerpiece
+  const mr = Math.min(w * 0.16, h * 0.115);
+  const medGrad = ctx.createRadialGradient(cx - mr * 0.2, cy - mr * 0.2, mr * 0.1, cx, cy, mr);
+  medGrad.addColorStop(0, "#fef08a");
+  medGrad.addColorStop(0.55, "#d99b38");
+  medGrad.addColorStop(1, "#7c3f12");
+  ctx.fillStyle = medGrad;
+  ctx.strokeStyle = "#5c2e0a";
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.arc(cx, cy, mr, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  drawFacetedGem2D(ctx, cx, cy, mr * 0.42, mr * 0.56, theme);
+}
+
+/** Helper: Precision Silver Jeweler's Tweezers Held by Master Fingertips (L3-11, L3-12, L3-13) */
+function drawJewelerTweezersHand2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  tipX: number,
+  tipY: number
+) {
+  // Steel Tweezers blades converging to (tipX, tipY)
+  ctx.strokeStyle = "#334155";
+  ctx.lineWidth = Math.max(2.6, w * 0.042);
+  ctx.beginPath();
+  ctx.moveTo(tipX, tipY);
+  ctx.lineTo(x + w * 0.88, y + h * 0.28);
+  ctx.moveTo(tipX + w * 0.04, tipY + h * 0.03);
+  ctx.lineTo(x + w * 0.92, y + h * 0.34);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#e2e8f0";
+  ctx.lineWidth = Math.max(1.4, w * 0.02);
+  ctx.beginPath();
+  ctx.moveTo(tipX, tipY);
+  ctx.lineTo(x + w * 0.88, y + h * 0.28);
+  ctx.moveTo(tipX + w * 0.04, tipY + h * 0.03);
+  ctx.lineTo(x + w * 0.92, y + h * 0.34);
+  ctx.stroke();
+
+  // Master Jeweler's Thumb & Index Finger gripping tweezers from right edge
+  ctx.fillStyle = "#d9a290";
+  ctx.strokeStyle = "#6e4238";
+  ctx.lineWidth = 1.3;
+  // Index finger below tweezers
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.78, y + h * 0.49, w * 0.22, h * 0.08, -0.45, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // Thumb on top right
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.92, y + h * 0.29, w * 0.22, h * 0.1, -0.12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // Thumbnail highlight
+  ctx.fillStyle = "#f2cfc2";
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.87, y + h * 0.28, w * 0.09, h * 0.06, -0.1, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/** L3-3. Tweezers Setting 5-Color Gems into Golden Fleur-de-Lis Scepter (Wild + Extra Turn: level3-11) */
+function drawDuelArtJeweledScepter2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  // Deep slate-teal studio backdrop
+  const bg = ctx.createLinearGradient(x, y, x + w, y + h);
+  bg.addColorStop(0, "#3b474a");
+  bg.addColorStop(1, "#1e2629");
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, y, w, h);
+
+  // Golden Scepter Rod extending down
+  const sx = x + w * 0.52;
+  ctx.fillStyle = "#d99b38";
+  ctx.strokeStyle = "#5c2e0a";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(sx - w * 0.03, y + h * 0.8);
+  ctx.lineTo(sx + w * 0.05, y + h * 0.8);
+  ctx.lineTo(sx + w * 0.1, y + h);
+  ctx.lineTo(sx + w * 0.01, y + h);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Ornate Golden Fleur-de-Lis Finial & Bulbous Scepter Head
+  const headGrad = ctx.createLinearGradient(sx - w * 0.25, y + h * 0.35, sx + w * 0.25, y + h * 0.8);
+  headGrad.addColorStop(0, "#fef08a");
+  headGrad.addColorStop(0.5, "#eab308");
+  headGrad.addColorStop(1, "#92400e");
+  ctx.fillStyle = headGrad;
+  ctx.beginPath();
+  ctx.moveTo(sx - w * 0.06, y + h * 0.32); // spear tip
+  ctx.lineTo(sx + w * 0.04, y + h * 0.45);
+  ctx.bezierCurveTo(sx + w * 0.28, y + h * 0.54, sx + w * 0.22, y + h * 0.76, sx, y + h * 0.78);
+  ctx.bezierCurveTo(sx - w * 0.26, y + h * 0.76, sx - w * 0.32, y + h * 0.54, sx - w * 0.08, y + h * 0.46);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Multi-Color Jewels studded into Scepter Head (Blue, Green, Black, Red)
+  drawFacetedGem2D(ctx, sx - w * 0.04, y + h * 0.52, w * 0.055, h * 0.036, getCardColorTheme("blue"));
+  drawFacetedGem2D(ctx, sx - w * 0.15, y + h * 0.6, w * 0.05, h * 0.036, getCardColorTheme("green"));
+  drawFacetedGem2D(ctx, sx - w * 0.06, y + h * 0.67, w * 0.048, h * 0.035, getCardColorTheme("black"));
+  drawFacetedGem2D(ctx, sx + w * 0.06, y + h * 0.66, w * 0.048, h * 0.035, getCardColorTheme("red"));
+
+  // Precision Tweezers setting the blue sapphire
+  drawJewelerTweezersHand2D(ctx, x, y, w, h, sx - w * 0.04, y + h * 0.52);
+}
+
+/** L3-4. Tweezers Setting Pearls into Ornate Imperial Gold Diadem (Wild + 3 Crowns: level3-12) */
+function drawDuelArtImperialDiademTweezers2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  // Deep slate upper backdrop + embossed rose-burgundy velvet cushion below
+  ctx.fillStyle = "#313c40";
+  ctx.fillRect(x, y, w, h * 0.75);
+  ctx.fillStyle = "#8a525e";
+  ctx.fillRect(x, y + h * 0.68, w, h * 0.32);
+
+  // Ornate Golden Imperial Diadem Arch filling center
+  const dGrad = ctx.createLinearGradient(x, y + h * 0.2, x, y + h * 0.78);
+  dGrad.addColorStop(0, "#fef08a");
+  dGrad.addColorStop(0.5, "#eab308");
+  dGrad.addColorStop(1, "#92400e");
+  ctx.fillStyle = dGrad;
+  ctx.strokeStyle = "#4d2308";
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(x - w * 0.04, y + h * 0.78);
+  ctx.lineTo(x - w * 0.04, y + h * 0.54);
+  ctx.quadraticCurveTo(x + w * 0.28, y + h * 0.38, x + w * 0.45, y + h * 0.18);
+  ctx.quadraticCurveTo(x + w * 0.68, y + h * 0.38, x + w * 1.04, y + h * 0.48);
+  ctx.lineTo(x + w * 1.04, y + h * 0.72);
+  ctx.quadraticCurveTo(x + w * 0.5, y + h * 0.68, x - w * 0.04, y + h * 0.78);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Upper Emerald Oval + Left Ruby Teardrop
+  drawFacetedGem2D(ctx, x + w * 0.49, y + h * 0.39, w * 0.068, h * 0.056, getCardColorTheme("green"));
+  drawFacetedGem2D(ctx, x + w * 0.1, y + h * 0.62, w * 0.06, h * 0.055, getCardColorTheme("red"), true, -0.2);
+
+  // Massive Center Onyx Surrounded by a Ring of 12 White Pearls
+  const px = x + w * 0.52;
+  const py = y + h * 0.6;
+  for (let i = 0; i < 12; i++) {
+    const a = (i * Math.PI * 2) / 12;
+    ctx.fillStyle = "#f8fafc";
+    ctx.strokeStyle = "#64748b";
+    ctx.lineWidth = 0.7;
+    ctx.beginPath();
+    ctx.arc(px + Math.cos(a) * w * 0.115, py + Math.sin(a) * h * 0.085, Math.max(1.8, w * 0.025), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  drawFacetedGem2D(ctx, px, py, w * 0.082, h * 0.064, getCardColorTheme("black"));
+
+  // Precision Tweezers placing pearl on top-left of halo
+  drawJewelerTweezersHand2D(ctx, x, y, w, h, px - w * 0.06, py - h * 0.07);
+}
+
+/** L3-5. Tweezers Suspending Carved Golden Pomander Lantern (Colorless 6-pt: level3-13) */
+function drawDuelArtGoldenPomanderTweezers2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  // Deep smoky teal-charcoal backdrop + dark wood edge at bottom
+  const bg = ctx.createLinearGradient(x, y, x + w, y + h);
+  bg.addColorStop(0, "#3b474d");
+  bg.addColorStop(1, "#1e262b");
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = "#4d352d";
+  ctx.fillRect(x, y + h * 0.88, w, h * 0.12);
+
+  // Exquisite Carved Golden Perfume Flask / Pomander Pendant
+  const cx = x + w * 0.57;
+  const cy = y + h * 0.8;
+  const pGrad = ctx.createRadialGradient(cx - w * 0.1, cy - h * 0.08, w * 0.04, cx, cy, w * 0.3);
+  pGrad.addColorStop(0, "#fef9c3");
+  pGrad.addColorStop(0.45, "#eab308");
+  pGrad.addColorStop(0.85, "#b45309");
+  pGrad.addColorStop(1, "#78350f");
+  ctx.fillStyle = pGrad;
+  ctx.strokeStyle = "#4d2308";
+  ctx.lineWidth = 1.5;
+
+  // Bulbous golden body
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, w * 0.27, h * 0.145, -0.08, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Ornate carved scroll filigree circles on flask body
+  ctx.strokeStyle = "#7c3f12";
+  ctx.lineWidth = 1.3;
+  ctx.beginPath();
+  ctx.arc(cx - w * 0.11, cy - h * 0.02, w * 0.06, 0, Math.PI * 2);
+  ctx.arc(cx + w * 0.11, cy - h * 0.04, w * 0.06, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Golden neck collar + twin scroll butterfly loops + top bail ring
+  ctx.fillStyle = "#eab308";
+  ctx.strokeStyle = "#5c2e0a";
+  ctx.lineWidth = 1.4;
+  drawRoundedRect(ctx, cx - w * 0.12, y + h * 0.62, w * 0.22, h * 0.055, 3);
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx - w * 0.11, y + h * 0.55, w * 0.065, 0, Math.PI * 2);
+  ctx.arc(cx + w * 0.05, y + h * 0.53, w * 0.065, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // Vertical bail loop held by tweezers
+  ctx.strokeStyle = "#facc15";
+  ctx.lineWidth = Math.max(2.5, w * 0.04);
+  ctx.beginPath();
+  ctx.moveTo(cx - w * 0.04, y + h * 0.54);
+  ctx.lineTo(cx - w * 0.09, y + h * 0.38);
+  ctx.stroke();
+
+  // Precision Tweezers gripping the top golden bail loop
+  drawJewelerTweezersHand2D(ctx, x, y, w, h, cx - w * 0.1, y + h * 0.39);
+}
+
 function resolveArtVariant(card: DuelJewelCard): DuelCardArtVariant {
   if (card.artVariant) return card.artVariant;
+  if (card.tier === 3) {
+    if (card.bonus === null) return "golden_pomander_tweezers";
+    if (card.bonus === "wild") {
+      return card.crowns >= 3 ? "imperial_diadem_tweezers" : "jeweled_scepter";
+    }
+    return card.crowns > 0 ? "imperial_crown" : "royal_collar_necklace";
+  }
   if (card.tier === 2) {
     if (card.bonus === "wild") return "ring_clamp";
     if (card.bonus === null) return "golden_orb_seal";
@@ -1980,6 +2450,21 @@ export function drawDuelPixelCard2D(
     case "golden_orb_seal":
       drawDuelArtGoldenOrbSeal2D(ctx, x, y, w, h);
       break;
+    case "imperial_crown":
+      drawDuelArtImperialCrown2D(ctx, x, y, w, h, theme);
+      break;
+    case "royal_collar_necklace":
+      drawDuelArtRoyalCollarNecklace2D(ctx, x, y, w, h, theme);
+      break;
+    case "jeweled_scepter":
+      drawDuelArtJeweledScepter2D(ctx, x, y, w, h);
+      break;
+    case "imperial_diadem_tweezers":
+      drawDuelArtImperialDiademTweezers2D(ctx, x, y, w, h);
+      break;
+    case "golden_pomander_tweezers":
+      drawDuelArtGoldenPomanderTweezers2D(ctx, x, y, w, h);
+      break;
   }
 
   // 2. Top Colored Cloth Canopy Wave (for colored & wild cards; colorless chalice keeps open art)
@@ -2002,13 +2487,19 @@ export function drawDuelPixelCard2D(
     ctx.stroke();
   }
 
-  // 3. Top-Left Vertical Pennant Ribbon (Points + Purple Power Badge)
-  const hasPowerOrWild = card.power !== null || card.bonus === "wild";
+  // 3. Top-Left Vertical Pennant Ribbon (Points + 1 or 2 Stacked Purple Power Badges)
+  const badges: (Exclude<DuelCardPower, null> | "WILD_ATTACH")[] = [];
+  if (card.bonus === "wild") badges.push("WILD_ATTACH");
+  if (card.power !== null) badges.push(card.power);
+
   const ribX = x + w * 0.06;
   const ribW = Math.max(15, w * 0.24);
-  const ribH = hasPowerOrWild
-    ? Math.max(30, h * 0.36)
-    : Math.max(18, h * 0.22);
+  const ribH =
+    badges.length >= 2
+      ? Math.max(46, h * 0.49)
+      : badges.length === 1
+        ? Math.max(30, h * 0.36)
+        : Math.max(18, h * 0.22);
 
   // Ribbon shadow
   ctx.fillStyle = "rgba(0,0,0,0.35)";
@@ -2052,22 +2543,30 @@ export function drawDuelPixelCard2D(
     ctx.fillText(String(card.points), ribX + ribW / 2, pyPt);
   }
 
-  // Purple Circular Power Icon hanging on lower part of pennant
-  if (card.power !== null) {
+  // Stacked Purple Circular Power Badges hanging on lower part of pennant (supports Wild + Extra Turn!)
+  const badgeR = Math.max(5, ribW * 0.35);
+  if (badges.length === 1) {
     drawDuelPowerBadge2D(
       ctx,
       ribX + ribW / 2,
       y + ribH - ribW * 0.52,
-      Math.max(5.5, ribW * 0.36),
-      card.power
+      badgeR,
+      badges[0]
     );
-  } else if (card.bonus === "wild") {
+  } else if (badges.length >= 2) {
     drawDuelPowerBadge2D(
       ctx,
       ribX + ribW / 2,
-      y + ribH - ribW * 0.52,
-      Math.max(5.5, ribW * 0.36),
-      "WILD_ATTACH"
+      y + ribH - badgeR * 3.35,
+      badgeR,
+      badges[0]
+    );
+    drawDuelPowerBadge2D(
+      ctx,
+      ribX + ribW / 2,
+      y + ribH - badgeR * 1.35,
+      badgeR,
+      badges[1]
     );
   }
 

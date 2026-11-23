@@ -71,7 +71,13 @@ export type DuelCardArtVariant =
   | "signet_ring"
   | "twin_rings_hand"
   | "ring_clamp"
-  | "golden_orb_seal";
+  | "golden_orb_seal"
+  // Level 3 (5 official motifs)
+  | "imperial_crown"
+  | "royal_collar_necklace"
+  | "jeweled_scepter"
+  | "imperial_diadem_tweezers"
+  | "golden_pomander_tweezers";
 
 export interface DuelJewelCard {
   id: string;
@@ -505,72 +511,29 @@ export function buildOfficialDuelDecks(): Record<
   ];
   tier2.push(...officialLevel2);
 
-  SPLENDOR_GEMS.forEach((bonus, i) => {
-    const c0 = SPLENDOR_GEMS[i];
-    const c1 = SPLENDOR_GEMS[(i + 1) % 5];
-    const c2 = SPLENDOR_GEMS[(i + 2) % 5];
-    const c3 = SPLENDOR_GEMS[(i + 3) % 5];
-    const c4 = SPLENDOR_GEMS[(i + 4) % 5];
-
-    // 2 colored Tier 3 cards per color (10) + 3 special Tier 3 = 13 Tier 3 cards
-    const t3Specs: Omit<DuelJewelCard, "id" | "tier">[] = [
-      {
-        bonus,
-        bonusCount: 1,
-        points: 4,
-        crowns: 2,
-        cost: makeDuelCost({ [c1]: 3, [c2]: 3, [c3]: 5, pearl: 1 }),
-        power: "STEAL",
-        artVariant: "silver_tiara_box",
-      },
-      {
-        bonus,
-        bonusCount: 1,
-        points: 5,
-        crowns: 2,
-        cost: makeDuelCost({ [c0]: 3, [c4]: 6, pearl: 1 }),
-        power: "EXTRA_TURN",
-        artVariant: "signet_ring",
-      },
-    ];
-    t3Specs.forEach((spec, idx) => {
-      tier3.push({ id: `dt3-${bonus}-${idx}`, tier: 3, ...spec });
-    });
-  });
-
-  // 3 Extra Tier 3 Grand Masterwork cards -> 13 total
-  tier3.push(
-    {
-      id: "dt3-wild-0",
-      tier: 3,
-      bonus: "wild",
-      bonusCount: 1,
-      points: 4,
-      crowns: 3,
-      cost: makeDuelCost({ white: 4, blue: 4, green: 3, pearl: 1 }),
-      power: "EXTRA_TURN",
-    },
-    {
-      id: "dt3-crown-0",
-      tier: 3,
-      bonus: null,
-      bonusCount: 0,
-      points: 6,
-      crowns: 3,
-      cost: makeDuelCost({ red: 5, black: 5, pearl: 2 }),
-      power: null,
-    },
-    {
-      id: "dt3-priv-0",
-      tier: 3,
-      bonus: "wild",
-      bonusCount: 1,
-      points: 5,
-      crowns: 2,
-      cost: makeDuelCost({ green: 4, red: 4, black: 4 }),
-      power: "PRIVILEGE",
-    }
-  );
+  // Official 13 Level 3 Cards (exact match to level3-01.png .. level3-13.png)
+  const officialLevel3: DuelJewelCard[] = [
+    // White (level3-01 .. level3-02)
+    { id: "level3-01", tier: 3, bonus: "white", bonusCount: 1, points: 3, crowns: 2, power: null, artVariant: "imperial_crown", cost: makeDuelCost({ blue: 3, red: 5, black: 3, pearl: 1 }) },
+    { id: "level3-02", tier: 3, bonus: "white", bonusCount: 1, points: 4, crowns: 0, power: null, artVariant: "royal_collar_necklace", cost: makeDuelCost({ white: 6, blue: 2, black: 2 }) },
+    // Blue (level3-03 .. level3-04)
+    { id: "level3-03", tier: 3, bonus: "blue", bonusCount: 1, points: 3, crowns: 2, power: null, artVariant: "imperial_crown", cost: makeDuelCost({ white: 3, green: 3, black: 5, pearl: 1 }) },
+    { id: "level3-04", tier: 3, bonus: "blue", bonusCount: 1, points: 4, crowns: 0, power: null, artVariant: "royal_collar_necklace", cost: makeDuelCost({ white: 2, blue: 6, green: 2 }) },
+    // Green (level3-05 .. level3-06)
+    { id: "level3-05", tier: 3, bonus: "green", bonusCount: 1, points: 3, crowns: 2, power: null, artVariant: "imperial_crown", cost: makeDuelCost({ white: 5, blue: 3, red: 3, pearl: 1 }) },
+    { id: "level3-06", tier: 3, bonus: "green", bonusCount: 1, points: 4, crowns: 0, power: null, artVariant: "royal_collar_necklace", cost: makeDuelCost({ blue: 2, green: 6, red: 2 }) },
+    // Black (level3-07 .. level3-08)
+    { id: "level3-07", tier: 3, bonus: "black", bonusCount: 1, points: 3, crowns: 2, power: null, artVariant: "imperial_crown", cost: makeDuelCost({ white: 3, green: 5, red: 3, pearl: 1 }) },
+    { id: "level3-08", tier: 3, bonus: "black", bonusCount: 1, points: 4, crowns: 0, power: null, artVariant: "royal_collar_necklace", cost: makeDuelCost({ white: 2, red: 2, black: 6 }) },
+    // Red (level3-09 .. level3-10)
+    { id: "level3-09", tier: 3, bonus: "red", bonusCount: 1, points: 3, crowns: 2, power: null, artVariant: "imperial_crown", cost: makeDuelCost({ blue: 5, green: 3, black: 3, pearl: 1 }) },
+    { id: "level3-10", tier: 3, bonus: "red", bonusCount: 1, points: 4, crowns: 0, power: null, artVariant: "royal_collar_necklace", cost: makeDuelCost({ green: 2, red: 6, black: 2 }) },
+    // 3 Grand Masterwork Special Level 3 Cards (level3-11 .. level3-13)
+    { id: "level3-11", tier: 3, bonus: "wild", bonusCount: 1, points: 3, crowns: 0, power: "EXTRA_TURN", artVariant: "jeweled_scepter", cost: makeDuelCost({ red: 8 }) },
+    { id: "level3-12", tier: 3, bonus: "wild", bonusCount: 1, points: 0, crowns: 3, power: null, artVariant: "imperial_diadem_tweezers", cost: makeDuelCost({ black: 8 }) },
+    { id: "level3-13", tier: 3, bonus: null, bonusCount: 0, points: 6, crowns: 0, power: null, artVariant: "golden_pomander_tweezers", cost: makeDuelCost({ white: 8 }) },
+  ];
+  tier3.push(...officialLevel3);
 
   return { 1: tier1, 2: tier2, 3: tier3 };
 }
