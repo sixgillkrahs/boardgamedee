@@ -686,7 +686,7 @@ export function DeadMansDrawCanvas({
             x: deckX - 6,
             y: deckY - 6,
             width: pileW + 12,
-            height: pileH + 28,
+            height: pileH + 12,
             cursor: "pointer",
             data: { type: "draw" },
           });
@@ -706,32 +706,45 @@ export function DeadMansDrawCanvas({
             }
           );
         }
-        if (pv.drawPileCount === 0) {
+
+        if (pv.drawPileCount > 0) {
+          // Place remaining card count directly inside the central circular medallion on the card back
+          const topX = deckX - 2;
+          const topY = deckY - 2;
+          const medCx = topX + pileW * 0.5;
+          const medCy = topY + pileH * 0.495;
+          const medR = Math.max(12, Math.round(pileW * 0.215));
+
+          ctx.save();
+          ctx.fillStyle = "rgba(18, 13, 8, 0.94)";
+          ctx.beginPath();
+          ctx.arc(medCx, medCy, medR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = canDrawNow && deckHovered ? "#fde047" : "#c89b44";
+          ctx.lineWidth = Math.max(1.4, pileW * 0.022);
+          ctx.stroke();
+
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.font = `900 ${Math.max(13, Math.round(medR * 1.18))}px ${fonts.mono}`;
+          ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+          ctx.fillText(String(pv.drawPileCount), medCx + 1, medCy + 1.5);
+          ctx.fillStyle = canDrawNow ? "#fef08a" : "#e5c878";
+          ctx.fillText(String(pv.drawPileCount), medCx, medCy + 0.5);
+          ctx.restore();
+        } else {
           drawRoundedRect(ctx, deckX, deckY, pileW, pileH, 8);
           ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
           ctx.setLineDash([4, 4]);
           ctx.stroke();
           ctx.setLineDash([]);
-        }
 
-        // Draw pile count badge
-        drawRoundedRect(ctx, deckX - 4, deckY + pileH + 6, pileW + 8, 20, 10);
-        ctx.fillStyle = canDrawNow
-          ? "rgba(217, 119, 6, 0.92)"
-          : "rgba(15, 23, 42, 0.92)";
-        ctx.fill();
-        ctx.strokeStyle = canDrawNow ? "#fde047" : "#475569";
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = canDrawNow ? "#0f172a" : "#e2e8f0";
-        ctx.font = `800 10px ${fonts.sans}`;
-        ctx.fillText(
-          canDrawNow ? `🃏 RÚT (${pv.drawPileCount})` : `Bộ bài: ${pv.drawPileCount}`,
-          deckX + pileW / 2,
-          deckY + pileH + 16
-        );
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = "#64748b";
+          ctx.font = `800 14px ${fonts.mono}`;
+          ctx.fillText("0", deckX + pileW / 2, deckY + pileH / 2);
+        }
 
         // Private ORACLE PEEK floating card right above/beside the Draw Pile!
         if (pv.oraclePeekedCard) {
