@@ -510,59 +510,10 @@ function drawDuelMatchScene(
     pv.seats.find((s) => s.seatNo === st.viewerSeatNo) ?? null;
 
   // =========================================================================
-  // 1. TOP HUD BAR: 3-Goal Banner | 4 Royal Cards | Privilege Supply & Timer
+  // 1. TOP BAR: 4 Royal Cards + Privilege Supply & Timer
   // =========================================================================
   const topY = 8;
   const topH = compact ? 64 : 74;
-
-  // Top-left: Turn & 3-Victory Goals compact pill
-  const leftHudW = compact ? Math.min(185, width * 0.34) : 230;
-  drawRoundedRect(ctx, 10, topY, leftHudW, topH, 10);
-  ctx.fillStyle = "rgba(10, 12, 26, 0.84)";
-  ctx.fill();
-  ctx.strokeStyle = "#475569";
-  ctx.lineWidth = 1.2;
-  ctx.stroke();
-
-  const activeSeat = pv.seats.find((s) => s.seatNo === pv.activeSeatNo);
-  ctx.fillStyle = isMyTurn ? "#fde047" : "#e2e8f0";
-  ctx.font = `800 ${compact ? 10 : 12}px sans-serif`;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  ctx.fillText(
-    pv.step === "Finished"
-      ? "🏆 KẾT THÚC"
-      : `Lượt ${pv.turnNumber} • ${activeSeat?.displayName ?? "?"}${pv.extraTurnQueued ? " 🔄" : ""}`,
-    18,
-    topY + 18
-  );
-
-  ctx.fillStyle = "#94a3b8";
-  ctx.font = `700 ${compact ? 9 : 10}px monospace`;
-  ctx.fillText("THẮNG NGAY: ★20 | 👑10 | 💎10/MÀU", 18, topY + 38);
-
-  const stepLabel =
-    pv.step === "TurnActionStep"
-      ? isMyTurn
-        ? st.privilegeMode
-          ? "📜 Chọn 1 đá quý (không phải Vàng)"
-          : "Chọn 1–3 đá thẳng hàng hoặc thẻ"
-        : "Đang chờ đối thủ..."
-      : pv.step === "WildColorPickStep"
-        ? "🌈 Chọn màu cho thẻ Đa Sắc"
-        : pv.step === "TakeMatchingStep"
-          ? "➕ Chọn 1 viên đá cùng màu trên bàn"
-          : pv.step === "StealTokenStep"
-            ? "🎯 Chọn 1 viên đá để cướp từ đối thủ"
-            : pv.step === "DiscardTokensStep"
-              ? "🎒 Trả bớt xu thừa về túi (≤ 10)"
-              : pv.step === "RoyalPickStep"
-                ? "👑 Chọn 1 Thẻ Hoàng Gia"
-                : pv.winReasonVi ?? "Trận đấu kết thúc";
-
-  ctx.fillStyle = isMyTurn ? "#4ade80" : "#cbd5e1";
-  ctx.font = `600 ${compact ? 9 : 10}px sans-serif`;
-  ctx.fillText(stepLabel, 18, topY + 56, leftHudW - 16);
 
   // Top-right: Privilege Supply + Bag Count + Countdown Timer
   const rightHudW = compact ? Math.min(165, width * 0.3) : 205;
@@ -577,6 +528,7 @@ function drawDuelMatchScene(
   ctx.fillStyle = "#fde68a";
   ctx.font = `800 ${compact ? 9 : 10}px monospace`;
   ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
   ctx.fillText(`ĐẶC QUYỀN (${pv.privilegeSupply})`, rightHudX + 8, topY + 16);
 
   for (let i = 0; i < 3; i++) {
@@ -604,11 +556,11 @@ function drawDuelMatchScene(
     ctx.fillText(`⏱ ${secLeft}s`, rightHudX + rightHudW - 10, topY + 56);
   }
 
-  // Top-center: 4 Royal Cards (clickable in RoyalPickStep)
-  const royalAreaX = leftHudW + 18;
-  const royalAreaW = Math.max(80, rightHudX - royalAreaX - 8);
+  // Top-left/center: 4 Royal Cards (clickable in RoyalPickStep)
+  const royalAreaX = 14;
+  const royalAreaW = Math.max(80, rightHudX - royalAreaX - 12);
   const royalCount = Math.max(1, pv.royals.length);
-  const royalGap = 6;
+  const royalGap = 8;
   const royalH = topH - 4;
   const maxRoyalW = (royalAreaW - royalGap * (royalCount - 1)) / Math.max(4, royalCount);
   const royalW = Math.min(maxRoyalW, Math.round(royalH * 0.662));
@@ -643,9 +595,9 @@ function drawDuelMatchScene(
 
   // Left: 5x5 Spiral Gem Board
   const maxBoardW = compact ? width * 0.42 : width * 0.37;
-  const boardSize = Math.floor(Math.min(maxBoardW - 20, midH - 22));
+  const boardSize = Math.floor(Math.min(maxBoardW - 16, midH - 12));
   const boardX = 16;
-  const boardY = midTop + Math.floor((midH - boardSize) / 2) + 4;
+  const boardY = midTop + Math.floor((midH - boardSize) / 2);
 
   const goldHighlightMode =
     isMyTurn &&
@@ -672,25 +624,20 @@ function drawDuelMatchScene(
     goldHighlightMode
   );
 
-  // Board caption above 5x5 grid
-  ctx.fillStyle = st.privilegeMode
-    ? "#fde047"
+  // Active mode hint only when in special pick state (no static "BÀN XOẮN ỐC 5x5" text)
+  const activeBoardHint = st.privilegeMode
+    ? "📜 CHỌN 1 ĐÁ QUÝ (KHÔNG PHẢI VÀNG)"
     : goldHighlightMode
-      ? "#fbbf24"
-      : "#94a3b8";
-  ctx.font = `700 ${compact ? 9 : 11}px monospace`;
-  ctx.textAlign = "center";
-  ctx.fillText(
-    st.privilegeMode
-      ? "📜 CHẾ ĐỘ ĐẶC QUYỀN: BẤM 1 ĐÁ QUÝ"
-      : goldHighlightMode
-        ? "🪙 CHỌN 1 XU VÀNG ĐỂ ĐẶT CỌC"
-        : highlightMatchColor
-          ? `➕ CHỌN 1 VIÊN ${DUEL_TOKEN_META[highlightMatchColor].shortVi.toUpperCase()}`
-          : "BÀN XOẮN ỐC 5×5",
-    boardX + boardSize / 2,
-    boardY - 11
-  );
+      ? "🪙 CHỌN 1 XU VÀNG ĐỂ ĐẶT CỌC"
+      : highlightMatchColor
+        ? `➕ CHỌN 1 VIÊN ${DUEL_TOKEN_META[highlightMatchColor].shortVi.toUpperCase()}`
+        : null;
+  if (activeBoardHint) {
+    ctx.fillStyle = st.privilegeMode ? "#fde047" : "#fbbf24";
+    ctx.font = `700 ${compact ? 9 : 11}px monospace`;
+    ctx.textAlign = "center";
+    ctx.fillText(activeBoardHint, boardX + boardSize / 2, boardY - 10);
+  }
 
   // Register 25 clickable hit regions on the 5x5 board
   const cellS = boardSize / 5;
