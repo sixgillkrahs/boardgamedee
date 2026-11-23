@@ -1342,8 +1342,563 @@ function drawDuelArtGoldsmithChalice2D(
   ctx.fill();
 }
 
+// ============================================================================
+// ALL 6 HANDCRAFTED 2D LEVEL-2 CARD ARTWORK SCENES (level2-01 .. level2-24)
+// ============================================================================
+
+/** L2-1. Silver Filigree Tiara in Crimson Velvet Jewelry Chest (01, 05, 09, 13, 17) */
+function drawDuelArtSilverTiaraBox2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  theme: CardColorTheme
+) {
+  // Dark wood table + mauve-plum runner cloth
+  ctx.fillStyle = "#3a2e2e";
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = "#7a6679";
+  ctx.beginPath();
+  ctx.moveTo(x - w * 0.05, y + h * 0.45);
+  ctx.lineTo(x + w * 0.85, y + h * 0.24);
+  ctx.lineTo(x + w * 1.05, y + h * 0.36);
+  ctx.lineTo(x + w * 1.05, y + h * 0.88);
+  ctx.lineTo(x + w * 0.3, y + h);
+  ctx.lineTo(x - w * 0.05, y + h * 0.82);
+  ctx.closePath();
+  ctx.fill();
+
+  // Open Chest Lid (angled back) with crimson tufted velvet & gold border
+  ctx.fillStyle = "#5c1726";
+  ctx.strokeStyle = "#d99b38";
+  ctx.lineWidth = Math.max(2.2, w * 0.032);
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.08, y + h * 0.46);
+  ctx.lineTo(x + w * 0.16, y + h * 0.22);
+  ctx.lineTo(x + w * 0.72, y + h * 0.14);
+  ctx.lineTo(x + w * 0.76, y + h * 0.34);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Tufted lid dots
+  ctx.fillStyle = "#3b0a15";
+  for (const [tx, ty] of [
+    [0.34, 0.25],
+    [0.48, 0.23],
+    [0.6, 0.22],
+    [0.38, 0.34],
+    [0.54, 0.32],
+  ] as const) {
+    ctx.beginPath();
+    ctx.arc(x + w * tx, y + h * ty, Math.max(1.2, w * 0.016), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Chest Outer Base (ornate silver filigree panels + gold corners)
+  ctx.fillStyle = "#8a929e";
+  ctx.strokeStyle = "#c98b2e";
+  ctx.lineWidth = Math.max(2, w * 0.028);
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.08, y + h * 0.48);
+  ctx.lineTo(x + w * 0.38, y + h * 0.85);
+  ctx.lineTo(x + w * 0.99, y + h * 0.68);
+  ctx.lineTo(x + w * 0.99, y + h * 0.54);
+  ctx.lineTo(x + w * 0.72, y + h * 0.36);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Crimson Velvet Inner Bed
+  ctx.fillStyle = "#7a192a";
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.14, y + h * 0.48);
+  ctx.lineTo(x + w * 0.42, y + h * 0.72);
+  ctx.lineTo(x + w * 0.94, y + h * 0.56);
+  ctx.lineTo(x + w * 0.7, y + h * 0.38);
+  ctx.closePath();
+  ctx.fill();
+
+  // Sparkling Silver Lattice Crown Tiara inside chest
+  const tx = x + w * 0.52;
+  const ty = y + h * 0.56;
+  ctx.strokeStyle = "#cbd5e1";
+  ctx.lineWidth = Math.max(1.6, w * 0.022);
+  ctx.beginPath();
+  ctx.ellipse(tx, ty - h * 0.02, w * 0.32, h * 0.12, 0.14, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Silver scalloped tiara spikes along front arc
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = Math.max(1.8, w * 0.026);
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.26, y + h * 0.54);
+  ctx.lineTo(x + w * 0.34, y + h * 0.47);
+  ctx.lineTo(x + w * 0.4, y + h * 0.59);
+  ctx.lineTo(x + w * 0.5, y + h * 0.45);
+  ctx.lineTo(x + w * 0.56, y + h * 0.64);
+  ctx.lineTo(x + w * 0.66, y + h * 0.52);
+  ctx.lineTo(x + w * 0.72, y + h * 0.65);
+  ctx.lineTo(x + w * 0.82, y + h * 0.58);
+  ctx.stroke();
+
+  // Large Central Teardrop Bonus-Colored Gem in Gold Bezel
+  ctx.fillStyle = "#eab308";
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.51, y + h * 0.52, w * 0.09, h * 0.075, 0.18, 0, Math.PI * 2);
+  ctx.fill();
+  drawFacetedGem2D(
+    ctx,
+    x + w * 0.51,
+    y + h * 0.52,
+    w * 0.068,
+    h * 0.062,
+    theme,
+    true,
+    0.18
+  );
+}
+
+/** L2-2. Purple-Gloved Thief Hand Reaching Over Shattered Glass Dome to Ring (02, 06, 10, 14, 18) */
+function drawDuelArtShatteredGlassRing2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  theme: CardColorTheme
+) {
+  // Moody violet-taupe shadow gallery + wooden table below
+  const bg = ctx.createLinearGradient(x, y, x + w, y + h * 0.75);
+  bg.addColorStop(0, "#755d6e");
+  bg.addColorStop(1, "#1e1624");
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, y, w, h);
+
+  ctx.fillStyle = "#5c342b";
+  ctx.fillRect(x, y + h * 0.74, w, h * 0.26);
+
+  // Display Base Plinth + Royal Blue Velvet Pad
+  ctx.fillStyle = "#4b6973";
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.52, y + h * 0.78, w * 0.5, h * 0.14, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#2b5b8c";
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.52, y + h * 0.74, w * 0.42, h * 0.1, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Golden Lotus/Sunburst Ring resting on blue pad
+  const rx = x + w * 0.52;
+  const ry = y + h * 0.72;
+  ctx.strokeStyle = "#d99b38";
+  ctx.lineWidth = Math.max(2.5, w * 0.042);
+  ctx.beginPath();
+  ctx.ellipse(rx, ry, w * 0.24, h * 0.055, 0.06, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Golden starburst petals rising behind central gem
+  ctx.fillStyle = "#eab34c";
+  ctx.strokeStyle = "#783f0f";
+  ctx.lineWidth = 1;
+  for (const [dx, dy, ang] of [
+    [-0.1, -0.05, -0.7],
+    [-0.05, -0.1, -0.35],
+    [0.01, -0.13, 0.05],
+    [0.07, -0.09, 0.45],
+    [0.11, -0.03, 0.8],
+  ] as const) {
+    ctx.save();
+    ctx.translate(rx + w * dx, ry + h * dy);
+    ctx.rotate(ang);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, w * 0.036, h * 0.06, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+  drawFacetedGem2D(ctx, rx + w * 0.02, ry - h * 0.01, w * 0.065, h * 0.038, theme);
+
+  // Jagged Shattered Pale-Blue Glass Dome Rim around ring
+  ctx.fillStyle = "rgba(186, 224, 232, 0.55)";
+  ctx.strokeStyle = "#e0f2fe";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.04, y + h * 0.72);
+  ctx.lineTo(x + w * 0.04, y + h * 0.56);
+  ctx.lineTo(x + w * 0.16, y + h * 0.64);
+  ctx.lineTo(x + w * 0.24, y + h * 0.52);
+  ctx.lineTo(x + w * 0.48, y + h * 0.48);
+  ctx.lineTo(x + w * 0.72, y + h * 0.58);
+  ctx.lineTo(x + w * 0.86, y + h * 0.56);
+  ctx.lineTo(x + w * 0.96, y + h * 0.68);
+  ctx.lineTo(x + w * 0.96, y + h * 0.76);
+  ctx.quadraticCurveTo(x + w * 0.5, y + h * 0.9, x + w * 0.04, y + h * 0.72);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Dramatic Purple-Gloved Thief Hand reaching down from top-right
+  const gloveGrad = ctx.createLinearGradient(x + w * 0.3, y + h * 0.2, x + w * 0.95, y + h * 0.55);
+  gloveGrad.addColorStop(0, "#8b63a3");
+  gloveGrad.addColorStop(0.55, "#4c2c66");
+  gloveGrad.addColorStop(1, "#261336");
+  ctx.fillStyle = gloveGrad;
+  ctx.strokeStyle = "#1b0b29";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.95, y + h * 0.16);
+  ctx.lineTo(x + w * 0.56, y + h * 0.22);
+  ctx.lineTo(x + w * 0.2, y + h * 0.46); // index finger
+  ctx.lineTo(x + w * 0.28, y + h * 0.47);
+  ctx.lineTo(x + w * 0.4, y + h * 0.4);
+  ctx.lineTo(x + w * 0.36, y + h * 0.5); // middle finger
+  ctx.lineTo(x + w * 0.45, y + h * 0.49);
+  ctx.lineTo(x + w * 0.54, y + h * 0.42);
+  ctx.lineTo(x + w * 0.55, y + h * 0.5); // ring finger
+  ctx.lineTo(x + w * 0.63, y + h * 0.46);
+  ctx.lineTo(x + w * 0.68, y + h * 0.54); // thumb
+  ctx.lineTo(x + w * 0.76, y + h * 0.52);
+  ctx.lineTo(x + w * 0.85, y + h * 0.34);
+  ctx.lineTo(x + w, y + h * 0.22);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+}
+
+/** L2-3. Heavy Golden 'S' Signet Ring on Parchment Scrolls (03, 07, 11, 15, 19) */
+function drawDuelArtSignetRing2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  theme: CardColorTheme
+) {
+  // Mahogany desk backdrop
+  ctx.fillStyle = "#52352c";
+  ctx.fillRect(x, y, w, h);
+
+  // Stacked cream parchment folio sheets at bottom
+  ctx.fillStyle = "#d9d2cc";
+  ctx.strokeStyle = "#5c4d4a";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(x - w * 0.04, y + h * 0.55);
+  ctx.lineTo(x + w * 0.72, y + h * 0.44);
+  ctx.lineTo(x + w * 1.04, y + h * 0.62);
+  ctx.lineTo(x + w * 0.44, y + h * 0.89);
+  ctx.lineTo(x - w * 0.04, y + h * 0.72);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Rolled parchment scroll upper-left + slate cord
+  ctx.fillStyle = "#c8c0ba";
+  ctx.beginPath();
+  ctx.moveTo(x, y + h * 0.28);
+  ctx.lineTo(x + w * 0.85, y + h * 0.16);
+  ctx.lineTo(x + w * 0.96, y + h * 0.28);
+  ctx.lineTo(x + w * 0.14, y + h * 0.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Heavy Golden Signet Ring Band
+  const rx = x + w * 0.62;
+  const ry = y + h * 0.49;
+  const ringGrad = ctx.createLinearGradient(x + w * 0.25, y + h * 0.34, x + w * 0.98, y + h * 0.66);
+  ringGrad.addColorStop(0, "#fef08a");
+  ringGrad.addColorStop(0.45, "#e5a33d");
+  ringGrad.addColorStop(1, "#7c3f12");
+  ctx.fillStyle = ringGrad;
+  ctx.strokeStyle = "#4d2308";
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.ellipse(rx, ry, w * 0.36, h * 0.16, 0.14, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Inner dark ring hole
+  ctx.fillStyle = "#47220a";
+  ctx.beginPath();
+  ctx.ellipse(rx + w * 0.04, ry - h * 0.05, w * 0.22, h * 0.065, 0.14, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Large Circular Golden Signet Face with Engraved 'S'
+  const fx = x + w * 0.47;
+  const fy = y + h * 0.53;
+  const fr = Math.min(w * 0.23, h * 0.16);
+  ctx.fillStyle = "#d99634";
+  ctx.strokeStyle = "#4d2308";
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.ellipse(fx, fy, fr * 0.92, fr * 1.04, -0.35, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Embossed Golden 'S' Monogram
+  ctx.strokeStyle = "#fef08a";
+  ctx.lineWidth = Math.max(2, fr * 0.2);
+  ctx.font = `900 ${Math.max(12, Math.round(fr * 1.35))}px Georgia, serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#fde68a";
+  ctx.fillText("S", fx, fy + 1);
+
+  // Side Oval Bonus-Colored Gemstone set into ring shank
+  drawFacetedGem2D(
+    ctx,
+    x + w * 0.8,
+    y + h * 0.56,
+    w * 0.062,
+    h * 0.036,
+    theme,
+    false,
+    -0.5
+  );
+}
+
+/** L2-4. Graceful Hand Wearing Two Matching Bonus-Colored Rings (04, 08, 12, 16, 20 — x2 Bonus!) */
+function drawDuelArtTwinRingsHand2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  theme: CardColorTheme
+) {
+  // Soft luminous silver-lavender studio backdrop
+  const bg = ctx.createLinearGradient(x, y, x + w, y + h);
+  bg.addColorStop(0, "#6c7185");
+  bg.addColorStop(0.45, "#b8becf");
+  bg.addColorStop(1, "#4d5366");
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, y, w, h);
+
+  // Hand & 4 graceful fingers angled diagonally down-right
+  const skin = ctx.createLinearGradient(x + w * 0.1, y + h * 0.2, x + w * 0.85, y + h * 0.85);
+  skin.addColorStop(0, "#cf9b86");
+  skin.addColorStop(0.6, "#e3b39f");
+  skin.addColorStop(1, "#b87f6c");
+  ctx.fillStyle = skin;
+  ctx.strokeStyle = "#6e4238";
+  ctx.lineWidth = 1.2;
+
+  // Wrist & Back of hand
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.02, y + h * 0.2);
+  ctx.lineTo(x + w * 0.34, y + h * 0.19);
+  ctx.quadraticCurveTo(x + w * 0.58, y + h * 0.3, x + w * 0.76, y + h * 0.42);
+  ctx.lineTo(x + w * 0.99, y + h * 0.8); // index finger
+  ctx.quadraticCurveTo(x + w * 0.94, y + h * 0.86, x + w * 0.87, y + h * 0.8);
+  ctx.lineTo(x + w * 0.72, y + h * 0.52);
+  ctx.lineTo(x + w * 0.76, y + h * 0.86); // middle finger
+  ctx.quadraticCurveTo(x + w * 0.68, y + h * 0.9, x + w * 0.62, y + h * 0.82);
+  ctx.lineTo(x + w * 0.55, y + h * 0.48);
+  ctx.lineTo(x + w * 0.55, y + h * 0.84); // ring finger
+  ctx.quadraticCurveTo(x + w * 0.46, y + h * 0.88, x + w * 0.42, y + h * 0.8);
+  ctx.lineTo(x + w * 0.4, y + h * 0.44);
+  ctx.lineTo(x + w * 0.38, y + h * 0.74); // pinky
+  ctx.quadraticCurveTo(x + w * 0.31, y + h * 0.78, x + w * 0.29, y + h * 0.7);
+  ctx.lineTo(x + w * 0.24, y + h * 0.42);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Ring 1 (Left / Ring Finger): Silver Band with 3 tiny bonus gems
+  const r1x = x + w * 0.49;
+  const r1y = y + h * 0.53;
+  ctx.strokeStyle = "#e2e8f0";
+  ctx.lineWidth = Math.max(2.6, w * 0.042);
+  ctx.beginPath();
+  ctx.ellipse(r1x, r1y, w * 0.085, h * 0.024, 0.06, 0, Math.PI * 2);
+  ctx.stroke();
+  drawFacetedGem2D(ctx, r1x - w * 0.04, r1y - 1, w * 0.025, h * 0.018, theme);
+  drawFacetedGem2D(ctx, r1x, r1y - 1.5, w * 0.032, h * 0.022, theme);
+  drawFacetedGem2D(ctx, r1x + w * 0.04, r1y - 1, w * 0.025, h * 0.018, theme);
+
+  // Ring 2 (Right / Index Finger): Bold Golden Cushion-Cut Signet Ring
+  const r2x = x + w * 0.8;
+  const r2y = y + h * 0.51;
+  ctx.fillStyle = "#d99b38";
+  ctx.strokeStyle = "#5c2e0a";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.ellipse(r2x, r2y, w * 0.1, h * 0.045, -0.35, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  drawFacetedGem2D(ctx, r2x + w * 0.015, r2y - h * 0.008, w * 0.055, h * 0.036, theme);
+}
+
+/** L2-5. Wooden Ring Clamp Holding Gold Ring Blank + Tools (Wild: 21, 22, 23) */
+function drawDuelArtRingClamp2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  // Planked wood bench + slate-teal jeweler's mat
+  ctx.fillStyle = "#6e4636";
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = "#3f5866";
+  ctx.beginPath();
+  ctx.moveTo(x - w * 0.05, y + h * 0.56);
+  ctx.lineTo(x + w * 0.45, y + h * 0.28);
+  ctx.lineTo(x + w * 1.05, y + h * 0.62);
+  ctx.lineTo(x + w * 0.18, y + h * 0.88);
+  ctx.closePath();
+  ctx.fill();
+
+  // Steel burnisher tool upper-right
+  ctx.strokeStyle = "#cbd5e1";
+  ctx.lineWidth = Math.max(2.5, w * 0.04);
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.5, y + h * 0.42);
+  ctx.lineTo(x + w * 0.72, y + h * 0.28);
+  ctx.stroke();
+  ctx.fillStyle = "#8c5642";
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.8, y + h * 0.24, w * 0.18, h * 0.08, -0.35, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Wooden Cylinder Ring Clamp
+  const woodGrad = ctx.createLinearGradient(x, y + h * 0.28, x + w * 0.6, y + h * 0.7);
+  woodGrad.addColorStop(0, "#a87765");
+  woodGrad.addColorStop(0.5, "#7d5142");
+  woodGrad.addColorStop(1, "#4a2c22");
+  ctx.fillStyle = woodGrad;
+  ctx.strokeStyle = "#331b14";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(x, y + h * 0.2);
+  ctx.lineTo(x + w * 0.24, y + h * 0.18);
+  ctx.lineTo(x + w * 0.6, y + h * 0.48);
+  ctx.quadraticCurveTo(x + w * 0.62, y + h * 0.66, x + w * 0.42, y + h * 0.71);
+  ctx.lineTo(x, y + h * 0.52);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Clamp jaw split & Gleaming Gold Ring Blank clamped tightly inside
+  ctx.fillStyle = "#26140e";
+  ctx.fillRect(x + w * 0.14, y + h * 0.54, w * 0.46, h * 0.045);
+
+  ctx.strokeStyle = "#eab308";
+  ctx.lineWidth = Math.max(3, w * 0.05);
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.42, y + h * 0.61, w * 0.18, h * 0.06, 0.18, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = "#d99b38";
+  ctx.strokeStyle = "#fef08a";
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.arc(x + w * 0.5, y + h * 0.63, w * 0.085, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+}
+
+/** L2-6. Polished Golden Yin-Yang Pomander Orb & Wax Seal Stamp (Colorless 5-pt: level2-24) */
+function drawDuelArtGoldenOrbSeal2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  // Deep charcoal-teal gallery background + black plinth
+  ctx.fillStyle = "#1b242c";
+  ctx.fillRect(x, y, w, h);
+
+  // Soft Mauve-Grey Draped Silk Cloth
+  ctx.fillStyle = "#a38d96";
+  ctx.beginPath();
+  ctx.moveTo(x, y + h * 0.28);
+  ctx.lineTo(x + w * 0.42, y + h * 0.21);
+  ctx.lineTo(x + w, y + h * 0.25);
+  ctx.lineTo(x + w, y + h * 0.66);
+  ctx.lineTo(x + w * 0.45, y + h * 0.8);
+  ctx.lineTo(x, y + h * 0.72);
+  ctx.closePath();
+  ctx.fill();
+
+  // Cast shadows on cloth
+  ctx.fillStyle = "rgba(42, 28, 36, 0.45)";
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.58, y + h * 0.44, w * 0.26, h * 0.06, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Polished Golden Spherical Orb (Upper Right)
+  const ox = x + w * 0.72;
+  const oy = y + h * 0.3;
+  const or = Math.min(w * 0.24, h * 0.16);
+  const orbGrad = ctx.createRadialGradient(ox - or * 0.35, oy - or * 0.35, or * 0.1, ox, oy, or);
+  orbGrad.addColorStop(0, "#fef9c3");
+  orbGrad.addColorStop(0.45, "#eab308");
+  orbGrad.addColorStop(1, "#92400e");
+  ctx.fillStyle = orbGrad;
+  ctx.strokeStyle = "#5c2e0a";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.arc(ox, oy, or, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Swirling yin-yang engraved groove & recessed circle on orb
+  ctx.strokeStyle = "#78350f";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.arc(ox + or * 0.4, oy - or * 0.25, or * 0.22, 0, Math.PI * 2);
+  ctx.fillStyle = "#b45309";
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(ox + or * 0.12, oy - or * 0.9);
+  ctx.quadraticCurveTo(ox - or * 0.15, oy, ox + or * 0.38, oy + or * 0.85);
+  ctx.stroke();
+
+  // Intricate Golden Wax Seal / Cufflink Stamp lying on left
+  ctx.fillStyle = "#dca040";
+  ctx.strokeStyle = "#5c2e0a";
+  ctx.lineWidth = 1.3;
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.26, y + h * 0.42, w * 0.1, h * 0.11, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x + w * 0.08, y + h * 0.49, w * 0.09, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Small Gold Coin & 3 Tiny Gold Nuggets scattered on cloth
+  ctx.fillStyle = "#facc15";
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.68, y + h * 0.5, w * 0.08, h * 0.025, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  for (const [nx, ny] of [
+    [0.42, 0.56],
+    [0.56, 0.57],
+    [0.6, 0.61],
+  ] as const) {
+    ctx.beginPath();
+    ctx.ellipse(x + w * nx, y + h * ny, w * 0.028, h * 0.014, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 function resolveArtVariant(card: DuelJewelCard): DuelCardArtVariant {
   if (card.artVariant) return card.artVariant;
+  if (card.tier === 2) {
+    if (card.bonus === "wild") return "ring_clamp";
+    if (card.bonus === null) return "golden_orb_seal";
+    if (card.bonusCount >= 2) return "twin_rings_hand";
+    if (card.power === "STEAL") return "shattered_glass_ring";
+    if (card.power === "PRIVILEGE") return "signet_ring";
+    return "silver_tiara_box";
+  }
   if (card.bonus === "wild") return "artisan_hands";
   if (card.bonus === null) return "goldsmith_chalice";
   if (card.crowns > 0) return "tiara";
@@ -1406,6 +1961,24 @@ export function drawDuelPixelCard2D(
       break;
     case "goldsmith_chalice":
       drawDuelArtGoldsmithChalice2D(ctx, x, y, w, h);
+      break;
+    case "silver_tiara_box":
+      drawDuelArtSilverTiaraBox2D(ctx, x, y, w, h, theme);
+      break;
+    case "shattered_glass_ring":
+      drawDuelArtShatteredGlassRing2D(ctx, x, y, w, h, theme);
+      break;
+    case "signet_ring":
+      drawDuelArtSignetRing2D(ctx, x, y, w, h, theme);
+      break;
+    case "twin_rings_hand":
+      drawDuelArtTwinRingsHand2D(ctx, x, y, w, h, theme);
+      break;
+    case "ring_clamp":
+      drawDuelArtRingClamp2D(ctx, x, y, w, h);
+      break;
+    case "golden_orb_seal":
+      drawDuelArtGoldenOrbSeal2D(ctx, x, y, w, h);
       break;
   }
 
@@ -1553,23 +2126,32 @@ export function drawDuelPixelCard2D(
         ctx.fill();
       });
     } else {
-      // Colored ring around ivory disc
-      ctx.strokeStyle = theme.ring;
-      ctx.lineWidth = Math.max(1.8, medR * 0.2);
-      ctx.beginPath();
-      ctx.arc(mx, my, medR, 0, Math.PI * 2);
-      ctx.stroke();
+      // Draw 1 or 2 Side-by-Side Circular Ivory Bonus Gem Medallions (official Level 2 x2 look!)
+      const count = card.bonusCount >= 2 ? 2 : 1;
+      const rUse = count === 2 ? medR * 0.92 : medR;
+      const centers =
+        count === 2
+          ? [mx - rUse * 1.82, mx]
+          : [mx];
 
-      drawDuelPixelTokenIcon2D(ctx, mx, my, medR * 1.45, card.bonus);
-      if (card.bonusCount >= 2) {
-        ctx.fillStyle = "#0f172a";
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 2;
-        ctx.font = `900 ${Math.max(8, Math.round(medR * 0.72))}px monospace`;
-        ctx.textAlign = "right";
-        ctx.textBaseline = "bottom";
-        ctx.strokeText("×2", mx + medR + 1, my + medR + 2);
-        ctx.fillText("×2", mx + medR + 1, my + medR + 2);
+      for (const cxMed of centers) {
+        if (cxMed !== mx) {
+          ctx.fillStyle = "rgba(0,0,0,0.35)";
+          ctx.beginPath();
+          ctx.arc(cxMed + 1, my + 1.5, rUse + 1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#f5efe6";
+          ctx.beginPath();
+          ctx.arc(cxMed, my, rUse, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.strokeStyle = theme.ring;
+        ctx.lineWidth = Math.max(1.8, rUse * 0.2);
+        ctx.beginPath();
+        ctx.arc(cxMed, my, rUse, 0, Math.PI * 2);
+        ctx.stroke();
+
+        drawDuelPixelTokenIcon2D(ctx, cxMed, my, rUse * 1.45, card.bonus);
       }
     }
   }

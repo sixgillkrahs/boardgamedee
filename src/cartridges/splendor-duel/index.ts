@@ -57,13 +57,21 @@ export type DuelTokenBag = Record<DuelTokenColor, number>;
 export type DuelColorCounts = Record<SplendorGemColor, number>;
 
 export type DuelCardArtVariant =
+  // Level 1 (7 official motifs)
   | "earring"
   | "tiara"
   | "necklace"
   | "teardrop_gem"
   | "rapier_hilt"
   | "artisan_hands"
-  | "goldsmith_chalice";
+  | "goldsmith_chalice"
+  // Level 2 (6 official motifs)
+  | "silver_tiara_box"
+  | "shattered_glass_ring"
+  | "signet_ring"
+  | "twin_rings_hand"
+  | "ring_clamp"
+  | "golden_orb_seal";
 
 export interface DuelJewelCard {
   id: string;
@@ -462,55 +470,47 @@ export function buildOfficialDuelDecks(): Record<
   ];
   tier1.push(...officialLevel1);
 
+  // Official 24 Level 2 Cards (exact match to level2-01.png .. level2-24.png)
+  const officialLevel2: DuelJewelCard[] = [
+    // White (level2-01 .. level2-04)
+    { id: "level2-01", tier: 2, bonus: "white", bonusCount: 1, points: 2, crowns: 1, power: null, artVariant: "silver_tiara_box", cost: makeDuelCost({ green: 2, red: 2, black: 2, pearl: 1 }) },
+    { id: "level2-02", tier: 2, bonus: "white", bonusCount: 1, points: 1, crowns: 0, power: "STEAL", artVariant: "shattered_glass_ring", cost: makeDuelCost({ blue: 4, red: 3 }) },
+    { id: "level2-03", tier: 2, bonus: "white", bonusCount: 1, points: 2, crowns: 0, power: "PRIVILEGE", artVariant: "signet_ring", cost: makeDuelCost({ white: 4, black: 2, pearl: 1 }) },
+    { id: "level2-04", tier: 2, bonus: "white", bonusCount: 2, points: 1, crowns: 0, power: null, artVariant: "twin_rings_hand", cost: makeDuelCost({ blue: 5, green: 2 }) },
+    // Blue (level2-05 .. level2-08)
+    { id: "level2-05", tier: 2, bonus: "blue", bonusCount: 1, points: 2, crowns: 1, power: null, artVariant: "silver_tiara_box", cost: makeDuelCost({ white: 2, red: 2, black: 2, pearl: 1 }) },
+    { id: "level2-06", tier: 2, bonus: "blue", bonusCount: 1, points: 1, crowns: 0, power: "STEAL", artVariant: "shattered_glass_ring", cost: makeDuelCost({ green: 4, black: 3 }) },
+    { id: "level2-07", tier: 2, bonus: "blue", bonusCount: 1, points: 2, crowns: 0, power: "PRIVILEGE", artVariant: "signet_ring", cost: makeDuelCost({ white: 2, blue: 4, pearl: 1 }) },
+    { id: "level2-08", tier: 2, bonus: "blue", bonusCount: 2, points: 1, crowns: 0, power: null, artVariant: "twin_rings_hand", cost: makeDuelCost({ green: 5, red: 2 }) },
+    // Green (level2-09 .. level2-12)
+    { id: "level2-09", tier: 2, bonus: "green", bonusCount: 1, points: 2, crowns: 1, power: null, artVariant: "silver_tiara_box", cost: makeDuelCost({ white: 2, blue: 2, black: 2, pearl: 1 }) },
+    { id: "level2-10", tier: 2, bonus: "green", bonusCount: 1, points: 1, crowns: 0, power: "STEAL", artVariant: "shattered_glass_ring", cost: makeDuelCost({ white: 3, red: 4 }) },
+    { id: "level2-11", tier: 2, bonus: "green", bonusCount: 1, points: 2, crowns: 0, power: "PRIVILEGE", artVariant: "signet_ring", cost: makeDuelCost({ blue: 2, green: 4, pearl: 1 }) },
+    { id: "level2-12", tier: 2, bonus: "green", bonusCount: 2, points: 1, crowns: 0, power: null, artVariant: "twin_rings_hand", cost: makeDuelCost({ red: 5, black: 2 }) },
+    // Black (level2-13 .. level2-16)
+    { id: "level2-13", tier: 2, bonus: "black", bonusCount: 1, points: 2, crowns: 1, power: null, artVariant: "silver_tiara_box", cost: makeDuelCost({ blue: 2, green: 2, red: 2, pearl: 1 }) },
+    { id: "level2-14", tier: 2, bonus: "black", bonusCount: 1, points: 1, crowns: 0, power: "STEAL", artVariant: "shattered_glass_ring", cost: makeDuelCost({ white: 4, green: 3 }) },
+    { id: "level2-15", tier: 2, bonus: "black", bonusCount: 1, points: 2, crowns: 0, power: "PRIVILEGE", artVariant: "signet_ring", cost: makeDuelCost({ red: 2, black: 4, pearl: 1 }) },
+    { id: "level2-16", tier: 2, bonus: "black", bonusCount: 2, points: 1, crowns: 0, power: null, artVariant: "twin_rings_hand", cost: makeDuelCost({ white: 5, blue: 2 }) },
+    // Red (level2-17 .. level2-20)
+    { id: "level2-17", tier: 2, bonus: "red", bonusCount: 1, points: 2, crowns: 1, power: null, artVariant: "silver_tiara_box", cost: makeDuelCost({ white: 2, blue: 2, green: 2, pearl: 1 }) },
+    { id: "level2-18", tier: 2, bonus: "red", bonusCount: 1, points: 1, crowns: 0, power: "STEAL", artVariant: "shattered_glass_ring", cost: makeDuelCost({ blue: 3, black: 4 }) },
+    { id: "level2-19", tier: 2, bonus: "red", bonusCount: 1, points: 2, crowns: 0, power: "PRIVILEGE", artVariant: "signet_ring", cost: makeDuelCost({ green: 2, red: 4, pearl: 1 }) },
+    { id: "level2-20", tier: 2, bonus: "red", bonusCount: 2, points: 1, crowns: 0, power: null, artVariant: "twin_rings_hand", cost: makeDuelCost({ white: 2, black: 5 }) },
+    // Special Wild & Colorless Golden Orb Seal (level2-21 .. level2-24)
+    { id: "level2-21", tier: 2, bonus: "wild", bonusCount: 1, points: 2, crowns: 0, power: null, artVariant: "ring_clamp", cost: makeDuelCost({ green: 6, pearl: 1 }) },
+    { id: "level2-22", tier: 2, bonus: "wild", bonusCount: 1, points: 0, crowns: 2, power: null, artVariant: "ring_clamp", cost: makeDuelCost({ green: 6, pearl: 1 }) },
+    { id: "level2-23", tier: 2, bonus: "wild", bonusCount: 1, points: 0, crowns: 2, power: null, artVariant: "ring_clamp", cost: makeDuelCost({ blue: 6, pearl: 1 }) },
+    { id: "level2-24", tier: 2, bonus: null, bonusCount: 0, points: 5, crowns: 0, power: null, artVariant: "golden_orb_seal", cost: makeDuelCost({ blue: 6, pearl: 1 }) },
+  ];
+  tier2.push(...officialLevel2);
+
   SPLENDOR_GEMS.forEach((bonus, i) => {
     const c0 = SPLENDOR_GEMS[i];
     const c1 = SPLENDOR_GEMS[(i + 1) % 5];
     const c2 = SPLENDOR_GEMS[(i + 2) % 5];
     const c3 = SPLENDOR_GEMS[(i + 3) % 5];
     const c4 = SPLENDOR_GEMS[(i + 4) % 5];
-
-    // 4 colored Tier 2 cards per color (20) + 4 wild/power Tier 2 = 24 Tier 2 cards
-    const t2Specs: Omit<DuelJewelCard, "id" | "tier">[] = [
-      {
-        bonus,
-        bonusCount: 2,
-        points: 1,
-        crowns: 0,
-        cost: makeDuelCost({ [c1]: 4, [c2]: 2, pearl: 1 }),
-        power: null,
-        artVariant: "necklace",
-      },
-      {
-        bonus,
-        bonusCount: 1,
-        points: 2,
-        crowns: 1,
-        cost: makeDuelCost({ [c2]: 4, [c3]: 3 }),
-        power: "PRIVILEGE",
-        artVariant: "tiara",
-      },
-      {
-        bonus,
-        bonusCount: 1,
-        points: 2,
-        crowns: 1,
-        cost: makeDuelCost({ [c0]: 2, [c1]: 3, [c4]: 2 }),
-        power: "STEAL",
-        artVariant: "earring",
-      },
-      {
-        bonus,
-        bonusCount: 1,
-        points: 3,
-        crowns: 0,
-        cost: makeDuelCost({ [c3]: 5, pearl: 1 }),
-        power: "EXTRA_TURN",
-        artVariant: "rapier_hilt",
-      },
-    ];
-    t2Specs.forEach((spec, idx) => {
-      tier2.push({ id: `dt2-${bonus}-${idx}`, tier: 2, ...spec });
-    });
 
     // 2 colored Tier 3 cards per color (10) + 3 special Tier 3 = 13 Tier 3 cards
     const t3Specs: Omit<DuelJewelCard, "id" | "tier">[] = [
@@ -521,7 +521,7 @@ export function buildOfficialDuelDecks(): Record<
         crowns: 2,
         cost: makeDuelCost({ [c1]: 3, [c2]: 3, [c3]: 5, pearl: 1 }),
         power: "STEAL",
-        artVariant: "tiara",
+        artVariant: "silver_tiara_box",
       },
       {
         bonus,
@@ -530,57 +530,13 @@ export function buildOfficialDuelDecks(): Record<
         crowns: 2,
         cost: makeDuelCost({ [c0]: 3, [c4]: 6, pearl: 1 }),
         power: "EXTRA_TURN",
-        artVariant: "rapier_hilt",
+        artVariant: "signet_ring",
       },
     ];
     t3Specs.forEach((spec, idx) => {
       tier3.push({ id: `dt3-${bonus}-${idx}`, tier: 3, ...spec });
     });
   });
-
-  // 4 Extra Tier 2 Wild / High-Crown cards -> 24 total
-  tier2.push(
-    {
-      id: "dt2-wild-0",
-      tier: 2,
-      bonus: "wild",
-      bonusCount: 1,
-      points: 2,
-      crowns: 1,
-      cost: makeDuelCost({ white: 3, black: 3, pearl: 1 }),
-      power: "TAKE_MATCHING",
-    },
-    {
-      id: "dt2-wild-1",
-      tier: 2,
-      bonus: "wild",
-      bonusCount: 1,
-      points: 2,
-      crowns: 2,
-      cost: makeDuelCost({ blue: 3, green: 3, pearl: 1 }),
-      power: null,
-    },
-    {
-      id: "dt2-crown-0",
-      tier: 2,
-      bonus: null,
-      bonusCount: 0,
-      points: 4,
-      crowns: 2,
-      cost: makeDuelCost({ red: 4, black: 3, pearl: 1 }),
-      power: null,
-    },
-    {
-      id: "dt2-extra-0",
-      tier: 2,
-      bonus: "green",
-      bonusCount: 1,
-      points: 2,
-      crowns: 1,
-      cost: makeDuelCost({ white: 3, blue: 3, red: 2 }),
-      power: "EXTRA_TURN",
-    }
-  );
 
   // 3 Extra Tier 3 Grand Masterwork cards -> 13 total
   tier3.push(
