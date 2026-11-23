@@ -438,6 +438,24 @@ export const DUEL_CARD_ATLAS_RECTS: Record<string, DuelCardAtlasRect> = {
     "sy": 952,
     "sw": 90,
     "sh": 136
+  },
+  "deck-1": {
+    "sx": 90,
+    "sy": 952,
+    "sw": 90,
+    "sh": 136
+  },
+  "deck-2": {
+    "sx": 180,
+    "sy": 952,
+    "sw": 90,
+    "sh": 136
+  },
+  "deck-3": {
+    "sx": 270,
+    "sy": 952,
+    "sw": 90,
+    "sh": 136
   }
 };
 

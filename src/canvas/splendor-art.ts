@@ -1,6 +1,8 @@
 import { drawRoundedRect } from "@/canvas/engine";
 import {
+  DUEL_CARD_ATLAS_RECTS,
   DUEL_TOKEN_ATLAS_RECTS,
+  getDuelCardPixelAtlas,
   getDuelTokenPixelAtlas,
 } from "@/canvas/splendor-duel-atlas";
 import {
@@ -596,6 +598,59 @@ export function drawSplendorPixelDeck2D(
     ctx.strokeStyle = border;
     ctx.lineWidth = 1;
     ctx.stroke();
+  }
+
+  // Prefer high-detail 90x136 16-bit Pixel Art Card Back from atlas (`deck-1`, `deck-2`, `deck-3`)
+  const cardAtlas = getDuelCardPixelAtlas();
+  const backRect = DUEL_CARD_ATLAS_RECTS[`deck-${tier}`];
+  if (cardAtlas && backRect) {
+    const rx = Math.round(x);
+    const ry = Math.round(y);
+    const rw = Math.round(w);
+    const rh = Math.round(h);
+
+    ctx.save();
+    drawRoundedRect(ctx, rx, ry, rw, rh, radius);
+    ctx.clip();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(
+      cardAtlas,
+      backRect.sx,
+      backRect.sy,
+      backRect.sw,
+      backRect.sh,
+      rx,
+      ry,
+      rw,
+      rh
+    );
+    ctx.restore();
+
+    drawRoundedRect(ctx, rx, ry, rw, rh, radius);
+    ctx.strokeStyle = selected ? "#fde047" : "#0f172a";
+    ctx.lineWidth = selected ? 3 : 1.6;
+    ctx.stroke();
+
+    // Crisp remaining card count pill in bottom-right corner
+    const badgeW = Math.max(20, Math.round(rw * 0.42));
+    const badgeH = Math.max(13, Math.round(rh * 0.16));
+    const bx = rx + rw - badgeW - 3;
+    const by = ry + rh - badgeH - 3;
+    drawRoundedRect(ctx, bx, by, badgeW, badgeH, 4);
+    ctx.fillStyle = "rgba(9, 13, 24, 0.88)";
+    ctx.fill();
+    ctx.strokeStyle = selected ? "#fde047" : border;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.fillStyle = "#fef08a";
+    ctx.font = `900 ${Math.max(9, Math.round(badgeH * 0.72))}px monospace`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(count), bx + badgeW / 2, by + badgeH / 2 + 0.5);
+
+    ctx.restore();
+    return;
   }
 
   drawRoundedRect(ctx, x, y, w, h, radius);
