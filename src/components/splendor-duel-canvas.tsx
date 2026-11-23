@@ -17,7 +17,10 @@ import {
   drawDuelPixelTokenIcon2D,
   drawDuelSpiralBoard2D,
 } from "@/canvas/splendor-duel-art";
-import { getDuelCardPixelAtlas } from "@/canvas/splendor-duel-atlas";
+import {
+  getDuelCardPixelAtlas,
+  getDuelTokenPixelAtlas,
+} from "@/canvas/splendor-duel-atlas";
 import {
   SPLENDOR_GEMS,
   type SplendorCardTier,
@@ -58,22 +61,27 @@ export function DuelTokenIconCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.round(size * dpr);
-    canvas.height = Math.round(size * dpr);
+    const draw = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(size * dpr);
+      canvas.height = Math.round(size * dpr);
 
-    ctx.save();
-    ctx.scale(dpr, dpr);
-    ctx.imageSmoothingEnabled = false;
-    ctx.clearRect(0, 0, size, size);
-    drawDuelPixelTokenIcon2D(ctx, size * 0.5, size * 0.5, size * 0.9, color);
-    ctx.restore();
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.imageSmoothingEnabled = false;
+      ctx.clearRect(0, 0, size, size);
+      drawDuelPixelTokenIcon2D(ctx, size * 0.5, size * 0.5, size * 0.88, color);
+      ctx.restore();
+    };
+
+    draw();
+    getDuelTokenPixelAtlas(draw);
   }, [color, size]);
 
   return (
     <canvas
       ref={ref}
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, imageRendering: "pixelated" }}
       className={`inline-block shrink-0 ${className}`}
     />
   );

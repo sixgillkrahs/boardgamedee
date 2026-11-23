@@ -462,3 +462,54 @@ export function getDuelCardPixelAtlas(onLoad?: () => void): HTMLImageElement | n
   }
   return atlasLoaded ? cachedAtlasImg : null;
 }
+
+// High-detail 48x48 16-bit Pixel Art Token & Privilege Scroll Atlas
+export const DUEL_TOKEN_ATLAS_URL = "/sprites/splendor-duel-tokens-pixel.png";
+
+export type DuelTokenSpriteKey =
+  | "white"
+  | "blue"
+  | "green"
+  | "red"
+  | "black"
+  | "pearl"
+  | "gold"
+  | "privilege";
+
+export const DUEL_TOKEN_ATLAS_RECTS: Record<
+  DuelTokenSpriteKey,
+  DuelCardAtlasRect
+> = {
+  white: { sx: 0, sy: 0, sw: 48, sh: 48 },
+  blue: { sx: 48, sy: 0, sw: 48, sh: 48 },
+  green: { sx: 96, sy: 0, sw: 48, sh: 48 },
+  red: { sx: 144, sy: 0, sw: 48, sh: 48 },
+  black: { sx: 192, sy: 0, sw: 48, sh: 48 },
+  pearl: { sx: 240, sy: 0, sw: 48, sh: 48 },
+  gold: { sx: 288, sy: 0, sw: 48, sh: 48 },
+  privilege: { sx: 336, sy: 0, sw: 48, sh: 48 },
+};
+
+let cachedTokenImg: HTMLImageElement | null = null;
+let tokenAtlasLoaded = false;
+const tokenListeners = new Set<() => void>();
+
+export function getDuelTokenPixelAtlas(
+  onLoad?: () => void
+): HTMLImageElement | null {
+  if (typeof window === "undefined") return null;
+  if (tokenAtlasLoaded && cachedTokenImg) return cachedTokenImg;
+  if (onLoad) tokenListeners.add(onLoad);
+  if (!cachedTokenImg) {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      tokenAtlasLoaded = true;
+      tokenListeners.forEach((fn) => fn());
+      tokenListeners.clear();
+    };
+    img.src = DUEL_TOKEN_ATLAS_URL;
+    cachedTokenImg = img;
+  }
+  return tokenAtlasLoaded ? cachedTokenImg : null;
+}

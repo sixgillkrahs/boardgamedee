@@ -16,6 +16,7 @@ import {
   drawSplendorPixelGemToken2D,
   drawSplendorPixelNoble2D,
 } from "@/canvas/splendor-art";
+import { getDuelTokenPixelAtlas } from "@/canvas/splendor-duel-atlas";
 import {
   computeCardPayment,
   SPLENDOR_GEM_META,
@@ -52,22 +53,27 @@ export function SplendorGemIconCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.round(size * dpr);
-    canvas.height = Math.round(size * dpr);
+    const draw = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(size * dpr);
+      canvas.height = Math.round(size * dpr);
 
-    ctx.save();
-    ctx.scale(dpr, dpr);
-    ctx.imageSmoothingEnabled = false;
-    ctx.clearRect(0, 0, size, size);
-    drawSplendorPixelGemIcon2D(ctx, size * 0.5, size * 0.5, size * 0.9, color);
-    ctx.restore();
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.imageSmoothingEnabled = false;
+      ctx.clearRect(0, 0, size, size);
+      drawSplendorPixelGemToken2D(ctx, size * 0.5, size * 0.48, size * 0.42, color);
+      ctx.restore();
+    };
+
+    draw();
+    getDuelTokenPixelAtlas(draw);
   }, [color, size]);
 
   return (
     <canvas
       ref={ref}
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, imageRendering: "pixelated" }}
       className={`inline-block shrink-0 ${className}`}
     />
   );

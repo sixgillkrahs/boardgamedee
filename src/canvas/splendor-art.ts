@@ -1,5 +1,9 @@
 import { drawRoundedRect } from "@/canvas/engine";
 import {
+  DUEL_TOKEN_ATLAS_RECTS,
+  getDuelTokenPixelAtlas,
+} from "@/canvas/splendor-duel-atlas";
+import {
   SPLENDOR_GEM_META,
   SPLENDOR_GEMS,
   type SplendorCardTier,
@@ -302,31 +306,46 @@ export function drawSplendorPixelGemToken2D(
     ctx.stroke();
   }
 
-  // Outer brass/ivory chip body
-  ctx.fillStyle = color === "gold" ? "#ca8a04" : "#d6d3d1";
-  ctx.strokeStyle = "#0f172a";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
+  // Prefer high-detail 48x48 16-bit Pixel Art Coin Sprite from token atlas
+  const tokenAtlas = getDuelTokenPixelAtlas();
+  if (tokenAtlas) {
+    const rect = DUEL_TOKEN_ATLAS_RECTS[color];
+    const drawS = Math.round(r * 2.38);
+    ctx.drawImage(
+      tokenAtlas,
+      rect.sx,
+      rect.sy,
+      rect.sw,
+      rect.sh,
+      Math.round(cx - drawS / 2),
+      Math.round(cy - drawS / 2 + r * 0.08),
+      drawS,
+      drawS
+    );
+  } else {
+    // Fallback procedural chip
+    ctx.fillStyle = color === "gold" ? "#ca8a04" : "#d6d3d1";
+    ctx.strokeStyle = "#0f172a";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
 
-  // 4 Cardinal pixel chip stripes around rim
-  ctx.fillStyle = meta.hex;
-  for (const ang of [0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2]) {
-    const sx = cx + Math.cos(ang) * (r * 0.8);
-    const sy = cy + Math.sin(ang) * (r * 0.8);
-    ctx.fillRect(Math.round(sx - 2), Math.round(sy - 2), 4, 4);
+    ctx.fillStyle = meta.hex;
+    for (const ang of [0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2]) {
+      const sx = cx + Math.cos(ang) * (r * 0.8);
+      const sy = cy + Math.sin(ang) * (r * 0.8);
+      ctx.fillRect(Math.round(sx - 2), Math.round(sy - 2), 4, 4);
+    }
+
+    ctx.fillStyle = color === "white" ? "#334155" : "#111827";
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.74, 0, Math.PI * 2);
+    ctx.fill();
+
+    drawSplendorPixelGemIcon2D(ctx, cx, cy, r * 1.15, color);
   }
-
-  // Inner recessed dark jewel bezel
-  ctx.fillStyle = color === "white" ? "#334155" : "#111827";
-  ctx.beginPath();
-  ctx.arc(cx, cy, r * 0.74, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Central 16-bit Pixel Gem Sprite
-  drawSplendorPixelGemIcon2D(ctx, cx, cy, r * 1.15, color);
 
   // Supply count badge in bottom-right corner
   if (count !== undefined) {

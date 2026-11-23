@@ -2,7 +2,9 @@ import { drawRoundedRect } from "@/canvas/engine";
 import { drawSplendorPixelGemIcon2D } from "@/canvas/splendor-art";
 import {
   DUEL_CARD_ATLAS_RECTS,
+  DUEL_TOKEN_ATLAS_RECTS,
   getDuelCardPixelAtlas,
+  getDuelTokenPixelAtlas,
 } from "@/canvas/splendor-duel-atlas";
 import {
   DUEL_SPIRAL_ORDER,
@@ -125,6 +127,27 @@ export function drawDuelPixelTokenIcon2D(
   size: number,
   color: DuelTokenColor
 ) {
+  const tokenAtlas = getDuelTokenPixelAtlas();
+  if (tokenAtlas) {
+    const rect = DUEL_TOKEN_ATLAS_RECTS[color];
+    const drawS = Math.round(size * 1.18);
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(
+      tokenAtlas,
+      rect.sx,
+      rect.sy,
+      rect.sw,
+      rect.sh,
+      Math.round(cx - drawS / 2),
+      Math.round(cy - drawS / 2),
+      drawS,
+      drawS
+    );
+    ctx.restore();
+    return;
+  }
+
   if (color !== "pearl") {
     drawSplendorPixelGemIcon2D(ctx, cx, cy, size, color);
     return;
@@ -178,7 +201,6 @@ export function drawDuelPixelTokenChip2D(
 ) {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  const meta = DUEL_TOKEN_META[color];
 
   if (selected || matchingHighlight) {
     ctx.strokeStyle = selected ? "#fde047" : "#4ade80";
@@ -186,7 +208,38 @@ export function drawDuelPixelTokenChip2D(
     ctx.beginPath();
     ctx.arc(cx, cy, r + 3.5, 0, Math.PI * 2);
     ctx.stroke();
+
+    // Subtle glowing aura behind active coin
+    ctx.fillStyle = selected
+      ? "rgba(253, 224, 71, 0.22)"
+      : "rgba(74, 222, 128, 0.22)";
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + 2.5, 0, Math.PI * 2);
+    ctx.fill();
   }
+
+  // Prefer high-detail 48x48 16-bit Pixel Art Coin Sprite from atlas!
+  const tokenAtlas = getDuelTokenPixelAtlas();
+  if (tokenAtlas) {
+    const rect = DUEL_TOKEN_ATLAS_RECTS[color];
+    // Sprite circle radius is ~20.5 out of 48px -> scale diameter slightly above 2*r
+    const drawS = Math.round(r * 2.38);
+    ctx.drawImage(
+      tokenAtlas,
+      rect.sx,
+      rect.sy,
+      rect.sw,
+      rect.sh,
+      Math.round(cx - drawS / 2),
+      Math.round(cy - drawS / 2 + r * 0.08),
+      drawS,
+      drawS
+    );
+    ctx.restore();
+    return;
+  }
+
+  const meta = DUEL_TOKEN_META[color];
 
   // Pixel drop shadow
   ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
@@ -242,6 +295,32 @@ export function drawDuelPixelPrivilegeScroll2D(
 ) {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
+
+  const tokenAtlas = getDuelTokenPixelAtlas();
+  if (tokenAtlas) {
+    const rect = DUEL_TOKEN_ATLAS_RECTS.privilege;
+    const drawS = Math.round(Math.max(w, h) * 1.18);
+    const cx = x + w / 2;
+    const cy = y + h / 2;
+    if (active) {
+      ctx.fillStyle = "rgba(253, 224, 71, 0.24)";
+      drawRoundedRect(ctx, x - 3, y - 3, w + 6, h + 6, 5);
+      ctx.fill();
+    }
+    ctx.drawImage(
+      tokenAtlas,
+      rect.sx,
+      rect.sy,
+      rect.sw,
+      rect.sh,
+      Math.round(cx - drawS / 2),
+      Math.round(cy - drawS / 2),
+      drawS,
+      drawS
+    );
+    ctx.restore();
+    return;
+  }
 
   drawRoundedRect(ctx, x, y, w, h, 4);
   ctx.fillStyle = active ? "#fef3c7" : "#d6c5a3";
