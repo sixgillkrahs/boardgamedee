@@ -56,6 +56,7 @@ export function DeadMansDrawCanvas({
   const inFlightCardRef = useRef<{ cardId: string; untilMs: number } | null>(
     null
   );
+  const peekOpponentSeatRef = useRef<number | null>(null);
   const lastAnimIdRef = useRef<number>(0);
   const layoutAnchorsRef = useRef<{
     deckX: number;
@@ -655,13 +656,13 @@ export function DeadMansDrawCanvas({
         const opponents = pv.seats.filter((s) => s.seatNo !== mySeat.seatNo);
         const suitsInPlay = new Set(pv.playArea.map((c) => c.suit));
 
-        // 1. TOP ROW: Opponent Vaults
+        // 1. TOP ROW: Compact Opponent Badges (full vault cards only expand when Cannon/Sword targeting or clicked to peek!)
         const topBarY = 12;
-        const oppH = Math.max(108, Math.min(132, Math.round(height * 0.21)));
+        const oppH = 58;
         const oppGap = 10;
         const oppCount = Math.max(1, opponents.length);
         const oppW = Math.min(
-          380,
+          290,
           Math.floor((width - 24 - oppGap * (oppCount - 1)) / oppCount)
         );
         const oppStartX =
@@ -672,33 +673,50 @@ export function DeadMansDrawCanvas({
         opponents.forEach((opp, idx) => {
           const ox = oppStartX + idx * (oppW + oppGap);
           const oy = topBarY;
-          seatAnchors[opp.seatNo] = { x: ox + oppW * 0.5, y: oy + oppH * 0.6 };
+          seatAnchors[opp.seatNo] = { x: ox + oppW * 0.5, y: oy + oppH * 0.55 };
 
           const isActive =
             opp.seatNo === pv.activeSeatNo && pv.step !== "Finished";
           const isWinner = pv.winnerSeatNos.includes(opp.seatNo);
-          const isTargetStep =
-            isMyTurn &&
-            (pv.step === "CannonTargetStep" || pv.step === "SwordTargetStep");
+          const ownedCount = DMD_SUITS.filter(
+            (s) => opp.bank[s].length > 0
+          ).length;
+          const badgeId = `opp-peek-${opp.seatNo}`;
+          const hovered = hoveredIdRef.current === badgeId;
 
-          drawRoundedRect(ctx, ox, oy, oppW, oppH, 14);
+          if (ownedCount > 0) {
+            newHitRegions.push({
+              id: badgeId,
+              shape: "rect",
+              x: ox,
+              y: oy,
+              width: oppW,
+              height: oppH,
+              cursor: "pointer",
+              data: { type: "peek-opponent", seatNo: opp.seatNo },
+            });
+          }
+
+          drawRoundedRect(ctx, ox, oy, oppW, oppH, 13);
           ctx.fillStyle = isWinner
-            ? "rgba(120, 53, 15, 0.55)"
+            ? "rgba(120, 53, 15, 0.6)"
             : isActive
-              ? "rgba(30, 41, 59, 0.92)"
-              : "rgba(15, 23, 42, 0.82)";
+              ? "rgba(30, 41, 59, 0.94)"
+              : hovered
+                ? "rgba(30, 41, 59, 0.88)"
+                : "rgba(15, 23, 42, 0.84)";
           ctx.fill();
           ctx.strokeStyle = isWinner
             ? "#facc15"
             : isActive
               ? "#fbbf24"
-              : isTargetStep
-                ? "#f97316"
-                : "rgba(148, 163, 184, 0.28)";
-          ctx.lineWidth = isActive || isWinner ? 2.4 : 1.3;
+              : hovered
+                ? "#94a3b8"
+                : "rgba(148, 163, 184, 0.3)";
+          ctx.lineWidth = isActive || isWinner ? 2.2 : 1.2;
           ctx.stroke();
 
-          // Name & Live Score Header
+          // Row 1: Opponent Name & Live Score
           ctx.textAlign = "left";
           ctx.textBaseline = "middle";
           ctx.fillStyle = isActive ? "#fde047" : "#f1f5f9";
@@ -706,81 +724,32 @@ export function DeadMansDrawCanvas({
           ctx.fillText(
             `${isActive ? "▶ " : ""}${opp.displayName}`,
             ox + 12,
-            oy + 17,
-            oppW - 110
+            oy + 20,
+            oppW - 92
           );
 
           ctx.textAlign = "right";
           ctx.fillStyle = "#fde68a";
-          ctx.font = `900 13px ${fonts.mono}`;
-          ctx.fillText(`★ ${opp.score}`, ox + oppW - 12, oy + 17);
+          ctx.font = `900 14px ${fonts.mono}`;
+          ctx.fillText(`★ ${opp.score}`, ox + oppW - 12, oy + 20);
 
-          // Opponent Banked Suit Mini-Cards
-          const ownedSuits = DMD_SUITS.filter((s) => opp.bank[s].length > 0);
-          if (ownedSuits.length === 0) {
-            ctx.textAlign = "center";
-            ctx.fillStyle = "#64748b";
-            ctx.font = `600 11px ${fonts.sans}`;
-            ctx.fillText(
-              "Kho báu đang trống",
-              ox + oppW * 0.5,
-              oy + oppH * 0.62
-            );
-          } else {
-            const availW = oppW - 20;
-            const miniW = Math.max(
-              32,
-              Math.min(48, Math.floor((availW - (ownedSuits.length - 1) * 4) / ownedSuits.length))
-            );
-            const miniH = Math.min(oppH - 36, Math.round(miniW * 1.4));
-            const totalStripW =
-              ownedSuits.length * miniW + (ownedSuits.length - 1) * 4;
-            const sx0 = ox + (oppW - totalStripW) / 2;
-            const sy0 = oy + 31;
+          // Row 2: Compact Vault Summary (cards & suit groups count)
+          ctx.textAlign = "left";
+          ctx.fillStyle = ownedCount > 0 ? "#cbd5e1" : "#64748b";
+          ctx.font = `600 10.5px ${fonts.sans}`;
+          ctx.fillText(
+            ownedCount > 0
+              ? `🏴‍☠️ ${opp.totalBankedCards} lá • ${ownedCount} nhóm kho báu`
+              : "Kho báu đang trống",
+            ox + 12,
+            oy + 41
+          );
 
-            ownedSuits.forEach((suit, sIdx) => {
-              const stack = opp.bank[suit];
-              const topCard = stack[stack.length - 1];
-              const cxCard = sx0 + sIdx * (miniW + 4);
-              const regionId = `opp-bank-${opp.seatNo}-${suit}`;
-              const hovered = hoveredIdRef.current === regionId;
-              const willBust =
-                pv.step === "SwordTargetStep" && suitsInPlay.has(suit);
-
-              if (isTargetStep) {
-                newHitRegions.push({
-                  id: regionId,
-                  shape: "rect",
-                  x: cxCard,
-                  y: sy0,
-                  width: miniW,
-                  height: miniH,
-                  cursor: "pointer",
-                  data: {
-                    type:
-                      pv.step === "CannonTargetStep"
-                        ? "cannon-target"
-                        : "sword-target",
-                    targetSeatNo: opp.seatNo,
-                    suit,
-                  },
-                });
-              }
-
-              drawDmdCard2D(
-                ctx,
-                cxCard,
-                sy0 - (hovered && isTargetStep ? 4 : 0),
-                miniW,
-                miniH,
-                topCard,
-                {
-                  highlighted: isTargetStep,
-                  bustRisk: willBust,
-                  stackCount: stack.length,
-                }
-              );
-            });
+          if (ownedCount > 0) {
+            ctx.textAlign = "right";
+            ctx.fillStyle = hovered ? "#fde047" : "#94a3b8";
+            ctx.font = `700 10px ${fonts.sans}`;
+            ctx.fillText("👁 Xem", ox + oppW - 12, oy + 41);
           }
         });
 
@@ -1270,7 +1239,168 @@ export function DeadMansDrawCanvas({
           });
         }
 
-        // 4. INTERACTIVE 2D MAP MODAL OVERLAY (MapPickStep)
+        // 4A. INTERACTIVE OPPONENT VAULT OVERLAY (Automatically opens for Cannon / Sword, or when peeking an opponent!)
+        const isTargetOverlay =
+          isMyTurn &&
+          (pv.step === "CannonTargetStep" || pv.step === "SwordTargetStep");
+        const peekSeatNo = isTargetOverlay ? null : peekOpponentSeatRef.current;
+        const overlayOpps = isTargetOverlay
+          ? opponents.filter((o) =>
+              DMD_SUITS.some((s) => o.bank[s].length > 0)
+            )
+          : peekSeatNo !== null
+            ? opponents.filter((o) => o.seatNo === peekSeatNo)
+            : [];
+
+        if (overlayOpps.length > 0) {
+          ctx.save();
+          ctx.fillStyle = "rgba(2, 6, 23, 0.84)";
+          ctx.fillRect(0, 0, width, height);
+
+          if (!isTargetOverlay) {
+            // Clicking backdrop closes read-only peek modal
+            newHitRegions.push({
+              id: "peek-backdrop-close",
+              shape: "rect",
+              x: 0,
+              y: 0,
+              width,
+              height,
+              cursor: "pointer",
+              data: { type: "close-peek" },
+            });
+          }
+
+          const isCannon = pv.step === "CannonTargetStep";
+          const isSword = pv.step === "SwordTargetStep";
+          const rowCount = overlayOpps.length;
+          const modalW = Math.min(width - 24, 680);
+          const rowH = Math.min(168, Math.floor((height - 120) / rowCount));
+          const modalH = Math.min(height - 28, 78 + rowCount * rowH);
+          const mx = (width - modalW) / 2;
+          const my = (height - modalH) / 2;
+
+          drawRoundedRect(ctx, mx, my, modalW, modalH, 20);
+          ctx.fillStyle = "#14110f";
+          ctx.fill();
+          ctx.strokeStyle = isCannon
+            ? "#f97316"
+            : isSword
+              ? "#38bdf8"
+              : "#eab308";
+          ctx.lineWidth = 2.4;
+          ctx.stroke();
+
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = isCannon
+            ? "#fdba74"
+            : isSword
+              ? "#7dd3fc"
+              : "#fde047";
+          ctx.font = `900 14px ${fonts.sans}`;
+          ctx.fillText(
+            isCannon
+              ? "💣 ĐẠI BÁC — CHỌN 1 LÁ KHO BÁU ĐỐI THỦ ĐỂ BẮN HỦY"
+              : isSword
+                ? "⚔️ KIẾM HẢI TẶC — CHỌN 1 LÁ ĐỂ CƯỚP LÊN BÀN"
+                : `🏴‍☠️ KHO BÁU CỦA ${overlayOpps[0].displayName} (★ ${overlayOpps[0].score} điểm)`,
+            width * 0.5,
+            my + 26
+          );
+          ctx.fillStyle = "#cbd5e1";
+          ctx.font = `600 11px ${fonts.sans}`;
+          ctx.fillText(
+            isCannon
+              ? "Lá bị bắn sẽ rơi thẳng xuống Mộ bài (Discard Pile)!"
+              : isSword
+                ? "Lá bị cướp sẽ đánh ngay lên Khu Lật Bài và kích hoạt kỹ năng!"
+                : "Chạm bất kỳ đâu bên ngoài để đóng",
+            width * 0.5,
+            my + 46
+          );
+
+          overlayOpps.forEach((opp, rIdx) => {
+            const ry = my + 64 + rIdx * rowH;
+            const ownedSuits = DMD_SUITS.filter((s) => opp.bank[s].length > 0);
+
+            if (isTargetOverlay) {
+              ctx.textAlign = "left";
+              ctx.fillStyle = "#f8fafc";
+              ctx.font = `800 12px ${fonts.sans}`;
+              ctx.fillText(
+                `${opp.displayName} (★ ${opp.score} điểm)`,
+                mx + 18,
+                ry + 10
+              );
+            }
+
+            const n = Math.max(1, ownedSuits.length);
+            const gap = 10;
+            const availW = modalW - 36;
+            const cW = Math.max(
+              48,
+              Math.min(78, Math.floor((availW - (n - 1) * gap) / n))
+            );
+            const cH = Math.min(rowH - 46, Math.round(cW * 1.42));
+            const stripW = n * cW + (n - 1) * gap;
+            const sx = mx + (modalW - stripW) / 2;
+            const cy = ry + (isTargetOverlay ? 24 : 12);
+
+            ownedSuits.forEach((suit, cIdx) => {
+              const stack = opp.bank[suit];
+              const topCard = stack[stack.length - 1];
+              const cxCard = sx + cIdx * (cW + gap);
+              const regionId = `overlay-opp-${opp.seatNo}-${suit}`;
+              const hov = hoveredIdRef.current === regionId;
+              const willBust = isSword && suitsInPlay.has(suit);
+
+              if (isTargetOverlay) {
+                newHitRegions.push({
+                  id: regionId,
+                  shape: "rect",
+                  x: cxCard,
+                  y: cy,
+                  width: cW,
+                  height: cH + 24,
+                  cursor: "pointer",
+                  data: {
+                    type: isCannon ? "cannon-target" : "sword-target",
+                    targetSeatNo: opp.seatNo,
+                    suit,
+                  },
+                });
+              }
+
+              drawDmdCard2D(
+                ctx,
+                cxCard,
+                cy - (hov && isTargetOverlay ? 6 : 0),
+                cW,
+                cH,
+                topCard,
+                {
+                  highlighted: isTargetOverlay,
+                  bustRisk: willBust,
+                  stackCount: stack.length,
+                  badgeText: isCannon
+                    ? hov
+                      ? "💣 BẮN HỦY"
+                      : undefined
+                    : isSword
+                      ? willBust
+                        ? "💥 TRÙNG!"
+                        : "⚔️ CƯỚP"
+                      : undefined,
+                }
+              );
+            });
+          });
+
+          ctx.restore();
+        }
+
+        // 4B. INTERACTIVE 2D MAP MODAL OVERLAY (MapPickStep)
         if (isMyTurn && pv.step === "MapPickStep" && pv.mapChoices.length > 0) {
           ctx.save();
           ctx.fillStyle = "rgba(2, 6, 23, 0.82)";
@@ -1421,17 +1551,26 @@ export function DeadMansDrawCanvas({
     const data = hit.data as Record<string, any>;
     const dispatch = stateRef.current.onDispatchCommand;
 
-    if (data.type === "draw") {
+    if (data.type === "peek-opponent") {
+      peekOpponentSeatRef.current =
+        peekOpponentSeatRef.current === data.seatNo ? null : data.seatNo;
+    } else if (data.type === "close-peek") {
+      peekOpponentSeatRef.current = null;
+    } else if (data.type === "draw") {
+      peekOpponentSeatRef.current = null;
       dispatch({ type: "DRAW" });
     } else if (data.type === "bank") {
+      peekOpponentSeatRef.current = null;
       dispatch({ type: "BANK" });
     } else if (data.type === "cannon-target") {
+      peekOpponentSeatRef.current = null;
       dispatch({
         type: "CANNON_TARGET",
         targetSeatNo: data.targetSeatNo,
         suit: data.suit as DmdSuit,
       });
     } else if (data.type === "sword-target") {
+      peekOpponentSeatRef.current = null;
       dispatch({
         type: "SWORD_TARGET",
         targetSeatNo: data.targetSeatNo,
