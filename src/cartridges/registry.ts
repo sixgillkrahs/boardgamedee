@@ -1,6 +1,7 @@
 import type { GameCartridge } from "@/cartridges/types";
 import { werewolfCartridge } from "@/cartridges/werewolf";
 import { coupCartridge } from "@/cartridges/coup";
+import { splendorCartridge } from "@/cartridges/splendor";
 
 export interface CatalogEntry {
   cartridgeId: string;
@@ -18,6 +19,7 @@ export interface CatalogEntry {
 const CARTRIDGES = new Map<string, GameCartridge<any, any, any, any>>([
   [werewolfCartridge.cartridgeId, werewolfCartridge],
   [coupCartridge.cartridgeId, coupCartridge],
+  [splendorCartridge.cartridgeId, splendorCartridge],
 ]);
 
 export function getCartridge(
@@ -70,6 +72,18 @@ export function listCartridges(): CatalogEntry[] {
       available: true,
       badgeVi: "Đang mở • Canvas 2D",
       accentColor: "#a855f7",
+    },
+    {
+      cartridgeId: splendorCartridge.cartridgeId,
+      title: splendorCartridge.title,
+      genreVi: "Chiến thuật • Thu thập đá quý",
+      subtitle: splendorCartridge.subtitle,
+      description: splendorCartridge.description,
+      minSeats: splendorCartridge.minSeats,
+      maxSeats: splendorCartridge.maxSeats,
+      available: true,
+      badgeVi: "Đang mở • Pixel 2D",
+      accentColor: "#10b981",
     },
     {
       cartridgeId: "secret-hitler",
