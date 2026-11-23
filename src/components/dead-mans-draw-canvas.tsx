@@ -56,7 +56,9 @@ export function DeadMansDrawCanvas({
   const inFlightCardRef = useRef<{ cardId: string; untilMs: number } | null>(
     null
   );
-  const peekOpponentSeatRef = useRef<number | null>(null);
+  const pointerPosRef = useRef<{ x: number; y: number } | null>(null);
+  const oppSlideRef = useRef<number>(0);
+  const mySlideRef = useRef<number>(0);
   const lastAnimIdRef = useRef<number>(0);
   const layoutAnchorsRef = useRef<{
     deckX: number;
@@ -656,107 +658,69 @@ export function DeadMansDrawCanvas({
         const opponents = pv.seats.filter((s) => s.seatNo !== mySeat.seatNo);
         const suitsInPlay = new Set(pv.playArea.map((c) => c.suit));
 
-        // 1. TOP ROW: Compact Opponent Badges (full vault cards only expand when Cannon/Sword targeting or clicked to peek!)
-        const topBarY = 12;
-        const oppH = 58;
+        const isOppTargetStep =
+          isMyTurn &&
+          (pv.step === "CannonTargetStep" || pv.step === "SwordTargetStep");
+        const isHookStep = isMyTurn && pv.step === "HookPickStep";
+
+        // 1. Vault Tray Dimensions & Smooth 70% Tucked <-> 100% Extended Slide Animation
+        const oppH = Math.max(122, Math.min(148, Math.round(height * 0.23)));
+        const bottomH = Math.max(134, Math.min(162, Math.round(height * 0.25)));
+        const oppVisibleTucked = Math.round(oppH * 0.7);
+        const botVisibleTucked = Math.round(bottomH * 0.7);
+
+        const ptr = pointerPosRef.current;
+        const hoveringOppZone =
+          ptr !== null && ptr.y <= (oppSlideRef.current > 0.3 ? oppH + 14 : oppVisibleTucked + 6);
+        const hoveringMyZone =
+          ptr !== null &&
+          ptr.y >= height - (mySlideRef.current > 0.3 ? bottomH + 14 : botVisibleTucked + 6);
+
+        const targetOppSlide = isOppTargetStep || hoveringOppZone ? 1 : 0;
+        const targetMySlide = isHookStep || hoveringMyZone ? 1 : 0;
+        const slideRate = Math.min(1, dt * 11);
+        oppSlideRef.current += (targetOppSlide - oppSlideRef.current) * slideRate;
+        mySlideRef.current += (targetMySlide - mySlideRef.current) * slideRate;
+
+        const oppSlide = oppSlideRef.current;
+        const mySlide = mySlideRef.current;
+
         const oppGap = 10;
         const oppCount = Math.max(1, opponents.length);
         const oppW = Math.min(
-          290,
+          420,
           Math.floor((width - 24 - oppGap * (oppCount - 1)) / oppCount)
         );
         const oppStartX =
           width * 0.5 - (oppW * oppCount + oppGap * (oppCount - 1)) / 2;
+        const oppY = Math.round(
+          -oppH * 0.3 * (1 - oppSlide) + 8 * oppSlide
+        );
 
+        const botX = 12;
+        const botW = width - 24;
+        const botY = Math.round(
+          (height - botVisibleTucked) * (1 - mySlide) +
+            (height - bottomH - 8) * mySlide
+        );
+
+        // Anchor seat coordinates for Cannon/Sword/Hook/Bank FX
         const seatAnchors: Record<number, { x: number; y: number }> = {};
-
         opponents.forEach((opp, idx) => {
           const ox = oppStartX + idx * (oppW + oppGap);
-          const oy = topBarY;
-          seatAnchors[opp.seatNo] = { x: ox + oppW * 0.5, y: oy + oppH * 0.55 };
-
-          const isActive =
-            opp.seatNo === pv.activeSeatNo && pv.step !== "Finished";
-          const isWinner = pv.winnerSeatNos.includes(opp.seatNo);
-          const ownedCount = DMD_SUITS.filter(
-            (s) => opp.bank[s].length > 0
-          ).length;
-          const badgeId = `opp-peek-${opp.seatNo}`;
-          const hovered = hoveredIdRef.current === badgeId;
-
-          if (ownedCount > 0) {
-            newHitRegions.push({
-              id: badgeId,
-              shape: "rect",
-              x: ox,
-              y: oy,
-              width: oppW,
-              height: oppH,
-              cursor: "pointer",
-              data: { type: "peek-opponent", seatNo: opp.seatNo },
-            });
-          }
-
-          drawRoundedRect(ctx, ox, oy, oppW, oppH, 13);
-          ctx.fillStyle = isWinner
-            ? "rgba(120, 53, 15, 0.6)"
-            : isActive
-              ? "rgba(30, 41, 59, 0.94)"
-              : hovered
-                ? "rgba(30, 41, 59, 0.88)"
-                : "rgba(15, 23, 42, 0.84)";
-          ctx.fill();
-          ctx.strokeStyle = isWinner
-            ? "#facc15"
-            : isActive
-              ? "#fbbf24"
-              : hovered
-                ? "#94a3b8"
-                : "rgba(148, 163, 184, 0.3)";
-          ctx.lineWidth = isActive || isWinner ? 2.2 : 1.2;
-          ctx.stroke();
-
-          // Row 1: Opponent Name & Live Score
-          ctx.textAlign = "left";
-          ctx.textBaseline = "middle";
-          ctx.fillStyle = isActive ? "#fde047" : "#f1f5f9";
-          ctx.font = `800 12px ${fonts.sans}`;
-          ctx.fillText(
-            `${isActive ? "▶ " : ""}${opp.displayName}`,
-            ox + 12,
-            oy + 20,
-            oppW - 92
-          );
-
-          ctx.textAlign = "right";
-          ctx.fillStyle = "#fde68a";
-          ctx.font = `900 14px ${fonts.mono}`;
-          ctx.fillText(`★ ${opp.score}`, ox + oppW - 12, oy + 20);
-
-          // Row 2: Compact Vault Summary (cards & suit groups count)
-          ctx.textAlign = "left";
-          ctx.fillStyle = ownedCount > 0 ? "#cbd5e1" : "#64748b";
-          ctx.font = `600 10.5px ${fonts.sans}`;
-          ctx.fillText(
-            ownedCount > 0
-              ? `🏴‍☠️ ${opp.totalBankedCards} lá • ${ownedCount} nhóm kho báu`
-              : "Kho báu đang trống",
-            ox + 12,
-            oy + 41
-          );
-
-          if (ownedCount > 0) {
-            ctx.textAlign = "right";
-            ctx.fillStyle = hovered ? "#fde047" : "#94a3b8";
-            ctx.font = `700 10px ${fonts.sans}`;
-            ctx.fillText("👁 Xem", ox + oppW - 12, oy + 41);
-          }
+          seatAnchors[opp.seatNo] = {
+            x: ox + oppW * 0.5,
+            y: Math.max(26, oppY + oppH * 0.55),
+          };
         });
+        seatAnchors[mySeat.seatNo] = {
+          x: botX + botW * 0.5,
+          y: Math.min(height - 32, botY + bottomH * 0.5),
+        };
 
-        // 2. CENTER ARENA: Draw Pile | Play Area | Discard Pile
-        const arenaTop = topBarY + oppH + 14;
-        const bottomH = Math.max(122, Math.min(156, Math.round(height * 0.24)));
-        const arenaBottom = height - bottomH - 14;
+        // 2. CENTER ARENA: Anchored cleanly between the 70%-tucked top & bottom vaults (NEVER shifts when vaults slide!)
+        const arenaTop = oppVisibleTucked + 10;
+        const arenaBottom = height - botVisibleTucked - 10;
         const arenaH = Math.max(150, arenaBottom - arenaTop);
         const arenaMidY = arenaTop + arenaH * 0.48;
 
@@ -1126,27 +1090,174 @@ export function DeadMansDrawCanvas({
           }
         }
 
-        // 3. BOTTOM ROW: Viewer's Own Pirate Vault
-        const botX = 12;
-        const botY = height - bottomH - 10;
-        const botW = width - 24;
-        seatAnchors[mySeat.seatNo] = {
-          x: botX + botW * 0.5,
-          y: botY + bottomH * 0.5,
-        };
+        // 3. TOP & BOTTOM SLIDE-OUT VAULT TRAYS (Drawn above arena edge so 100% slide-out feels crisp & layered!)
+        // Soft spotlight dim only during active Cannon / Sword / Hook targeting so target tray pops out clearly
+        if (isOppTargetStep || isHookStep) {
+          ctx.save();
+          ctx.fillStyle = "rgba(2, 6, 23, 0.42)";
+          ctx.fillRect(0, 0, width, height);
+          ctx.restore();
+        }
 
+        // --- 3A. TOP OPPONENT VAULT TRAYS (70% tucked normally -> 100% slid out when targeting or hovering!) ---
+        opponents.forEach((opp, idx) => {
+          const ox = oppStartX + idx * (oppW + oppGap);
+          const oy = oppY;
+          const isActive =
+            opp.seatNo === pv.activeSeatNo && pv.step !== "Finished";
+          const isWinner = pv.winnerSeatNos.includes(opp.seatNo);
+          const isCannon = pv.step === "CannonTargetStep";
+          const isSword = pv.step === "SwordTargetStep";
+
+          ctx.save();
+          if (oppSlide > 0.2) {
+            ctx.shadowColor = "rgba(0, 0, 0, 0.65)";
+            ctx.shadowBlur = 18 * oppSlide;
+            ctx.shadowOffsetY = 6 * oppSlide;
+          }
+          drawRoundedRect(ctx, ox, oy, oppW, oppH, 16);
+          ctx.fillStyle = isWinner
+            ? "rgba(120, 53, 15, 0.72)"
+            : isOppTargetStep
+              ? "rgba(22, 18, 16, 0.96)"
+              : isActive
+                ? "rgba(26, 36, 54, 0.94)"
+                : "rgba(15, 23, 42, 0.9)";
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = isWinner
+            ? "#facc15"
+            : isOppTargetStep
+              ? isCannon
+                ? "#f97316"
+                : "#38bdf8"
+              : isActive
+                ? "#fbbf24"
+                : "rgba(148, 163, 184, 0.32)";
+          ctx.lineWidth = isActive || isWinner || isOppTargetStep ? 2.4 : 1.3;
+          ctx.stroke();
+          ctx.restore();
+
+          // Opponent Banked Suit Cards (upper body of tray -> 70% visible tucked, 100% visible slid out!)
+          const ownedSuits = DMD_SUITS.filter((s) => opp.bank[s].length > 0);
+          if (ownedSuits.length === 0) {
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "#64748b";
+            ctx.font = `600 11px ${fonts.sans}`;
+            ctx.fillText(
+              "Kho báu đang trống",
+              ox + oppW * 0.5,
+              oy + oppH * 0.48
+            );
+          } else {
+            const availW = oppW - 22;
+            const gap = 6;
+            const cardW = Math.max(
+              38,
+              Math.min(
+                62,
+                Math.floor((availW - (ownedSuits.length - 1) * gap) / ownedSuits.length)
+              )
+            );
+            const cardH = Math.min(oppH - 38, Math.round(cardW * 1.42));
+            const stripW = ownedSuits.length * cardW + (ownedSuits.length - 1) * gap;
+            const sx0 = ox + (oppW - stripW) / 2;
+            const sy0 = oy + 8;
+
+            ownedSuits.forEach((suit, sIdx) => {
+              const stack = opp.bank[suit];
+              const topCard = stack[stack.length - 1];
+              const cxCard = sx0 + sIdx * (cardW + gap);
+              const regionId = `opp-bank-${opp.seatNo}-${suit}`;
+              const hovered = hoveredIdRef.current === regionId;
+              const willBust = isOppTargetStep && isSword && suitsInPlay.has(suit);
+
+              if (isOppTargetStep) {
+                newHitRegions.push({
+                  id: regionId,
+                  shape: "rect",
+                  x: cxCard,
+                  y: sy0,
+                  width: cardW,
+                  height: cardH,
+                  cursor: "pointer",
+                  data: {
+                    type: isCannon ? "cannon-target" : "sword-target",
+                    targetSeatNo: opp.seatNo,
+                    suit,
+                  },
+                });
+              }
+
+              drawDmdCard2D(
+                ctx,
+                cxCard,
+                sy0 + (hovered && isOppTargetStep ? 5 : 0),
+                cardW,
+                cardH,
+                topCard,
+                {
+                  highlighted: isOppTargetStep,
+                  bustRisk: willBust,
+                  stackCount: stack.length,
+                  badgeText:
+                    isOppTargetStep && hovered
+                      ? isCannon
+                        ? "💣 BẮN"
+                        : willBust
+                          ? "💥 TRÙNG!"
+                          : "⚔️ CƯỚP"
+                      : undefined,
+                }
+              );
+            });
+          }
+
+          // Bottom Lip of Opponent Tray (ALWAYS visible even when 70% tucked!): Name + Score + Card Count
+          const lipY = oy + oppH - 16;
+          ctx.textAlign = "left";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = isActive ? "#fde047" : "#f1f5f9";
+          ctx.font = `800 12px ${fonts.sans}`;
+          ctx.fillText(
+            `${isActive ? "▶ " : ""}${opp.displayName}`,
+            ox + 14,
+            lipY,
+            oppW - 120
+          );
+
+          ctx.textAlign = "right";
+          ctx.fillStyle = "#fde68a";
+          ctx.font = `900 12.5px ${fonts.mono}`;
+          ctx.fillText(
+            `★ ${opp.score} (${opp.totalBankedCards} lá)`,
+            ox + oppW - 14,
+            lipY
+          );
+        });
+
+        // --- 3B. BOTTOM VIEWER VAULT TRAY (70% tucked normally -> 100% slid out on HookPickStep or hover!) ---
         const myActive =
           mySeat.seatNo === pv.activeSeatNo && pv.step !== "Finished";
         const myWinner = pv.winnerSeatNos.includes(mySeat.seatNo);
-        const isHookStep = isMyTurn && pv.step === "HookPickStep";
 
+        ctx.save();
+        if (mySlide > 0.2) {
+          ctx.shadowColor = "rgba(0, 0, 0, 0.68)";
+          ctx.shadowBlur = 18 * mySlide;
+          ctx.shadowOffsetY = -6 * mySlide;
+        }
         drawRoundedRect(ctx, botX, botY, botW, bottomH, 16);
         ctx.fillStyle = myWinner
-          ? "rgba(120, 53, 15, 0.55)"
-          : myActive
-            ? "rgba(22, 33, 52, 0.94)"
-            : "rgba(15, 23, 42, 0.86)";
+          ? "rgba(120, 53, 15, 0.72)"
+          : isHookStep
+            ? "rgba(18, 28, 44, 0.96)"
+            : myActive
+              ? "rgba(22, 33, 52, 0.94)"
+              : "rgba(15, 23, 42, 0.9)";
         ctx.fill();
+        ctx.shadowBlur = 0;
         ctx.strokeStyle = myWinner
           ? "#facc15"
           : isHookStep
@@ -1156,14 +1267,17 @@ export function DeadMansDrawCanvas({
               : "rgba(148, 163, 184, 0.32)";
         ctx.lineWidth = myActive || myWinner || isHookStep ? 2.4 : 1.4;
         ctx.stroke();
+        ctx.restore();
 
-        // Vault header
+        // Top Lip of Your Vault (ALWAYS visible even when 70% tucked!)
         ctx.textAlign = "left";
         ctx.textBaseline = "middle";
         ctx.fillStyle = myActive ? "#fde047" : "#f8fafc";
         ctx.font = `800 13px ${fonts.sans}`;
         ctx.fillText(
-          `🏴‍☠️ KHO BÁU CỦA BẠN — ${mySeat.displayName}`,
+          isHookStep
+            ? `🪝 MÓC SẮT — CHỌN 1 LÁ TRONG KHO BÁU CỦA BẠN`
+            : `🏴‍☠️ KHO BÁU CỦA BẠN — ${mySeat.displayName}`,
           botX + 14,
           botY + 19
         );
@@ -1185,7 +1299,7 @@ export function DeadMansDrawCanvas({
           ctx.fillText(
             "Chưa có kho báu nào — Hãy rút bài và bấm THU KHO để ghi điểm (tính lá cao nhất mỗi nhóm)!",
             botX + botW * 0.5,
-            botY + bottomH * 0.62
+            botY + bottomH * 0.52
           );
         } else {
           const availW = botW - 28;
@@ -1193,11 +1307,11 @@ export function DeadMansDrawCanvas({
           const cardW = Math.max(
             44,
             Math.min(
-              72,
+              74,
               Math.floor((availW - (myOwned.length - 1) * gap) / myOwned.length)
             )
           );
-          const cardH = Math.min(bottomH - 42, Math.round(cardW * 1.4));
+          const cardH = Math.min(bottomH - 42, Math.round(cardW * 1.42));
           const stripW = myOwned.length * cardW + (myOwned.length - 1) * gap;
           const sx0 = botX + (botW - stripW) / 2;
           const sy0 = botY + 34;
@@ -1226,7 +1340,7 @@ export function DeadMansDrawCanvas({
             drawDmdCard2D(
               ctx,
               cxCard,
-              sy0 - (hov && isHookStep ? 5 : 0),
+              sy0 - (hov && isHookStep ? 6 : 0),
               cardW,
               cardH,
               topCard,
@@ -1234,173 +1348,18 @@ export function DeadMansDrawCanvas({
                 highlighted: isHookStep,
                 bustRisk: willBust,
                 stackCount: stack.length,
+                badgeText:
+                  isHookStep && hov
+                    ? willBust
+                      ? "💥 TRÙNG!"
+                      : "🪝 KÉO LÊN"
+                    : undefined,
               }
             );
           });
         }
 
-        // 4A. INTERACTIVE OPPONENT VAULT OVERLAY (Automatically opens for Cannon / Sword, or when peeking an opponent!)
-        const isTargetOverlay =
-          isMyTurn &&
-          (pv.step === "CannonTargetStep" || pv.step === "SwordTargetStep");
-        const peekSeatNo = isTargetOverlay ? null : peekOpponentSeatRef.current;
-        const overlayOpps = isTargetOverlay
-          ? opponents.filter((o) =>
-              DMD_SUITS.some((s) => o.bank[s].length > 0)
-            )
-          : peekSeatNo !== null
-            ? opponents.filter((o) => o.seatNo === peekSeatNo)
-            : [];
-
-        if (overlayOpps.length > 0) {
-          ctx.save();
-          ctx.fillStyle = "rgba(2, 6, 23, 0.84)";
-          ctx.fillRect(0, 0, width, height);
-
-          if (!isTargetOverlay) {
-            // Clicking backdrop closes read-only peek modal
-            newHitRegions.push({
-              id: "peek-backdrop-close",
-              shape: "rect",
-              x: 0,
-              y: 0,
-              width,
-              height,
-              cursor: "pointer",
-              data: { type: "close-peek" },
-            });
-          }
-
-          const isCannon = pv.step === "CannonTargetStep";
-          const isSword = pv.step === "SwordTargetStep";
-          const rowCount = overlayOpps.length;
-          const modalW = Math.min(width - 24, 680);
-          const rowH = Math.min(168, Math.floor((height - 120) / rowCount));
-          const modalH = Math.min(height - 28, 78 + rowCount * rowH);
-          const mx = (width - modalW) / 2;
-          const my = (height - modalH) / 2;
-
-          drawRoundedRect(ctx, mx, my, modalW, modalH, 20);
-          ctx.fillStyle = "#14110f";
-          ctx.fill();
-          ctx.strokeStyle = isCannon
-            ? "#f97316"
-            : isSword
-              ? "#38bdf8"
-              : "#eab308";
-          ctx.lineWidth = 2.4;
-          ctx.stroke();
-
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillStyle = isCannon
-            ? "#fdba74"
-            : isSword
-              ? "#7dd3fc"
-              : "#fde047";
-          ctx.font = `900 14px ${fonts.sans}`;
-          ctx.fillText(
-            isCannon
-              ? "💣 ĐẠI BÁC — CHỌN 1 LÁ KHO BÁU ĐỐI THỦ ĐỂ BẮN HỦY"
-              : isSword
-                ? "⚔️ KIẾM HẢI TẶC — CHỌN 1 LÁ ĐỂ CƯỚP LÊN BÀN"
-                : `🏴‍☠️ KHO BÁU CỦA ${overlayOpps[0].displayName} (★ ${overlayOpps[0].score} điểm)`,
-            width * 0.5,
-            my + 26
-          );
-          ctx.fillStyle = "#cbd5e1";
-          ctx.font = `600 11px ${fonts.sans}`;
-          ctx.fillText(
-            isCannon
-              ? "Lá bị bắn sẽ rơi thẳng xuống Mộ bài (Discard Pile)!"
-              : isSword
-                ? "Lá bị cướp sẽ đánh ngay lên Khu Lật Bài và kích hoạt kỹ năng!"
-                : "Chạm bất kỳ đâu bên ngoài để đóng",
-            width * 0.5,
-            my + 46
-          );
-
-          overlayOpps.forEach((opp, rIdx) => {
-            const ry = my + 64 + rIdx * rowH;
-            const ownedSuits = DMD_SUITS.filter((s) => opp.bank[s].length > 0);
-
-            if (isTargetOverlay) {
-              ctx.textAlign = "left";
-              ctx.fillStyle = "#f8fafc";
-              ctx.font = `800 12px ${fonts.sans}`;
-              ctx.fillText(
-                `${opp.displayName} (★ ${opp.score} điểm)`,
-                mx + 18,
-                ry + 10
-              );
-            }
-
-            const n = Math.max(1, ownedSuits.length);
-            const gap = 10;
-            const availW = modalW - 36;
-            const cW = Math.max(
-              48,
-              Math.min(78, Math.floor((availW - (n - 1) * gap) / n))
-            );
-            const cH = Math.min(rowH - 46, Math.round(cW * 1.42));
-            const stripW = n * cW + (n - 1) * gap;
-            const sx = mx + (modalW - stripW) / 2;
-            const cy = ry + (isTargetOverlay ? 24 : 12);
-
-            ownedSuits.forEach((suit, cIdx) => {
-              const stack = opp.bank[suit];
-              const topCard = stack[stack.length - 1];
-              const cxCard = sx + cIdx * (cW + gap);
-              const regionId = `overlay-opp-${opp.seatNo}-${suit}`;
-              const hov = hoveredIdRef.current === regionId;
-              const willBust = isSword && suitsInPlay.has(suit);
-
-              if (isTargetOverlay) {
-                newHitRegions.push({
-                  id: regionId,
-                  shape: "rect",
-                  x: cxCard,
-                  y: cy,
-                  width: cW,
-                  height: cH + 24,
-                  cursor: "pointer",
-                  data: {
-                    type: isCannon ? "cannon-target" : "sword-target",
-                    targetSeatNo: opp.seatNo,
-                    suit,
-                  },
-                });
-              }
-
-              drawDmdCard2D(
-                ctx,
-                cxCard,
-                cy - (hov && isTargetOverlay ? 6 : 0),
-                cW,
-                cH,
-                topCard,
-                {
-                  highlighted: isTargetOverlay,
-                  bustRisk: willBust,
-                  stackCount: stack.length,
-                  badgeText: isCannon
-                    ? hov
-                      ? "💣 BẮN HỦY"
-                      : undefined
-                    : isSword
-                      ? willBust
-                        ? "💥 TRÙNG!"
-                        : "⚔️ CƯỚP"
-                      : undefined,
-                }
-              );
-            });
-          });
-
-          ctx.restore();
-        }
-
-        // 4B. INTERACTIVE 2D MAP MODAL OVERLAY (MapPickStep)
+        // 4. INTERACTIVE 2D MAP MODAL OVERLAY (MapPickStep)
         if (isMyTurn && pv.step === "MapPickStep" && pv.mapChoices.length > 0) {
           ctx.save();
           ctx.fillStyle = "rgba(2, 6, 23, 0.82)";
@@ -1538,6 +1497,7 @@ export function DeadMansDrawCanvas({
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const pt = getPointerCoords(e);
+    pointerPosRef.current = pt;
     const hit = findHitRegionAtPoint(hitRegionsRef.current, pt.x, pt.y);
     hoveredIdRef.current = hit?.id ?? null;
     e.currentTarget.style.cursor = hit?.cursor ?? "default";
@@ -1551,26 +1511,17 @@ export function DeadMansDrawCanvas({
     const data = hit.data as Record<string, any>;
     const dispatch = stateRef.current.onDispatchCommand;
 
-    if (data.type === "peek-opponent") {
-      peekOpponentSeatRef.current =
-        peekOpponentSeatRef.current === data.seatNo ? null : data.seatNo;
-    } else if (data.type === "close-peek") {
-      peekOpponentSeatRef.current = null;
-    } else if (data.type === "draw") {
-      peekOpponentSeatRef.current = null;
+    if (data.type === "draw") {
       dispatch({ type: "DRAW" });
     } else if (data.type === "bank") {
-      peekOpponentSeatRef.current = null;
       dispatch({ type: "BANK" });
     } else if (data.type === "cannon-target") {
-      peekOpponentSeatRef.current = null;
       dispatch({
         type: "CANNON_TARGET",
         targetSeatNo: data.targetSeatNo,
         suit: data.suit as DmdSuit,
       });
     } else if (data.type === "sword-target") {
-      peekOpponentSeatRef.current = null;
       dispatch({
         type: "SWORD_TARGET",
         targetSeatNo: data.targetSeatNo,
@@ -1596,6 +1547,7 @@ export function DeadMansDrawCanvas({
       onClick={handleClick}
       onMouseLeave={() => {
         hoveredIdRef.current = null;
+        pointerPosRef.current = null;
       }}
       className="w-full h-full block select-none"
     />
