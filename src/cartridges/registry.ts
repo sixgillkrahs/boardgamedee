@@ -3,6 +3,7 @@ import { werewolfCartridge } from "@/cartridges/werewolf";
 import { coupCartridge } from "@/cartridges/coup";
 import { splendorCartridge } from "@/cartridges/splendor";
 import { splendorDuelCartridge } from "@/cartridges/splendor-duel";
+import { deadMansDrawCartridge } from "@/cartridges/dead-mans-draw";
 
 export interface CatalogEntry {
   cartridgeId: string;
@@ -23,6 +24,7 @@ const CARTRIDGES = new Map<string, GameCartridge<any, any, any, any>>([
   [coupCartridge.cartridgeId, coupCartridge],
   [splendorCartridge.cartridgeId, splendorCartridge],
   [splendorDuelCartridge.cartridgeId, splendorDuelCartridge],
+  [deadMansDrawCartridge.cartridgeId, deadMansDrawCartridge],
 ]);
 
 export function getCartridge(
@@ -102,6 +104,19 @@ export function listCartridges(): CatalogEntry[] {
       badgeVi: "Đang mở • Pixel 2D",
       accentColor: "#ec4899",
       coverImage: "/covers/splendor-duel-pixel.png",
+    },
+    {
+      cartridgeId: deadMansDrawCartridge.cartridgeId,
+      title: deadMansDrawCartridge.title,
+      genreVi: "Cược may rủi • Hải tặc",
+      subtitle: deadMansDrawCartridge.subtitle,
+      description: deadMansDrawCartridge.description,
+      minSeats: deadMansDrawCartridge.minSeats,
+      maxSeats: deadMansDrawCartridge.maxSeats,
+      available: true,
+      badgeVi: "Đang mở • Pixel 2D",
+      accentColor: "#f59e0b",
+      coverImage: "/covers/dead-mans-draw-pixel.png",
     },
     {
       cartridgeId: "secret-hitler",
