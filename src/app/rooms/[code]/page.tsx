@@ -439,7 +439,7 @@ function RoomPageContent({
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
-            className="rounded-lg border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-2.5 py-1.5 text-xs font-bold text-amber-300 transition cursor-pointer flex items-center gap-1.5"
+            className="h-8 rounded-lg border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-2.5 text-xs font-bold text-amber-300 transition cursor-pointer inline-flex items-center gap-1.5"
             title="Mở Kênh Chat & Nhật Ký"
           >
             <span>💬</span>
@@ -450,7 +450,7 @@ function RoomPageContent({
           <button
             type="button"
             onClick={() => setRulesModalOpen(true)}
-            className="rounded-lg border border-sky-500/40 bg-sky-500/15 hover:bg-sky-500/25 w-8 h-8 flex items-center justify-center font-serif italic font-extrabold text-sm text-sky-300 transition cursor-pointer"
+            className="w-8 h-8 rounded-lg border border-sky-500/40 bg-sky-500/15 hover:bg-sky-500/25 inline-flex items-center justify-center font-serif italic font-extrabold text-sm text-sky-300 transition cursor-pointer"
             title="Xem luật chơi"
             aria-label="Xem luật chơi"
           >
@@ -461,7 +461,7 @@ function RoomPageContent({
           <button
             type="button"
             onClick={() => setConfigModalOpen(true)}
-            className="rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 p-2 text-sm text-slate-200 transition cursor-pointer"
+            className="w-8 h-8 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 inline-flex items-center justify-center text-xs text-slate-200 transition cursor-pointer"
             title="Cấu hình vai trò & thời gian"
             aria-label="Cấu hình vai trò & thời gian"
           >
@@ -471,8 +471,9 @@ function RoomPageContent({
           <button
             type="button"
             onClick={() => setSoundEnabled((v) => !v)}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-2 sm:px-2.5 py-1.5 text-xs text-slate-200 hover:bg-slate-700 transition cursor-pointer"
+            className="w-8 h-8 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 inline-flex items-center justify-center text-xs text-slate-200 transition cursor-pointer"
             title="Bật/Tắt âm thanh"
+            aria-label="Bật/Tắt âm thanh"
           >
             {soundEnabled ? "🔊" : "🔇"}
           </button>
@@ -487,14 +488,15 @@ function RoomPageContent({
                 void document.exitFullscreen().catch(() => {});
               }
             }}
-            className="hidden sm:inline-flex rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-slate-200 hover:bg-slate-700 transition cursor-pointer"
+            className="hidden sm:inline-flex w-8 h-8 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 items-center justify-center text-xs text-slate-200 transition cursor-pointer"
             title="Toàn màn hình"
+            aria-label="Toàn màn hình"
           >
             ⛶
           </button>
 
           {actor && (
-            <div className="hidden sm:flex items-center gap-2 rounded-lg bg-slate-800/90 border border-slate-700 px-2.5 py-1">
+            <div className="hidden sm:flex h-8 items-center gap-2 rounded-lg bg-slate-800/90 border border-slate-700 px-2.5">
               <span className="font-semibold text-sky-300 max-w-28 truncate">
                 {actor.displayName}
               </span>
