@@ -14,12 +14,14 @@ import {
   drawKotIcon2D,
   drawKotMonsterBoard2D,
   drawKotMonsterPortrait2D,
+  drawKotPowerCardArt2D,
   drawKotTokyoBackground2D,
   getKotBoardAtlas,
   getKotDiceAtlas,
   getKotGameBoardImage,
   getKotIconsAtlas,
   getKotMonsterAtlas,
+  getKotPowerCardsAtlas,
   getKotTokensAtlas,
 } from "@/canvas/king-of-tokyo-duel-art";
 import {
@@ -245,6 +247,7 @@ export function KingOfTokyoDuelCanvas({
     getKotGameBoardImage();
     getKotTokensAtlas();
     getKotIconsAtlas();
+    getKotPowerCardsAtlas();
     getKotDiceAtlas();
 
     const canvas = canvasRef.current;
@@ -1078,6 +1081,12 @@ export function KingOfTokyoDuelCanvas({
           const mCardsAvailH = Math.max(96, marketBoxH - 34);
           const mCardH = Math.floor((mCardsAvailH - mCardGap * 2) / 3);
           const mCardW = deckW - mPad * 2;
+          let hoveredMarketCard: {
+            card: (typeof pv.market)[number];
+            effCost: number;
+            canBuy: boolean;
+            anchorY: number;
+          } | null = null;
 
           pv.market.slice(0, 3).forEach((card, ci) => {
             const cy = mCardsTop + ci * (mCardH + mCardGap);
@@ -1090,81 +1099,183 @@ export function KingOfTokyoDuelCanvas({
             const cId = `kot-market-${card.id}`;
             const hov = hoveredIdRef.current === cId;
 
-            if (canBuy) {
-              newHitRegions.push({
-                id: cId,
-                shape: "rect",
-                x: cx,
-                y: cy,
-                width: mCardW,
-                height: mCardH,
-                cursor: "pointer",
-                data: { type: "buy-card", cardId: card.id },
-              });
+            // Always register hit region so hovering previews full-art card anytime; clicking buys when affordable!
+            newHitRegions.push({
+              id: cId,
+              shape: "rect",
+              x: cx,
+              y: cy,
+              width: mCardW,
+              height: mCardH,
+              cursor: canBuy ? "pointer" : "help",
+              data: canBuy ? { type: "buy-card", cardId: card.id } : { type: "noop" },
+            });
+
+            if (hov) {
+              hoveredMarketCard = { card, effCost, canBuy, anchorY: cy + mCardH / 2 };
             }
 
             drawRoundedRect(ctx, cx, cy, mCardW, mCardH, 10);
             ctx.fillStyle = canBuy
               ? hov
-                ? "rgba(245, 158, 11, 0.24)"
-                : "rgba(24, 34, 54, 0.95)"
-              : "rgba(15, 23, 42, 0.78)";
+                ? "rgba(245, 158, 11, 0.28)"
+                : "rgba(24, 34, 54, 0.96)"
+              : hov
+                ? "rgba(30, 41, 59, 0.94)"
+                : "rgba(15, 23, 42, 0.82)";
             ctx.fill();
             ctx.strokeStyle = canBuy
               ? hov
                 ? "#fde047"
                 : "#f59e0b"
-              : "rgba(100, 116, 139, 0.35)";
-            ctx.lineWidth = canBuy ? (hov ? 2 : 1.5) : 1;
+              : hov
+                ? "#94a3b8"
+                : "rgba(100, 116, 139, 0.35)";
+            ctx.lineWidth = canBuy ? (hov ? 2.2 : 1.5) : hov ? 1.5 : 1;
             ctx.stroke();
 
-            // Row 1: Card emoji + name + KIND pill + Cost with official Energy Bolt!
+            // Left: Official Illustrated Power Card Thumbnail (portrait 100:140) with real effective cost badge!
+            const artPad = 4;
+            const artH = Math.max(40, mCardH - artPad * 2);
+            const artW = Math.min(Math.round(mCardW * 0.34), Math.round(artH * (100 / 140)));
+            const artX = cx + artPad;
+            const artY = cy + artPad;
+            drawKotPowerCardArt2D(ctx, artX, artY, artW, artH, card.id, {
+              effCost,
+              highlighted: canBuy || hov,
+              radius: 7,
+            });
+
+            // Right: Vietnamese Title, KIND badge & Wrapped Effect Description
+            const tx = artX + artW + 8;
+            const tw = mCardW - (artW + artPad + 14);
             const row1Y = cy + 14;
+            const kindW = card.kind === "KEEP" ? 30 : 38;
+
             ctx.textAlign = "left";
             ctx.textBaseline = "middle";
-            ctx.fillStyle = canBuy ? "#f8fafc" : "#cbd5e1";
+            ctx.fillStyle = canBuy ? "#fef08a" : "#f1f5f9";
             ctx.font = `800 11px ${fonts.sans}`;
-            ctx.fillText(`${card.emoji} ${card.nameVi}`, cx + 8, row1Y, mCardW - 92);
+            ctx.fillText(card.nameVi, tx, row1Y, Math.max(40, tw - kindW - 6));
 
-            // Kind badge
-            const kindW = card.kind === "KEEP" ? 30 : 38;
-            const costPillW = 36;
-            const kindX = cx + mCardW - costPillW - kindW - 10;
+            // Kind badge top-right
+            const kindX = cx + mCardW - kindW - 6;
             drawRoundedRect(ctx, kindX, row1Y - 8, kindW, 16, 4);
             ctx.fillStyle =
               card.kind === "KEEP"
-                ? "rgba(14, 165, 233, 0.22)"
-                : "rgba(244, 63, 94, 0.22)";
+                ? "rgba(14, 165, 233, 0.24)"
+                : "rgba(244, 63, 94, 0.24)";
             ctx.fill();
             ctx.textAlign = "center";
             ctx.fillStyle = card.kind === "KEEP" ? "#7dd3fc" : "#fda4af";
             ctx.font = `800 8.5px ${fonts.sans}`;
-            ctx.fillText(card.kind === "KEEP" ? "GIỮ" : "DÙNG", kindX + kindW / 2, row1Y + 0.5);
+            ctx.fillText(
+              card.kind === "KEEP" ? "GIỮ" : "DÙNG",
+              kindX + kindW / 2,
+              row1Y + 0.5
+            );
 
-            // Cost pill with 16-bit Lime Energy Bolt
-            const costX = cx + mCardW - costPillW - 6;
-            drawRoundedRect(ctx, costX, row1Y - 8, costPillW, 16, 5);
-            ctx.fillStyle = "rgba(132, 204, 22, 0.2)";
-            ctx.fill();
-            ctx.strokeStyle = "rgba(163, 230, 53, 0.55)";
-            ctx.lineWidth = 1;
-            ctx.stroke();
+            // Wrapped Vietnamese description
             ctx.textAlign = "left";
-            ctx.fillStyle = "#bef264";
-            ctx.font = `900 10px ${fonts.mono}`;
-            ctx.fillText(`${effCost}`, costX + 5, row1Y + 0.5);
-            drawKotIcon2D(ctx, costX + costPillW - 10, row1Y, 12, "energy");
-
-            // Row 2: Wrapped Vietnamese description
-            ctx.textAlign = "left";
-            ctx.fillStyle = "#94a3b8";
+            ctx.fillStyle = canBuy ? "#e2e8f0" : "#94a3b8";
             ctx.font = `600 9.5px ${fonts.sans}`;
-            const cLines = wrapCanvasText(ctx, card.descVi, mCardW - 16);
-            const maxCLines = mCardH >= 58 ? 2 : 1;
+            const cLines = wrapCanvasText(ctx, card.descVi, tw);
+            const lineH = 12.5;
+            const maxCLines = Math.max(1, Math.floor((mCardH - 28) / lineH));
             cLines.slice(0, maxCLines).forEach((ln, li) => {
-              ctx.fillText(ln, cx + 8, cy + 30 + li * 13, mCardW - 16);
+              ctx.fillText(ln, tx, cy + 29 + li * lineH, tw);
             });
           });
+
+          // --- HOVER FULL-ART COMIC POWER CARD ZOOM PREVIEW ---
+          if (hoveredMarketCard) {
+            const hm = hoveredMarketCard as {
+              card: (typeof pv.market)[number];
+              effCost: number;
+              canBuy: boolean;
+              anchorY: number;
+            };
+            const zW = 216;
+            const zH = 304;
+            const zX = Math.max(12, deckX - zW - 14);
+            const zY = Math.max(
+              midTop,
+              Math.min(midBot - zH, Math.round(hm.anchorY - zH / 2))
+            );
+
+            ctx.save();
+            ctx.shadowColor = "rgba(0, 0, 0, 0.78)";
+            ctx.shadowBlur = 24;
+            ctx.shadowOffsetY = 8;
+            drawRoundedRect(ctx, zX, zY, zW, zH, 14);
+            ctx.fillStyle = "#f5ebd6";
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.strokeStyle = hm.canBuy ? "#fde047" : "#1e293b";
+            ctx.lineWidth = hm.canBuy ? 3 : 2;
+            ctx.stroke();
+
+            // Upper 62%: Large Official Full-Art Power Card Illustration
+            const zPad = 6;
+            const zArtW = zW - zPad * 2;
+            const zArtH = Math.round(zH * 0.62);
+            drawKotPowerCardArt2D(ctx, zX + zPad, zY + zPad, zArtW, zArtH, hm.card.id, {
+              effCost: hm.effCost,
+              highlighted: hm.canBuy,
+              radius: 10,
+            });
+
+            // Kind pill top-right over art
+            const zKindLabel = hm.card.kind === "KEEP" ? "GIỮ VĨNH VIỄN" : "DÙNG NGAY";
+            const zKindW = hm.card.kind === "KEEP" ? 86 : 68;
+            drawRoundedRect(ctx, zX + zW - zKindW - 10, zY + 10, zKindW, 20, 6);
+            ctx.fillStyle = hm.card.kind === "KEEP" ? "#0284c7" : "#e11d48";
+            ctx.fill();
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "#ffffff";
+            ctx.font = `900 9px ${fonts.sans}`;
+            ctx.fillText(zKindLabel, zX + zW - zKindW / 2 - 10, zY + 20.5);
+
+            // Lower 38%: Vintage Cream Rule Box with Vietnamese Name & Full Effect
+            const zTextY = zY + zPad + zArtH + 14;
+            ctx.textAlign = "left";
+            ctx.fillStyle = "#0f172a";
+            ctx.font = `900 13px ${fonts.sans}`;
+            ctx.fillText(
+              `${hm.card.emoji} ${hm.card.nameVi}`,
+              zX + 12,
+              zTextY,
+              zW - 24
+            );
+
+            ctx.fillStyle = "#334155";
+            ctx.font = `700 11px ${fonts.sans}`;
+            const zLines = wrapCanvasText(ctx, hm.card.descVi, zW - 24);
+            zLines.slice(0, 4).forEach((ln, li) => {
+              ctx.fillText(ln, zX + 12, zTextY + 18 + li * 15);
+            });
+
+            // Footer status bar inside zoom card
+            const zFootY = zY + zH - 22;
+            drawRoundedRect(ctx, zX + 10, zFootY - 9, zW - 20, 20, 6);
+            ctx.fillStyle = hm.canBuy ? "#f59e0b" : "#cbd5e1";
+            ctx.fill();
+            ctx.textAlign = "center";
+            ctx.fillStyle = "#0f172a";
+            ctx.font = `900 10px ${fonts.sans}`;
+            ctx.fillText(
+              hm.canBuy
+                ? "✨ BẤM ĐỂ MUA NGAY!"
+                : pv.step !== "BuyCardsStep"
+                  ? "Chốt xúc xắc để mua thẻ"
+                  : `Cần thêm ${Math.max(0, hm.effCost - mySeat.energy)} Năng Lượng`,
+              zX + zW / 2,
+              zFootY + 1.5
+            );
+            ctx.restore();
+          }
         } else {
           // NARROW STACKED: 16-bit Tokyo Board on TOP (~64%) + Horizontal Dice & Action Strip BELOW
           const diceStripAreaH = isMyTurn ? 96 : 64;

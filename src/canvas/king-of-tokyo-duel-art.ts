@@ -12,7 +12,31 @@ export const KOT_BOARD_ATLAS_URL = "/sprites/kot-duel-boards-pixel.png";
 export const KOT_GAME_BOARD_URL = "/sprites/kot-duel-board-map-pixel.png";
 export const KOT_TOKENS_ATLAS_URL = "/sprites/kot-duel-tokens-pixel.png";
 export const KOT_ICONS_ATLAS_URL = "/sprites/kot-duel-icons-pixel.png";
+export const KOT_POWER_CARDS_ATLAS_URL = "/sprites/kot-duel-power-cards-pixel.png";
 export const KOT_DICE_ATLAS_URL = "/sprites/kot-duel-dice-pixel.png";
+
+/** Grid coordinates (col 0..9, row 0..4, each 100x140) in kot-duel-power-cards-pixel.png for every Power Card ID. */
+export const KOT_POWER_CARD_COORDS: Record<string, { col: number; row: number }> = {
+  "kot-beam": { col: 0, row: 2 },
+  "kot-nuke-heal": { col: 5, row: 0 },
+  "kot-media-storm": { col: 6, row: 2 },
+  "kot-quake": { col: 9, row: 0 },
+  "kot-shockwave": { col: 7, row: 1 },
+  "kot-live-tv": { col: 6, row: 1 },
+  "kot-meltdown": { col: 7, row: 0 },
+  "kot-dual-strike": { col: 1, row: 1 },
+  "kot-overcharge": { col: 2, row: 0 },
+  "kot-titan-claws": { col: 0, row: 0 },
+  "kot-armor": { col: 3, row: 2 },
+  "kot-reactor": { col: 7, row: 2 },
+  "kot-extra-die": { col: 1, row: 3 },
+  "kot-regen": { col: 2, row: 3 },
+  "kot-jetpack": { col: 5, row: 4 },
+  "kot-siege": { col: 4, row: 4 },
+  "kot-idol": { col: 3, row: 4 },
+  "kot-vamp": { col: 2, row: 2 },
+  "kot-discount": { col: 8, row: 0 },
+};
 
 export type KotIconName =
   | "heart"
@@ -221,6 +245,110 @@ export function drawKotIcon2D(
     size,
     size
   );
+  ctx.restore();
+}
+
+let cachedPowerCardsImg: HTMLImageElement | null = null;
+let powerCardsLoaded = false;
+const powerCardsListeners = new Set<() => void>();
+
+export function getKotPowerCardsAtlas(
+  onLoad?: () => void
+): HTMLImageElement | null {
+  if (typeof window === "undefined") return null;
+  if (powerCardsLoaded && cachedPowerCardsImg) return cachedPowerCardsImg;
+  if (onLoad) powerCardsListeners.add(onLoad);
+  if (!cachedPowerCardsImg) {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      powerCardsLoaded = true;
+      powerCardsListeners.forEach((fn) => fn());
+      powerCardsListeners.clear();
+    };
+    img.src = KOT_POWER_CARDS_ATLAS_URL;
+    cachedPowerCardsImg = img;
+  }
+  return powerCardsLoaded ? cachedPowerCardsImg : null;
+}
+
+/**
+ * Draws the official full-color illustrated Power Card artwork for `cardId` at `(x, y, w, h)`
+ * with vintage comic frame and optional live effective cost badge cleanly covering the top-left corner!
+ */
+export function drawKotPowerCardArt2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  cardId: string,
+  opts: {
+    effCost?: number;
+    highlighted?: boolean;
+    radius?: number;
+  } = {}
+) {
+  ctx.save();
+  const r = opts.radius ?? Math.max(6, Math.round(Math.min(w, h) * 0.1));
+  const coord = KOT_POWER_CARD_COORDS[cardId] ?? { col: 0, row: 0 };
+
+  drawRoundedRect(ctx, x, y, w, h, r);
+  ctx.save();
+  ctx.clip();
+
+  const atlas = getKotPowerCardsAtlas();
+  if (atlas) {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(
+      atlas,
+      coord.col * 100,
+      coord.row * 140,
+      100,
+      140,
+      x,
+      y,
+      w,
+      h
+    );
+  } else {
+    ctx.fillStyle = "#1e293b";
+    ctx.fillRect(x, y, w, h);
+  }
+
+  // Official-style cream cost badge top-left cleanly covering source corner cost!
+  if (opts.effCost !== undefined) {
+    const bw = Math.max(26, Math.min(44, Math.round(w * 0.38)));
+    const bh = Math.max(16, Math.min(26, Math.round(h * 0.22)));
+    drawRoundedRect(ctx, x - 2, y - 2, bw + 2, bh + 2, 6);
+    ctx.fillStyle = "#f5ebd6";
+    ctx.fill();
+    ctx.strokeStyle = "#1c1917";
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+
+    const fonts = getCanvasFontFamilies();
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#0f172a";
+    ctx.font = `900 ${Math.max(10, Math.round(bh * 0.65))}px ${fonts.mono}`;
+    ctx.fillText(`${opts.effCost}`, x + 3, y + bh * 0.52);
+    drawKotIcon2D(
+      ctx,
+      x + bw - Math.round(bh * 0.42),
+      y + bh * 0.5,
+      Math.max(10, Math.round(bh * 0.72)),
+      "energy"
+    );
+  }
+
+  ctx.restore();
+
+  drawRoundedRect(ctx, x, y, w, h, r);
+  ctx.strokeStyle = opts.highlighted ? "#fde047" : "#f5ebd6";
+  ctx.lineWidth = opts.highlighted ? 2.2 : 1.4;
+  ctx.stroke();
   ctx.restore();
 }
 
