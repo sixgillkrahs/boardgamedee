@@ -4354,7 +4354,7 @@ function RoomPageContent({
                   </h2>
                   <p className="text-[11px] text-slate-400">
                     {isKot
-                      ? "6 Quái Vật Kaiju • 6 Xúc Xắc Tokyo • Kéo co Danh Vọng & Phá Hủy + Spotlight"
+                      ? "Đối kháng 1v1 • 6 Xúc Xắc Đỏ + 2 Xúc Xắc Trắng • Kéo co Danh Vọng & Phá Hủy + Token Buzz"
                       : isDmd
                         ? "60 lá kho báu • 10 kỹ năng liên hoàn • Cược may rủi hoặc Cháy bài mất trắng"
                         : isDuel
@@ -4379,71 +4379,305 @@ function RoomPageContent({
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {isKot ? (
                 <>
-                  <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-2 leading-relaxed text-slate-300">
-                    <p className="font-bold text-orange-300 text-xs">
-                      1. 3 Cách Chiến Thắng Tức Thì Trong King of Tokyo: Duel
+                  {/* 1. 3 Cách Chiến Thắng */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/65 p-3.5 space-y-2.5 leading-relaxed text-slate-300">
+                    <p className="font-extrabold text-orange-300 text-xs uppercase tracking-wider">
+                      1. Mục Tiêu — 3 Cách Chiến Thắng Tức Thì
                     </p>
-                    <p>
-                      • <strong>💀 Hạ Gục KO</strong>: Đưa Máu (HP) của đối thủ
-                      về <strong>0</strong>.
-                    </p>
-                    <p>
-                      • <strong>👑 Chạm Đỉnh Thanh (Ô số 6)</strong>: Kéo thanh{" "}
-                      <strong>⭐ Danh Vọng</strong> HOẶC thanh{" "}
-                      <strong>🏢 Phá Hủy</strong> chạm ô cuối cùng (số 6) về phía
-                      bạn.
-                    </p>
-                    <p>
-                      • <strong>🔦 Chiến Thắng Spotlight Kép</strong>: Kéo{" "}
-                      <strong>CẢ HAI</strong> dấu mốc Danh Vọng & Phá Hủy cùng
-                      nằm trong <strong>Vùng Spotlight (ô 3–5)</strong> bên phía
-                      bạn!
-                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div className="rounded-lg border border-rose-500/30 bg-slate-900/85 p-2.5 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="inline-block w-5 h-5 shrink-0 bg-no-repeat"
+                            style={{
+                              backgroundImage:
+                                "url(/sprites/kot-duel-icons-pixel.png)",
+                              backgroundPosition: "85.7143% 0%",
+                              backgroundSize: "800% 100%",
+                            }}
+                          />
+                          <strong className="text-rose-300 text-xs">
+                            Hạ Gục KO
+                          </strong>
+                        </div>
+                        <p className="text-[11px] text-slate-300 leading-snug">
+                          Đánh tụt Máu (HP) đối thủ về <strong>0</strong>.
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg border border-amber-500/30 bg-slate-900/85 p-2.5 space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="inline-block w-5 h-5 shrink-0 bg-no-repeat"
+                            style={{
+                              backgroundImage:
+                                "url(/sprites/kot-duel-icons-pixel.png)",
+                              backgroundPosition: "42.8571% 0%",
+                              backgroundSize: "800% 100%",
+                            }}
+                          />
+                          <span
+                            className="inline-block w-5 h-5 shrink-0 bg-no-repeat"
+                            style={{
+                              backgroundImage:
+                                "url(/sprites/kot-duel-icons-pixel.png)",
+                              backgroundPosition: "57.1429% 0%",
+                              backgroundSize: "800% 100%",
+                            }}
+                          />
+                          <strong className="text-amber-300 text-xs">
+                            Chạm Ô Đích (Ô 7)
+                          </strong>
+                        </div>
+                        <p className="text-[11px] text-slate-300 leading-snug">
+                          Kéo dấu mốc <strong>Danh Vọng</strong> hoặc{" "}
+                          <strong>Phá Hủy</strong> chạm ô cuối cùng (ô số 7) về
+                          phía bạn.
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg border border-emerald-500/30 bg-slate-900/85 p-2.5 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="inline-block w-5 h-5 shrink-0 bg-no-repeat"
+                            style={{
+                              backgroundImage:
+                                "url(/sprites/kot-duel-icons-pixel.png)",
+                              backgroundPosition: "71.4286% 0%",
+                              backgroundSize: "800% 100%",
+                            }}
+                          />
+                          <strong className="text-emerald-300 text-xs">
+                            Spotlight Kép
+                          </strong>
+                        </div>
+                        <p className="text-[11px] text-slate-300 leading-snug">
+                          Đưa <strong>cả hai</strong> dấu mốc Danh Vọng và Phá
+                          Hủy cùng vào <strong>Vùng Spotlight (ô 3–6)</strong>{" "}
+                          bên phía bạn.
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-2">
-                    <p className="font-bold text-sky-300 text-xs">
-                      2. Ý Nghĩa 6 Mặt Xúc Xắc Kaiju (Tung tối đa 3 lần/lượt)
+                  {/* 2. Diễn Biến 1 Lượt Chơi */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/65 p-3.5 space-y-2 leading-relaxed text-slate-300">
+                    <p className="font-extrabold text-sky-300 text-xs uppercase tracking-wider">
+                      2. Trình Tự 1 Lượt Chơi (3 Bước)
                     </p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {KOT_DIE_FACES.map((face) => (
+                    <ol className="space-y-1.5 text-[11.5px]">
+                      <li>
+                        <strong className="text-slate-100">
+                          Bước 1 — Tung Xúc Xắc:
+                        </strong>{" "}
+                        Lượt đầu tiên người đi trước tung{" "}
+                        <strong>5 Xúc Xắc Đỏ</strong>; mọi lượt sau tung{" "}
+                        <strong>6 Xúc Xắc Đỏ</strong>. Mỗi lượt được tung tối đa{" "}
+                        <strong>3 lần</strong> (bấm vào từng viên để khóa/mở
+                        khóa trước khi tung lại). Nếu có{" "}
+                        <strong>Token Xúc Xắc</strong> (giữ tối đa 2), bạn có
+                        thể bấm dùng để tung thêm{" "}
+                        <strong>Xúc Xắc Trắng</strong> (tối đa 8 viên/lượt).
+                      </li>
+                      <li>
+                        <strong className="text-slate-100">
+                          Bước 2 — Chốt Kết Quả:
+                        </strong>{" "}
+                        Bấm <strong>Chốt xúc xắc</strong> để thực thi toàn bộ
+                        sát thương, hồi máu, thu{" "}
+                        <img
+                          src="/sprites/kot-duel-energy-cube-pixel.png"
+                          alt="Năng lượng"
+                          className="inline-block w-3.5 h-3.5 align-middle mx-0.5"
+                        />
+                        <strong>Năng Lượng</strong>, kéo thanh Danh Vọng / Phá
+                        Hủy và kích hoạt kỹ năng Kaiju.
+                      </li>
+                      <li>
+                        <strong className="text-slate-100">
+                          Bước 3 — Mua Thẻ Sức Mạnh & Kết Thúc Lượt:
+                        </strong>{" "}
+                        Dùng{" "}
+                        <img
+                          src="/sprites/kot-duel-energy-cube-pixel.png"
+                          alt="Năng lượng"
+                          className="inline-block w-3.5 h-3.5 align-middle mx-0.5"
+                        />
+                        <strong>Năng Lượng</strong> mua thẻ trên 3 ô chợ (hoặc
+                        trả <strong>2 Năng Lượng</strong> để đổi 3 thẻ mới). Thẻ{" "}
+                        <strong>Bỏ Đi</strong> có tác dụng ngay; thẻ{" "}
+                        <strong>Giữ</strong> cho hiệu ứng vĩnh viễn suốt trận.
+                      </li>
+                    </ol>
+                  </div>
+
+                  {/* 3. Ý Nghĩa 6 Mặt Xúc Xắc (dùng sprite Xúc Xắc Đỏ thật) */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/65 p-3.5 space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-extrabold text-rose-300 text-xs uppercase tracking-wider">
+                        3. Ý Nghĩa 6 Mặt Xúc Xắc
+                      </p>
+                      <span className="text-[10px] text-slate-400">
+                        6 viên Đỏ (chính) + tối đa 2 viên Trắng (thêm)
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {[
+                        {
+                          face: "claw",
+                          bgPos: "0% 100%",
+                          title: "Vuốt (Sát Thương)",
+                          desc: "Mỗi mặt gây 1 sát thương trực tiếp lên đối thủ.",
+                        },
+                        {
+                          face: "heal",
+                          bgPos: "20% 100%",
+                          title: "Trái Tim (Hồi Máu)",
+                          desc: "Mỗi mặt hồi 1 HP (không vượt quá máu tối đa).",
+                        },
+                        {
+                          face: "energy",
+                          bgPos: "40% 100%",
+                          title: "Năng Lượng",
+                          desc: "Mỗi mặt nhận 1 khối Năng Lượng xanh để mua thẻ.",
+                        },
+                        {
+                          face: "star",
+                          bgPos: "60% 100%",
+                          title: "Danh Vọng",
+                          desc: "Cần từ 3 mặt kéo 1 bước; mỗi mặt dư thêm +1 bước.",
+                        },
+                        {
+                          face: "building",
+                          bgPos: "80% 100%",
+                          title: "Phá Hủy",
+                          desc: "Cần từ 3 mặt kéo 1 bước; mỗi mặt dư thêm +1 bước.",
+                        },
+                        {
+                          face: "special",
+                          bgPos: "100% 100%",
+                          title: "Kỹ Năng Đặc Biệt",
+                          desc: "Kích hoạt năng lực riêng của Quái Vật bạn đang cầm.",
+                        },
+                      ].map((item) => (
                         <div
-                          key={face}
-                          className="rounded-lg border border-slate-800 bg-slate-900/80 p-2 text-[11px]"
+                          key={item.face}
+                          className="flex items-start gap-2.5 rounded-lg border border-slate-800 bg-slate-900/85 p-2"
                         >
-                          <span className="font-bold text-slate-100">
-                            {KOT_DIE_META[face].emoji} {KOT_DIE_META[face].nameVi}
-                          </span>
+                          <span
+                            className="inline-block w-7 h-7 shrink-0 rounded bg-no-repeat mt-0.5"
+                            style={{
+                              backgroundImage:
+                                "url(/sprites/kot-duel-dice-pixel.png)",
+                              backgroundPosition: item.bgPos,
+                              backgroundSize: "600% 200%",
+                            }}
+                          />
+                          <div className="min-w-0">
+                            <div className="font-bold text-slate-100 text-[11.5px]">
+                              {item.title}
+                            </div>
+                            <p className="text-[11px] text-slate-400 leading-snug">
+                              {item.desc}
+                            </p>
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-2">
-                    <p className="font-bold text-amber-300 text-xs">
-                      3. 6 Quái Vật Kaiju & Kỹ Năng Độc Quyền (Kích hoạt bằng{" "}
+                  {/* 4. Cơ Chế Token Buzz */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/65 p-3.5 space-y-2 leading-relaxed text-slate-300">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-extrabold text-emerald-300 text-xs uppercase tracking-wider">
+                        4. Cơ Chế Token Buzz Trên Bàn Đấu
+                      </p>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span
+                          className="inline-block w-11 h-7 bg-no-repeat"
+                          style={{
+                            backgroundImage:
+                              "url(/sprites/kot-duel-buzz-tiles-pixel.png)",
+                            backgroundPosition: "33.333% 0%",
+                            backgroundSize: "400% 300%",
+                          }}
+                        />
+                        <span
+                          className="inline-block w-11 h-7 bg-no-repeat"
+                          style={{
+                            backgroundImage:
+                              "url(/sprites/kot-duel-buzz-tiles-pixel.png)",
+                            backgroundPosition: "100% 0%",
+                            backgroundSize: "400% 300%",
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <ul className="space-y-1 text-[11.5px] list-disc pl-4">
+                      <li>
+                        Nhiều Thẻ Sức Mạnh có{" "}
+                        <strong>biểu tượng linh vật Buzz</strong> ở góc trên bên
+                        trái. Khi mua thẻ đó, nếu miếng Token Buzz tương ứng
+                        chưa ở trên bàn, bạn được{" "}
+                        <strong>đặt mới miếng Buzz (2 ô hoặc 3 ô)</strong> lên
+                        thanh Danh Vọng hoặc Phá Hủy.
+                      </li>
+                      <li>
+                        Nếu miếng Token Buzz đó <strong>đã nằm trên bàn</strong>{" "}
+                        (dù do bạn hay đối thủ đặt trước đó), người vừa mua thẻ
+                        có quyền <strong>nhấc và di chuyển</strong> sang vị trí
+                        mới có lợi hơn.
+                      </li>
+                      <li>
+                        Token Buzz nằm <strong>bền vững trên bàn</strong>: mỗi
+                        khi quân cờ bước qua ô có biểu tượng (hoặc khi đặt trúng
+                        ô quân cờ đang đứng), người đi lượt lập tức nhận thưởng{" "}
+                        {renderKotRichText("🐾 / ❤️ / ⚡ / 🎲")} tương ứng.
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* 5. 6 Quái Vật Kaiju (dùng chân dung 16-bit thật) */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/65 p-3.5 space-y-2.5">
+                    <p className="font-extrabold text-amber-300 text-xs uppercase tracking-wider">
+                      5. 6 Quái Vật Kaiju & Kỹ Năng Độc Quyền (Kích hoạt bằng{" "}
                       {renderKotRichText("[!]")})
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {KOT_MONSTER_IDS.map((mid) => {
+                      {KOT_MONSTER_IDS.map((mid, idx) => {
                         const m = KOT_MONSTERS[mid];
+                        const bgX = `${(idx / 5) * 100}%`;
                         return (
                           <div
                             key={mid}
-                            className="rounded-lg border border-slate-800 bg-slate-900/80 p-2 space-y-0.5"
+                            className="flex items-start gap-2.5 rounded-lg border border-slate-800 bg-slate-900/85 p-2"
                           >
-                            <p className="font-bold text-slate-100">
-                              {m.name}{" "}
-                              <span className="text-[10px] text-emerald-300 font-mono">
-                                ({m.maxHp} HP)
-                              </span>
-                            </p>
-                            <p className="text-[11px] text-slate-400 leading-snug">
-                              <strong className="text-amber-300">
-                                {m.powerNameVi}:
-                              </strong>{" "}
-                              {renderKotRichText(m.powerDescVi)}
-                            </p>
+                            <span
+                              className="inline-block w-11 h-11 shrink-0 rounded-lg border border-slate-700 bg-no-repeat"
+                              style={{
+                                backgroundImage:
+                                  "url(/sprites/kot-duel-monsters-pixel.png)",
+                                backgroundPosition: `${bgX} 0%`,
+                                backgroundSize: "600% 100%",
+                              }}
+                            />
+                            <div className="min-w-0 space-y-0.5">
+                              <div className="flex items-center justify-between gap-1.5">
+                                <span className="font-bold text-slate-100 text-xs truncate">
+                                  {m.name}
+                                </span>
+                                <span className="inline-flex items-center gap-0.5 shrink-0 text-[10px] text-rose-300 font-mono font-bold">
+                                  {renderKotRichText("❤️")}
+                                  {m.maxHp}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-400 leading-snug">
+                                <strong className="text-amber-300">
+                                  {m.powerNameVi}:
+                                </strong>{" "}
+                                {renderKotRichText(m.powerDescVi)}
+                              </p>
+                            </div>
                           </div>
                         );
                       })}
