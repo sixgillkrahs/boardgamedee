@@ -8,14 +8,19 @@ if (!connectionString) {
   throw new Error("DATABASE_URL environment variable is not defined");
 }
 
-// Giữ singleton connection trong môi trường dev để tránh tạo quá nhiều kết nối khi Next.js HMR
+// Giữ singleton connection để tái sử dụng kết nối TCP/TLS giữa các request (tránh handshake lặp lại)
 const globalForDb = globalThis as unknown as {
   conn: postgres.Sql | undefined;
 };
 
-const conn = globalForDb.conn ?? postgres(connectionString, { prepare: false });
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.conn = conn;
-}
+const conn =
+  globalForDb.conn ??
+  postgres(connectionString, {
+    prepare: false,
+    max: 5,
+    idle_timeout: 20,
+    connect_timeout: 10,
+  });
+globalForDb.conn = conn;
 
 export const db = drizzle(conn, { schema });

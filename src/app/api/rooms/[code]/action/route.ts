@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import {
   addBotSeat,
+  findRoomByCode,
+  getActorById,
   getRoomSnapshotForActor,
   joinRoom,
   leaveRoom,
@@ -8,10 +10,14 @@ import {
   removeSeatFromRoom,
   returnRoomToLobby,
   startMatch,
-  submitMatchCommand,
+  submitMatchCommandAndGetSnapshot,
   updateRoomConfig,
 } from "@/platform/coordinator";
-import { ensureCurrentActor, getCurrentActor } from "@/platform/session";
+import {
+  ensureCurrentActor,
+  getCurrentActor,
+  getVerifiedActorIdFromCookie,
+} from "@/platform/session";
 import type { ChannelId } from "@/cartridges/types";
 
 export async function GET(
@@ -41,6 +47,35 @@ export async function POST(
   try {
     const { code } = await context.params;
     const body = await request.json();
+
+    // Đường đi nhanh cho MATCH_COMMAND: song song hóa đọc actor + room và dựng snapshot không query lại
+    if (body.type === "MATCH_COMMAND") {
+      const cookieActorId = await getVerifiedActorIdFromCookie();
+      let actor = null;
+      let preloadedRoom = undefined;
+
+      if (cookieActorId) {
+        const [foundActor, foundRoom] = await Promise.all([
+          getActorById(cookieActorId),
+          findRoomByCode(code),
+        ]);
+        actor = foundActor;
+        preloadedRoom = foundRoom;
+      }
+
+      if (!actor) {
+        actor = await ensureCurrentActor(body.displayName || "Lữ Khách");
+      }
+
+      const snapshot = await submitMatchCommandAndGetSnapshot({
+        code,
+        actorId: actor.id,
+        command: body.command,
+        preloadedRoom,
+      });
+      return NextResponse.json({ snapshot, actor });
+    }
+
     const actor = await ensureCurrentActor(body.displayName || "Lữ Khách");
 
     switch (body.type) {
@@ -77,14 +112,6 @@ export async function POST(
         await startMatch({ code, actorId: actor.id });
         break;
       }
-      case "MATCH_COMMAND": {
-        await submitMatchCommand({
-          code,
-          actorId: actor.id,
-          command: body.command,
-        });
-        break;
-      }
       case "SEND_MESSAGE": {
         await postChannelMessage({
           code,
@@ -108,6 +135,7 @@ export async function POST(
     const snapshot = await getRoomSnapshotForActor({
       code,
       actorId: actor.id,
+      skipExpiryCheck: true,
     });
     return NextResponse.json({ snapshot, actor });
   } catch (err: any) {

@@ -126,7 +126,19 @@ function RoomPageContent({
           return;
         }
         if (data.snapshot) {
-          setSnapshot(data.snapshot);
+          setSnapshot((prev) => {
+            if (
+              prev &&
+              prev.room.activeMatchId &&
+              prev.room.activeMatchId === data.snapshot.room.activeMatchId &&
+              prev.matchVersion !== null &&
+              data.snapshot.matchVersion !== null &&
+              data.snapshot.matchVersion < prev.matchVersion
+            ) {
+              return prev;
+            }
+            return data.snapshot;
+          });
         }
         if (data.actor) {
           setActor(data.actor);

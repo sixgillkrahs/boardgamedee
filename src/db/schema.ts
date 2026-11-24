@@ -1,5 +1,6 @@
 import {
   boolean,
+  index,
   integer,
   jsonb,
   pgTable,
@@ -58,42 +59,58 @@ export const seats = pgTable(
   ]
 );
 
-export const matches = pgTable("matches", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  roomId: uuid("room_id")
-    .notNull()
-    .references(() => rooms.id, { onDelete: "cascade" }),
-  cartridgeId: text("cartridge_id").notNull(),
-  status: text("status").notNull().default("active"), // 'active' | 'finished'
-  version: integer("version").notNull().default(1),
-  state: jsonb("state").notNull(),
-  phaseDeadlineAt: timestamp("phase_deadline_at"),
-  winningFaction: text("winning_faction"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  finishedAt: timestamp("finished_at"),
-});
+export const matches = pgTable(
+  "matches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    roomId: uuid("room_id")
+      .notNull()
+      .references(() => rooms.id, { onDelete: "cascade" }),
+    cartridgeId: text("cartridge_id").notNull(),
+    status: text("status").notNull().default("active"), // 'active' | 'finished'
+    version: integer("version").notNull().default(1),
+    state: jsonb("state").notNull(),
+    phaseDeadlineAt: timestamp("phase_deadline_at"),
+    winningFaction: text("winning_faction"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    finishedAt: timestamp("finished_at"),
+  },
+  (table) => [index("matches_room_id_idx").on(table.roomId)]
+);
 
-export const matchEvents = pgTable("match_events", {
-  id: serial("id").primaryKey(),
-  matchId: uuid("match_id")
-    .notNull()
-    .references(() => matches.id, { onDelete: "cascade" }),
-  version: integer("version").notNull(),
-  eventType: text("event_type").notNull(),
-  message: text("message").notNull(),
-  visibleToSeatNos: jsonb("visible_to_seat_nos").notNull(), // 'all' | number[]
-  payload: jsonb("payload"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const matchEvents = pgTable(
+  "match_events",
+  {
+    id: serial("id").primaryKey(),
+    matchId: uuid("match_id")
+      .notNull()
+      .references(() => matches.id, { onDelete: "cascade" }),
+    version: integer("version").notNull(),
+    eventType: text("event_type").notNull(),
+    message: text("message").notNull(),
+    visibleToSeatNos: jsonb("visible_to_seat_nos").notNull(), // 'all' | number[]
+    payload: jsonb("payload"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("match_events_match_id_id_idx").on(table.matchId, table.id),
+  ]
+);
 
-export const channelMessages = pgTable("channel_messages", {
-  id: serial("id").primaryKey(),
-  matchId: uuid("match_id")
-    .notNull()
-    .references(() => matches.id, { onDelete: "cascade" }),
-  channelId: text("channel_id").notNull(), // 'village' | 'werewolf' | 'graveyard'
-  senderSeatNo: integer("sender_seat_no").notNull(),
-  senderName: text("sender_name").notNull(),
-  content: text("content").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const channelMessages = pgTable(
+  "channel_messages",
+  {
+    id: serial("id").primaryKey(),
+    matchId: uuid("match_id")
+      .notNull()
+      .references(() => matches.id, { onDelete: "cascade" }),
+    channelId: text("channel_id").notNull(), // 'village' | 'werewolf' | 'graveyard'
+    senderSeatNo: integer("sender_seat_no").notNull(),
+    senderName: text("sender_name").notNull(),
+    content: text("content").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("channel_messages_match_id_id_idx").on(table.matchId, table.id),
+  ]
+);

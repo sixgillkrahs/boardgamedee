@@ -39,11 +39,15 @@ export function verifySignedActorId(rawCookie: string): string | null {
   return valid ? actorId : null;
 }
 
-export async function getCurrentActor() {
+export async function getVerifiedActorIdFromCookie(): Promise<string | null> {
   const cookieStore = await cookies();
   const rawValue = cookieStore.get(ACTOR_COOKIE_NAME)?.value;
   if (!rawValue) return null;
-  const actorId = verifySignedActorId(rawValue);
+  return verifySignedActorId(rawValue);
+}
+
+export async function getCurrentActor() {
+  const actorId = await getVerifiedActorIdFromCookie();
   if (!actorId) return null;
   return getActorById(actorId);
 }
