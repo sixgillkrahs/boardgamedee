@@ -114,7 +114,10 @@ export function KingOfTokyoDuelCanvas({
   const rollStartMsRef = useRef<number>(0);
   const rollSeedRef = useRef<number>(1);
   const landedDiceRef = useRef<Set<number>>(new Set());
+  const rollingIndicesRef = useRef<Set<number> | null>(null);
   const lastRollKeyRef = useRef<string>("");
+  const lastRollTurnRef = useRef<string>("");
+  const lastDiceLenRef = useRef<number>(0);
   const screenShakeEndRef = useRef<number>(0);
   const screenShakeMagRef = useRef<number>(0);
   const lastAnimIdRef = useRef<number>(0);
@@ -146,14 +149,39 @@ export function KingOfTokyoDuelCanvas({
       onDispatchCommand,
     };
 
-    // Trigger staggered 3D dice tumble animation on any fresh turn roll, reroll, or adding a White Bonus Die!
+    // Trigger simultaneous launch + staggered landing 3D dice animation on fresh turn, reroll, or White Bonus Die!
     if (mode === "match" && playerView && playerView.step === "RollDiceStep") {
-      const rollKey = `${playerView.turnNumber}-${playerView.activeSeatNo}-${playerView.rollsLeft}-${playerView.dice.length}`;
+      const turnRollKey = `${playerView.turnNumber}-${playerView.activeSeatNo}-${playerView.rollsLeft}`;
+      const rollKey = `${turnRollKey}-${playerView.dice.length}`;
       if (rollKey !== lastRollKeyRef.current) {
+        const addedOnlyBonusDie =
+          turnRollKey === lastRollTurnRef.current &&
+          playerView.dice.length > lastDiceLenRef.current;
+        const prevLen = lastDiceLenRef.current;
         lastRollKeyRef.current = rollKey;
-        rollStartMsRef.current = performance.now();
-        rollSeedRef.current = Math.floor(Math.random() * 10000) + 1;
-        landedDiceRef.current = new Set();
+        lastRollTurnRef.current = turnRollKey;
+        lastDiceLenRef.current = playerView.dice.length;
+
+        const nowMs = performance.now();
+        if (addedOnlyBonusDie) {
+          // Only tumble the newly added White Bonus Die(s)!
+          const addedSet = new Set<number>();
+          for (let i = prevLen; i < playerView.dice.length; i++) addedSet.add(i);
+          rollingIndicesRef.current = addedSet;
+          rollStartMsRef.current = nowMs;
+          rollSeedRef.current = Math.floor(Math.random() * 10000) + 1;
+          landedDiceRef.current = new Set();
+        } else {
+          // If user click already started rolling within the last 280ms, keep spinning seamlessly into server result!
+          const alreadyOptimisticRolling =
+            rollStartMsRef.current > 0 && nowMs - rollStartMsRef.current < 280;
+          if (!alreadyOptimisticRolling) {
+            rollingIndicesRef.current = null;
+            rollStartMsRef.current = nowMs;
+            rollSeedRef.current = Math.floor(Math.random() * 10000) + 1;
+            landedDiceRef.current = new Set();
+          }
+        }
       }
     }
 
@@ -168,9 +196,14 @@ export function KingOfTokyoDuelCanvas({
       const targetY = anim.targetSeatNo === viewerSeat ? botY : topY;
 
       if (anim.kind === "ROLL") {
-        rollStartMsRef.current = now;
-        rollSeedRef.current = anim.id * 37 + 13;
-        landedDiceRef.current = new Set();
+        const alreadyRolling =
+          rollStartMsRef.current > 0 && now - rollStartMsRef.current < 280;
+        if (!alreadyRolling) {
+          rollingIndicesRef.current = null;
+          rollStartMsRef.current = now;
+          rollSeedRef.current = anim.id * 37 + 13;
+          landedDiceRef.current = new Set();
+        }
       }
 
       if ((anim.damage ?? 0) > 0) {
@@ -739,7 +772,9 @@ export function KingOfTokyoDuelCanvas({
           kind: b.kind,
         }));
 
-        // Computes realistic staggered 3D tumble, face cycling, impact bounce & landing sparks for each die!
+        // Computes simultaneous launch + staggered landing 3D tumble, face cycling, impact bounce & sparks!
+        // All rolling dice begin spinning IMMEDIATELY at t=0 (never flashing their final result first!),
+        // then land one by one from left to right to reveal each final face at impact.
         const computeDieRollState = (
           idx: number,
           die: (typeof pv.dice)[number],
@@ -760,26 +795,32 @@ export function KingOfTokyoDuelCanvas({
           if (die.locked || rollStartMsRef.current === 0) {
             return { displayFace: die.face, offsetX: 0 };
           }
-          const dieStart = rollStartMsRef.current + idx * 48;
-          const elapsed = now - dieStart;
-          const dur = 560;
-          if (elapsed < 0 || elapsed >= dur) {
+          if (rollingIndicesRef.current && !rollingIndicesRef.current.has(idx)) {
             return { displayFace: die.face, offsetX: 0 };
           }
 
-          const p = elapsed / dur;
-          const landAt = 0.72;
+          // Clamp negative rAF clock skew to 0 so a die NEVER leaks its final face on frame 0!
+          const elapsed = Math.max(0, now - rollStartMsRef.current);
+          const staggerRank = rollingIndicesRef.current ? 0 : idx;
+          const airDur = 360 + staggerRank * 52;
+          const settleDur = 175;
+          const totalDur = airDur + settleDur;
+
+          if (elapsed >= totalDur) {
+            return { displayFace: die.face, offsetX: 0 };
+          }
+
           const dir = idx % 2 === 0 ? 1 : -1;
 
-          if (p < landAt) {
-            const air = p / landAt; // 0..1 airborne arc
+          if (elapsed < airDur) {
+            const air = elapsed / airDur; // 0..1 airborne arc
             const jumpY = -Math.sin(air * Math.PI) * 22;
             const offsetX = Math.sin(air * Math.PI * 3 + idx) * (1 - air) * 5;
-            const angle = (1 - air) * (1 - air) * dir * Math.PI * 2.6;
+            const angle = (1 - air) * (1 - air) * dir * Math.PI * 2.8;
             const flipWave = Math.abs(Math.cos(air * Math.PI * 4.5 + idx * 0.7));
             const scaleX = 0.56 + 0.44 * flipWave;
             const scaleY = 1.04 + 0.14 * Math.sin(air * Math.PI);
-            const cycleStep = Math.floor(elapsed / 62);
+            const cycleStep = Math.floor(elapsed / 58);
             const faceIdx =
               (rollSeedRef.current + idx * 5 + cycleStep) % KOT_DIE_FACES.length;
             return {
@@ -806,7 +847,7 @@ export function KingOfTokyoDuelCanvas({
                 });
               }
             }
-            const bp = (p - landAt) / (1 - landAt); // 0..1 settle
+            const bp = (elapsed - airDur) / settleDur; // 0..1 settle
             const jumpY = -Math.abs(Math.sin(bp * Math.PI)) * 5 * (1 - bp);
             const squash = Math.sin(bp * Math.PI) * (1 - bp) * 0.16;
             const scaleX = 1 + squash;
@@ -1842,6 +1883,7 @@ export function KingOfTokyoDuelCanvas({
     } else if (data.type === "use-dice-token") {
       dispatch({ type: "USE_DICE_TOKEN" });
     } else if (data.type === "reroll") {
+      rollingIndicesRef.current = null;
       rollStartMsRef.current = performance.now();
       rollSeedRef.current = Math.floor(Math.random() * 10000) + 1;
       landedDiceRef.current = new Set();
