@@ -1231,10 +1231,10 @@ export function KingOfTokyoDuelCanvas({
           // =================================================================
           // 3. CENTER TABLETOP: MASSIVE HD TOKYO BOARD + EXACT 5:7 VIETNAMESE POWER CARDS IN TOP 3 GREEN SLOTS!
           // =================================================================
-          const cardWRatio = 0.194; // aligns dead-center over the 3 green board card slots
+          const cardWRatio = 0.209; // fits snugly edge-to-edge inside each of the 3 green board trays!
           const cardAspect = 1.40;  // EXACT 5:7 (200x280) official card aspect ratio — zero stretching!
-          const overlapRatio = 0.048; // bottom edge hugs right inside the 3 green board slots
-          const deckLeftProtrude = 0.096; // deck back nestled cleanly beside Slot 0
+          const overlapRatio = 0.052; // bottom edge rests flush inside the 3 green board slots
+          const deckLeftProtrude = 0.112; // deck back nestled cleanly beside Slot 0
           const totalHRatio = 1 + cardWRatio * cardAspect * boardAspect - overlapRatio;
           const totalWRatio = 1 + deckLeftProtrude;
 
@@ -1265,7 +1265,7 @@ export function KingOfTokyoDuelCanvas({
           });
 
           // B. Draw Lightning-Bolt Power Deck Back right to the left of Slot 0!
-          const slotCentersNx = [0.223, 0.471, 0.720];
+          const slotCentersNx = [0.228, 0.476, 0.726];
           const slot0X = boardX + Math.round(slotCentersNx[0] * boardW - mCardW / 2);
           const deckBackX = Math.max(centerColX, slot0X - mCardW - Math.max(8, Math.round(boardW * 0.018)));
           const marketRowY = groupY;
