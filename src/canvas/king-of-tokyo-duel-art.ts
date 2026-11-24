@@ -16,6 +16,8 @@ export const KOT_POWER_CARDS_ATLAS_URL = "/sprites/kot-duel-power-cards-vi.webp"
 export const KOT_CARD_BACK_URL = "/sprites/kot-duel-card-back-pixel.png";
 export const KOT_HP_DIALS_ATLAS_URL = "/sprites/kot-duel-hp-dials-pixel.png";
 export const KOT_ENERGY_CUBE_URL = "/sprites/kot-duel-energy-cube-pixel.png";
+export const KOT_BUZZ_MEDALS_URL = "/sprites/kot-duel-buzz-medallions-pixel.png";
+export const KOT_BUZZ_TILES_URL = "/sprites/kot-duel-buzz-tiles-pixel.png";
 export const KOT_DICE_ATLAS_URL = "/sprites/kot-duel-dice-pixel.png";
 
 /** Grid coordinates (col 0..9, row 0..4, each 200x280 exact 5:7 Vietnamese localized card) in kot-duel-power-cards-vi.webp. */
@@ -466,6 +468,38 @@ export function drawKotDeckBack2D(
 
   ctx.restore();
 }
+
+let cachedBuzzMedalsImg: HTMLImageElement | null = null;
+let buzzMedalsLoaded = false;
+const buzzMedalsListeners = new Set<() => void>();
+
+export function getKotBuzzMedalsAtlas(
+  onLoad?: () => void
+): HTMLImageElement | null {
+  if (typeof window === "undefined") return null;
+  if (buzzMedalsLoaded && cachedBuzzMedalsImg) return cachedBuzzMedalsImg;
+  if (onLoad) buzzMedalsListeners.add(onLoad);
+  if (!cachedBuzzMedalsImg) {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      buzzMedalsLoaded = true;
+      buzzMedalsListeners.forEach((fn) => fn());
+      buzzMedalsListeners.clear();
+    };
+    img.src = KOT_BUZZ_MEDALS_URL;
+    cachedBuzzMedalsImg = img;
+  }
+  return buzzMedalsLoaded ? cachedBuzzMedalsImg : null;
+}
+
+const BUZZ_MEDAL_SX: Record<KotBuzzKind, number> = {
+  ENERGY_2: 0,
+  HEAL_2: 64,
+  DMG_1: 128,
+  BONUS_DIE: 192,
+  PULL_1: 256,
+};
 
 let cachedHpDialsImg: HTMLImageElement | null = null;
 let hpDialsLoaded = false;
@@ -1301,6 +1335,7 @@ export function drawKotGameBoard2D(
   ctx.fillText("BẠN THẮNG ▶", x + w - rightPillW / 2 - 8, y + h - pillH / 2 - 7.5);
 
   // Live Buzz Tokens sitting inside their exact zigzag track circles!
+  const buzzAtlas = getKotBuzzMedalsAtlas();
   const tokenR = Math.max(10, Math.min(18, Math.round(w * 0.0255)));
   const pulse = 0.5 + 0.5 * Math.sin(opts.nowMs / 340);
 
@@ -1310,24 +1345,68 @@ export function drawKotGameBoard2D(
     const by = y + pt.ny * h;
 
     ctx.save();
-    ctx.shadowColor = "rgba(250, 204, 21, 0.8)";
-    ctx.shadowBlur = 6 + pulse * 5;
-    ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
-    ctx.beginPath();
-    ctx.arc(bx, by, tokenR, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#fde047";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
+    if (buzzAtlas) {
+      const diam = Math.round(tokenR * 2.45);
+      const half = diam / 2;
+      const sx = BUZZ_MEDAL_SX[bz.kind];
 
-    const icSize = Math.max(10, Math.round(tokenR * 1.05));
-    drawKotIcon2D(ctx, bx + tokenR * 0.28, by, icSize, BUZZ_ICON[bz.kind]);
-    ctx.textAlign = "right";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "#fef08a";
-    ctx.font = `900 ${Math.max(8, Math.round(tokenR * 0.66))}px ${fonts.mono}`;
-    ctx.fillText(BUZZ_SHORT_LABEL[bz.kind], bx - 1, by + 0.5);
+      ctx.shadowColor = "rgba(250, 204, 21, 0.58)";
+      ctx.shadowBlur = 5 + pulse * 5;
+      ctx.shadowOffsetY = 2;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(
+        buzzAtlas,
+        sx,
+        0,
+        64,
+        64,
+        Math.round(bx - half),
+        Math.round(by - half),
+        diam,
+        diam
+      );
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // Crisp micro-quantity badge for +2 bonuses (ENERGY_2 / HEAL_2) & +1 pull
+      if (bz.kind === "ENERGY_2" || bz.kind === "HEAL_2" || bz.kind === "PULL_1") {
+        const badgeR = Math.max(6, Math.round(tokenR * 0.44));
+        const bdx = bx + half * 0.66;
+        const bdy = by + half * 0.62;
+        ctx.fillStyle = "#0f172a";
+        ctx.beginPath();
+        ctx.arc(bdx, bdy, badgeR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#fde047";
+        ctx.lineWidth = 1.3;
+        ctx.stroke();
+        ctx.fillStyle = "#fef08a";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = `900 ${Math.max(7, Math.round(badgeR * 1.15))}px ${fonts.mono}`;
+        ctx.fillText(BUZZ_SHORT_LABEL[bz.kind], bdx, bdy + 0.5);
+      }
+    } else {
+      ctx.shadowColor = "rgba(250, 204, 21, 0.8)";
+      ctx.shadowBlur = 6 + pulse * 5;
+      ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
+      ctx.beginPath();
+      ctx.arc(bx, by, tokenR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#fde047";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      const icSize = Math.max(10, Math.round(tokenR * 1.05));
+      drawKotIcon2D(ctx, bx + tokenR * 0.28, by, icSize, BUZZ_ICON[bz.kind]);
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#fef08a";
+      ctx.font = `900 ${Math.max(8, Math.round(tokenR * 0.66))}px ${fonts.mono}`;
+      ctx.fillText(BUZZ_SHORT_LABEL[bz.kind], bx - 1, by + 0.5);
+    }
     ctx.restore();
   }
 
