@@ -711,7 +711,10 @@ export function KingOfTokyoDuelCanvas({
             ? pv.pendingBuzzTileId
             : null;
         const validBuzzSpots = activePendingBuzzId
-          ? getValidBuzzPlacements(placedBuzzTiles, activePendingBuzzId)
+          ? getValidBuzzPlacements(placedBuzzTiles, activePendingBuzzId, {
+              famePos: pv.famePos,
+              destructionPos: pv.destructionPos,
+            })
           : [];
 
         const registerBuzzPlacementHitRegions = (

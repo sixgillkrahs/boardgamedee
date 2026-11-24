@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  getValidBuzzPlacements,
+  isBuzzTilePinnedByMarker,
   kingOfTokyoDuelCartridge,
   KOT_MONSTERS,
   KOT_POWER_DECK_TEMPLATE,
@@ -148,16 +150,16 @@ describe("King of Tokyo: Duel Cartridge", () => {
     expect(bought1.state.step).toBe("PlaceBuzzStep");
     expect(bought1.state.pendingBuzzTileId).toBe("kraken");
 
-    // Seat 1 places Kraken 3-space Buzz Tile on Fame at startPos = -3 (occupies -3, -2, -1)
+    // Seat 1 places Kraken 3-space Buzz Tile on empty Fame spaces startPos = 1 (occupies 1, 2, 3; famePos is -2)
     const placed1 = kingOfTokyoDuelCartridge.reduce({
       state: bought1.state,
-      command: { type: "PLACE_BUZZ", track: "fame", startPos: -3 },
+      command: { type: "PLACE_BUZZ", track: "fame", startPos: 1 },
       actorSeatNo: 1,
       nowMs: 4500,
     });
     expect(placed1.state.step).toBe("BuyCardsStep");
     expect(placed1.state.placedBuzzTiles).toEqual([
-      { tileId: "kraken", track: "fame", startPos: -3 },
+      { tileId: "kraken", track: "fame", startPos: 1 },
     ]);
 
     // End Seat 1's turn -> Seat 2's turn -> Seat 2 buys another Kraken Buzz card and MOVES the same tile!
@@ -304,5 +306,88 @@ describe("King of Tokyo: Duel Cartridge", () => {
     });
     expect(used2.state.dice).toHaveLength(8);
     expect(used2.state.seats[0].bonusDiceNextTurn).toBe(0);
+  });
+
+  it("pins any Buzz Tile currently underneath the Fame or Destruction marker and blocks placing a Buzz Tile under a marker", () => {
+    const init = kingOfTokyoDuelCartridge.createInitialState({
+      config: kingOfTokyoDuelCartridge.defaultConfig(2),
+      seats: SEATS,
+      nowMs: 1000,
+    });
+    const r1 = kingOfTokyoDuelCartridge.reduce({
+      state: init.state,
+      command: { type: "PICK_MONSTER", monsterId: "gigazaur" },
+      actorSeatNo: 1,
+      nowMs: 2000,
+    });
+    const r2 = kingOfTokyoDuelCartridge.reduce({
+      state: r1.state,
+      command: { type: "PICK_MONSTER", monsterId: "cyber_kitty" },
+      actorSeatNo: 2,
+      nowMs: 3000,
+    });
+
+    const krakenCard = KOT_POWER_DECK_TEMPLATE.find(
+      (c) => c.id === "kot-beam"
+    )!;
+    const anubisCard = KOT_POWER_DECK_TEMPLATE.find(
+      (c) => c.buzzTileId === "anubis"
+    )!;
+
+    // 1. Kraken (span 3) placed at Fame startPos=-2 (covers -2, -1, 0), and Fame marker is at -1 -> PINNED!
+    const placed = [{ tileId: "kraken" as const, track: "fame" as const, startPos: -2 }];
+    expect(isBuzzTilePinnedByMarker(placed, "kraken", -1, 0)).toBe(true);
+    expect(getValidBuzzPlacements(placed, "kraken", { famePos: -1, destructionPos: 0 })).toEqual([]);
+
+    // Buying a Kraken Buzz card while Fame marker stands on Kraken MUST NOT enter PlaceBuzzStep or move Kraken!
+    const pinnedState: KotMatchState = {
+      ...r2.state,
+      step: "BuyCardsStep",
+      famePos: -1,
+      destructionPos: 0,
+      placedBuzzTiles: placed,
+      seats: r2.state.seats.map((s) => ({ ...s, energy: 10 })),
+      market: [krakenCard, anubisCard],
+    };
+    const boughtPinned = kingOfTokyoDuelCartridge.reduce({
+      state: pinnedState,
+      command: { type: "BUY_CARD", cardId: krakenCard.id },
+      actorSeatNo: 1,
+      nowMs: 4000,
+    });
+    expect(boughtPinned.state.step).toBe("BuyCardsStep");
+    expect(boughtPinned.state.pendingBuzzTileId).toBeNull();
+    expect(boughtPinned.state.placedBuzzTiles).toEqual(placed);
+
+    // 2. Placing a new Buzz Tile (Anubis, span 2) CANNOT cover Destruction marker at pos 0!
+    const boughtAnubis = kingOfTokyoDuelCartridge.reduce({
+      state: boughtPinned.state,
+      command: { type: "BUY_CARD", cardId: anubisCard.id },
+      actorSeatNo: 1,
+      nowMs: 4500,
+    });
+    expect(boughtAnubis.state.step).toBe("PlaceBuzzStep");
+    expect(() =>
+      kingOfTokyoDuelCartridge.reduce({
+        state: boughtAnubis.state,
+        command: { type: "PLACE_BUZZ", track: "destruction", startPos: 0 },
+        actorSeatNo: 1,
+        nowMs: 4600,
+      })
+    ).toThrow(/không hợp lệ/);
+
+    // Placing at Destruction startPos = 1 (covers 1, 2 — empty!) succeeds cleanly
+    const placedOk = kingOfTokyoDuelCartridge.reduce({
+      state: boughtAnubis.state,
+      command: { type: "PLACE_BUZZ", track: "destruction", startPos: 1 },
+      actorSeatNo: 1,
+      nowMs: 4700,
+    });
+    expect(placedOk.state.step).toBe("BuyCardsStep");
+    expect(placedOk.state.placedBuzzTiles).toContainEqual({
+      tileId: "anubis",
+      track: "destruction",
+      startPos: 1,
+    });
   });
 });

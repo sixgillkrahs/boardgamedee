@@ -4626,12 +4626,19 @@ function RoomPageContent({
                         Nếu miếng Token Buzz đó <strong>đã nằm trên bàn</strong>{" "}
                         (dù do bạn hay đối thủ đặt trước đó), người vừa mua thẻ
                         có quyền <strong>nhấc và di chuyển</strong> sang vị trí
-                        mới có lợi hơn.
+                        mới — <strong>ngoại trừ</strong> khi quân cờ{" "}
+                        <strong>Danh Vọng</strong> hoặc <strong>Phá Hủy</strong>{" "}
+                        đang đứng đè lên bất kỳ ô nào của miếng Buzz đó (lúc này
+                        miếng Buzz bị <strong>khóa cố định</strong>, không thể
+                        di chuyển).
                       </li>
                       <li>
-                        Token Buzz nằm <strong>bền vững trên bàn</strong>: mỗi
-                        khi quân cờ bước qua ô có biểu tượng (hoặc khi đặt trúng
-                        ô quân cờ đang đứng), người đi lượt lập tức nhận thưởng{" "}
+                        Chỉ được đặt Token Buzz lên các{" "}
+                        <strong>ô trống</strong> (không chồng lên Buzz khác,
+                        không đè lên ô đang có quân cờ đứng và không che 2 ô
+                        đích thắng). Miếng Buzz nằm <strong>bền vững</strong>:
+                        mỗi khi quân cờ bước qua ô có biểu tượng, người đi lượt
+                        lập tức nhận thưởng{" "}
                         {renderKotRichText("🐾 / ❤️ / ⚡ / 🎲")} tương ứng.
                       </li>
                     </ul>

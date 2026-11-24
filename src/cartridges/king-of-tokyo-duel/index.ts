@@ -290,16 +290,49 @@ export const KOT_BUZZ_TILE_DEFS: Record<KotBuzzTileId, KotBuzzTileDef> = {
   },
 };
 
+export function isBuzzTilePinnedByMarker(
+  placedBuzzTiles: KotPlacedBuzzTile[],
+  tileId: KotBuzzTileId,
+  famePos: number,
+  destructionPos: number
+): boolean {
+  const existing = placedBuzzTiles.find((t) => t.tileId === tileId);
+  if (!existing) return false;
+  const def = KOT_BUZZ_TILE_DEFS[tileId];
+  const markerPos = existing.track === "fame" ? famePos : destructionPos;
+  return markerPos >= existing.startPos && markerPos < existing.startPos + def.span;
+}
+
 export function getValidBuzzPlacements(
   placedBuzzTiles: KotPlacedBuzzTile[],
-  tileId: KotBuzzTileId
+  tileId: KotBuzzTileId,
+  markerPositions?: { famePos: number; destructionPos: number }
 ): Array<{ track: KotTrackType; startPos: number }> {
+  // Official rule: a Buzz Tile with Fame or Destruction marker standing on any of its spaces is PINNED and cannot be moved!
+  if (
+    markerPositions &&
+    isBuzzTilePinnedByMarker(
+      placedBuzzTiles,
+      tileId,
+      markerPositions.famePos,
+      markerPositions.destructionPos
+    )
+  ) {
+    return [];
+  }
+
   const def = KOT_BUZZ_TILE_DEFS[tileId];
   const maxStart = 6 - (def.span - 1);
   const results: Array<{ track: KotTrackType; startPos: number }> = [];
 
   for (const track of ["fame", "destruction"] as const) {
     const occupied = new Set<number>();
+    // Cannot place a Buzz Tile underneath the Fame or Destruction marker!
+    if (markerPositions) {
+      occupied.add(
+        track === "fame" ? markerPositions.famePos : markerPositions.destructionPos
+      );
+    }
     for (const placed of placedBuzzTiles) {
       if (placed.track !== track || placed.tileId === tileId) continue;
       const pDef = KOT_BUZZ_TILE_DEFS[placed.tileId];
@@ -1066,7 +1099,10 @@ function chooseBestBuzzPlacement(
   seatNo: number,
   tileId: KotBuzzTileId
 ): { track: KotTrackType; startPos: number } | null {
-  const valid = getValidBuzzPlacements(state.placedBuzzTiles, tileId);
+  const valid = getValidBuzzPlacements(state.placedBuzzTiles, tileId, {
+    famePos: state.famePos,
+    destructionPos: state.destructionPos,
+  });
   if (valid.length === 0) return null;
   const dir = pullDirForSeat(state, seatNo);
   const def = KOT_BUZZ_TILE_DEFS[tileId];
@@ -1629,24 +1665,40 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
 
         // Official King of Tokyo: Duel Buzz Token Rule:
         // Buying a Power Card with a Buzz mascot badge lets the buyer place (if new)
-        // or relocate (if already on the board from either player!) that shaped Buzz Tile!
+        // or relocate (if already on the board from either player!) that shaped Buzz Tile —
+        // UNLESS the Fame or Destruction marker is currently standing on top of that Buzz Tile (pinned)!
         if (card.buzzTileId) {
-          const validSpots = getValidBuzzPlacements(
+          const def = KOT_BUZZ_TILE_DEFS[card.buzzTileId];
+          const isPinned = isBuzzTilePinnedByMarker(
             state.placedBuzzTiles,
-            card.buzzTileId
+            card.buzzTileId,
+            state.famePos,
+            state.destructionPos
           );
-          if (validSpots.length > 0) {
-            const def = KOT_BUZZ_TILE_DEFS[card.buzzTileId];
-            const alreadyPlaced = state.placedBuzzTiles.some(
-              (t) => t.tileId === card.buzzTileId
-            );
-            state.pendingBuzzTileId = card.buzzTileId;
-            state.step = "PlaceBuzzStep";
+          if (isPinned) {
             events.push({
-              eventType: "KOT_BUZZ_PENDING",
-              message: `🎯 ${actor.displayName} được ${alreadyPlaced ? "di chuyển" : "đặt"} Token Buzz **${def.nameVi}** (${def.summaryVi}) lên bàn đấu!`,
+              eventType: "KOT_BUZZ_PINNED",
+              message: `Token Buzz **${def.nameVi}** đang có quân cờ đứng trên nên bị khóa, không thể di chuyển!`,
               visibleToSeatNos: "all",
             });
+          } else {
+            const validSpots = getValidBuzzPlacements(
+              state.placedBuzzTiles,
+              card.buzzTileId,
+              { famePos: state.famePos, destructionPos: state.destructionPos }
+            );
+            if (validSpots.length > 0) {
+              const alreadyPlaced = state.placedBuzzTiles.some(
+                (t) => t.tileId === card.buzzTileId
+              );
+              state.pendingBuzzTileId = card.buzzTileId;
+              state.step = "PlaceBuzzStep";
+              events.push({
+                eventType: "KOT_BUZZ_PENDING",
+                message: `${actor.displayName} được ${alreadyPlaced ? "di chuyển" : "đặt"} Token Buzz **${def.nameVi}** (${def.summaryVi}) lên bàn đấu!`,
+                visibleToSeatNos: "all",
+              });
+            }
           }
         }
 
@@ -1659,12 +1711,30 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
           throw new Error("Hiện không có Token Buzz nào cần đặt.");
         }
         const tileId = state.pendingBuzzTileId;
-        const validSpots = getValidBuzzPlacements(state.placedBuzzTiles, tileId);
+        if (
+          isBuzzTilePinnedByMarker(
+            state.placedBuzzTiles,
+            tileId,
+            state.famePos,
+            state.destructionPos
+          )
+        ) {
+          throw new Error(
+            "Token Buzz này đang có quân cờ Danh Vọng hoặc Phá Hủy đứng trên nên không thể di chuyển."
+          );
+        }
+        const validSpots = getValidBuzzPlacements(
+          state.placedBuzzTiles,
+          tileId,
+          { famePos: state.famePos, destructionPos: state.destructionPos }
+        );
         const isValid = validSpots.some(
           (s) => s.track === command.track && s.startPos === command.startPos
         );
         if (!isValid) {
-          throw new Error("Vị trí đặt Token Buzz không hợp lệ hoặc bị chồng lấn.");
+          throw new Error(
+            "Vị trí đặt Token Buzz không hợp lệ (trùng quân cờ hoặc chồng lên Buzz khác)."
+          );
         }
 
         const def = KOT_BUZZ_TILE_DEFS[tileId];
@@ -1680,37 +1750,19 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
         state.pendingBuzzTileId = null;
 
         const trackLabel =
-          command.track === "fame" ? "Danh Vọng ⭐" : "Phá Hủy 🏢";
+          command.track === "fame" ? "Danh Vọng" : "Phá Hủy";
         events.push({
           eventType: "KOT_BUZZ_PLACED",
-          message: `✨ ${actor.displayName} đã ${wasMoved ? "di chuyển" : "đặt"} Token Buzz **${def.nameVi}** lên thanh ${trackLabel}!`,
+          message: `${actor.displayName} đã ${wasMoved ? "di chuyển" : "đặt"} Token Buzz **${def.nameVi}** lên thanh ${trackLabel}!`,
           visibleToSeatNos: "all",
         });
-
-        // If placed directly under the current marker on a bonus slot, trigger it immediately!
-        const markerPos =
-          command.track === "fame" ? state.famePos : state.destructionPos;
-        const slotIdx = markerPos - command.startPos;
-        if (slotIdx >= 0 && slotIdx < def.span) {
-          const eff = def.slotEffects[slotIdx];
-          if (eff) {
-            applyBuzzSlotEffect(
-              state,
-              actor.seatNo,
-              command.track,
-              eff,
-              def.nameVi,
-              events
-            );
-          }
-        }
 
         setAnim(
           state,
           {
             kind: "BUZZ",
             actorSeatNo: actor.seatNo,
-            labelVi: `✨ ${wasMoved ? "Di chuyển" : "Đặt"} Buzz ${def.nameVi}!`,
+            labelVi: `${wasMoved ? "Di chuyển" : "Đặt"} Buzz ${def.nameVi}`,
           },
           nowMs
         );
