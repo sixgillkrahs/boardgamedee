@@ -376,6 +376,62 @@ export async function leaveRoom(input: { code: string; actorId: string }) {
   publishRoomUpdate(room.code);
 }
 
+export async function removeSeatFromRoom(input: {
+  code: string;
+  hostActorId: string;
+  targetSeatNo: number;
+}) {
+  const room = await findRoomByCode(input.code);
+  if (!room) throw new Error("Không tìm thấy phòng chơi.");
+  if (room.hostActorId !== input.hostActorId) {
+    throw new Error("Chỉ Chủ phòng mới có quyền xóa Bot hoặc kick người chơi.");
+  }
+  if (room.status !== "lobby") {
+    throw new Error(
+      "Chỉ có thể xóa Bot hoặc kick người chơi khi đang ở sảnh chờ."
+    );
+  }
+
+  const roomSeats = await db
+    .select()
+    .from(seats)
+    .where(eq(seats.roomId, room.id))
+    .orderBy(asc(seats.seatNo));
+
+  const targetSeat = roomSeats.find((s) => s.seatNo === input.targetSeatNo);
+  if (!targetSeat) {
+    throw new Error("Không tìm thấy ghế này trong bàn chơi.");
+  }
+  if (targetSeat.actorId === input.hostActorId) {
+    throw new Error("Chủ phòng không thể tự kick chính mình khỏi bàn.");
+  }
+
+  await db.delete(seats).where(eq(seats.id, targetSeat.id));
+
+  const remaining = roomSeats.filter((s) => s.id !== targetSeat.id);
+  for (let idx = 0; idx < remaining.length; idx++) {
+    const desiredNo = idx + 1;
+    if (remaining[idx].seatNo !== desiredNo) {
+      await db
+        .update(seats)
+        .set({ seatNo: desiredNo })
+        .where(eq(seats.id, remaining[idx].id));
+    }
+  }
+
+  const cartridge = getCartridge(room.cartridgeId);
+  const updatedFields: Partial<typeof rooms.$inferInsert> = {
+    updatedAt: new Date(),
+  };
+  if (cartridge && remaining.length >= cartridge.minSeats) {
+    updatedFields.config = cartridge.defaultConfig(remaining.length);
+  }
+
+  await db.update(rooms).set(updatedFields).where(eq(rooms.id, room.id));
+  publishRoomUpdate(room.code);
+  return { removedSeat: targetSeat };
+}
+
 export async function updateRoomConfig(input: {
   code: string;
   actorId: string;

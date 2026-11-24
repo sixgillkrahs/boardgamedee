@@ -8,6 +8,7 @@ import {
   joinRoom,
   leaveRoom,
   postChannelMessage,
+  removeSeatFromRoom,
   returnRoomToLobby,
   startMatch,
   submitMatchCommand,
@@ -175,5 +176,64 @@ describe("Platform Core Coordinator - Seam 2 (PostgreSQL Integration)", () => {
       actorId: p2.id,
     });
     expect(afterHostLeave.room.hostActorId).toBe(p2.id);
+  });
+
+  it("allows Host to remove bots and kick human players in lobby while blocking unauthorized or self kicks", async () => {
+    const host = await createOrUpdateGuestActor({ displayName: "Chủ Bàn" });
+    const guestA = await createOrUpdateGuestActor({ displayName: "Người Chơi A" });
+    const guestB = await createOrUpdateGuestActor({ displayName: "Người Chơi B" });
+
+    const room = await createRoom({
+      hostActorId: host.id,
+      cartridgeId: "dead-mans-draw",
+    });
+    await joinRoom({ code: room.code, actorId: guestA.id }); // seat 2
+    await addBotSeat({ code: room.code, hostActorId: host.id }); // seat 3 (Bot)
+    await joinRoom({ code: room.code, actorId: guestB.id }); // seat 4
+
+    // Non-host cannot kick or remove bot
+    await expect(
+      removeSeatFromRoom({
+        code: room.code,
+        hostActorId: guestA.id,
+        targetSeatNo: 3,
+      })
+    ).rejects.toThrow(/Chủ phòng/);
+
+    // Host cannot kick themselves
+    await expect(
+      removeSeatFromRoom({
+        code: room.code,
+        hostActorId: host.id,
+        targetSeatNo: 1,
+      })
+    ).rejects.toThrow(/chính mình/);
+
+    // Host removes Bot at seat 3 -> guestB re-numbers cleanly to seat 3
+    await removeSeatFromRoom({
+      code: room.code,
+      hostActorId: host.id,
+      targetSeatNo: 3,
+    });
+    const afterBotRemove = await getRoomSnapshotForActor({
+      code: room.code,
+      actorId: host.id,
+    });
+    expect(afterBotRemove.seats.map((s) => s.seatNo)).toEqual([1, 2, 3]);
+    expect(afterBotRemove.seats.some((s) => s.isBot)).toBe(false);
+
+    // Host kicks human player guestA at seat 2 -> guestA viewerSeatNo becomes null, guestB re-numbers to seat 2
+    await removeSeatFromRoom({
+      code: room.code,
+      hostActorId: host.id,
+      targetSeatNo: 2,
+    });
+    const kickedView = await getRoomSnapshotForActor({
+      code: room.code,
+      actorId: guestA.id,
+    });
+    expect(kickedView.viewerSeatNo).toBeNull();
+    expect(kickedView.seats.map((s) => s.actorId)).toEqual([host.id, guestB.id]);
+    expect(kickedView.seats.map((s) => s.seatNo)).toEqual([1, 2]);
   });
 });

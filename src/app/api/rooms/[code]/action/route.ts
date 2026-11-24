@@ -5,6 +5,7 @@ import {
   joinRoom,
   leaveRoom,
   postChannelMessage,
+  removeSeatFromRoom,
   returnRoomToLobby,
   startMatch,
   submitMatchCommand,
@@ -49,6 +50,15 @@ export async function POST(
       }
       case "ADD_BOT": {
         await addBotSeat({ code, hostActorId: actor.id });
+        break;
+      }
+      case "REMOVE_SEAT":
+      case "KICK_SEAT": {
+        await removeSeatFromRoom({
+          code,
+          hostActorId: actor.id,
+          targetSeatNo: Number(body.targetSeatNo),
+        });
         break;
       }
       case "LEAVE": {
