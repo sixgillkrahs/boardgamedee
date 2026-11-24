@@ -33,6 +33,7 @@ import {
   getKotHpDialsAtlas,
   getKotIconsAtlas,
   getKotLobbyBgImage,
+  getKotMatchBgImage,
   getKotMonsterAtlas,
   getKotPowerCardsAtlas,
   getKotTokensAtlas,
@@ -311,6 +312,7 @@ export function KingOfTokyoDuelCanvas({
     getKotBuzzMedalsAtlas();
     getKotBuzzTilesAtlas();
     getKotLobbyBgImage();
+    getKotMatchBgImage();
     getKotDiceAtlas();
 
     const canvas = canvasRef.current;

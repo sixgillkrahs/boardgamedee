@@ -23,6 +23,7 @@ export const KOT_ENERGY_CUBE_URL = "/sprites/kot-duel-energy-cube-pixel.png";
 export const KOT_BUZZ_MEDALS_URL = "/sprites/kot-duel-buzz-medallions-pixel.png";
 export const KOT_BUZZ_TILES_URL = "/sprites/kot-duel-buzz-tiles-pixel.png";
 export const KOT_LOBBY_BG_URL = "/sprites/kot-duel-lobby-bg.webp";
+export const KOT_MATCH_BG_URL = "/sprites/kot-duel-match-bg.webp";
 export const KOT_DICE_ATLAS_URL = "/sprites/kot-duel-dice-pixel.png";
 
 /** Grid coordinates (col 0..9, row 0..4, each 200x280 exact 5:7 Vietnamese localized card) in kot-duel-power-cards-vi.webp. */
@@ -717,6 +718,30 @@ export function drawKotBuzzTilePreview2D(
   ctx.restore();
 }
 
+let cachedMatchBgImg: HTMLImageElement | null = null;
+let matchBgLoaded = false;
+const matchBgListeners = new Set<() => void>();
+
+export function getKotMatchBgImage(
+  onLoad?: () => void
+): HTMLImageElement | null {
+  if (typeof window === "undefined") return null;
+  if (matchBgLoaded && cachedMatchBgImg) return cachedMatchBgImg;
+  if (onLoad) matchBgListeners.add(onLoad);
+  if (!cachedMatchBgImg) {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      matchBgLoaded = true;
+      matchBgListeners.forEach((fn) => fn());
+      matchBgListeners.clear();
+    };
+    img.src = KOT_MATCH_BG_URL;
+    cachedMatchBgImg = img;
+  }
+  return matchBgLoaded ? cachedMatchBgImg : null;
+}
+
 let cachedLobbyBgImg: HTMLImageElement | null = null;
 let lobbyBgLoaded = false;
 const lobbyBgListeners = new Set<() => void>();
@@ -1101,6 +1126,43 @@ export function drawKotTokyoBackground2D(
   height: number,
   nowMs: number
 ) {
+  const matchImg = getKotMatchBgImage();
+  if (matchImg) {
+    ctx.save();
+    const imgAspect = matchImg.naturalWidth / Math.max(1, matchImg.naturalHeight);
+    const viewAspect = width / Math.max(1, height);
+    let drawW = width;
+    let drawH = drawW / imgAspect;
+    if (viewAspect < imgAspect) {
+      drawH = height;
+      drawW = drawH * imgAspect;
+    }
+    const dx = (width - drawW) / 2;
+    // Anchor slightly toward the horizon/buildings so both top swirling clouds and bottom crumbling Tokyo ruins stay framed!
+    const dy = (height - drawH) * 0.65;
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(matchImg, dx, dy, drawW, drawH);
+
+    // Subtle atmospheric dusk veil along edges so tabletop boards, dice, and cards pop crisply
+    const vig = ctx.createRadialGradient(
+      width * 0.5,
+      height * 0.48,
+      Math.min(width, height) * 0.25,
+      width * 0.5,
+      height * 0.5,
+      Math.max(width, height) * 0.72
+    );
+    vig.addColorStop(0, "rgba(12, 8, 24, 0.04)");
+    vig.addColorStop(1, "rgba(6, 6, 18, 0.34)");
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.restore();
+    return;
+  }
+
   ctx.save();
   ctx.imageSmoothingEnabled = false;
 
