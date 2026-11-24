@@ -23,6 +23,7 @@ import {
   getKotTokensAtlas,
 } from "@/canvas/king-of-tokyo-duel-art";
 import {
+  getEffectiveCardCost,
   KOT_MONSTER_IDS,
   KOT_MONSTERS,
   type KotCommand,
@@ -809,12 +810,18 @@ export function KingOfTokyoDuelCanvas({
         const isWideArena = width >= 760 && midH >= 240;
 
         if (isWideArena) {
-          // WIDE SPLIT: Huge unobstructed 16-bit Tokyo Board on LEFT (~65%), Dice & Actions Panel on RIGHT (~33%)
+          // FULL-WIDTH ARENA: Height-maximized HD Tokyo Board on LEFT + Compact Dice & 3-Card Power Market on RIGHT!
           const gapMid = 14;
-          const deckW = Math.max(216, Math.min(276, Math.round(hudW * 0.31)));
-          const boardMaxW = hudW - deckW - gapMid;
-          const boardW = Math.min(boardMaxW, Math.round(midH * boardAspect));
+          const minDeckW = 264;
+          const maxDeckW = 356;
+          const idealBoardW = Math.round(midH * boardAspect);
+          const boardMaxW = Math.max(360, hudW - minDeckW - gapMid);
+          const boardW = Math.min(boardMaxW, idealBoardW);
           const boardH = Math.round(boardW / boardAspect);
+          const deckW = Math.max(
+            minDeckW,
+            Math.min(maxDeckW, hudW - boardW - gapMid)
+          );
           const totalGroupW = boardW + gapMid + deckW;
           const groupX0 = padX + Math.max(0, Math.round((hudW - totalGroupW) / 2));
           const boardX = groupX0;
@@ -827,49 +834,55 @@ export function KingOfTokyoDuelCanvas({
             buzzTokens: orientedBuzz,
           });
 
-          // Right Tactical Dice & Action Deck
+          // Right Unified Tactical Panel: Top = Kaiju Dice & Actions (~44%), Bottom = 3-Card Power Market (~56%)
           const deckX = boardX + boardW + gapMid;
-          const deckY = boardY;
-          const deckH = boardH;
+          const deckY = midTop;
+          const deckH = midH;
+          const secGap = 10;
+          const diceBoxH = Math.max(150, Math.min(220, Math.round(deckH * 0.43)));
+          const marketBoxY = deckY + diceBoxH + secGap;
+          const marketBoxH = Math.max(150, deckH - diceBoxH - secGap);
 
-          drawRoundedRect(ctx, deckX, deckY, deckW, deckH, 16);
-          ctx.fillStyle = "rgba(10, 15, 30, 0.9)";
+          // --- TOP PANEL: DICE & ACTIONS ---
+          drawRoundedRect(ctx, deckX, deckY, deckW, diceBoxH, 14);
+          ctx.fillStyle = "rgba(10, 15, 30, 0.92)";
           ctx.fill();
-          ctx.strokeStyle = isMyTurn
-            ? "rgba(250, 204, 21, 0.52)"
-            : "rgba(148, 163, 184, 0.25)";
-          ctx.lineWidth = isMyTurn ? 1.8 : 1.2;
+          ctx.strokeStyle =
+            isMyTurn && pv.step === "RollDiceStep"
+              ? "rgba(250, 204, 21, 0.62)"
+              : "rgba(148, 163, 184, 0.28)";
+          ctx.lineWidth = isMyTurn && pv.step === "RollDiceStep" ? 1.8 : 1.2;
           ctx.stroke();
 
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillStyle = isMyTurn ? "#fde047" : "#94a3b8";
-          ctx.font = `900 11.5px ${fonts.sans}`;
+          ctx.font = `900 11px ${fonts.sans}`;
           const deckTitle =
             pv.step === "Finished"
               ? "🏆 TRẬN ĐẤU KẾT THÚC"
               : pv.step === "BuyCardsStep"
-                ? "🛒 MUA THẺ NĂNG LỰC"
+                ? "🛒 MUA THẺ HOẶC XONG LƯỢT"
                 : `🎲 XÚC XẮC KAIJU (${pv.rollsLeft} lượt tung)`;
-          ctx.fillText(deckTitle, deckX + deckW / 2, deckY + 18, deckW - 16);
+          ctx.fillText(deckTitle, deckX + deckW / 2, deckY + 15, deckW - 16);
 
-          // Dice grid (3 cols x 2 rows, or 4x2 if 7-8 bonus dice!)
           const diceCount = pv.dice.length;
           const dCols = diceCount > 6 ? 4 : 3;
           const dRows = Math.ceil(diceCount / dCols);
-          const dGap = 10;
-          const btnsAreaH = isMyTurn ? (pv.step === "RollDiceStep" ? 84 : 44) : 26;
-          const diceAvailH = Math.max(96, deckH - 36 - btnsAreaH - 12);
+          const dGap = 8;
+          const bH = 30;
+          const btnsRowH = isMyTurn ? bH + 12 : 22;
+          const diceAvailH = Math.max(76, diceBoxH - 28 - btnsRowH);
           const dieSize = Math.max(
-            38,
+            34,
             Math.min(
-              62,
-              Math.floor((deckW - 24 - (dCols - 1) * dGap) / dCols),
+              52,
+              Math.floor((deckW - 22 - (dCols - 1) * dGap) / dCols),
               Math.floor((diceAvailH - (dRows - 1) * dGap) / dRows)
             )
           );
           const dGridH = dRows * dieSize + (dRows - 1) * dGap;
-          const dGridY0 = deckY + 32 + Math.max(0, Math.round((diceAvailH - dGridH) / 2));
+          const dGridY0 = deckY + 26 + Math.max(0, Math.round((diceAvailH - dGridH) / 2));
 
           pv.dice.forEach((die, idx) => {
             const r = Math.floor(idx / dCols);
@@ -911,108 +924,247 @@ export function KingOfTokyoDuelCanvas({
             );
           });
 
-          // Stacked full-width Action Buttons pinned neatly to bottom of Right Deck
-          const bPad = 12;
-          const bW = deckW - bPad * 2;
-          const bH = 34;
-          const bBottom = deckY + deckH - 12;
+          // Compact Action Row at bottom of Dice Box
+          const bPad = 10;
+          const bRowY = deckY + diceBoxH - bH - 9;
+          const bTotalW = deckW - bPad * 2;
 
           if (isMyTurn) {
             if (pv.step === "RollDiceStep") {
               const canReroll = pv.rollsLeft > 0 && pv.dice.some((d) => !d.locked);
-              const resY = bBottom - bH;
+              const gapBtn = 8;
+              const halfW = Math.floor((bTotalW - gapBtn) / 2);
 
               if (canReroll) {
-                const rrY = resY - bH - 8;
                 const id = "kot-btn-reroll";
                 const hov = hoveredIdRef.current === id;
                 newHitRegions.push({
                   id,
                   shape: "rect",
                   x: deckX + bPad,
-                  y: rrY,
-                  width: bW,
+                  y: bRowY,
+                  width: halfW,
                   height: bH,
                   cursor: "pointer",
                   data: { type: "reroll" },
                 });
-                drawRoundedRect(ctx, deckX + bPad, rrY, bW, bH, 10);
+                drawRoundedRect(ctx, deckX + bPad, bRowY, halfW, bH, 9);
                 ctx.fillStyle = hov ? "#38bdf8" : "#0284c7";
                 ctx.fill();
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillStyle = "#ffffff";
-                ctx.font = `900 11.5px ${fonts.sans}`;
+                ctx.font = `900 10.5px ${fonts.sans}`;
                 ctx.fillText(
-                  `🎲 TUNG LẠI (Còn ${pv.rollsLeft})`,
-                  deckX + deckW / 2,
-                  rrY + bH / 2 + 0.5
+                  `🎲 TUNG (${pv.rollsLeft})`,
+                  deckX + bPad + halfW / 2,
+                  bRowY + bH / 2 + 0.5
                 );
               }
 
+              const resX = canReroll ? deckX + bPad + halfW + gapBtn : deckX + bPad;
+              const resW = canReroll ? halfW : bTotalW;
               const resId = "kot-btn-resolve";
               const resHov = hoveredIdRef.current === resId;
               newHitRegions.push({
                 id: resId,
                 shape: "rect",
-                x: deckX + bPad,
-                y: resY,
-                width: bW,
+                x: resX,
+                y: bRowY,
+                width: resW,
                 height: bH,
                 cursor: "pointer",
                 data: { type: "resolve" },
               });
-              drawRoundedRect(ctx, deckX + bPad, resY, bW, bH, 10);
+              drawRoundedRect(ctx, resX, bRowY, resW, bH, 9);
               ctx.fillStyle = resHov ? "#fbbf24" : "#f59e0b";
               ctx.fill();
               ctx.textAlign = "center";
               ctx.textBaseline = "middle";
               ctx.fillStyle = "#0f172a";
-              ctx.font = `900 11.5px ${fonts.sans}`;
-              ctx.fillText(
-                "✅ CHỐT XÚC XẮC",
-                deckX + deckW / 2,
-                resY + bH / 2 + 0.5
-              );
+              ctx.font = `900 10.5px ${fonts.sans}`;
+              ctx.fillText("✅ CHỐT XÚC XẮC", resX + resW / 2, bRowY + bH / 2 + 0.5);
             } else if (pv.step === "BuyCardsStep") {
-              const endY = bBottom - bH;
+              const gapBtn = 8;
+              const halfW = Math.floor((bTotalW - gapBtn) / 2);
+              const canFlush = mySeat.energy >= 2 && pv.deckCount > 0;
+              const flId = "kot-btn-flush";
+              const flHov = hoveredIdRef.current === flId;
+              if (canFlush) {
+                newHitRegions.push({
+                  id: flId,
+                  shape: "rect",
+                  x: deckX + bPad,
+                  y: bRowY,
+                  width: halfW,
+                  height: bH,
+                  cursor: "pointer",
+                  data: { type: "flush-market" },
+                });
+              }
+              drawRoundedRect(ctx, deckX + bPad, bRowY, halfW, bH, 9);
+              ctx.fillStyle = canFlush
+                ? flHov
+                  ? "rgba(56, 189, 248, 0.35)"
+                  : "rgba(14, 165, 233, 0.2)"
+                : "rgba(30, 41, 59, 0.5)";
+              ctx.fill();
+              ctx.strokeStyle = canFlush ? "#38bdf8" : "#475569";
+              ctx.lineWidth = 1.2;
+              ctx.stroke();
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillStyle = canFlush ? "#bae6fd" : "#64748b";
+              ctx.font = `800 10px ${fonts.sans}`;
+              ctx.fillText("🔄 ĐỔI CHỢ (-2⚡)", deckX + bPad + halfW / 2, bRowY + bH / 2 + 0.5);
+
+              const endX = deckX + bPad + halfW + gapBtn;
               const endId = "kot-btn-end";
               const hov = hoveredIdRef.current === endId;
               newHitRegions.push({
                 id: endId,
                 shape: "rect",
-                x: deckX + bPad,
-                y: endY,
-                width: bW,
+                x: endX,
+                y: bRowY,
+                width: halfW,
                 height: bH,
                 cursor: "pointer",
                 data: { type: "end-turn" },
               });
-              drawRoundedRect(ctx, deckX + bPad, endY, bW, bH, 10);
+              drawRoundedRect(ctx, endX, bRowY, halfW, bH, 9);
               ctx.fillStyle = hov ? "#34d399" : "#10b981";
               ctx.fill();
-              ctx.textAlign = "center";
-              ctx.textBaseline = "middle";
               ctx.fillStyle = "#022c22";
-              ctx.font = `900 11.5px ${fonts.sans}`;
-              ctx.fillText(
-                "⏭ KẾT THÚC LƯỢT",
-                deckX + deckW / 2,
-                endY + bH / 2 + 0.5
-              );
+              ctx.font = `900 10.5px ${fonts.sans}`;
+              ctx.fillText("⏭ XONG LƯỢT", endX + halfW / 2, bRowY + bH / 2 + 0.5);
             }
           } else if (pv.step !== "Finished") {
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillStyle = "#94a3b8";
-            ctx.font = `700 11px ${fonts.sans}`;
+            ctx.font = `700 10.5px ${fonts.sans}`;
             ctx.fillText(
               `⏳ Đang chờ ${oppSeat.displayName}...`,
               deckX + deckW / 2,
-              bBottom - 10,
-              bW
+              deckY + diceBoxH - 14,
+              bTotalW
             );
           }
+
+          // --- BOTTOM PANEL: INTERACTIVE 3-CARD POWER MARKET ---
+          drawRoundedRect(ctx, deckX, marketBoxY, deckW, marketBoxH, 14);
+          ctx.fillStyle = "rgba(10, 15, 30, 0.92)";
+          ctx.fill();
+          ctx.strokeStyle =
+            isMyTurn && pv.step === "BuyCardsStep"
+              ? "rgba(52, 211, 153, 0.6)"
+              : "rgba(148, 163, 184, 0.25)";
+          ctx.lineWidth = isMyTurn && pv.step === "BuyCardsStep" ? 1.8 : 1.2;
+          ctx.stroke();
+
+          ctx.textAlign = "left";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = "#fbbf24";
+          ctx.font = `900 10.5px ${fonts.sans}`;
+          ctx.fillText(
+            `⚡ CHỢ THẺ SỨC MẠNH (${pv.deckCount} lá)`,
+            deckX + 12,
+            marketBoxY + 15
+          );
+
+          const mPad = 8;
+          const mCardGap = 6;
+          const mCardsTop = marketBoxY + 26;
+          const mCardsAvailH = Math.max(96, marketBoxH - 34);
+          const mCardH = Math.floor((mCardsAvailH - mCardGap * 2) / 3);
+          const mCardW = deckW - mPad * 2;
+
+          pv.market.slice(0, 3).forEach((card, ci) => {
+            const cy = mCardsTop + ci * (mCardH + mCardGap);
+            const cx = deckX + mPad;
+            const effCost = getEffectiveCardCost(mySeat, card);
+            const canBuy =
+              isMyTurn &&
+              pv.step === "BuyCardsStep" &&
+              mySeat.energy >= effCost;
+            const cId = `kot-market-${card.id}`;
+            const hov = hoveredIdRef.current === cId;
+
+            if (canBuy) {
+              newHitRegions.push({
+                id: cId,
+                shape: "rect",
+                x: cx,
+                y: cy,
+                width: mCardW,
+                height: mCardH,
+                cursor: "pointer",
+                data: { type: "buy-card", cardId: card.id },
+              });
+            }
+
+            drawRoundedRect(ctx, cx, cy, mCardW, mCardH, 10);
+            ctx.fillStyle = canBuy
+              ? hov
+                ? "rgba(245, 158, 11, 0.24)"
+                : "rgba(24, 34, 54, 0.95)"
+              : "rgba(15, 23, 42, 0.78)";
+            ctx.fill();
+            ctx.strokeStyle = canBuy
+              ? hov
+                ? "#fde047"
+                : "#f59e0b"
+              : "rgba(100, 116, 139, 0.35)";
+            ctx.lineWidth = canBuy ? (hov ? 2 : 1.5) : 1;
+            ctx.stroke();
+
+            // Row 1: Card emoji + name + KIND pill + Cost with official Energy Bolt!
+            const row1Y = cy + 14;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = canBuy ? "#f8fafc" : "#cbd5e1";
+            ctx.font = `800 11px ${fonts.sans}`;
+            ctx.fillText(`${card.emoji} ${card.nameVi}`, cx + 8, row1Y, mCardW - 92);
+
+            // Kind badge
+            const kindW = card.kind === "KEEP" ? 30 : 38;
+            const costPillW = 36;
+            const kindX = cx + mCardW - costPillW - kindW - 10;
+            drawRoundedRect(ctx, kindX, row1Y - 8, kindW, 16, 4);
+            ctx.fillStyle =
+              card.kind === "KEEP"
+                ? "rgba(14, 165, 233, 0.22)"
+                : "rgba(244, 63, 94, 0.22)";
+            ctx.fill();
+            ctx.textAlign = "center";
+            ctx.fillStyle = card.kind === "KEEP" ? "#7dd3fc" : "#fda4af";
+            ctx.font = `800 8.5px ${fonts.sans}`;
+            ctx.fillText(card.kind === "KEEP" ? "GIỮ" : "DÙNG", kindX + kindW / 2, row1Y + 0.5);
+
+            // Cost pill with 16-bit Lime Energy Bolt
+            const costX = cx + mCardW - costPillW - 6;
+            drawRoundedRect(ctx, costX, row1Y - 8, costPillW, 16, 5);
+            ctx.fillStyle = "rgba(132, 204, 22, 0.2)";
+            ctx.fill();
+            ctx.strokeStyle = "rgba(163, 230, 53, 0.55)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.textAlign = "left";
+            ctx.fillStyle = "#bef264";
+            ctx.font = `900 10px ${fonts.mono}`;
+            ctx.fillText(`${effCost}`, costX + 5, row1Y + 0.5);
+            drawKotIcon2D(ctx, costX + costPillW - 10, row1Y, 12, "energy");
+
+            // Row 2: Wrapped Vietnamese description
+            ctx.textAlign = "left";
+            ctx.fillStyle = "#94a3b8";
+            ctx.font = `600 9.5px ${fonts.sans}`;
+            const cLines = wrapCanvasText(ctx, card.descVi, mCardW - 16);
+            const maxCLines = mCardH >= 58 ? 2 : 1;
+            cLines.slice(0, maxCLines).forEach((ln, li) => {
+              ctx.fillText(ln, cx + 8, cy + 30 + li * 13, mCardW - 16);
+            });
+          });
         } else {
           // NARROW STACKED: 16-bit Tokyo Board on TOP (~64%) + Horizontal Dice & Action Strip BELOW
           const diceStripAreaH = isMyTurn ? 96 : 64;
@@ -1276,6 +1428,10 @@ export function KingOfTokyoDuelCanvas({
       dispatch({ type: "REROLL" });
     } else if (data.type === "resolve") {
       dispatch({ type: "RESOLVE_DICE" });
+    } else if (data.type === "buy-card") {
+      dispatch({ type: "BUY_CARD", cardId: data.cardId });
+    } else if (data.type === "flush-market") {
+      dispatch({ type: "FLUSH_MARKET" });
     } else if (data.type === "end-turn") {
       dispatch({ type: "END_TURN" });
     }

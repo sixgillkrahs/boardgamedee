@@ -547,15 +547,39 @@ function RoomPageContent({
       <main className="relative flex-1 flex flex-col lg:flex-row gap-2 sm:gap-2.5 p-2 sm:p-2.5 w-full">
         <div className="flex-1 h-[54vh] min-h-[380px] sm:h-[62vh] sm:min-h-[500px] lg:h-[calc(100vh-62px)] lg:min-h-[620px] relative">
           {isKot ? (
-            <KingOfTokyoDuelCanvas
-              mode={isLobby ? "lobby" : "match"}
-              lobbySeats={snapshot?.seats ?? []}
-              viewerSeatNo={snapshot?.viewerSeatNo ?? null}
-              playerView={kotView}
-              onDispatchCommand={(cmd) =>
-                void sendRoomAction({ type: "MATCH_COMMAND", command: cmd })
-              }
-            />
+            <>
+              <KingOfTokyoDuelCanvas
+                mode={isLobby ? "lobby" : "match"}
+                lobbySeats={snapshot?.seats ?? []}
+                viewerSeatNo={snapshot?.viewerSeatNo ?? null}
+                playerView={kotView}
+                onDispatchCommand={(cmd) =>
+                  void sendRoomAction({ type: "MATCH_COMMAND", command: cmd })
+                }
+              />
+              {!isLobby && kotView?.step === "Finished" && (
+                <div className="absolute inset-x-0 bottom-20 z-20 flex justify-center pointer-events-none px-4">
+                  <div className="pointer-events-auto max-w-md w-full rounded-2xl border border-amber-400/60 bg-slate-950/92 backdrop-blur-md p-4 shadow-2xl text-center space-y-2.5">
+                    <div className="text-xs font-extrabold uppercase tracking-wider text-amber-400">
+                      👑 VUA TOKYO MỚI!
+                    </div>
+                    <p className="text-sm font-bold text-slate-100 leading-snug">
+                      {kotView.winReasonVi}
+                    </p>
+                    {snapshot?.isHost && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => sendRoomAction({ type: "REMATCH" })}
+                        className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-4 py-2.5 text-xs font-extrabold text-slate-950 shadow-lg transition cursor-pointer disabled:opacity-40"
+                      >
+                        🔁 Chơi Ván Mới (Về Sảnh)
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
           ) : isDmd ? (
             <DeadMansDrawCanvas
               mode={isLobby ? "lobby" : "match"}
@@ -676,7 +700,8 @@ function RoomPageContent({
           )}
         </div>
 
-        {/* Right-Side Action Selection Panel */}
+        {/* Right-Side Action Selection Panel (hidden during active King of Tokyo: Duel matches for full-width board!) */}
+        {!(isKot && !isLobby) && (
         <aside className="w-full lg:w-76 xl:w-84 lg:max-h-[calc(100vh-62px)] lg:overflow-y-auto shrink-0 rounded-2xl border border-slate-800 bg-slate-900/95 p-3 sm:p-4 shadow-xl flex flex-col justify-between gap-3 sm:gap-4">
           {isLobby ? (
             <div className="flex flex-col gap-3">
@@ -3309,6 +3334,7 @@ function RoomPageContent({
             </button>
           </div>
         </aside>
+        )}
       </main>
 
       {/* Slide-Over Right Drawer: Kênh Chat & Nhật Ký */}
