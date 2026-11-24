@@ -715,7 +715,8 @@ export function drawKotGameBoard2D(
 
   const boardImg = getKotGameBoardImage();
   if (boardImg) {
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
     ctx.drawImage(boardImg, x, y, w, h);
   } else {
     ctx.fillStyle = "#111827";
@@ -800,17 +801,17 @@ export function drawKotGameBoard2D(
 
     ctx.save();
     if (tokensAtlas) {
-      const spriteSize = Math.max(30, Math.min(58, Math.round(w * 0.082)));
-      const sx = track === "fame" ? 0 : 64;
+      const spriteSize = Math.max(46, Math.min(96, Math.round(w * 0.125)));
+      const sx = track === "fame" ? 0 : 128;
 
       // Grounded elliptical tabletop drop shadow right inside the circular track space
       ctx.fillStyle = "rgba(2, 6, 23, 0.58)";
       ctx.beginPath();
       ctx.ellipse(
         mx,
-        my + spriteSize * 0.14,
+        my + spriteSize * 0.12,
         spriteSize * 0.34,
-        spriteSize * 0.14,
+        spriteSize * 0.13,
         0,
         0,
         Math.PI * 2
@@ -819,12 +820,13 @@ export function drawKotGameBoard2D(
 
       // Subtle glowing halo behind the wooden meeple so it stands out on bright spotlight beams!
       ctx.shadowColor = glowColor;
-      ctx.shadowBlur = 10 + pulse * 6;
-      ctx.imageSmoothingEnabled = false;
+      ctx.shadowBlur = 12 + pulse * 6;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
       // Anchor pedestal bottom cleanly into the circle center!
       const drawX = Math.round(mx - spriteSize * 0.5);
-      const drawY = Math.round(my - spriteSize * 0.72 - glideHop - idleBob);
-      ctx.drawImage(tokensAtlas, sx, 0, 64, 64, drawX, drawY, spriteSize, spriteSize);
+      const drawY = Math.round(my - spriteSize * 0.78 - glideHop - idleBob);
+      ctx.drawImage(tokensAtlas, sx, 0, 128, 128, drawX, drawY, spriteSize, spriteSize);
     } else {
       const puckR = Math.max(12, Math.min(22, Math.round(w * 0.031)));
       ctx.fillStyle = "rgba(2, 6, 23, 0.72)";
