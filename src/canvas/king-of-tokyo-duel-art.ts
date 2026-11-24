@@ -6,7 +6,20 @@ import {
 } from "@/cartridges/king-of-tokyo-duel";
 
 export const KOT_MONSTER_ATLAS_URL = "/sprites/kot-duel-monsters-pixel.png";
+export const KOT_BOARD_ATLAS_URL = "/sprites/kot-duel-boards-pixel.png";
 export const KOT_DICE_ATLAS_URL = "/sprites/kot-duel-dice-pixel.png";
+
+export const KOT_BOARD_RECTS: Record<
+  KotMonsterId,
+  { sx: number; sy: number; sw: number; sh: number }
+> = {
+  gigazaur: { sx: 0, sy: 0, sw: 220, sh: 168 },
+  cyber_kitty: { sx: 220, sy: 0, sw: 220, sh: 168 },
+  the_king: { sx: 440, sy: 0, sw: 220, sh: 168 },
+  space_penguin: { sx: 660, sy: 0, sw: 220, sh: 168 },
+  meka_dragon: { sx: 880, sy: 0, sw: 220, sh: 168 },
+  alienoid: { sx: 1100, sy: 0, sw: 220, sh: 168 },
+};
 
 export const KOT_MONSTER_RECTS: Record<
   KotMonsterId,
@@ -52,6 +65,28 @@ export function getKotMonsterAtlas(onLoad?: () => void): HTMLImageElement | null
     cachedMonsterImg = img;
   }
   return monsterLoaded ? cachedMonsterImg : null;
+}
+
+let cachedBoardImg: HTMLImageElement | null = null;
+let boardLoaded = false;
+const boardListeners = new Set<() => void>();
+
+export function getKotBoardAtlas(onLoad?: () => void): HTMLImageElement | null {
+  if (typeof window === "undefined") return null;
+  if (boardLoaded && cachedBoardImg) return cachedBoardImg;
+  if (onLoad) boardListeners.add(onLoad);
+  if (!cachedBoardImg) {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      boardLoaded = true;
+      boardListeners.forEach((fn) => fn());
+      boardListeners.clear();
+    };
+    img.src = KOT_BOARD_ATLAS_URL;
+    cachedBoardImg = img;
+  }
+  return boardLoaded ? cachedBoardImg : null;
 }
 
 let cachedDiceImg: HTMLImageElement | null = null;
@@ -226,6 +261,144 @@ export function drawKotMonsterPortrait2D(
   ctx.strokeStyle = highlighted ? "#fde047" : meta.accentColor;
   ctx.lineWidth = highlighted ? 3 : 2;
   ctx.stroke();
+  ctx.restore();
+}
+
+/**
+ * Draws a full-art wide landscape 16-bit Kaiju Monster Board (220x168 native)
+ * with authentic vintage cream-paper outer trim, bold top-right HP heart badge, and monster name banner!
+ */
+export function drawKotMonsterBoard2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  monsterId: KotMonsterId,
+  opts: {
+    selected?: boolean;
+    hovered?: boolean;
+    takenBy?: string;
+  } = {}
+) {
+  ctx.save();
+  const radius = Math.max(10, Math.round(Math.min(w, h) * 0.08));
+  const meta = KOT_MONSTERS[monsterId];
+  const fonts = getCanvasFontFamilies();
+
+  // Drop shadow & selection glow
+  if (opts.selected) {
+    ctx.shadowColor = "#fde047";
+    ctx.shadowBlur = 20;
+  } else if (opts.hovered) {
+    ctx.shadowColor = meta.accentColor;
+    ctx.shadowBlur = 14;
+  } else {
+    ctx.shadowColor = "rgba(0, 0, 0, 0.55)";
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 4;
+  }
+
+  // Vintage cream-parchment outer comic card rim (matching official King of Tokyo: Duel monster boards!)
+  drawRoundedRect(ctx, x, y, w, h, radius);
+  ctx.fillStyle = opts.selected ? "#fef08a" : "#f5ebd6";
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+
+  // Inner clipped full-body 16-bit Kaiju artwork
+  const pad = Math.max(3, Math.round(Math.min(w, h) * 0.028));
+  const ix = x + pad;
+  const iy = y + pad;
+  const iw = w - pad * 2;
+  const ih = h - pad * 2;
+
+  ctx.save();
+  drawRoundedRect(ctx, ix, iy, iw, ih, Math.max(6, radius - 2));
+  ctx.clip();
+
+  const boardAtlas = getKotBoardAtlas();
+  if (boardAtlas) {
+    const r = KOT_BOARD_RECTS[monsterId];
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(boardAtlas, r.sx, r.sy, r.sw, r.sh, ix, iy, iw, ih);
+  } else {
+    drawKotMonsterPortrait2D(ctx, ix, iy, Math.min(iw, ih), monsterId, opts.selected);
+  }
+
+  // Subtle dark gradient along bottom for crisp comic monster nameplate
+  const grad = ctx.createLinearGradient(0, iy + ih * 0.62, 0, iy + ih);
+  grad.addColorStop(0, "rgba(6, 10, 20, 0)");
+  grad.addColorStop(1, "rgba(6, 10, 20, 0.88)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(ix, iy + ih * 0.6, iw, ih * 0.4);
+
+  // Official-style bold comic HP badge top-right (e.g. "14 ♥")
+  const badgeW = Math.max(46, Math.round(w * 0.24));
+  const badgeH = Math.max(24, Math.round(h * 0.17));
+  drawRoundedRect(ctx, ix + iw - badgeW + 4, iy - 4, badgeW + 2, badgeH + 2, 10);
+  ctx.fillStyle = "#f5ebd6";
+  ctx.fill();
+  ctx.strokeStyle = "#1c1917";
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `900 ${Math.max(12, Math.round(badgeH * 0.64))}px ${fonts.mono}`;
+  ctx.fillStyle = "#111827";
+  ctx.fillText(
+    `${meta.maxHp}`,
+    ix + iw - badgeW * 0.62,
+    iy + badgeH * 0.48
+  );
+  ctx.fillStyle = "#f43f5e";
+  ctx.font = `900 ${Math.max(12, Math.round(badgeH * 0.6))}px ${fonts.sans}`;
+  ctx.fillText("♥", ix + iw - badgeW * 0.24, iy + badgeH * 0.48);
+
+  // Bold Monster Nameplate bottom-left
+  ctx.textAlign = "left";
+  ctx.textBaseline = "bottom";
+  const namePx = Math.max(13, Math.min(20, Math.round(w * 0.088)));
+  ctx.font = `900 ${namePx}px ${fonts.sans}`;
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 3.5;
+  ctx.strokeStyle = "#090d16";
+  const nx = ix + 10;
+  const ny = iy + ih - 8;
+  ctx.strokeText(meta.name.toUpperCase(), nx, ny, iw - 20);
+  ctx.fillStyle = meta.accentColor;
+  ctx.fillText(meta.name.toUpperCase(), nx, ny, iw - 20);
+
+  // Taken dim stamp if already picked by opponent
+  if (opts.takenBy) {
+    ctx.fillStyle = "rgba(2, 6, 23, 0.58)";
+    ctx.fillRect(ix, iy, iw, ih);
+    drawRoundedRect(ctx, ix + iw * 0.14, iy + ih * 0.38, iw * 0.72, 28, 10);
+    ctx.fillStyle = "rgba(15, 23, 42, 0.94)";
+    ctx.fill();
+    ctx.strokeStyle = "#fbbf24";
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#fde047";
+    ctx.font = `800 11px ${fonts.sans}`;
+    ctx.fillText(`✓ ĐÃ CHỌN: ${opts.takenBy}`, ix + iw / 2, iy + ih * 0.38 + 14, iw * 0.66);
+  }
+
+  ctx.restore(); // end clip
+
+  // Outer selection ring
+  drawRoundedRect(ctx, x, y, w, h, radius);
+  ctx.strokeStyle = opts.selected
+    ? "#fde047"
+    : opts.hovered
+      ? meta.accentColor
+      : "#1e293b";
+  ctx.lineWidth = opts.selected ? 3.4 : opts.hovered ? 2.4 : 1.5;
+  ctx.stroke();
+
   ctx.restore();
 }
 

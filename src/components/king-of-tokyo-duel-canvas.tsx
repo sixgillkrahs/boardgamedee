@@ -10,8 +10,10 @@ import {
 } from "@/canvas/engine";
 import {
   drawKotDie2D,
+  drawKotMonsterBoard2D,
   drawKotMonsterPortrait2D,
   drawKotTokyoBackground2D,
+  getKotBoardAtlas,
   getKotDiceAtlas,
   getKotMonsterAtlas,
 } from "@/canvas/king-of-tokyo-duel-art";
@@ -22,6 +24,7 @@ import {
   KOT_WIN_TRACK_POS,
   type KotBuzzKind,
   type KotCommand,
+  type KotMonsterId,
   type KotPlayerView,
 } from "@/cartridges/king-of-tokyo-duel";
 import type { LobbySeatItem } from "@/components/werewolf-canvas";
@@ -58,6 +61,27 @@ const BUZZ_SHORT: Record<KotBuzzKind, string> = {
   PULL_1: "+1➡",
 };
 
+function wrapCanvasText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number
+): string[] {
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (ctx.measureText(candidate).width <= maxWidth || !current) {
+      current = candidate;
+    } else {
+      lines.push(current);
+      current = word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
 export function KingOfTokyoDuelCanvas({
   mode,
   lobbySeats,
@@ -68,6 +92,7 @@ export function KingOfTokyoDuelCanvas({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const hitRegionsRef = useRef<HitRegion[]>([]);
   const hoveredIdRef = useRef<string | null>(null);
+  const inspectedMonsterRef = useRef<KotMonsterId>("gigazaur");
   const particlesRef = useRef<ParticleSystem>(new ParticleSystem());
   const bannersRef = useRef<KotBannerFx[]>([]);
   const slashesRef = useRef<KotSlashFx[]>([]);
@@ -221,6 +246,7 @@ export function KingOfTokyoDuelCanvas({
 
   useEffect(() => {
     getKotMonsterAtlas();
+    getKotBoardAtlas();
     getKotDiceAtlas();
 
     const canvas = canvasRef.current;
@@ -282,24 +308,40 @@ export function KingOfTokyoDuelCanvas({
         ctx.textBaseline = "middle";
         ctx.fillStyle = "#fde047";
         ctx.font = `900 ${Math.min(28, Math.round(width * 0.048))}px ${fonts.pixel}`;
-        ctx.fillText("🦖 KING OF TOKYO: DUEL", width * 0.5, height * 0.16);
+        ctx.fillText("🦖 KING OF TOKYO: DUEL", width * 0.5, height * 0.11);
 
         ctx.fillStyle = "#cbd5e1";
         ctx.font = `600 12px ${fonts.sans}`;
         ctx.fillText(
           "Đại Chiến 1v1 • 6 Quái Vật Kaiju • Kéo Co Danh Vọng & Phá Hủy",
           width * 0.5,
-          height * 0.22
+          height * 0.17
         );
 
-        const pSize = Math.max(54, Math.min(82, Math.floor((width - 64) / 6) - 10));
-        const gap = 10;
-        const totalW = pSize * 6 + gap * 5;
-        const sx = width * 0.5 - totalW / 2;
-        const sy = height * 0.36;
+        const lCols = 3;
+        const lRows = 2;
+        const lGap = 12;
+        const lMaxW = Math.min(200, (width - 64 - (lCols - 1) * lGap) / lCols);
+        const lMaxH = Math.min(152, (height * 0.52 - (lRows - 1) * lGap) / lRows);
+        const lAspect = 220 / 168;
+        const lCardW = Math.max(88, Math.min(lMaxW, lMaxH * lAspect));
+        const lCardH = lCardW / lAspect;
+        const lGridW = lCols * lCardW + (lCols - 1) * lGap;
+        const lGridH = lRows * lCardH + (lRows - 1) * lGap;
+        const lsx = (width - lGridW) / 2;
+        const lsy = height * 0.22 + Math.max(0, (height * 0.5 - lGridH) / 2);
         KOT_MONSTER_IDS.forEach((mid, i) => {
-          const bob = Math.sin(now / 520 + i * 0.9) * 4;
-          drawKotMonsterPortrait2D(ctx, sx + i * (pSize + gap), sy + bob, pSize, mid);
+          const r = Math.floor(i / lCols);
+          const c = i % lCols;
+          const bob = Math.sin(now / 620 + i * 0.9) * 3;
+          drawKotMonsterBoard2D(
+            ctx,
+            lsx + c * (lCardW + lGap),
+            lsy + r * (lCardH + lGap) + bob,
+            lCardW,
+            lCardH,
+            mid
+          );
         });
 
         const count = Math.max(1, curLobby.length);
@@ -307,7 +349,7 @@ export function KingOfTokyoDuelCanvas({
         const psx = width * 0.5 - ((pillW + 10) * curLobby.length - 10) / 2;
         curLobby.forEach((s, idx) => {
           const px = psx + idx * (pillW + 10);
-          const py = height * 0.76;
+          const py = height * 0.79;
           drawRoundedRect(ctx, px, py, pillW, 48, 12);
           ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
           ctx.fill();
@@ -327,7 +369,7 @@ export function KingOfTokyoDuelCanvas({
           );
         });
       } else if (pv.step === "MonsterPickStep") {
-        // --- INTERACTIVE 2D MONSTER SELECT SCREEN ---
+        // --- INTERACTIVE 2D MONSTER SELECT SCREEN: LEFT POWER INSPECTOR + RIGHT BIG FULL-ART ROSTER ---
         const isMyPick = pv.activeSeatNo === curViewer;
         const activeSeat = pv.seats.find((s) => s.seatNo === pv.activeSeatNo);
         const takenMap = new Map<string, string>();
@@ -335,94 +377,282 @@ export function KingOfTokyoDuelCanvas({
           if (s.monsterId) takenMap.set(s.monsterId, s.displayName);
         });
 
+        const selId = inspectedMonsterRef.current;
+        const selMeta = KOT_MONSTERS[selId];
+        const selTakenBy = takenMap.get(selId);
+
+        // Header bar
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillStyle = "#fde047";
-        ctx.font = `900 ${Math.min(22, Math.round(width * 0.036))}px ${fonts.sans}`;
+        ctx.font = `900 ${Math.min(20, Math.round(width * 0.03))}px ${fonts.sans}`;
         ctx.fillText(
           isMyPick
             ? "🦖 CHỌN QUÁI VẬT KAIJU CỦA BẠN!"
             : `⏳ Đang chờ ${activeSeat?.displayName ?? "..."} chọn Quái Vật...`,
           width * 0.5,
-          36
+          24
+        );
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = `600 11px ${fonts.sans}`;
+        ctx.fillText(
+          "Bấm vào Quái Vật bên phải để xem toàn cảnh & Năng Lực chi tiết bên trái",
+          width * 0.5,
+          43
         );
 
-        const cols = width < 560 ? 2 : 3;
-        const rows = Math.ceil(6 / cols);
-        const gap = 14;
-        const cardW = Math.min(220, Math.floor((width - 40 - (cols - 1) * gap) / cols));
-        const cardH = Math.min(198, Math.floor((height - 96 - (rows - 1) * gap) / rows));
-        const gridW = cols * cardW + (cols - 1) * gap;
-        const gridH = rows * cardH + (rows - 1) * gap;
-        const gx0 = (width - gridW) / 2;
-        const gy0 = 66 + Math.max(0, (height - 82 - gridH) / 2);
+        const pad = 14;
+        const splitGap = 16;
+        const topY = 56;
+        const contentH = Math.max(260, height - topY - 12);
+
+        // Left Power Inspector Panel (~33-36% width)
+        const leftW = Math.max(220, Math.min(340, Math.floor(width * 0.34)));
+        const leftX = pad;
+        const leftY = topY;
+        const leftH = contentH;
+
+        drawRoundedRect(ctx, leftX, leftY, leftW, leftH, 16);
+        const panelGrad = ctx.createLinearGradient(leftX, leftY, leftX, leftY + leftH);
+        panelGrad.addColorStop(0, "rgba(15, 23, 42, 0.94)");
+        panelGrad.addColorStop(1, "rgba(9, 13, 28, 0.97)");
+        ctx.fillStyle = panelGrad;
+        ctx.fill();
+        ctx.strokeStyle = selMeta.accentColor;
+        ctx.lineWidth = 2.2;
+        ctx.stroke();
+
+        // Top section of Left Inspector: Large Hero Monster Board
+        const innerPad = 12;
+        const innerW = leftW - innerPad * 2;
+        const boardAspect = 220 / 168;
+        const maxHeroH = Math.floor(leftH * 0.42);
+        const heroW = Math.min(innerW, Math.floor(maxHeroH * boardAspect));
+        const heroH = Math.round(heroW / boardAspect);
+        const heroX = leftX + (leftW - heroW) / 2;
+        const heroY = leftY + 12;
+
+        drawKotMonsterBoard2D(ctx, heroX, heroY, heroW, heroH, selId, {
+          selected: true,
+          takenBy: selTakenBy,
+        });
+
+        // Subtitle & Max HP badge
+        let curY = heroY + heroH + 14;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = selMeta.accentColor;
+        ctx.font = `800 13px ${fonts.sans}`;
+        ctx.fillText(`${selMeta.emoji} ${selMeta.titleVi}`, leftX + innerPad, curY, innerW - 76);
+
+        // HP pill on right of subtitle row
+        const hpPillW = 70;
+        const hpPillH = 22;
+        drawRoundedRect(
+          ctx,
+          leftX + leftW - innerPad - hpPillW,
+          curY - hpPillH / 2,
+          hpPillW,
+          hpPillH,
+          999
+        );
+        ctx.fillStyle = "rgba(244, 63, 94, 0.18)";
+        ctx.fill();
+        ctx.strokeStyle = "#fb7185";
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#fecdd3";
+        ctx.font = `800 11px ${fonts.mono}`;
+        ctx.fillText(`❤️ ${selMeta.maxHp} HP`, leftX + leftW - innerPad - hpPillW / 2, curY + 0.5);
+
+        // Official-style Cream Comic Power Box ("NĂNG LỰC QUÁI VẬT")
+        const btnH = 44;
+        const btnY = leftY + leftH - innerPad - btnH;
+        const powerBoxY = curY + 18;
+        const powerBoxH = Math.max(92, btnY - powerBoxY - 12);
+
+        drawRoundedRect(ctx, leftX + innerPad, powerBoxY, innerW, powerBoxH, 12);
+        ctx.fillStyle = "#f5ebd6";
+        ctx.fill();
+        ctx.strokeStyle = "#1e293b";
+        ctx.lineWidth = 2.2;
+        ctx.stroke();
+
+        // Dark comic header ribbon inside Power Box
+        const ribbonH = 24;
+        drawRoundedRect(ctx, leftX + innerPad, powerBoxY, innerW, ribbonH, 10);
+        ctx.fillStyle = "#0f172a";
+        ctx.fill();
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#fde047";
+        ctx.font = `900 11px ${fonts.sans}`;
+        ctx.fillText(
+          "⚡ NĂNG LỰC QUÁI VẬT",
+          leftX + innerPad + 10,
+          powerBoxY + ribbonH / 2 + 0.5
+        );
+
+        // Power Name + stylized red [!] badge icons (matching official card!)
+        const pContentX = leftX + innerPad + 10;
+        const pContentW = innerW - 20;
+        const badgeY = powerBoxY + ribbonH + 10;
+        drawRoundedRect(ctx, pContentX, badgeY, 20, 20, 4);
+        ctx.fillStyle = "#dc2626";
+        ctx.fill();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `900 14px ${fonts.sans}`;
+        ctx.fillText("!", pContentX + 10, badgeY + 10.5);
+
+        ctx.textAlign = "left";
+        ctx.fillStyle = "#0f172a";
+        ctx.font = `900 13px ${fonts.sans}`;
+        ctx.fillText(selMeta.powerNameVi, pContentX + 27, badgeY + 10.5, pContentW - 27);
+
+        // Wrapped Vietnamese Power Description
+        ctx.fillStyle = "#1e293b";
+        const descFontSize = leftW < 255 ? 11 : 12;
+        ctx.font = `700 ${descFontSize}px ${fonts.sans}`;
+        const descLines = wrapCanvasText(ctx, selMeta.powerDescVi, pContentW);
+        const lineH = descFontSize + 5;
+        const descStartY = badgeY + 30;
+        const maxLines = Math.max(
+          2,
+          Math.floor((powerBoxY + powerBoxH - 8 - descStartY) / lineH) + 1
+        );
+        descLines.slice(0, maxLines).forEach((line, li) => {
+          ctx.fillText(line, pContentX, descStartY + li * lineH);
+        });
+
+        // Bottom Confirm Button inside Left Inspector
+        const confirmId = `confirm-monster-${selId}`;
+        const confirmHov = hoveredIdRef.current === confirmId;
+        const canConfirm = isMyPick && !selTakenBy;
+
+        if (canConfirm) {
+          newHitRegions.push({
+            id: confirmId,
+            shape: "rect",
+            x: leftX + innerPad,
+            y: btnY,
+            width: innerW,
+            height: btnH,
+            cursor: "pointer",
+            data: { type: "confirm-monster", monsterId: selId },
+          });
+        }
+
+        drawRoundedRect(ctx, leftX + innerPad, btnY, innerW, btnH, 12);
+        if (canConfirm) {
+          const btnGrad = ctx.createLinearGradient(
+            leftX + innerPad,
+            btnY,
+            leftX + innerPad,
+            btnY + btnH
+          );
+          btnGrad.addColorStop(0, confirmHov ? "#fde047" : "#f59e0b");
+          btnGrad.addColorStop(1, confirmHov ? "#f97316" : "#ea580c");
+          ctx.fillStyle = btnGrad;
+          ctx.fill();
+          ctx.strokeStyle = "#fef08a";
+          ctx.lineWidth = confirmHov ? 2.6 : 1.6;
+          ctx.stroke();
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = "#0f172a";
+          ctx.font = `900 13px ${fonts.sans}`;
+          ctx.fillText(
+            `🦖 CHỌN ${selMeta.name.toUpperCase()}!`,
+            leftX + leftW / 2,
+            btnY + btnH / 2 + 0.5,
+            innerW - 14
+          );
+        } else {
+          ctx.fillStyle = "rgba(30, 41, 59, 0.85)";
+          ctx.fill();
+          ctx.strokeStyle = selTakenBy ? "#fbbf24" : "#475569";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = selTakenBy ? "#fde047" : "#94a3b8";
+          ctx.font = `800 12px ${fonts.sans}`;
+          ctx.fillText(
+            selTakenBy
+              ? `✓ ĐÃ CHỌN: ${selTakenBy}`
+              : `⏳ Đang chờ ${activeSeat?.displayName ?? "..."}`,
+            leftX + leftW / 2,
+            btnY + btnH / 2 + 0.5,
+            innerW - 14
+          );
+        }
+
+        // Right Big Full-Art Kaiju Roster Grid (choose 2x3 or 3x2 — whichever maximizes big board size!)
+        const rightX = leftX + leftW + splitGap;
+        const rightY = topY;
+        const rightW = Math.max(220, width - rightX - pad);
+        const rightH = contentH;
+        const gridGap = 14;
+
+        const calcLayout = (cols: number, rows: number) => {
+          const maxW = (rightW - (cols - 1) * gridGap) / cols;
+          const maxH = (rightH - (rows - 1) * gridGap) / rows;
+          const cw = Math.max(80, Math.min(maxW, maxH * boardAspect));
+          const ch = cw / boardAspect;
+          return { cols, rows, cw, ch, area: cw * ch };
+        };
+        const layout3x2 = calcLayout(3, 2);
+        const layout2x3 = calcLayout(2, 3);
+        const chosen = layout3x2.area >= layout2x3.area ? layout3x2 : layout2x3;
+
+        const gridW = chosen.cols * chosen.cw + (chosen.cols - 1) * gridGap;
+        const gridH = chosen.rows * chosen.ch + (chosen.rows - 1) * gridGap;
+        const gx0 = rightX + (rightW - gridW) / 2;
+        const gy0 = rightY + (rightH - gridH) / 2;
 
         KOT_MONSTER_IDS.forEach((mid, idx) => {
-          const r = Math.floor(idx / cols);
-          const c = idx % cols;
-          const x = gx0 + c * (cardW + gap);
-          const y = gy0 + r * (cardH + gap);
-          const meta = KOT_MONSTERS[mid];
+          const r = Math.floor(idx / chosen.cols);
+          const c = idx % chosen.cols;
+          const x = gx0 + c * (chosen.cw + gridGap);
+          const y = gy0 + r * (chosen.ch + gridGap);
           const takenBy = takenMap.get(mid);
-          const regionId = `pick-monster-${mid}`;
+          const isSelected = selId === mid;
+          const regionId = `inspect-monster-${mid}`;
           const hov = hoveredIdRef.current === regionId;
 
-          if (isMyPick && !takenBy) {
-            newHitRegions.push({
-              id: regionId,
-              shape: "rect",
-              x,
-              y,
-              width: cardW,
-              height: cardH,
-              cursor: "pointer",
-              data: { type: "pick-monster", monsterId: mid },
-            });
+          newHitRegions.push({
+            id: regionId,
+            shape: "rect",
+            x,
+            y,
+            width: chosen.cw,
+            height: chosen.ch,
+            cursor: "pointer",
+            data: { type: "inspect-monster", monsterId: mid },
+          });
+
+          const lift = isSelected ? 4 : hov ? 2 : 0;
+          drawKotMonsterBoard2D(ctx, x, y - lift, chosen.cw, chosen.ch, mid, {
+            selected: isSelected,
+            hovered: hov,
+            takenBy,
+          });
+
+          if (isSelected) {
+            const tagW = 74;
+            const tagH = 19;
+            drawRoundedRect(ctx, x + 8, y - lift + 8, tagW, tagH, 999);
+            ctx.fillStyle = "#fde047";
+            ctx.fill();
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "#0f172a";
+            ctx.font = `900 10px ${fonts.sans}`;
+            ctx.fillText("◀ ĐANG XEM", x + 8 + tagW / 2, y - lift + 8 + tagH / 2 + 0.5);
           }
-
-          drawRoundedRect(ctx, x, y - (hov && !takenBy ? 4 : 0), cardW, cardH, 16);
-          ctx.fillStyle = takenBy
-            ? "rgba(15, 23, 42, 0.65)"
-            : hov
-              ? "rgba(30, 41, 59, 0.96)"
-              : "rgba(15, 23, 42, 0.9)";
-          ctx.fill();
-          ctx.strokeStyle = takenBy
-            ? "#475569"
-            : hov
-              ? "#fde047"
-              : meta.accentColor;
-          ctx.lineWidth = hov && !takenBy ? 2.8 : 1.6;
-          ctx.stroke();
-
-          const pSize = Math.min(82, Math.floor(cardH * 0.46));
-          drawKotMonsterPortrait2D(
-            ctx,
-            x + (cardW - pSize) / 2,
-            y + 10 - (hov && !takenBy ? 4 : 0),
-            pSize,
-            mid,
-            hov && !takenBy
-          );
-
-          const textY = y + pSize + 24;
-          ctx.textAlign = "center";
-          ctx.fillStyle = "#f8fafc";
-          ctx.font = `900 13px ${fonts.sans}`;
-          ctx.fillText(meta.name, x + cardW / 2, textY);
-
-          ctx.fillStyle = "#6ee7b7";
-          ctx.font = `800 11px ${fonts.mono}`;
-          ctx.fillText(`❤️ ${meta.maxHp} HP • ${meta.powerNameVi}`, x + cardW / 2, textY + 17, cardW - 16);
-
-          ctx.fillStyle = takenBy ? "#fbbf24" : "#94a3b8";
-          ctx.font = `600 10px ${fonts.sans}`;
-          ctx.fillText(
-            takenBy ? `✓ Đã chọn: ${takenBy}` : isMyPick ? "Chạm để chọn Kaiju này" : meta.titleVi,
-            x + cardW / 2,
-            y + cardH - 14,
-            cardW - 16
-          );
         });
       } else {
         // --- ACTIVE 1v1 TOKYO DUEL ARENA ---
@@ -953,7 +1183,9 @@ export function KingOfTokyoDuelCanvas({
     const data = hit.data as Record<string, any>;
     const dispatch = stateRef.current.onDispatchCommand;
 
-    if (data.type === "pick-monster") {
+    if (data.type === "inspect-monster") {
+      inspectedMonsterRef.current = data.monsterId as KotMonsterId;
+    } else if (data.type === "confirm-monster" || data.type === "pick-monster") {
       dispatch({ type: "PICK_MONSTER", monsterId: data.monsterId });
     } else if (data.type === "toggle-die") {
       dispatch({ type: "TOGGLE_DIE", dieIndex: data.dieIndex });
