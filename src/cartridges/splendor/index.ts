@@ -659,7 +659,7 @@ export const splendorCartridge: GameCartridge<
   SplendorPlayerView
 > = {
   cartridgeId: "splendor",
-  title: "Splendor: Thương Nhân Đá Quý",
+  title: "Splendor",
   subtitle: "Xây dựng động cơ • Thu thập đá quý • 2–4 người chơi",
   description:
     "Hóa thân thành thương nhân thời Phục Hưng, thu thập đá quý, đầu tư mỏ quặng và chinh phục các Quý Tộc để chạm mốc 15 điểm Uy Tín.",
