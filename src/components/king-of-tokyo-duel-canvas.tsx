@@ -898,6 +898,7 @@ export function KingOfTokyoDuelCanvas({
               });
             }
 
+            const baseDiceCount = pv.turnNumber === 1 ? 5 : 6;
             drawKotDie2D(
               ctx,
               dx + wobbleX,
@@ -905,7 +906,8 @@ export function KingOfTokyoDuelCanvas({
               dieSize,
               die.face,
               die.locked,
-              canToggle && hov
+              canToggle && hov,
+              idx >= baseDiceCount
             );
           });
 
@@ -1063,6 +1065,7 @@ export function KingOfTokyoDuelCanvas({
               });
             }
 
+            const baseDiceCount = pv.turnNumber === 1 ? 5 : 6;
             drawKotDie2D(
               ctx,
               dx + wobbleX,
@@ -1070,7 +1073,8 @@ export function KingOfTokyoDuelCanvas({
               dieSize,
               die.face,
               die.locked,
-              canToggle && hov
+              canToggle && hov,
+              idx >= baseDiceCount
             );
           });
 

@@ -547,7 +547,8 @@ export function drawKotMonsterBoard2D(
 }
 
 /**
- * Draws a crisp 16-bit Black Kaiju Die at `(x, y, size, size)` with lock ring & tumbling wobble!
+ * Draws a crisp 16-bit Kaiju Die at `(x, y, size, size)` — Ivory/Cream for standard dice,
+ * Coral-Red for bonus extra dice (`isBonus = true`), with golden lock ring & padlock badge!
  */
 export function drawKotDie2D(
   ctx: CanvasRenderingContext2D,
@@ -556,7 +557,8 @@ export function drawKotDie2D(
   size: number,
   face: KotDieFace,
   locked: boolean,
-  hovered = false
+  hovered = false,
+  isBonus = false
 ) {
   ctx.save();
   const lift = locked ? -5 : hovered ? -3 : 0;
@@ -575,12 +577,13 @@ export function drawKotDie2D(
   const atlas = getKotDiceAtlas();
   if (atlas) {
     const r = KOT_DICE_RECTS[face];
+    const sy = isBonus ? 64 : r.sy;
     ctx.imageSmoothingEnabled = size < 44;
     if (ctx.imageSmoothingEnabled) ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(atlas, r.sx, r.sy, r.sw, r.sh, x, dy, size, size);
+    ctx.drawImage(atlas, r.sx, sy, r.sw, r.sh, x, dy, size, size);
   } else {
     drawRoundedRect(ctx, x, dy, size, size, 10);
-    ctx.fillStyle = "#18181b";
+    ctx.fillStyle = isBonus ? "#e2505a" : "#f4e0ba";
     ctx.fill();
   }
 
