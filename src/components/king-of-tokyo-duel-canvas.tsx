@@ -20,6 +20,7 @@ import {
   drawKotMonsterBoard2D,
   drawKotMonsterPortrait2D,
   drawKotPowerCardArt2D,
+  drawKotRichText2D,
   drawKotTokyoBackground2D,
   getKotBoardAtlas,
   getKotBuzzMedalsAtlas,
@@ -487,47 +488,49 @@ export function KingOfTokyoDuelCanvas({
         drawRoundedRect(ctx, leftX + innerPad, powerBoxY, innerW, ribbonH, 10);
         ctx.fillStyle = "#0f172a";
         ctx.fill();
+        drawKotIcon2D(
+          ctx,
+          leftX + innerPad + 16,
+          powerBoxY + ribbonH / 2,
+          15,
+          "energy"
+        );
         ctx.textAlign = "left";
         ctx.textBaseline = "middle";
         ctx.fillStyle = "#fde047";
         ctx.font = `900 11px ${fonts.sans}`;
         ctx.fillText(
-          "⚡ NĂNG LỰC QUÁI VẬT",
-          leftX + innerPad + 10,
+          "NĂNG LỰC QUÁI VẬT",
+          leftX + innerPad + 28,
           powerBoxY + ribbonH / 2 + 0.5
         );
 
-        // Power Name + stylized red [!] badge icons (matching official card!)
+        // Power Name + official 16-bit Red Special [!] Die sprite (matching official card!)
         const pContentX = leftX + innerPad + 10;
         const pContentW = innerW - 20;
-        const badgeY = powerBoxY + ribbonH + 10;
-        drawRoundedRect(ctx, pContentX, badgeY, 20, 20, 4);
-        ctx.fillStyle = "#dc2626";
-        ctx.fill();
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = "#ffffff";
-        ctx.font = `900 14px ${fonts.sans}`;
-        ctx.fillText("!", pContentX + 10, badgeY + 10.5);
+        const badgeY = powerBoxY + ribbonH + 9;
+        drawKotDie2D(ctx, pContentX, badgeY, 22, "special", false, false, false);
 
         ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
         ctx.fillStyle = "#0f172a";
         ctx.font = `900 13px ${fonts.sans}`;
-        ctx.fillText(selMeta.powerNameVi, pContentX + 27, badgeY + 10.5, pContentW - 27);
+        ctx.fillText(selMeta.powerNameVi, pContentX + 29, badgeY + 11.5, pContentW - 29);
 
-        // Wrapped Vietnamese Power Description
-        ctx.fillStyle = "#1e293b";
+        // Wrapped Vietnamese Power Description with crisp inline official icons (no raw "[!]" text!)
         const descFontSize = leftW < 255 ? 11 : 12;
-        ctx.font = `700 ${descFontSize}px ${fonts.sans}`;
-        const descLines = wrapCanvasText(ctx, selMeta.powerDescVi, pContentW);
-        const lineH = descFontSize + 5;
-        const descStartY = badgeY + 30;
+        const lineH = descFontSize + 7;
+        const descStartY = badgeY + 34;
         const maxLines = Math.max(
           2,
           Math.floor((powerBoxY + powerBoxH - 8 - descStartY) / lineH) + 1
         );
-        descLines.slice(0, maxLines).forEach((line, li) => {
-          ctx.fillText(line, pContentX, descStartY + li * lineH);
+        drawKotRichText2D(ctx, selMeta.powerDescVi, pContentX, descStartY, pContentW, {
+          font: `700 ${descFontSize}px ${fonts.sans}`,
+          color: "#1e293b",
+          lineHeight: lineH,
+          iconSize: descFontSize + 4,
+          maxLines,
         });
 
         // Bottom Confirm Button inside Left Inspector
@@ -1318,12 +1321,20 @@ export function KingOfTokyoDuelCanvas({
               );
 
               if (seat.keepCards.length === 0) {
-                ctx.fillStyle = "#64748b";
-                ctx.font = `600 9.5px ${fonts.sans}`;
-                const pLines = wrapCanvasText(ctx, meta.powerDescVi, sideW - 24);
-                pLines.slice(0, 4).forEach((ln, li) => {
-                  ctx.fillText(ln, colX + 12, curRowY + 21 + li * 13);
-                });
+                drawKotRichText2D(
+                  ctx,
+                  meta.powerDescVi,
+                  colX + 12,
+                  curRowY + 22,
+                  sideW - 24,
+                  {
+                    font: `600 9.5px ${fonts.sans}`,
+                    color: "#94a3b8",
+                    lineHeight: 15,
+                    iconSize: 13,
+                    maxLines: 4,
+                  }
+                );
               } else {
                 const kCols = 3;
                 const kGap = 6;

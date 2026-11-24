@@ -64,6 +64,84 @@ import {
 import type { RoomSnapshotForActor } from "@/platform/coordinator";
 import type { ChannelId } from "@/cartridges/types";
 
+const KOT_HTML_INLINE_RE = /(\[!\]|⭐|🏢|⚡|❤️|♥|🐾|🎲)/g;
+
+const KOT_HTML_ICON_SPRITE: Record<
+  string,
+  { url: string; bgPos: string; bgSize: string; label: string }
+> = {
+  "[!]": {
+    url: "/sprites/kot-duel-dice-pixel.png",
+    bgPos: "100% 100%",
+    bgSize: "600% 200%",
+    label: "Mặt Đặc Biệt",
+  },
+  "❤️": {
+    url: "/sprites/kot-duel-icons-pixel.png",
+    bgPos: "0% 0%",
+    bgSize: "800% 100%",
+    label: "Hồi Máu",
+  },
+  "♥": {
+    url: "/sprites/kot-duel-icons-pixel.png",
+    bgPos: "0% 0%",
+    bgSize: "800% 100%",
+    label: "Máu",
+  },
+  "⚡": {
+    url: "/sprites/kot-duel-icons-pixel.png",
+    bgPos: "14.2857% 0%",
+    bgSize: "800% 100%",
+    label: "Năng Lượng",
+  },
+  "🎲": {
+    url: "/sprites/kot-duel-icons-pixel.png",
+    bgPos: "28.5714% 0%",
+    bgSize: "800% 100%",
+    label: "Xúc Xắc",
+  },
+  "⭐": {
+    url: "/sprites/kot-duel-icons-pixel.png",
+    bgPos: "42.8571% 0%",
+    bgSize: "800% 100%",
+    label: "Danh Vọng",
+  },
+  "🏢": {
+    url: "/sprites/kot-duel-icons-pixel.png",
+    bgPos: "57.1429% 0%",
+    bgSize: "800% 100%",
+    label: "Phá Hủy",
+  },
+  "🐾": {
+    url: "/sprites/kot-duel-icons-pixel.png",
+    bgPos: "100% 0%",
+    bgSize: "800% 100%",
+    label: "Sát Thương",
+  },
+};
+
+function renderKotRichText(text: string): React.ReactNode {
+  const parts = text.split(KOT_HTML_INLINE_RE);
+  return parts.map((part, idx) => {
+    const sp = KOT_HTML_ICON_SPRITE[part];
+    if (!sp) return <React.Fragment key={idx}>{part}</React.Fragment>;
+    return (
+      <span
+        key={idx}
+        role="img"
+        aria-label={sp.label}
+        title={sp.label}
+        className="inline-block align-middle mx-0.5 w-4 h-4 bg-no-repeat"
+        style={{
+          backgroundImage: `url(${sp.url})`,
+          backgroundPosition: sp.bgPos,
+          backgroundSize: sp.bgSize,
+        }}
+      />
+    );
+  });
+}
+
 export default function RoomPage({
   params,
 }: {
@@ -1143,7 +1221,7 @@ function RoomPageContent({
                         <span className="font-bold text-amber-300">
                           {myMonster.emoji} {myMonster.powerNameVi}:
                         </span>{" "}
-                        {myMonster.powerDescVi}
+                        {renderKotRichText(myMonster.powerDescVi)}
                       </div>
                     )}
                   </div>
@@ -4363,7 +4441,7 @@ function RoomPageContent({
                               <strong className="text-amber-300">
                                 {m.powerNameVi}:
                               </strong>{" "}
-                              {m.powerDescVi}
+                              {renderKotRichText(m.powerDescVi)}
                             </p>
                           </div>
                         );

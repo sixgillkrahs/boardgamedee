@@ -261,6 +261,155 @@ export function drawKotIcon2D(
   ctx.restore();
 }
 
+type KotRichInlineToken =
+  | "special_die"
+  | "star"
+  | "building"
+  | "energy"
+  | "heart"
+  | "claw"
+  | "dice";
+
+const KOT_INLINE_SYMBOL_RE = /(\[!\]|⭐|🏢|⚡|❤️|♥|🐾|🎲)/g;
+
+function mapInlineToken(raw: string): KotRichInlineToken | null {
+  switch (raw) {
+    case "[!]":
+      return "special_die";
+    case "⭐":
+      return "star";
+    case "🏢":
+      return "building";
+    case "⚡":
+      return "energy";
+    case "❤️":
+    case "♥":
+      return "heart";
+    case "🐾":
+      return "claw";
+    case "🎲":
+      return "dice";
+    default:
+      return null;
+  }
+}
+
+/**
+ * Draws wrapped Vietnamese Kaiju power/card text with crisp inline 16-bit official icons
+ * (Red `[!]` Special Die sprite, Fame Star, Destruction Building, Energy Bolt, Heart, Claw, Bonus Die)
+ * instead of raw `[!]` text or plain Unicode emojis!
+ */
+export function drawKotRichText2D(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  opts: {
+    font: string;
+    color: string;
+    lineHeight: number;
+    iconSize: number;
+    maxLines?: number;
+  }
+) {
+  ctx.save();
+  ctx.font = opts.font;
+  ctx.fillStyle = opts.color;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+
+  type Segment =
+    | { kind: "text"; text: string; w: number }
+    | { kind: "icon"; token: KotRichInlineToken; w: number };
+
+  const spaceW = ctx.measureText(" ").width;
+  const iconAdvance = opts.iconSize + 2;
+
+  const parseWord = (word: string): { segs: Segment[]; width: number } => {
+    const parts = word.split(KOT_INLINE_SYMBOL_RE).filter(Boolean);
+    const segs: Segment[] = [];
+    let width = 0;
+    for (const part of parts) {
+      const tok = mapInlineToken(part);
+      if (tok) {
+        segs.push({ kind: "icon", token: tok, w: iconAdvance });
+        width += iconAdvance;
+      } else {
+        const w = ctx.measureText(part).width;
+        segs.push({ kind: "text", text: part, w });
+        width += w;
+      }
+    }
+    return { segs, width };
+  };
+
+  const words = text.trim().split(/\s+/).filter(Boolean).map(parseWord);
+  const lines: Array<Array<{ segs: Segment[]; width: number }>> = [];
+  let curLine: Array<{ segs: Segment[]; width: number }> = [];
+  let curW = 0;
+
+  for (const w of words) {
+    const added = curLine.length === 0 ? w.width : spaceW + w.width;
+    if (curLine.length > 0 && curW + added > maxWidth) {
+      lines.push(curLine);
+      curLine = [w];
+      curW = w.width;
+    } else {
+      curLine.push(w);
+      curW += added;
+    }
+  }
+  if (curLine.length > 0) lines.push(curLine);
+
+  const visibleLines =
+    opts.maxLines !== undefined ? lines.slice(0, opts.maxLines) : lines;
+  const diceAtlas = getKotDiceAtlas();
+
+  visibleLines.forEach((lineWords, li) => {
+    const cy = y + li * opts.lineHeight;
+    let cx = x;
+    lineWords.forEach((w, wi) => {
+      if (wi > 0) cx += spaceW;
+      for (const seg of w.segs) {
+        if (seg.kind === "text") {
+          ctx.fillStyle = opts.color;
+          ctx.fillText(seg.text, cx, cy);
+        } else if (seg.token === "special_die") {
+          const sz = opts.iconSize;
+          const ix = Math.round(cx + 1);
+          const iy = Math.round(cy - sz / 2);
+          if (diceAtlas) {
+            const r = KOT_DICE_RECTS.special;
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+            ctx.drawImage(diceAtlas, r.sx, 64, r.sw, r.sh, ix, iy, sz, sz);
+          } else {
+            drawRoundedRect(ctx, ix, iy, sz, sz, 3);
+            ctx.fillStyle = "#e2505a";
+            ctx.fill();
+            ctx.fillStyle = "#ffffff";
+            ctx.textAlign = "center";
+            ctx.fillText("!", ix + sz / 2, cy);
+            ctx.textAlign = "left";
+          }
+        } else {
+          drawKotIcon2D(
+            ctx,
+            cx + seg.w / 2,
+            cy,
+            opts.iconSize,
+            seg.token
+          );
+        }
+        cx += seg.w;
+      }
+    });
+  });
+
+  ctx.restore();
+}
+
 let cachedPowerCardsImg: HTMLImageElement | null = null;
 let powerCardsLoaded = false;
 const powerCardsListeners = new Set<() => void>();
