@@ -546,15 +546,15 @@ function RoomPageContent({
       {/* Full-Width Interactive 2D Canvas Tabletop (Left) + Action Selection Sidebar (Right) */}
       <main
         className={`relative flex-1 flex flex-col lg:flex-row w-full ${
-          isKot && !isLobby
+          isKot
             ? "gap-1 p-1 sm:p-1.5"
             : "gap-2 sm:gap-2.5 p-2 sm:p-2.5"
         }`}
       >
         <div
           className={`flex-1 relative ${
-            isKot && !isLobby
-              ? "h-[60vh] min-h-[420px] sm:h-[70vh] sm:min-h-[540px] lg:h-[calc(100vh-50px)] lg:min-h-[620px]"
+            isKot
+              ? "h-[66vh] min-h-[460px] sm:h-[74vh] sm:min-h-[540px] lg:h-[calc(100vh-50px)] lg:min-h-[620px]"
               : "h-[54vh] min-h-[380px] sm:h-[62vh] sm:min-h-[500px] lg:h-[calc(100vh-62px)] lg:min-h-[620px]"
           }`}
         >
@@ -569,6 +569,183 @@ function RoomPageContent({
                   void sendRoomAction({ type: "MATCH_COMMAND", command: cmd })
                 }
               />
+              {isLobby && snapshot && (
+                <div className="absolute inset-x-0 bottom-5 sm:bottom-8 z-20 flex flex-col items-center pointer-events-none px-4">
+                  <div className="pointer-events-auto w-full max-w-md flex flex-col gap-3">
+                    {/* Single Player Roster Card with inline Remove Bot & Kick Player controls */}
+                    <div className="rounded-2xl border border-amber-400/45 bg-slate-950/82 backdrop-blur-md p-3.5 shadow-2xl space-y-2.5">
+                      <div className="flex items-center justify-between border-b border-slate-700/50 pb-2">
+                        <span className="text-xs font-extrabold uppercase tracking-wider text-amber-300">
+                          👥 Danh Sách Người Chơi
+                        </span>
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-[11px] font-extrabold font-mono border ${
+                            snapshot.seats.length >= 2
+                              ? "border-emerald-400/50 bg-emerald-500/20 text-emerald-300"
+                              : "border-amber-400/50 bg-amber-500/15 text-amber-300"
+                          }`}
+                        >
+                          {snapshot.seats.length}/2
+                        </span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {[0, 1].map((slotIdx) => {
+                          const seat = snapshot.seats[slotIdx];
+                          if (!seat) {
+                            return (
+                              <div
+                                key={`empty-${slotIdx}`}
+                                className="flex items-center gap-3 rounded-xl border border-dashed border-slate-700/70 bg-slate-900/50 px-3 py-2.5 text-xs text-slate-400"
+                              >
+                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-800 font-mono text-[11px] font-bold text-slate-500">
+                                  #{slotIdx + 1}
+                                </span>
+                                <span className="italic">
+                                  ⏳ Đang chờ đối thủ vào phòng (hoặc thêm Bot)...
+                                </span>
+                              </div>
+                            );
+                          }
+
+                          const isRoomHost =
+                            seat.actorId === snapshot.room.hostActorId;
+                          const isMe = seat.seatNo === snapshot.viewerSeatNo;
+                          const canRemove = snapshot.isHost && !isRoomHost;
+
+                          return (
+                            <div
+                              key={seat.seatNo}
+                              className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2 transition ${
+                                isMe
+                                  ? "border-amber-400/60 bg-amber-500/12"
+                                  : "border-slate-700/70 bg-slate-900/80"
+                              }`}
+                            >
+                              <div className="min-w-0 flex items-center gap-2.5">
+                                <span
+                                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-[11px] font-extrabold ${
+                                    isMe
+                                      ? "bg-amber-400 text-slate-950"
+                                      : seat.isBot
+                                        ? "bg-sky-600 text-white"
+                                        : "bg-slate-700 text-slate-100"
+                                  }`}
+                                >
+                                  #{seat.seatNo}
+                                </span>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <span
+                                      className={`text-xs font-extrabold truncate ${
+                                        isMe ? "text-amber-200" : "text-slate-100"
+                                      }`}
+                                    >
+                                      {seat.displayName}
+                                      {isMe ? " (BẠN)" : ""}
+                                    </span>
+                                    {isRoomHost ? (
+                                      <span className="shrink-0 rounded bg-amber-500/20 border border-amber-400/45 px-1.5 py-0.5 text-[9px] font-bold text-amber-300">
+                                        👑 Chủ
+                                      </span>
+                                    ) : seat.isBot ? (
+                                      <span className="shrink-0 rounded bg-sky-500/20 border border-sky-400/40 px-1.5 py-0.5 text-[9px] font-bold text-sky-300">
+                                        🤖 Bot
+                                      </span>
+                                    ) : (
+                                      <span
+                                        className={`h-2 w-2 rounded-full shrink-0 ${
+                                          seat.connected
+                                            ? "bg-emerald-400"
+                                            : "bg-slate-500"
+                                        }`}
+                                        title={
+                                          seat.connected
+                                            ? "Trực tuyến"
+                                            : "Mất kết nối"
+                                        }
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {canRemove ? (
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() =>
+                                    sendRoomAction({
+                                      type: "REMOVE_SEAT",
+                                      targetSeatNo: seat.seatNo,
+                                    })
+                                  }
+                                  className={`shrink-0 rounded-lg px-2.5 py-1 text-[10px] font-extrabold transition cursor-pointer disabled:opacity-40 ${
+                                    seat.isBot
+                                      ? "border border-amber-500/45 bg-amber-500/15 hover:bg-amber-500/30 text-amber-200"
+                                      : "border border-rose-500/50 bg-rose-500/20 hover:bg-rose-500/35 text-rose-200"
+                                  }`}
+                                >
+                                  {seat.isBot ? "✕ Xóa Bot" : "🚫 Kick"}
+                                </button>
+                              ) : (
+                                <span className="shrink-0 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                                  ● Sẵn sàng
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons directly below the Player Roster Card */}
+                    {snapshot.isHost ? (
+                      <div className="flex items-center gap-2.5">
+                        <button
+                          type="button"
+                          disabled={busy || snapshot.seats.length >= 2}
+                          onClick={() => sendRoomAction({ type: "ADD_BOT" })}
+                          className="flex-1 rounded-xl border border-sky-400/55 bg-slate-950/85 hover:bg-sky-950/90 backdrop-blur-md px-4 py-3 text-xs font-extrabold text-sky-200 shadow-xl transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          🤖 + Thêm Bot
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy || !snapshot.configValidation.valid}
+                          onClick={() => sendRoomAction({ type: "START_MATCH" })}
+                          className="flex-[1.35] rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-3 text-xs font-black tracking-wide text-slate-950 shadow-xl shadow-orange-500/25 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          🔥 BẮT ĐẦU GAME
+                        </button>
+                      </div>
+                    ) : snapshot.viewerSeatNo === null ? (
+                      <button
+                        type="button"
+                        disabled={busy || snapshot.seats.length >= 2}
+                        onClick={() => sendRoomAction({ type: "JOIN" })}
+                        className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-3 text-xs font-black text-slate-950 shadow-xl transition cursor-pointer disabled:opacity-40"
+                      >
+                        🪑 Ngồi Vào Bàn
+                      </button>
+                    ) : (
+                      <div className="flex items-center justify-between gap-2.5 rounded-xl border border-slate-700/60 bg-slate-950/80 backdrop-blur-md px-3.5 py-2.5 shadow-xl">
+                        <span className="text-xs font-medium text-slate-300 italic">
+                          ⏳ Đang chờ Chủ phòng bắt đầu game...
+                        </span>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => sendRoomAction({ type: "LEAVE" })}
+                          className="shrink-0 rounded-lg border border-slate-600 bg-slate-800/90 hover:bg-slate-700 px-3 py-1.5 text-[11px] font-bold text-slate-200 transition cursor-pointer disabled:opacity-40"
+                        >
+                          🚪 Rời Bàn
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               {!isLobby && kotView?.step === "Finished" && (
                 <div className="absolute inset-x-0 bottom-20 z-20 flex justify-center pointer-events-none px-4">
                   <div className="pointer-events-auto max-w-md w-full rounded-2xl border border-amber-400/60 bg-slate-950/92 backdrop-blur-md p-4 shadow-2xl text-center space-y-2.5">
@@ -712,8 +889,8 @@ function RoomPageContent({
           )}
         </div>
 
-        {/* Right-Side Action Selection Panel (hidden during active King of Tokyo: Duel matches for full-width board!) */}
-        {!(isKot && !isLobby) && (
+        {/* Right-Side Action Selection Panel (hidden completely for King of Tokyo: Duel lobby & matches!) */}
+        {!isKot && (
         <aside className="w-full lg:w-76 xl:w-84 lg:max-h-[calc(100vh-62px)] lg:overflow-y-auto shrink-0 rounded-2xl border border-slate-800 bg-slate-900/95 p-3 sm:p-4 shadow-xl flex flex-col justify-between gap-3 sm:gap-4">
           {isLobby ? (
             <div className="flex flex-col gap-3">
