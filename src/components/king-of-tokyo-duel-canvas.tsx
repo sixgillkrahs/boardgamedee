@@ -16,6 +16,7 @@ import {
   drawKotGameBoard2D,
   drawKotHealthDial2D,
   drawKotIcon2D,
+  drawKotLobbyBackground2D,
   drawKotMonsterBoard2D,
   drawKotMonsterPortrait2D,
   drawKotPowerCardArt2D,
@@ -30,6 +31,7 @@ import {
   getKotGameBoardImage,
   getKotHpDialsAtlas,
   getKotIconsAtlas,
+  getKotLobbyBgImage,
   getKotMonsterAtlas,
   getKotPowerCardsAtlas,
   getKotTokensAtlas,
@@ -274,6 +276,7 @@ export function KingOfTokyoDuelCanvas({
     getKotEnergyCubeImage();
     getKotBuzzMedalsAtlas();
     getKotBuzzTilesAtlas();
+    getKotLobbyBgImage();
     getKotDiceAtlas();
 
     const canvas = canvasRef.current;
@@ -324,75 +327,79 @@ export function KingOfTokyoDuelCanvas({
         );
       }
 
-      drawKotTokyoBackground2D(ctx, width, height, now);
+      if (curMode === "lobby" || !pv) {
+        drawKotLobbyBackground2D(ctx, width, height, now);
+      } else {
+        drawKotTokyoBackground2D(ctx, width, height, now);
+      }
 
       const newHitRegions: HitRegion[] = [];
       const particles = particlesRef.current;
 
       if (curMode === "lobby" || !pv) {
-        // --- LOBBY PREVIEW ---
+        // --- LOBBY PREVIEW OVER OFFICIAL 1920x1080 MEKA DRAGON VS GIGAZAUR COVER ART ---
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
+        const titleSize = Math.min(30, Math.max(18, Math.round(width * 0.044)));
+        ctx.font = `900 ${titleSize}px ${fonts.pixel}`;
+        ctx.lineJoin = "round";
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = "rgba(6, 10, 22, 0.92)";
+        ctx.strokeText("🦖 KING OF TOKYO: DUEL", width * 0.5, height * 0.095);
         ctx.fillStyle = "#fde047";
-        ctx.font = `900 ${Math.min(28, Math.round(width * 0.048))}px ${fonts.pixel}`;
-        ctx.fillText("🦖 KING OF TOKYO: DUEL", width * 0.5, height * 0.11);
+        ctx.fillText("🦖 KING OF TOKYO: DUEL", width * 0.5, height * 0.095);
 
-        ctx.fillStyle = "#cbd5e1";
-        ctx.font = `600 12px ${fonts.sans}`;
-        ctx.fillText(
-          "Đại Chiến 1v1 • 6 Quái Vật Kaiju • Kéo Co Danh Vọng & Phá Hủy",
-          width * 0.5,
-          height * 0.17
-        );
+        const subText = "Đại Chiến 1v1 • 6 Quái Vật Kaiju • Kéo Co Danh Vọng & Phá Hủy";
+        ctx.font = `700 12px ${fonts.sans}`;
+        const subW = Math.min(width - 32, ctx.measureText(subText).width + 28);
+        drawRoundedRect(ctx, width * 0.5 - subW / 2, height * 0.155 - 12, subW, 24, 999);
+        ctx.fillStyle = "rgba(6, 10, 22, 0.68)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(253, 224, 71, 0.35)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = "#fef9c3";
+        ctx.fillText(subText, width * 0.5, height * 0.155 + 0.5, subW - 16);
 
-        const lCols = 3;
-        const lRows = 2;
-        const lGap = 12;
-        const lMaxW = Math.min(200, (width - 64 - (lCols - 1) * lGap) / lCols);
-        const lMaxH = Math.min(152, (height * 0.52 - (lRows - 1) * lGap) / lRows);
-        const lAspect = 220 / 168;
-        const lCardW = Math.max(88, Math.min(lMaxW, lMaxH * lAspect));
-        const lCardH = lCardW / lAspect;
-        const lGridW = lCols * lCardW + (lCols - 1) * lGap;
-        const lGridH = lRows * lCardH + (lRows - 1) * lGap;
-        const lsx = (width - lGridW) / 2;
-        const lsy = height * 0.22 + Math.max(0, (height * 0.5 - lGridH) / 2);
+        // Compact 6-Kaiju showcase strip along the lower band so Meka Dragon vs Gigazaur stays wide open!
+        const pGap = Math.max(8, Math.min(14, Math.round(width * 0.014)));
+        const pSize = Math.max(48, Math.min(72, Math.floor((width - 48 - pGap * 5) / 6)));
+        const stripW = pSize * 6 + pGap * 5;
+        const stripX = (width - stripW) / 2;
+        const stripY = Math.round(height * 0.62);
         KOT_MONSTER_IDS.forEach((mid, i) => {
-          const r = Math.floor(i / lCols);
-          const c = i % lCols;
-          const bob = Math.sin(now / 620 + i * 0.9) * 3;
-          drawKotMonsterBoard2D(
+          const bob = Math.sin(now / 620 + i * 0.9) * 2.5;
+          drawKotMonsterPortrait2D(
             ctx,
-            lsx + c * (lCardW + lGap),
-            lsy + r * (lCardH + lGap) + bob,
-            lCardW,
-            lCardH,
+            stripX + i * (pSize + pGap),
+            stripY + bob,
+            pSize,
             mid
           );
         });
 
         const count = Math.max(1, curLobby.length);
-        const pillW = Math.min(180, Math.floor((width - 48) / count) - 10);
+        const pillW = Math.min(200, Math.floor((width - 48) / count) - 10);
         const psx = width * 0.5 - ((pillW + 10) * curLobby.length - 10) / 2;
         curLobby.forEach((s, idx) => {
           const px = psx + idx * (pillW + 10);
-          const py = height * 0.79;
-          drawRoundedRect(ctx, px, py, pillW, 48, 12);
-          ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
+          const py = Math.round(height * 0.8);
+          drawRoundedRect(ctx, px, py, pillW, 50, 12);
+          ctx.fillStyle = "rgba(10, 15, 30, 0.88)";
           ctx.fill();
-          ctx.strokeStyle = s.seatNo === curViewer ? "#facc15" : "#475569";
-          ctx.lineWidth = s.seatNo === curViewer ? 2 : 1.2;
+          ctx.strokeStyle = s.seatNo === curViewer ? "#facc15" : "rgba(255, 255, 255, 0.25)";
+          ctx.lineWidth = s.seatNo === curViewer ? 2.2 : 1.2;
           ctx.stroke();
 
           ctx.fillStyle = "#f8fafc";
-          ctx.font = `800 12px ${fonts.sans}`;
+          ctx.font = `800 12.5px ${fonts.sans}`;
           ctx.fillText(s.displayName, px + pillW / 2, py + 18, pillW - 14);
           ctx.fillStyle = s.isBot ? "#38bdf8" : "#fde047";
-          ctx.font = `600 10px ${fonts.sans}`;
+          ctx.font = `700 10.5px ${fonts.sans}`;
           ctx.fillText(
             s.isBot ? "🤖 Kaiju Bot" : `Người chơi #${s.seatNo}`,
             px + pillW / 2,
-            py + 35
+            py + 36
           );
         });
       } else if (pv.step === "MonsterPickStep") {

@@ -22,6 +22,7 @@ export const KOT_HP_DIALS_ATLAS_URL = "/sprites/kot-duel-hp-dials-pixel.png";
 export const KOT_ENERGY_CUBE_URL = "/sprites/kot-duel-energy-cube-pixel.png";
 export const KOT_BUZZ_MEDALS_URL = "/sprites/kot-duel-buzz-medallions-pixel.png";
 export const KOT_BUZZ_TILES_URL = "/sprites/kot-duel-buzz-tiles-pixel.png";
+export const KOT_LOBBY_BG_URL = "/sprites/kot-duel-lobby-bg.webp";
 export const KOT_DICE_ATLAS_URL = "/sprites/kot-duel-dice-pixel.png";
 
 /** Grid coordinates (col 0..9, row 0..4, each 200x280 exact 5:7 Vietnamese localized card) in kot-duel-power-cards-vi.webp. */
@@ -564,6 +565,98 @@ export function drawKotBuzzTilePreview2D(
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(atlas, sx, sy, 192, 160, dx, dy, dw, dh);
+  ctx.restore();
+}
+
+let cachedLobbyBgImg: HTMLImageElement | null = null;
+let lobbyBgLoaded = false;
+const lobbyBgListeners = new Set<() => void>();
+
+export function getKotLobbyBgImage(
+  onLoad?: () => void
+): HTMLImageElement | null {
+  if (typeof window === "undefined") return null;
+  if (lobbyBgLoaded && cachedLobbyBgImg) return cachedLobbyBgImg;
+  if (onLoad) lobbyBgListeners.add(onLoad);
+  if (!cachedLobbyBgImg) {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      lobbyBgLoaded = true;
+      lobbyBgListeners.forEach((fn) => fn());
+      lobbyBgListeners.clear();
+    };
+    img.src = KOT_LOBBY_BG_URL;
+    cachedLobbyBgImg = img;
+  }
+  return lobbyBgLoaded ? cachedLobbyBgImg : null;
+}
+
+/**
+ * Draws the official 1920x1080 Meka Dragon vs Gigazaur Tokyo Clash cover artwork
+ * as a full-bleed aspect-preserving lobby background with subtle cinematic breathing
+ * zoom, floating embers, and top/bottom contrast scrims so UI overlays stay crisp.
+ */
+export function drawKotLobbyBackground2D(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  nowMs: number
+) {
+  const img = getKotLobbyBgImage();
+  if (!img) {
+    drawKotTokyoBackground2D(ctx, width, height, nowMs);
+    return;
+  }
+
+  ctx.save();
+  const imgAspect = img.naturalWidth / Math.max(1, img.naturalHeight);
+  const viewAspect = width / Math.max(1, height);
+
+  // Subtle cinematic breathing scale (1.01 .. 1.03)
+  const zoom = 1.02 + Math.sin(nowMs / 4600) * 0.01;
+  let drawW = width * zoom;
+  let drawH = drawW / imgAspect;
+  if (viewAspect < imgAspect) {
+    drawH = height * zoom;
+    drawW = drawH * imgAspect;
+  }
+  const dx = (width - drawW) / 2;
+  const dy = (height - drawH) / 2;
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(img, dx, dy, drawW, drawH);
+
+  // Soft top & bottom gradient scrims so title + seat cards pop cleanly while keeping center art vibrant!
+  const topScrim = ctx.createLinearGradient(0, 0, 0, height * 0.3);
+  topScrim.addColorStop(0, "rgba(6, 10, 22, 0.72)");
+  topScrim.addColorStop(1, "rgba(6, 10, 22, 0)");
+  ctx.fillStyle = topScrim;
+  ctx.fillRect(0, 0, width, height * 0.3);
+
+  const botScrim = ctx.createLinearGradient(0, height * 0.56, 0, height);
+  botScrim.addColorStop(0, "rgba(6, 10, 22, 0)");
+  botScrim.addColorStop(0.55, "rgba(6, 10, 22, 0.56)");
+  botScrim.addColorStop(1, "rgba(4, 7, 16, 0.88)");
+  ctx.fillStyle = botScrim;
+  ctx.fillRect(0, height * 0.56, width, height * 0.44);
+
+  // Subtle floating fiery embers drifting up from burning Tokyo
+  for (let i = 0; i < 18; i++) {
+    const t = ((nowMs * (0.018 + (i % 5) * 0.005) + i * 97) % (height + 40));
+    const ey = height + 20 - t;
+    const ex = ((i * 137.5 + Math.sin(nowMs / 900 + i) * 26) % width + width) % width;
+    const r = 1.2 + (i % 3) * 0.8;
+    const alpha = Math.max(0, Math.min(0.75, (ey / height) * 0.75));
+    ctx.fillStyle = i % 2 === 0
+      ? `rgba(253, 224, 71, ${alpha})`
+      : `rgba(251, 146, 60, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(ex, ey, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   ctx.restore();
 }
 
