@@ -13,13 +13,20 @@ export const KOT_BOARD_RECTS: Record<
   KotMonsterId,
   { sx: number; sy: number; sw: number; sh: number }
 > = {
-  gigazaur: { sx: 0, sy: 0, sw: 220, sh: 168 },
-  cyber_kitty: { sx: 220, sy: 0, sw: 220, sh: 168 },
-  the_king: { sx: 440, sy: 0, sw: 220, sh: 168 },
-  space_penguin: { sx: 660, sy: 0, sw: 220, sh: 168 },
-  meka_dragon: { sx: 880, sy: 0, sw: 220, sh: 168 },
-  alienoid: { sx: 1100, sy: 0, sw: 220, sh: 168 },
+  gigazaur: { sx: 0, sy: 0, sw: 440, sh: 336 },
+  cyber_kitty: { sx: 440, sy: 0, sw: 440, sh: 336 },
+  the_king: { sx: 880, sy: 0, sw: 440, sh: 336 },
+  space_penguin: { sx: 1320, sy: 0, sw: 440, sh: 336 },
+  meka_dragon: { sx: 1760, sy: 0, sw: 440, sh: 336 },
+  alienoid: { sx: 2200, sy: 0, sw: 440, sh: 336 },
 };
+
+/** Monsters whose board slot contains the 100% untouched original official card (including HP badge & nameplate). */
+export const OFFICIAL_FULL_BOARD_MONSTERS = new Set<KotMonsterId>([
+  "gigazaur",
+  "cyber_kitty",
+  "alienoid",
+]);
 
 export const KOT_MONSTER_RECTS: Record<
   KotMonsterId,
@@ -299,76 +306,85 @@ export function drawKotMonsterBoard2D(
     ctx.shadowOffsetY = 4;
   }
 
-  // Vintage cream-parchment outer comic card rim (matching official King of Tokyo: Duel monster boards!)
+  const isOfficialFullCard = OFFICIAL_FULL_BOARD_MONSTERS.has(monsterId);
+
+  // Outer card surface (for non-official pixel boards, add vintage cream comic border; official cards already have their own authentic border!)
   drawRoundedRect(ctx, x, y, w, h, radius);
   ctx.fillStyle = opts.selected ? "#fef08a" : "#f5ebd6";
   ctx.fill();
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
 
-  // Inner clipped full-body 16-bit Kaiju artwork
-  const pad = Math.max(3, Math.round(Math.min(w, h) * 0.028));
+  // Inner clipped artwork
+  const pad = isOfficialFullCard ? 0 : Math.max(3, Math.round(Math.min(w, h) * 0.028));
   const ix = x + pad;
   const iy = y + pad;
   const iw = w - pad * 2;
   const ih = h - pad * 2;
 
   ctx.save();
-  drawRoundedRect(ctx, ix, iy, iw, ih, Math.max(6, radius - 2));
+  drawRoundedRect(ctx, ix, iy, iw, ih, isOfficialFullCard ? radius : Math.max(6, radius - 2));
   ctx.clip();
 
   const boardAtlas = getKotBoardAtlas();
   if (boardAtlas) {
     const r = KOT_BOARD_RECTS[monsterId];
-    ctx.imageSmoothingEnabled = false;
+    if (isOfficialFullCard) {
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+    } else {
+      ctx.imageSmoothingEnabled = false;
+    }
     ctx.drawImage(boardAtlas, r.sx, r.sy, r.sw, r.sh, ix, iy, iw, ih);
   } else {
     drawKotMonsterPortrait2D(ctx, ix, iy, Math.min(iw, ih), monsterId, opts.selected);
   }
 
-  // Subtle dark gradient along bottom for crisp comic monster nameplate
-  const grad = ctx.createLinearGradient(0, iy + ih * 0.62, 0, iy + ih);
-  grad.addColorStop(0, "rgba(6, 10, 20, 0)");
-  grad.addColorStop(1, "rgba(6, 10, 20, 0.88)");
-  ctx.fillStyle = grad;
-  ctx.fillRect(ix, iy + ih * 0.6, iw, ih * 0.4);
+  if (!isOfficialFullCard) {
+    // Subtle dark gradient along bottom for crisp comic monster nameplate
+    const grad = ctx.createLinearGradient(0, iy + ih * 0.62, 0, iy + ih);
+    grad.addColorStop(0, "rgba(6, 10, 20, 0)");
+    grad.addColorStop(1, "rgba(6, 10, 20, 0.88)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(ix, iy + ih * 0.6, iw, ih * 0.4);
 
-  // Official-style bold comic HP badge top-right (e.g. "14 ♥")
-  const badgeW = Math.max(46, Math.round(w * 0.24));
-  const badgeH = Math.max(24, Math.round(h * 0.17));
-  drawRoundedRect(ctx, ix + iw - badgeW + 4, iy - 4, badgeW + 2, badgeH + 2, 10);
-  ctx.fillStyle = "#f5ebd6";
-  ctx.fill();
-  ctx.strokeStyle = "#1c1917";
-  ctx.lineWidth = 1.6;
-  ctx.stroke();
+    // Official-style bold comic HP badge top-right (e.g. "14 ♥")
+    const badgeW = Math.max(46, Math.round(w * 0.24));
+    const badgeH = Math.max(24, Math.round(h * 0.17));
+    drawRoundedRect(ctx, ix + iw - badgeW + 4, iy - 4, badgeW + 2, badgeH + 2, 10);
+    ctx.fillStyle = "#f5ebd6";
+    ctx.fill();
+    ctx.strokeStyle = "#1c1917";
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
 
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.font = `900 ${Math.max(12, Math.round(badgeH * 0.64))}px ${fonts.mono}`;
-  ctx.fillStyle = "#111827";
-  ctx.fillText(
-    `${meta.maxHp}`,
-    ix + iw - badgeW * 0.62,
-    iy + badgeH * 0.48
-  );
-  ctx.fillStyle = "#f43f5e";
-  ctx.font = `900 ${Math.max(12, Math.round(badgeH * 0.6))}px ${fonts.sans}`;
-  ctx.fillText("♥", ix + iw - badgeW * 0.24, iy + badgeH * 0.48);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `900 ${Math.max(12, Math.round(badgeH * 0.64))}px ${fonts.mono}`;
+    ctx.fillStyle = "#111827";
+    ctx.fillText(
+      `${meta.maxHp}`,
+      ix + iw - badgeW * 0.62,
+      iy + badgeH * 0.48
+    );
+    ctx.fillStyle = "#f43f5e";
+    ctx.font = `900 ${Math.max(12, Math.round(badgeH * 0.6))}px ${fonts.sans}`;
+    ctx.fillText("♥", ix + iw - badgeW * 0.24, iy + badgeH * 0.48);
 
-  // Bold Monster Nameplate bottom-left
-  ctx.textAlign = "left";
-  ctx.textBaseline = "bottom";
-  const namePx = Math.max(13, Math.min(20, Math.round(w * 0.088)));
-  ctx.font = `900 ${namePx}px ${fonts.sans}`;
-  ctx.lineJoin = "round";
-  ctx.lineWidth = 3.5;
-  ctx.strokeStyle = "#090d16";
-  const nx = ix + 10;
-  const ny = iy + ih - 8;
-  ctx.strokeText(meta.name.toUpperCase(), nx, ny, iw - 20);
-  ctx.fillStyle = meta.accentColor;
-  ctx.fillText(meta.name.toUpperCase(), nx, ny, iw - 20);
+    // Bold Monster Nameplate bottom-left
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    const namePx = Math.max(13, Math.min(20, Math.round(w * 0.088)));
+    ctx.font = `900 ${namePx}px ${fonts.sans}`;
+    ctx.lineJoin = "round";
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = "#090d16";
+    const nx = ix + 10;
+    const ny = iy + ih - 8;
+    ctx.strokeText(meta.name.toUpperCase(), nx, ny, iw - 20);
+    ctx.fillStyle = meta.accentColor;
+    ctx.fillText(meta.name.toUpperCase(), nx, ny, iw - 20);
+  }
 
   // Taken dim stamp if already picked by opponent
   if (opts.takenBy) {
