@@ -680,7 +680,7 @@ function RoomPageContent({
                     <div className="rounded-2xl border border-amber-400/45 bg-slate-950/82 backdrop-blur-md p-3.5 shadow-2xl space-y-2.5">
                       <div className="flex items-center justify-between border-b border-slate-700/50 pb-2">
                         <span className="text-xs font-extrabold uppercase tracking-wider text-amber-300">
-                          👥 Danh Sách Người Chơi
+                          Danh Sách Người Chơi
                         </span>
                         <span
                           className={`rounded-full px-2.5 py-0.5 text-[11px] font-extrabold font-mono border ${
@@ -706,7 +706,7 @@ function RoomPageContent({
                                   #{slotIdx + 1}
                                 </span>
                                 <span className="italic">
-                                  ⏳ Đang chờ đối thủ vào phòng (hoặc thêm Bot)...
+                                  Đang chờ đối thủ vào phòng (hoặc thêm Bot)...
                                 </span>
                               </div>
                             );
@@ -750,11 +750,11 @@ function RoomPageContent({
                                     </span>
                                     {isRoomHost ? (
                                       <span className="shrink-0 rounded bg-amber-500/20 border border-amber-400/45 px-1.5 py-0.5 text-[9px] font-bold text-amber-300">
-                                        👑 Chủ
+                                        Chủ phòng
                                       </span>
                                     ) : seat.isBot ? (
                                       <span className="shrink-0 rounded bg-sky-500/20 border border-sky-400/40 px-1.5 py-0.5 text-[9px] font-bold text-sky-300">
-                                        🤖 Bot
+                                        Bot
                                       </span>
                                     ) : (
                                       <span
@@ -790,11 +790,11 @@ function RoomPageContent({
                                       : "border border-rose-500/50 bg-rose-500/20 hover:bg-rose-500/35 text-rose-200"
                                   }`}
                                 >
-                                  {seat.isBot ? "✕ Xóa Bot" : "🚫 Kick"}
+                                  {seat.isBot ? "Xóa Bot" : "Kick"}
                                 </button>
                               ) : (
                                 <span className="shrink-0 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
-                                  ● Sẵn sàng
+                                  Sẵn sàng
                                 </span>
                               )}
                             </div>
@@ -830,12 +830,12 @@ function RoomPageContent({
                         onClick={() => sendRoomAction({ type: "JOIN" })}
                         className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-3 text-xs font-black text-slate-950 shadow-xl transition cursor-pointer disabled:opacity-40"
                       >
-                        🪑 Ngồi Vào Bàn
+                        Ngồi Vào Bàn
                       </button>
                     ) : (
                       <div className="flex items-center justify-between gap-2.5 rounded-xl border border-slate-700/60 bg-slate-950/80 backdrop-blur-md px-3.5 py-2.5 shadow-xl">
                         <span className="text-xs font-medium text-slate-300 italic">
-                          ⏳ Đang chờ Chủ phòng bắt đầu game...
+                          Đang chờ Chủ phòng bắt đầu game...
                         </span>
                         <button
                           type="button"
@@ -843,7 +843,7 @@ function RoomPageContent({
                           onClick={() => sendRoomAction({ type: "LEAVE" })}
                           className="shrink-0 rounded-lg border border-slate-600 bg-slate-800/90 hover:bg-slate-700 px-3 py-1.5 text-[11px] font-bold text-slate-200 transition cursor-pointer disabled:opacity-40"
                         >
-                          🚪 Rời Bàn
+                          Rời Bàn
                         </button>
                       </div>
                     )}
@@ -854,7 +854,7 @@ function RoomPageContent({
                 <div className="absolute inset-x-0 bottom-20 z-20 flex justify-center pointer-events-none px-4">
                   <div className="pointer-events-auto max-w-md w-full rounded-2xl border border-amber-400/60 bg-slate-950/92 backdrop-blur-md p-4 shadow-2xl text-center space-y-2.5">
                     <div className="text-xs font-extrabold uppercase tracking-wider text-amber-400">
-                      👑 VUA TOKYO MỚI!
+                      VUA TOKYO MỚI
                     </div>
                     <p className="text-sm font-bold text-slate-100 leading-snug">
                       {kotView.winReasonVi}
@@ -866,7 +866,7 @@ function RoomPageContent({
                         onClick={() => sendRoomAction({ type: "REMATCH" })}
                         className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-4 py-2.5 text-xs font-extrabold text-slate-950 shadow-lg transition cursor-pointer disabled:opacity-40"
                       >
-                        🔁 Chơi Ván Mới (Về Sảnh)
+                        Chơi Ván Mới (Về Sảnh)
                       </button>
                     )}
                   </div>
@@ -1219,7 +1219,7 @@ function RoomPageContent({
                     {myMonster && (
                       <div className="rounded-lg bg-slate-900/90 border border-slate-800 px-2.5 py-1.5 text-[10.5px] text-slate-300 leading-snug">
                         <span className="font-bold text-amber-300">
-                          {myMonster.emoji} {myMonster.powerNameVi}:
+                          {myMonster.powerNameVi}:
                         </span>{" "}
                         {renderKotRichText(myMonster.powerDescVi)}
                       </div>
@@ -4421,7 +4421,8 @@ function RoomPageContent({
 
                   <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-2">
                     <p className="font-bold text-amber-300 text-xs">
-                      3. 6 Quái Vật Kaiju & Kỹ Năng Độc Quyền (Kích hoạt bằng ❗)
+                      3. 6 Quái Vật Kaiju & Kỹ Năng Độc Quyền (Kích hoạt bằng{" "}
+                      {renderKotRichText("[!]")})
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {KOT_MONSTER_IDS.map((mid) => {
@@ -4432,7 +4433,7 @@ function RoomPageContent({
                             className="rounded-lg border border-slate-800 bg-slate-900/80 p-2 space-y-0.5"
                           >
                             <p className="font-bold text-slate-100">
-                              {m.emoji} {m.name}{" "}
+                              {m.name}{" "}
                               <span className="text-[10px] text-emerald-300 font-mono">
                                 ({m.maxHp} HP)
                               </span>

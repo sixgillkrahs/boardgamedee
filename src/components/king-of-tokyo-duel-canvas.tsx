@@ -197,7 +197,7 @@ export function KingOfTokyoDuelCanvas({
           });
         }
         bannersRef.current.push({
-          text: `🐾 -${anim.damage} HP!`,
+          text: `-${anim.damage} HP`,
           color: "#fca5a5",
           x: midX,
           y: targetY,
@@ -220,7 +220,7 @@ export function KingOfTokyoDuelCanvas({
           });
         }
         bannersRef.current.push({
-          text: `❤️ +${anim.heal} HP`,
+          text: `+${anim.heal} HP`,
           color: "#6ee7b7",
           x: midX - 95,
           y: actorY - 10,
@@ -243,7 +243,7 @@ export function KingOfTokyoDuelCanvas({
           });
         }
         bannersRef.current.push({
-          text: `⚡ +${anim.energyGain}`,
+          text: `+${anim.energyGain} NL`,
           color: "#bef264",
           x: midX + 95,
           y: actorY - 10,
@@ -381,8 +381,8 @@ export function KingOfTokyoDuelCanvas({
         ctx.font = `900 ${Math.min(20, Math.round(width * 0.03))}px ${fonts.sans}`;
         ctx.fillText(
           isMyPick
-            ? "🦖 CHỌN QUÁI VẬT KAIJU CỦA BẠN!"
-            : `⏳ Đang chờ ${activeSeat?.displayName ?? "..."} chọn Quái Vật...`,
+            ? "CHỌN QUÁI VẬT KAIJU CỦA BẠN"
+            : `Đang chờ ${activeSeat?.displayName ?? "..."} chọn Quái Vật...`,
           width * 0.5,
           24
         );
@@ -436,7 +436,7 @@ export function KingOfTokyoDuelCanvas({
         ctx.textBaseline = "middle";
         ctx.fillStyle = selMeta.accentColor;
         ctx.font = `800 13px ${fonts.sans}`;
-        ctx.fillText(`${selMeta.emoji} ${selMeta.titleVi}`, leftX + innerPad, curY, innerW - 76);
+        ctx.fillText(selMeta.titleVi, leftX + innerPad, curY, innerW - 76);
 
         // HP pill on right of subtitle row
         const hpPillW = 70;
@@ -571,7 +571,7 @@ export function KingOfTokyoDuelCanvas({
           ctx.fillStyle = "#0f172a";
           ctx.font = `900 13px ${fonts.sans}`;
           ctx.fillText(
-            `🦖 CHỌN ${selMeta.name.toUpperCase()}!`,
+            `CHỌN ${selMeta.name.toUpperCase()}`,
             leftX + leftW / 2,
             btnY + btnH / 2 + 0.5,
             innerW - 14
@@ -588,8 +588,8 @@ export function KingOfTokyoDuelCanvas({
           ctx.font = `800 12px ${fonts.sans}`;
           ctx.fillText(
             selTakenBy
-              ? `✓ ĐÃ CHỌN: ${selTakenBy}`
-              : `⏳ Đang chờ ${activeSeat?.displayName ?? "..."}`,
+              ? `ĐÃ CHỌN: ${selTakenBy}`
+              : `Đang chờ ${activeSeat?.displayName ?? "..."}`,
             leftX + leftW / 2,
             btnY + btnH / 2 + 0.5,
             innerW - 14
@@ -942,7 +942,7 @@ export function KingOfTokyoDuelCanvas({
             ctx.fillStyle = "#6ee7b7";
             ctx.font = `900 12px ${fonts.sans}`;
             ctx.fillText(
-              `🎯 ${isMoving ? "DI CHUYỂN" : "ĐẶT"} BUZZ ${bDef.nameVi.toUpperCase()} (${bDef.span} Ô)`,
+              `${isMoving ? "DI CHUYỂN" : "ĐẶT"} BUZZ ${bDef.nameVi.toUpperCase()} (${bDef.span} Ô)`,
               contentStartX + 60,
               topBarY + 15,
               actionsW - 140
@@ -1050,7 +1050,7 @@ export function KingOfTokyoDuelCanvas({
                 ctx.fillStyle = "#1c1917";
                 ctx.font = `900 10.5px ${fonts.sans}`;
                 ctx.fillText(
-                  `+1 🎲 Trắng (${mySeat.bonusDiceNextTurn})`,
+                  `+1 Trắng (${mySeat.bonusDiceNextTurn})`,
                   cursorX + wTok / 2,
                   actBtnY + actBtnH / 2 + 0.5
                 );
@@ -1077,7 +1077,7 @@ export function KingOfTokyoDuelCanvas({
                 ctx.textBaseline = "middle";
                 ctx.fillStyle = "#ffffff";
                 ctx.font = `900 11px ${fonts.sans}`;
-                ctx.fillText(`🎲 Tung lại (${pv.rollsLeft})`, cursorX + w1 / 2, actBtnY + actBtnH / 2 + 0.5);
+                ctx.fillText(`Tung lại (${pv.rollsLeft})`, cursorX + w1 / 2, actBtnY + actBtnH / 2 + 0.5);
               }
               const resX = canReroll ? cursorX + w1 + 8 : cursorX;
               const resW = canReroll ? w2 : w1 + w2 + 8;
@@ -1100,7 +1100,7 @@ export function KingOfTokyoDuelCanvas({
               ctx.textBaseline = "middle";
               ctx.fillStyle = "#0f172a";
               ctx.font = `900 11px ${fonts.sans}`;
-              ctx.fillText("✅ Chốt xúc xắc", resX + resW / 2, actBtnY + actBtnH / 2 + 0.5);
+              ctx.fillText("Chốt xúc xắc", resX + resW / 2, actBtnY + actBtnH / 2 + 0.5);
             } else if (isMyTurn && pv.step === "BuyCardsStep") {
               const w1 = 114;
               const w2 = 114;
@@ -1133,7 +1133,7 @@ export function KingOfTokyoDuelCanvas({
               ctx.textBaseline = "middle";
               ctx.fillStyle = canFlush ? "#bae6fd" : "#64748b";
               ctx.font = `800 10.5px ${fonts.sans}`;
-              ctx.fillText("🔄 Đổi 3 thẻ (-2⚡)", actX + w1 / 2, actBtnY + actBtnH / 2 + 0.5);
+              ctx.fillText("Đổi 3 thẻ (-2 NL)", actX + w1 / 2, actBtnY + actBtnH / 2 + 0.5);
 
               const endX = actX + w1 + 8;
               const endId = "kot-btn-end";
@@ -1153,7 +1153,7 @@ export function KingOfTokyoDuelCanvas({
               ctx.fill();
               ctx.fillStyle = "#022c22";
               ctx.font = `900 11px ${fonts.sans}`;
-              ctx.fillText("⏭ Xong lượt", endX + w2 / 2, actBtnY + actBtnH / 2 + 0.5);
+              ctx.fillText("Xong lượt", endX + w2 / 2, actBtnY + actBtnH / 2 + 0.5);
             } else {
               ctx.textAlign = "center";
               ctx.textBaseline = "middle";
@@ -1161,10 +1161,10 @@ export function KingOfTokyoDuelCanvas({
               ctx.font = `800 11.5px ${fonts.sans}`;
               ctx.fillText(
                 pv.step === "Finished"
-                  ? "👑 TRẬN ĐẤU KẾT THÚC"
+                  ? "TRẬN ĐẤU KẾT THÚC"
                   : pv.step === "PlaceBuzzStep"
-                    ? `🎯 ${oppSeat.displayName} đang đặt Token Buzz...`
-                    : `⏳ Lượt của ${oppSeat.displayName}...`,
+                    ? `${oppSeat.displayName} đang đặt Token Buzz...`
+                    : `Lượt của ${oppSeat.displayName}...`,
                 actX + actionsW / 2,
                 topBarY + topBarH / 2 + 0.5,
                 actionsW
@@ -1313,8 +1313,8 @@ export function KingOfTokyoDuelCanvas({
               ctx.font = `800 9.5px ${fonts.sans}`;
               ctx.fillText(
                 seat.keepCards.length > 0
-                  ? `🃏 THẺ ĐANG GIỮ (${seat.keepCards.length})`
-                  : `${meta.emoji} ${meta.powerNameVi}`,
+                  ? `THẺ ĐANG GIỮ (${seat.keepCards.length})`
+                  : meta.powerNameVi,
                 colX + 12,
                 curRowY + 6,
                 sideW - 24
@@ -1500,19 +1500,19 @@ export function KingOfTokyoDuelCanvas({
 
             if (hov) {
               const buzzTag = card.buzzTileId
-                ? ` • 🎯 Buzz ${KOT_BUZZ_TILE_DEFS[card.buzzTileId].nameVi}`
+                ? ` • Buzz ${KOT_BUZZ_TILE_DEFS[card.buzzTileId].nameVi}`
                 : "";
               zoomedCardInfo = {
                 card,
                 effCost,
                 canBuy,
                 statusText: canBuy
-                  ? `✨ BẤM MUA NGAY!${buzzTag}`
+                  ? `BẤM MUA NGAY${buzzTag}`
                   : pv.step === "PlaceBuzzStep"
                     ? "Hãy đặt Token Buzz trên bàn trước!"
                     : pv.step !== "BuyCardsStep"
                       ? `Chốt xúc xắc để mua${buzzTag}`
-                      : `Thiếu ${Math.max(0, effCost - mySeat.energy)} ⚡${buzzTag}`,
+                      : `Thiếu ${Math.max(0, effCost - mySeat.energy)} năng lượng${buzzTag}`,
                 anchorX: cx + mCardW / 2,
                 anchorY: cy + mCardH + 14,
               };
@@ -1708,7 +1708,7 @@ export function KingOfTokyoDuelCanvas({
                 ctx.textBaseline = "middle";
                 ctx.fillStyle = "#ffffff";
                 ctx.font = `900 10px ${fonts.sans}`;
-                ctx.fillText(`🎲 Tung lại (${pv.rollsLeft})`, bx0 + rerollW / 2, btnY + btnH / 2);
+                ctx.fillText(`Tung lại (${pv.rollsLeft})`, bx0 + rerollW / 2, btnY + btnH / 2);
               }
               const resX = canReroll ? bx0 + rerollW + gapB : bx0;
               const resId = "kot-btn-resolve";
@@ -1721,7 +1721,7 @@ export function KingOfTokyoDuelCanvas({
               ctx.textBaseline = "middle";
               ctx.fillStyle = "#0f172a";
               ctx.font = `900 10px ${fonts.sans}`;
-              ctx.fillText("✅ Chốt xúc xắc", resX + resolveW / 2, btnY + btnH / 2);
+              ctx.fillText("Chốt xúc xắc", resX + resolveW / 2, btnY + btnH / 2);
             } else if (pv.step === "BuyCardsStep") {
               const endW = 160;
               const ex = width * 0.5 - endW / 2;
@@ -1735,7 +1735,7 @@ export function KingOfTokyoDuelCanvas({
               ctx.textBaseline = "middle";
               ctx.fillStyle = "#022c22";
               ctx.font = `900 10px ${fonts.sans}`;
-              ctx.fillText("⏭ Xong lượt", ex + endW / 2, btnY + btnH / 2);
+              ctx.fillText("Xong lượt", ex + endW / 2, btnY + btnH / 2);
             }
           }
         }
