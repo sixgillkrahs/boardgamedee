@@ -25,6 +25,7 @@ export const KOT_BOARD_RECTS: Record<
 export const OFFICIAL_FULL_BOARD_MONSTERS = new Set<KotMonsterId>([
   "gigazaur",
   "cyber_kitty",
+  "meka_dragon",
   "alienoid",
 ]);
 
