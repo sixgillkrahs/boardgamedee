@@ -11,6 +11,7 @@ import {
 import {
   drawKotDeckBack2D,
   drawKotDie2D,
+  drawKotEnergyStash2D,
   drawKotGameBoard2D,
   drawKotHealthDial2D,
   drawKotIcon2D,
@@ -21,6 +22,7 @@ import {
   getKotBoardAtlas,
   getKotCardBackImage,
   getKotDiceAtlas,
+  getKotEnergyCubeImage,
   getKotGameBoardImage,
   getKotHpDialsAtlas,
   getKotIconsAtlas,
@@ -262,6 +264,7 @@ export function KingOfTokyoDuelCanvas({
     getKotPowerCardsAtlas();
     getKotCardBackImage();
     getKotHpDialsAtlas();
+    getKotEnergyCubeImage();
     getKotDiceAtlas();
 
     const canvas = canvasRef.current;
@@ -1122,24 +1125,12 @@ export function KingOfTokyoDuelCanvas({
               isViewer ? (smoothMyHpRef.current ?? seat.hp) : (smoothOppHpRef.current ?? seat.hp)
             );
 
-            // Glowing Energy Box on the right half next to Health Dial
-            const enBoxX = colX + Math.round(sideW * 0.62);
-            const enBoxW = sideW - Math.round(sideW * 0.62) - 10;
-            const enBoxH = Math.round(dialR * 1.55);
+            // Tabletop Translucent Green Energy Cubes Stash on the right half next to Health Dial!
+            const enBoxX = colX + Math.round(sideW * 0.59);
+            const enBoxW = sideW - Math.round(sideW * 0.59) - 8;
+            const enBoxH = Math.round(dialR * 1.85);
             const enBoxY = dialY - enBoxH / 2;
-            drawRoundedRect(ctx, enBoxX, enBoxY, enBoxW, enBoxH, 12);
-            ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
-            ctx.fill();
-            ctx.strokeStyle = "rgba(163, 230, 53, 0.45)";
-            ctx.lineWidth = 1.4;
-            ctx.stroke();
-
-            drawKotIcon2D(ctx, enBoxX + enBoxW / 2, enBoxY + enBoxH * 0.34, 24, "energy");
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillStyle = "#bef264";
-            ctx.font = `900 17px ${fonts.mono}`;
-            ctx.fillText(`${seat.energy}`, enBoxX + enBoxW / 2, enBoxY + enBoxH * 0.74);
+            drawKotEnergyStash2D(ctx, enBoxX, enBoxY, enBoxW, enBoxH, seat.energy);
 
             // Bonus dice next turn badge if any
             let curRowY = dialY + dialR + 14;

@@ -15,6 +15,7 @@ export const KOT_ICONS_ATLAS_URL = "/sprites/kot-duel-icons-pixel.png";
 export const KOT_POWER_CARDS_ATLAS_URL = "/sprites/kot-duel-power-cards-vi.webp";
 export const KOT_CARD_BACK_URL = "/sprites/kot-duel-card-back-pixel.png";
 export const KOT_HP_DIALS_ATLAS_URL = "/sprites/kot-duel-hp-dials-pixel.png";
+export const KOT_ENERGY_CUBE_URL = "/sprites/kot-duel-energy-cube-pixel.png";
 export const KOT_DICE_ATLAS_URL = "/sprites/kot-duel-dice-pixel.png";
 
 /** Grid coordinates (col 0..9, row 0..4, each 200x280 exact 5:7 Vietnamese localized card) in kot-duel-power-cards-vi.webp. */
@@ -606,6 +607,121 @@ export function drawKotHealthDial2D(
     ctx.fillStyle = "#ffffff";
     ctx.font = `900 ${Math.round(radius * 0.55)}px ${fonts.mono}`;
     ctx.fillText(`${hp}/${maxHp}`, cx, cy);
+  }
+
+  ctx.restore();
+}
+
+let cachedEnergyCubeImg: HTMLImageElement | null = null;
+let energyCubeLoaded = false;
+const energyCubeListeners = new Set<() => void>();
+
+export function getKotEnergyCubeImage(onLoad?: () => void): HTMLImageElement | null {
+  if (typeof window === "undefined") return null;
+  if (energyCubeLoaded && cachedEnergyCubeImg) return cachedEnergyCubeImg;
+  if (onLoad) energyCubeListeners.add(onLoad);
+  if (!cachedEnergyCubeImg) {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      energyCubeLoaded = true;
+      energyCubeListeners.forEach((fn) => fn());
+      energyCubeListeners.clear();
+    };
+    img.src = KOT_ENERGY_CUBE_URL;
+    cachedEnergyCubeImg = img;
+  }
+  return energyCubeLoaded ? cachedEnergyCubeImg : null;
+}
+
+/**
+ * Draws a single 16-bit translucent emerald-green Energy Cube centered at `(cx, cy)`.
+ */
+export function drawKotEnergyCube2D(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  size: number
+) {
+  const img = getKotEnergyCubeImage();
+  if (!img) return;
+  ctx.save();
+  ctx.shadowColor = "rgba(132, 204, 22, 0.55)";
+  ctx.shadowBlur = 6;
+  ctx.imageSmoothingEnabled = size < 24;
+  if (ctx.imageSmoothingEnabled) ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(
+    img,
+    Math.round(cx - size / 2),
+    Math.round(cy - size / 2),
+    size,
+    size
+  );
+  ctx.restore();
+}
+
+/**
+ * Draws a player's tabletop Energy Stash inside `(x, y, w, h)`:
+ * physical stacked translucent green 16-bit Energy Cubes + crisp `×N` badge!
+ */
+export function drawKotEnergyStash2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  energy: number
+) {
+  ctx.save();
+  const fonts = getCanvasFontFamilies();
+  drawRoundedRect(ctx, x, y, w, h, 12);
+  ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
+  ctx.fill();
+  ctx.strokeStyle =
+    energy > 0 ? "rgba(163, 230, 53, 0.55)" : "rgba(100, 116, 139, 0.35)";
+  ctx.lineWidth = energy > 0 ? 1.5 : 1.1;
+  ctx.stroke();
+
+  if (energy <= 0) {
+    ctx.globalAlpha = 0.35;
+    drawKotEnergyCube2D(ctx, x + w / 2, y + h * 0.38, Math.min(28, Math.round(w * 0.42)));
+    ctx.globalAlpha = 1;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#64748b";
+    ctx.font = `900 14px ${fonts.mono}`;
+    ctx.fillText("0", x + w / 2, y + h * 0.78);
+  } else {
+    // Draw a neat tabletop pile of physical green Energy Cubes (up to 6 visible cubes!)
+    const shown = Math.min(6, energy);
+    const cubeSz = Math.max(15, Math.min(24, Math.round(w * (shown <= 2 ? 0.38 : 0.28))));
+    const topZoneH = h * 0.62;
+    const cols = shown <= 2 ? shown : 3;
+    const rows = Math.ceil(shown / cols);
+    const stepX = cubeSz * 0.88;
+    const stepY = cubeSz * 0.72;
+    const gridH = (rows - 1) * stepY + cubeSz;
+    const startY = y + 4 + Math.max(0, (topZoneH - gridH) / 2) + cubeSz / 2;
+
+    for (let i = 0; i < shown; i++) {
+      const r = Math.floor(i / cols);
+      const c = i % cols;
+      const itemsInRow = Math.min(cols, shown - r * cols);
+      const rowW = (itemsInRow - 1) * stepX;
+      const cx = x + w / 2 - rowW / 2 + c * stepX;
+      const cy = startY + r * stepY;
+      drawKotEnergyCube2D(ctx, cx, cy, cubeSz);
+    }
+
+    // Bottom crisp count badge (`×N`) with tiny lime lightning bolt
+    const lblY = y + h * 0.81;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#bef264";
+    ctx.font = `900 14px ${fonts.mono}`;
+    ctx.fillText(`×${energy}`, x + w / 2 + 6, lblY);
+    const tw = ctx.measureText(`×${energy}`).width;
+    drawKotIcon2D(ctx, x + w / 2 - tw / 2 - 2, lblY, 13, "energy");
   }
 
   ctx.restore();
