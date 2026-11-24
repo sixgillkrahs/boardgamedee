@@ -1,12 +1,15 @@
 import { drawRoundedRect, getCanvasFontFamilies } from "@/canvas/engine";
 import {
   KOT_MONSTERS,
+  KOT_WIN_TRACK_POS,
+  type KotBuzzKind,
   type KotDieFace,
   type KotMonsterId,
 } from "@/cartridges/king-of-tokyo-duel";
 
 export const KOT_MONSTER_ATLAS_URL = "/sprites/kot-duel-monsters-pixel.png";
 export const KOT_BOARD_ATLAS_URL = "/sprites/kot-duel-boards-pixel.png";
+export const KOT_GAME_BOARD_URL = "/sprites/kot-duel-board-map-pixel.png";
 export const KOT_DICE_ATLAS_URL = "/sprites/kot-duel-dice-pixel.png";
 
 export const KOT_BOARD_RECTS: Record<
@@ -97,6 +100,28 @@ export function getKotBoardAtlas(onLoad?: () => void): HTMLImageElement | null {
     cachedBoardImg = img;
   }
   return boardLoaded ? cachedBoardImg : null;
+}
+
+let cachedGameBoardImg: HTMLImageElement | null = null;
+let gameBoardLoaded = false;
+const gameBoardListeners = new Set<() => void>();
+
+export function getKotGameBoardImage(onLoad?: () => void): HTMLImageElement | null {
+  if (typeof window === "undefined") return null;
+  if (gameBoardLoaded && cachedGameBoardImg) return cachedGameBoardImg;
+  if (onLoad) gameBoardListeners.add(onLoad);
+  if (!cachedGameBoardImg) {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      gameBoardLoaded = true;
+      gameBoardListeners.forEach((fn) => fn());
+      gameBoardListeners.clear();
+    };
+    img.src = KOT_GAME_BOARD_URL;
+    cachedGameBoardImg = img;
+  }
+  return gameBoardLoaded ? cachedGameBoardImg : null;
 }
 
 let cachedDiceImg: HTMLImageElement | null = null;
@@ -486,5 +511,234 @@ export function drawKotDie2D(
     ctx.fillText("🔒", bx, by + 0.5);
   }
 
+  ctx.restore();
+}
+
+// Exact normalized coordinates of the 15 zigzag circular spaces (-7..0..+7) on the 512x325 16-bit Tokyo board!
+const BOARD_STEP_NX = [256, 288, 320, 353, 385, 417, 450, 483].map((v) => v / 512);
+const BOARD_FAME_NY = [112, 85, 112, 85, 112, 85, 112, 85].map((v) => v / 325);
+const BOARD_DEST_NY = [217, 243, 217, 243, 217, 243, 217, 243].map((v) => v / 325);
+
+function getDiscreteTrackNorm(
+  track: "fame" | "destruction",
+  step: number
+): { nx: number; ny: number } {
+  const clamped = Math.max(-KOT_WIN_TRACK_POS, Math.min(KOT_WIN_TRACK_POS, step));
+  const abs = Math.abs(clamped);
+  const dx = BOARD_STEP_NX[abs] - 0.5;
+  const nx = clamped >= 0 ? 0.5 + dx : 0.5 - dx;
+  const ny = track === "fame" ? BOARD_FAME_NY[abs] : BOARD_DEST_NY[abs];
+  return { nx, ny };
+}
+
+/**
+ * Returns the exact normalized `(nx, ny)` board coordinate along the official zigzag track,
+ * smoothly interpolating along segments for continuous animated positions!
+ */
+export function getKotTrackNodeNorm(
+  track: "fame" | "destruction",
+  orientedPos: number
+): { nx: number; ny: number } {
+  const clamped = Math.max(
+    -KOT_WIN_TRACK_POS,
+    Math.min(KOT_WIN_TRACK_POS, orientedPos)
+  );
+  const lo = Math.floor(clamped);
+  const hi = Math.ceil(clamped);
+  if (lo === hi) return getDiscreteTrackNorm(track, lo);
+  const t = clamped - lo;
+  const a = getDiscreteTrackNorm(track, lo);
+  const b = getDiscreteTrackNorm(track, hi);
+  return {
+    nx: a.nx + (b.nx - a.nx) * t,
+    ny: a.ny + (b.ny - a.ny) * t,
+  };
+}
+
+const BUZZ_SHORT_LABEL: Record<KotBuzzKind, string> = {
+  ENERGY_2: "+2⚡",
+  HEAL_2: "+2❤️",
+  DMG_1: "1🐾",
+  BONUS_DIE: "+1🎲",
+  PULL_1: "+1➡",
+};
+
+/**
+ * Draws the detailed 2D 16-bit Pixel Art Tokyo Duel Game Board with live zigzag Buzz Tokens
+ * and smoothly gliding Fame (⭐) & Destruction (🏢) markers!
+ */
+export function drawKotGameBoard2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  opts: {
+    nowMs: number;
+    smoothFame: number;
+    smoothDest: number;
+    buzzTokens: Array<{
+      id: string;
+      track: "fame" | "destruction";
+      orientedPos: number;
+      kind: KotBuzzKind;
+    }>;
+  }
+) {
+  ctx.save();
+  const radius = Math.max(10, Math.round(Math.min(w, h) * 0.036));
+  const fonts = getCanvasFontFamilies();
+
+  ctx.shadowColor = "rgba(0, 0, 0, 0.65)";
+  ctx.shadowBlur = 18;
+  ctx.shadowOffsetY = 5;
+  drawRoundedRect(ctx, x, y, w, h, radius);
+  ctx.fillStyle = "#0b1120";
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+
+  ctx.save();
+  drawRoundedRect(ctx, x, y, w, h, radius);
+  ctx.clip();
+
+  const boardImg = getKotGameBoardImage();
+  if (boardImg) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(boardImg, x, y, w, h);
+  } else {
+    ctx.fillStyle = "#111827";
+    ctx.fillRect(x, y, w, h);
+  }
+
+  // Orientation pills (LEFT = Opponent Win | RIGHT = YOUR Win)
+  const pillH = Math.max(18, Math.round(h * 0.068));
+  const pillFont = Math.max(9, Math.min(11, Math.round(h * 0.033)));
+
+  const leftPillW = Math.max(82, Math.round(w * 0.165));
+  drawRoundedRect(ctx, x + 8, y + h - pillH - 8, leftPillW, pillH, 999);
+  ctx.fillStyle = "rgba(15, 23, 42, 0.86)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(248, 113, 113, 0.85)";
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#fca5a5";
+  ctx.font = `900 ${pillFont}px ${fonts.sans}`;
+  ctx.fillText("◀ ĐỐI THỦ", x + 8 + leftPillW / 2, y + h - pillH / 2 - 7.5);
+
+  const rightPillW = Math.max(90, Math.round(w * 0.18));
+  drawRoundedRect(ctx, x + w - rightPillW - 8, y + h - pillH - 8, rightPillW, pillH, 999);
+  ctx.fillStyle = "rgba(15, 23, 42, 0.86)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(52, 211, 153, 0.9)";
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  ctx.fillStyle = "#6ee7b7";
+  ctx.fillText("BẠN THẮNG ▶", x + w - rightPillW / 2 - 8, y + h - pillH / 2 - 7.5);
+
+  // Live Buzz Tokens sitting inside their exact zigzag track circles!
+  const tokenR = Math.max(10, Math.min(18, Math.round(w * 0.0255)));
+  const pulse = 0.5 + 0.5 * Math.sin(opts.nowMs / 340);
+
+  for (const bz of opts.buzzTokens) {
+    const pt = getKotTrackNodeNorm(bz.track, bz.orientedPos);
+    const bx = x + pt.nx * w;
+    const by = y + pt.ny * h;
+
+    ctx.save();
+    ctx.shadowColor = "rgba(250, 204, 21, 0.8)";
+    ctx.shadowBlur = 6 + pulse * 5;
+    ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
+    ctx.beginPath();
+    ctx.arc(bx, by, tokenR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#fde047";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#fef08a";
+    ctx.font = `900 ${Math.max(8, Math.round(tokenR * 0.68))}px ${fonts.sans}`;
+    ctx.fillText(BUZZ_SHORT_LABEL[bz.kind], bx, by + 0.5);
+    ctx.restore();
+  }
+
+  // 3D embossed arcade puck markers (⭐ Fame / 🏢 Destruction)
+  const drawTrackPuck = (
+    track: "fame" | "destruction",
+    smoothPos: number,
+    emoji: string,
+    fillCore: string,
+    rimColor: string,
+    glowColor: string
+  ) => {
+    const pt = getKotTrackNodeNorm(track, smoothPos);
+    const mx = x + pt.nx * w;
+    const my = y + pt.ny * h;
+    const puckR = Math.max(12, Math.min(22, Math.round(w * 0.031)));
+
+    ctx.save();
+    ctx.fillStyle = "rgba(2, 6, 23, 0.72)";
+    ctx.beginPath();
+    ctx.arc(mx, my + 4, puckR, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowColor = glowColor;
+    ctx.shadowBlur = 14 + pulse * 6;
+
+    const g = ctx.createRadialGradient(
+      mx - puckR * 0.3,
+      my - puckR * 0.35,
+      puckR * 0.15,
+      mx,
+      my,
+      puckR
+    );
+    g.addColorStop(0, "#ffffff");
+    g.addColorStop(0.28, fillCore);
+    g.addColorStop(1, "#0f172a");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(mx, my, puckR, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = rimColor;
+    ctx.lineWidth = 2.6;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(mx, my, puckR - 3, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `900 ${Math.round(puckR * 1.05)}px ${fonts.sans}`;
+    ctx.fillText(emoji, mx, my + 1);
+    ctx.restore();
+  };
+
+  drawTrackPuck("fame", opts.smoothFame, "⭐", "#06b6d4", "#fef08a", "#22d3ee");
+  drawTrackPuck(
+    "destruction",
+    opts.smoothDest,
+    "🏢",
+    "#ef4444",
+    "#fde047",
+    "#f97316"
+  );
+
+  ctx.restore();
+
+  drawRoundedRect(ctx, x, y, w, h, radius);
+  ctx.strokeStyle = "rgba(250, 204, 21, 0.62)";
+  ctx.lineWidth = 2.2;
+  ctx.stroke();
   ctx.restore();
 }

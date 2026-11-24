@@ -462,7 +462,7 @@ export interface KotPlayerView {
 }
 
 export const KOT_SPOTLIGHT_THRESHOLD = 3;
-export const KOT_WIN_TRACK_POS = 6;
+export const KOT_WIN_TRACK_POS = 7;
 
 function shuffle<T>(arr: T[], rng: () => number): T[] {
   const copy = [...arr];
