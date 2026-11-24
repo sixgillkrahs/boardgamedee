@@ -28,9 +28,11 @@ import {
 } from "@/canvas/king-of-tokyo-duel-art";
 import {
   getEffectiveCardCost,
+  KOT_DIE_FACES,
   KOT_MONSTER_IDS,
   KOT_MONSTERS,
   type KotCommand,
+  type KotDieFace,
   type KotMonsterId,
   type KotPlayerView,
 } from "@/cartridges/king-of-tokyo-duel";
@@ -95,7 +97,10 @@ export function KingOfTokyoDuelCanvas({
   const particlesRef = useRef<ParticleSystem>(new ParticleSystem());
   const bannersRef = useRef<KotBannerFx[]>([]);
   const slashesRef = useRef<KotSlashFx[]>([]);
-  const rollShakeEndRef = useRef<number>(0);
+  const rollStartMsRef = useRef<number>(0);
+  const rollSeedRef = useRef<number>(1);
+  const landedDiceRef = useRef<Set<number>>(new Set());
+  const lastRollKeyRef = useRef<string>("");
   const screenShakeEndRef = useRef<number>(0);
   const screenShakeMagRef = useRef<number>(0);
   const lastAnimIdRef = useRef<number>(0);
@@ -125,6 +130,17 @@ export function KingOfTokyoDuelCanvas({
       onDispatchCommand,
     };
 
+    // Trigger staggered 3D dice tumble animation on any fresh turn roll OR reroll!
+    if (mode === "match" && playerView && playerView.step === "RollDiceStep") {
+      const rollKey = `${playerView.turnNumber}-${playerView.activeSeatNo}-${playerView.rollsLeft}`;
+      if (rollKey !== lastRollKeyRef.current) {
+        lastRollKeyRef.current = rollKey;
+        rollStartMsRef.current = performance.now();
+        rollSeedRef.current = Math.floor(Math.random() * 10000) + 1;
+        landedDiceRef.current = new Set();
+      }
+    }
+
     const anim = playerView?.lastAnim;
     if (mode === "match" && anim && anim.id !== lastAnimIdRef.current) {
       lastAnimIdRef.current = anim.id;
@@ -136,19 +152,9 @@ export function KingOfTokyoDuelCanvas({
       const targetY = anim.targetSeatNo === viewerSeat ? botY : topY;
 
       if (anim.kind === "ROLL") {
-        rollShakeEndRef.current = now + 380;
-        for (let i = 0; i < 14; i++) {
-          particles.spawn({
-            x: midX + (Math.random() - 0.5) * 260,
-            y: midY + 95,
-            vx: (Math.random() - 0.5) * 90,
-            vy: -30 - Math.random() * 60,
-            radius: 2 + Math.random() * 2,
-            color: i % 2 === 0 ? "#fde047" : "#38bdf8",
-            life: 0.45,
-            maxLife: 0.45,
-          });
-        }
+        rollStartMsRef.current = now;
+        rollSeedRef.current = anim.id * 37 + 13;
+        landedDiceRef.current = new Set();
       }
 
       if ((anim.damage ?? 0) > 0) {
@@ -684,7 +690,6 @@ export function KingOfTokyoDuelCanvas({
         smoothFameRef.current += (targetFame - smoothFameRef.current) * Math.min(1, dt * 10);
         smoothDestRef.current += (targetDest - smoothDestRef.current) * Math.min(1, dt * 10);
 
-        const isRolling = now < rollShakeEndRef.current;
         const boardAspect = 1024 / 650;
         const orientedBuzz = pv.buzzTokens.map((b) => ({
           id: b.id,
@@ -692,6 +697,88 @@ export function KingOfTokyoDuelCanvas({
           orientedPos: orient(b.pos),
           kind: b.kind,
         }));
+
+        // Computes realistic staggered 3D tumble, face cycling, impact bounce & landing sparks for each die!
+        const computeDieRollState = (
+          idx: number,
+          die: (typeof pv.dice)[number],
+          dx: number,
+          dy: number,
+          dieSize: number
+        ): {
+          displayFace: KotDieFace;
+          offsetX: number;
+          anim?: {
+            angle: number;
+            scaleX: number;
+            scaleY: number;
+            jumpY: number;
+            flash: number;
+          };
+        } => {
+          if (die.locked || rollStartMsRef.current === 0) {
+            return { displayFace: die.face, offsetX: 0 };
+          }
+          const dieStart = rollStartMsRef.current + idx * 48;
+          const elapsed = now - dieStart;
+          const dur = 560;
+          if (elapsed < 0 || elapsed >= dur) {
+            return { displayFace: die.face, offsetX: 0 };
+          }
+
+          const p = elapsed / dur;
+          const landAt = 0.72;
+          const dir = idx % 2 === 0 ? 1 : -1;
+
+          if (p < landAt) {
+            const air = p / landAt; // 0..1 airborne arc
+            const jumpY = -Math.sin(air * Math.PI) * 22;
+            const offsetX = Math.sin(air * Math.PI * 3 + idx) * (1 - air) * 5;
+            const angle = (1 - air) * (1 - air) * dir * Math.PI * 2.6;
+            const flipWave = Math.abs(Math.cos(air * Math.PI * 4.5 + idx * 0.7));
+            const scaleX = 0.56 + 0.44 * flipWave;
+            const scaleY = 1.04 + 0.14 * Math.sin(air * Math.PI);
+            const cycleStep = Math.floor(elapsed / 62);
+            const faceIdx =
+              (rollSeedRef.current + idx * 5 + cycleStep) % KOT_DIE_FACES.length;
+            return {
+              displayFace: KOT_DIE_FACES[faceIdx],
+              offsetX,
+              anim: { angle, scaleX, scaleY, jumpY, flash: 0 },
+            };
+          } else {
+            // Impact landing + elastic squash-stretch + secondary bounce + golden spark burst!
+            if (!landedDiceRef.current.has(idx)) {
+              landedDiceRef.current.add(idx);
+              for (let s = 0; s < 6; s++) {
+                const ang = (Math.PI * 2 * s) / 6 + Math.random() * 0.4;
+                const spd = 28 + Math.random() * 48;
+                particles.spawn({
+                  x: dx + dieSize / 2,
+                  y: dy + dieSize / 2,
+                  vx: Math.cos(ang) * spd,
+                  vy: Math.sin(ang) * spd - 14,
+                  radius: 1.6 + Math.random() * 1.4,
+                  color: s % 2 === 0 ? "#fde047" : "#f8fafc",
+                  life: 0.34,
+                  maxLife: 0.34,
+                });
+              }
+            }
+            const bp = (p - landAt) / (1 - landAt); // 0..1 settle
+            const jumpY = -Math.abs(Math.sin(bp * Math.PI)) * 5 * (1 - bp);
+            const squash = Math.sin(bp * Math.PI) * (1 - bp) * 0.16;
+            const scaleX = 1 + squash;
+            const scaleY = 1 - squash;
+            const angle = Math.sin(bp * Math.PI * 2) * (1 - bp) * 0.12 * dir;
+            const flash = Math.max(0, 1 - bp * 2.4);
+            return {
+              displayFace: die.face,
+              offsetX: 0,
+              anim: { angle, scaleX, scaleY, jumpY, flash },
+            };
+          }
+        };
 
         // Shared helper: Draws a vertical tabletop Power Card (Official Art Top + GIỮ/BỎ ĐI Ribbon + Cream Vietnamese Rule Box!)
         const drawVerticalMarketCard = (
@@ -835,9 +922,6 @@ export function KingOfTokyoDuelCanvas({
 
           pv.dice.forEach((die, idx) => {
             const dx = contentStartX + idx * (dieSize + dieGap);
-            const wobbleX = isRolling && !die.locked ? (Math.random() - 0.5) * 5 : 0;
-            const wobbleY =
-              isRolling && !die.locked ? -Math.abs(Math.sin(now / 45 + idx)) * 7 : 0;
             const rId = `kot-die-${idx}`;
             const hov = hoveredIdRef.current === rId;
             const canToggle = isMyTurn && pv.step === "RollDiceStep" && pv.rollsLeft > 0;
@@ -855,15 +939,17 @@ export function KingOfTokyoDuelCanvas({
               });
             }
 
+            const rollAnim = computeDieRollState(idx, die, dx, dieY, dieSize);
             drawKotDie2D(
               ctx,
-              dx + wobbleX,
-              dieY + wobbleY,
+              dx + rollAnim.offsetX,
+              dieY,
               dieSize,
-              die.face,
+              rollAnim.displayFace,
               die.locked,
               canToggle && hov,
-              idx >= baseDiceCount
+              idx >= baseDiceCount,
+              rollAnim.anim
             );
           });
 
@@ -1183,7 +1269,7 @@ export function KingOfTokyoDuelCanvas({
           // Exact card-to-board ratios matching the official BGA King of Tokyo: Duel tabletop!
           const cardWRatio = 0.215; // each card = 21.5% of boardW
           const cardAspect = 1.40;  // tall vertical Power Card (100:140)
-          const overlapRatio = 0.068; // bottom of cards sits right inside the 3 green board slots!
+          const overlapRatio = 0.036; // sits cleanly higher up, resting flush inside the 3 green board card slots!
           const deckLeftProtrude = 0.115; // deck back extends cleanly ~11.5% left of boardX
           // Total height = boardH + (cardWRatio * cardAspect * boardAspect - overlapRatio) * boardH
           const totalHRatio = 1 + cardWRatio * cardAspect * boardAspect - overlapRatio;
@@ -1454,8 +1540,6 @@ export function KingOfTokyoDuelCanvas({
 
           pv.dice.forEach((die, idx) => {
             const dx = diceStartX + idx * (dieSize + dieGap);
-            const wobbleX = isRolling && !die.locked ? (Math.random() - 0.5) * 5 : 0;
-            const wobbleY = isRolling && !die.locked ? -Math.abs(Math.sin(now / 45 + idx)) * 7 : 0;
             const rId = `kot-die-${idx}`;
             const hov = hoveredIdRef.current === rId;
             const canToggle = isMyTurn && pv.step === "RollDiceStep" && pv.rollsLeft > 0;
@@ -1471,7 +1555,18 @@ export function KingOfTokyoDuelCanvas({
                 data: { type: "toggle-die", dieIndex: idx },
               });
             }
-            drawKotDie2D(ctx, dx + wobbleX, dieY + wobbleY, dieSize, die.face, die.locked, canToggle && hov, idx >= baseDiceCount);
+            const rollAnim = computeDieRollState(idx, die, dx, dieY, dieSize);
+            drawKotDie2D(
+              ctx,
+              dx + rollAnim.offsetX,
+              dieY,
+              dieSize,
+              rollAnim.displayFace,
+              die.locked,
+              canToggle && hov,
+              idx >= baseDiceCount,
+              rollAnim.anim
+            );
           });
 
           const btnY = dieY + dieSize + 6;
@@ -1626,6 +1721,9 @@ export function KingOfTokyoDuelCanvas({
     } else if (data.type === "toggle-die") {
       dispatch({ type: "TOGGLE_DIE", dieIndex: data.dieIndex });
     } else if (data.type === "reroll") {
+      rollStartMsRef.current = performance.now();
+      rollSeedRef.current = Math.floor(Math.random() * 10000) + 1;
+      landedDiceRef.current = new Set();
       dispatch({ type: "REROLL" });
     } else if (data.type === "resolve") {
       dispatch({ type: "RESOLVE_DICE" });

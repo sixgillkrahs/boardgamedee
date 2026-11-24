@@ -864,7 +864,8 @@ export function drawKotMonsterBoard2D(
 
 /**
  * Draws a crisp 16-bit Kaiju Die at `(x, y, size, size)` — Ivory/Cream for standard dice,
- * Coral-Red for bonus extra dice (`isBonus = true`), with golden lock ring & padlock badge!
+ * Coral-Red for bonus extra dice (`isBonus = true`), with golden lock ring, padlock badge,
+ * and optional 3D tumble / jump / squash-and-stretch landing animation!
  */
 export function drawKotDie2D(
   ctx: CanvasRenderingContext2D,
@@ -874,48 +875,94 @@ export function drawKotDie2D(
   face: KotDieFace,
   locked: boolean,
   hovered = false,
-  isBonus = false
+  isBonus = false,
+  anim?: {
+    angle?: number;
+    scaleX?: number;
+    scaleY?: number;
+    jumpY?: number;
+    flash?: number;
+  }
 ) {
   ctx.save();
-  const lift = locked ? -5 : hovered ? -3 : 0;
-  const dy = y + lift;
+  const lift = locked ? -4 : hovered ? -2.5 : 0;
+  const jumpY = anim?.jumpY ?? 0;
+  const angle = anim?.angle ?? 0;
+  const scaleX = anim?.scaleX ?? 1;
+  const scaleY = anim?.scaleY ?? 1;
+  const flash = anim?.flash ?? 0;
+  const dy = y + lift + jumpY;
 
-  // Grounded drop shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
-  drawRoundedRect(ctx, x + 2, y + 5, size, size, Math.round(size * 0.18));
+  // Grounded drop shadow (shrinks & softens as the die leaps higher into the air!)
+  const airFrac = Math.min(1, Math.abs(jumpY) / 30);
+  const shadScale = 1 - airFrac * 0.28;
+  ctx.save();
+  ctx.globalAlpha = 0.55 - airFrac * 0.25;
+  ctx.fillStyle = "#000000";
+  const sw = size * shadScale;
+  const sh = size * shadScale;
+  drawRoundedRect(
+    ctx,
+    x + (size - sw) / 2 + 2,
+    y + (size - sh) / 2 + 5,
+    sw,
+    sh,
+    Math.round(sw * 0.18)
+  );
   ctx.fill();
+  ctx.restore();
+
+  // Apply 3D-feel spin & squash-stretch around die center
+  const cx = x + size / 2;
+  const cy = dy + size / 2;
+  ctx.translate(cx, cy);
+  if (angle !== 0) ctx.rotate(angle);
+  if (scaleX !== 1 || scaleY !== 1) ctx.scale(scaleX, scaleY);
+
+  const lx = -size / 2;
+  const ly = -size / 2;
 
   if (locked) {
     ctx.shadowColor = "rgba(250, 204, 21, 0.85)";
     ctx.shadowBlur = 14;
+  } else if (flash > 0.02) {
+    ctx.shadowColor = `rgba(253, 224, 71, ${flash * 0.9})`;
+    ctx.shadowBlur = 16 * flash;
   }
 
   const atlas = getKotDiceAtlas();
   if (atlas) {
     const r = KOT_DICE_RECTS[face];
     const sy = isBonus ? 64 : r.sy;
-    ctx.imageSmoothingEnabled = size < 44;
+    ctx.imageSmoothingEnabled = size < 44 || angle !== 0;
     if (ctx.imageSmoothingEnabled) ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(atlas, r.sx, sy, r.sw, r.sh, x, dy, size, size);
+    ctx.drawImage(atlas, r.sx, sy, r.sw, r.sh, lx, ly, size, size);
   } else {
-    drawRoundedRect(ctx, x, dy, size, size, 10);
+    drawRoundedRect(ctx, lx, ly, size, size, 10);
     ctx.fillStyle = isBonus ? "#e2505a" : "#f4e0ba";
     ctx.fill();
   }
 
   ctx.shadowBlur = 0;
 
+  // Brief bright impact sheen right when the die lands!
+  if (flash > 0.02) {
+    drawRoundedRect(ctx, lx, ly, size, size, Math.round(size * 0.18));
+    ctx.fillStyle = `rgba(255, 255, 255, ${flash * 0.42})`;
+    ctx.fill();
+  }
+
   // Golden lock border & padlock mini badge when Kept!
   if (locked || hovered) {
-    drawRoundedRect(ctx, x, dy, size, size, Math.round(size * 0.18));
+    drawRoundedRect(ctx, lx, ly, size, size, Math.round(size * 0.18));
     ctx.strokeStyle = locked ? "#facc15" : "rgba(255, 255, 255, 0.65)";
     ctx.lineWidth = locked ? 2.8 : 1.8;
     ctx.stroke();
   }
 
   if (locked) {
-    const bx = x + size - 7;
-    const by = dy + 7;
+    const bx = lx + size - 7;
+    const by = ly + 7;
     ctx.fillStyle = "#facc15";
     ctx.beginPath();
     ctx.arc(bx, by, 8.5, 0, Math.PI * 2);
