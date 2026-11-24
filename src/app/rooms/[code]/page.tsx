@@ -544,8 +544,20 @@ function RoomPageContent({
       )}
 
       {/* Full-Width Interactive 2D Canvas Tabletop (Left) + Action Selection Sidebar (Right) */}
-      <main className="relative flex-1 flex flex-col lg:flex-row gap-2 sm:gap-2.5 p-2 sm:p-2.5 w-full">
-        <div className="flex-1 h-[54vh] min-h-[380px] sm:h-[62vh] sm:min-h-[500px] lg:h-[calc(100vh-62px)] lg:min-h-[620px] relative">
+      <main
+        className={`relative flex-1 flex flex-col lg:flex-row w-full ${
+          isKot && !isLobby
+            ? "gap-1 p-1 sm:p-1.5"
+            : "gap-2 sm:gap-2.5 p-2 sm:p-2.5"
+        }`}
+      >
+        <div
+          className={`flex-1 relative ${
+            isKot && !isLobby
+              ? "h-[60vh] min-h-[420px] sm:h-[70vh] sm:min-h-[540px] lg:h-[calc(100vh-50px)] lg:min-h-[620px]"
+              : "h-[54vh] min-h-[380px] sm:h-[62vh] sm:min-h-[500px] lg:h-[calc(100vh-62px)] lg:min-h-[620px]"
+          }`}
+        >
           {isKot ? (
             <>
               <KingOfTokyoDuelCanvas

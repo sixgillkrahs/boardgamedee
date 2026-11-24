@@ -899,22 +899,22 @@ export function KingOfTokyoDuelCanvas({
 
         if (isDesktopTable) {
           // =================================================================
-          // 1. TOP DICE & ACTION BAR (Slim centered glass bar across top!)
+          // 1. TOP DICE & ACTION BAR (Ultra-slim centered glass bar so the Tokyo Board gets maximum height!)
           // =================================================================
-          const topBarH = 54;
-          const topBarY = 6;
+          const topBarH = 46;
+          const topBarY = 4;
           const diceCount = pv.dice.length;
-          const dieSize = 40;
-          const dieGap = 7;
+          const dieSize = 36;
+          const dieGap = 6;
           const diceRowW = diceCount * dieSize + Math.max(0, diceCount - 1) * dieGap;
           const actionsW =
             isMyTurn && pv.step === "RollDiceStep"
-              ? 248
+              ? 236
               : isMyTurn && pv.step === "BuyCardsStep"
-                ? 248
-                : 196;
-          const barInnerW = diceRowW + 16 + actionsW;
-          const barW = Math.min(width - 24, barInnerW + 24);
+                ? 236
+                : 186;
+          const barInnerW = diceRowW + 14 + actionsW;
+          const barW = Math.min(width - 16, barInnerW + 20);
           const barX = Math.round((width - barW) / 2);
 
           drawRoundedRect(ctx, barX, topBarY, barW, topBarH, 14);
@@ -964,14 +964,14 @@ export function KingOfTokyoDuelCanvas({
           });
 
           // Action buttons right beside dice in Top Bar
-          const actX = contentStartX + diceRowW + 16;
-          const actBtnH = 34;
+          const actX = contentStartX + diceRowW + 14;
+          const actBtnH = 30;
           const actBtnY = topBarY + Math.round((topBarH - actBtnH) / 2);
 
           if (isMyTurn && pv.step === "RollDiceStep") {
             const canReroll = pv.rollsLeft > 0 && pv.dice.some((d) => !d.locked);
-            const w1 = 122;
-            const w2 = 118;
+            const w1 = 114;
+            const w2 = 114;
             if (canReroll) {
               const id = "kot-btn-reroll";
               const hov = hoveredIdRef.current === id;
@@ -1017,8 +1017,8 @@ export function KingOfTokyoDuelCanvas({
             ctx.font = `900 11px ${fonts.sans}`;
             ctx.fillText("✅ Chốt xúc xắc", resX + resW / 2, actBtnY + actBtnH / 2 + 0.5);
           } else if (isMyTurn && pv.step === "BuyCardsStep") {
-            const w1 = 122;
-            const w2 = 118;
+            const w1 = 114;
+            const w2 = 114;
             const canFlush = mySeat.energy >= 2 && pv.deckCount > 0;
             const flId = "kot-btn-flush";
             const flHov = hoveredIdRef.current === flId;
@@ -1085,17 +1085,17 @@ export function KingOfTokyoDuelCanvas({
           }
 
           // =================================================================
-          // 2. THREE-COLUMN TABLETOP: LEFT OPPONENT | CENTER BOARD+MARKET | RIGHT YOU
+          // 2. THREE-COLUMN TABLETOP: SLEEK SIDE KAIJU PANELS + MASSIVE CENTER TOKYO BOARD!
           // =================================================================
-          const bodyTop = topBarY + topBarH + 8;
-          const bodyH = Math.max(320, height - bodyTop - 8);
-          const padEdge = 10;
-          const colGap = 12;
-          const sideW = Math.max(188, Math.min(268, Math.round(width * 0.205)));
+          const bodyTop = topBarY + topBarH + 5;
+          const bodyH = Math.max(320, height - bodyTop - 4);
+          const padEdge = 6;
+          const colGap = 8;
+          const sideW = Math.max(166, Math.min(222, Math.round(width * 0.168)));
           const leftColX = padEdge;
           const rightColX = width - padEdge - sideW;
           const centerColX = leftColX + sideW + colGap;
-          const centerColW = Math.max(360, rightColX - colGap - centerColX);
+          const centerColW = Math.max(400, rightColX - colGap - centerColX);
 
           // Update FX anchors to hit Opponent Board (Left) and Your Board (Right)!
           anchorsRef.current = {
@@ -1275,14 +1275,12 @@ export function KingOfTokyoDuelCanvas({
           drawSideKaijuColumn(mySeat, rightColX, true);
 
           // =================================================================
-          // 3. CENTER TABLETOP: POWER DECK + 3 MARKET CARDS TUCKED INTO TOP 3 GREEN SLOTS OF TOKYO BOARD!
+          // 3. CENTER TABLETOP: MASSIVE HD TOKYO BOARD + TOP 3 GREEN-SLOT MARKET CARDS + DECK BACK!
           // =================================================================
-          // Exact card-to-board ratios matching the official BGA King of Tokyo: Duel tabletop!
-          const cardWRatio = 0.215; // each card = 21.5% of boardW
-          const cardAspect = 1.40;  // tall vertical Power Card (100:140)
-          const overlapRatio = 0.036; // sits cleanly higher up, resting flush inside the 3 green board card slots!
-          const deckLeftProtrude = 0.115; // deck back extends cleanly ~11.5% left of boardX
-          // Total height = boardH + (cardWRatio * cardAspect * boardAspect - overlapRatio) * boardH
+          const cardWRatio = 0.205; // aligns dead-center over the 3 green board card slots
+          const cardAspect = 1.24;  // crisp compact portrait card so the Tokyo Board gets maximum vertical size!
+          const overlapRatio = 0.048; // bottom edge hugs right inside the 3 green board slots
+          const deckLeftProtrude = 0.082; // deck back nestled tightly beside Slot 0
           const totalHRatio = 1 + cardWRatio * cardAspect * boardAspect - overlapRatio;
           const totalWRatio = 1 + deckLeftProtrude;
 
