@@ -11,12 +11,14 @@ import {
 import {
   drawKotDie2D,
   drawKotGameBoard2D,
+  drawKotIcon2D,
   drawKotMonsterBoard2D,
   drawKotMonsterPortrait2D,
   drawKotTokyoBackground2D,
   getKotBoardAtlas,
   getKotDiceAtlas,
   getKotGameBoardImage,
+  getKotIconsAtlas,
   getKotMonsterAtlas,
   getKotTokensAtlas,
 } from "@/canvas/king-of-tokyo-duel-art";
@@ -241,6 +243,7 @@ export function KingOfTokyoDuelCanvas({
     getKotBoardAtlas();
     getKotGameBoardImage();
     getKotTokensAtlas();
+    getKotIconsAtlas();
     getKotDiceAtlas();
 
     const canvas = canvasRef.current;
@@ -455,10 +458,21 @@ export function KingOfTokyoDuelCanvas({
         ctx.strokeStyle = "#fb7185";
         ctx.lineWidth = 1.2;
         ctx.stroke();
-        ctx.textAlign = "center";
+        drawKotIcon2D(
+          ctx,
+          leftX + leftW - innerPad - hpPillW + 16,
+          curY,
+          15,
+          "heart"
+        );
+        ctx.textAlign = "left";
         ctx.fillStyle = "#fecdd3";
         ctx.font = `800 11px ${fonts.mono}`;
-        ctx.fillText(`❤️ ${selMeta.maxHp} HP`, leftX + leftW - innerPad - hpPillW / 2, curY + 0.5);
+        ctx.fillText(
+          `${selMeta.maxHp} HP`,
+          leftX + leftW - innerPad - hpPillW + 27,
+          curY + 0.5
+        );
 
         // Official-style Cream Comic Power Box ("NĂNG LỰC QUÁI VẬT")
         const btnH = 44;
@@ -721,14 +735,16 @@ export function KingOfTokyoDuelCanvas({
             infoW - 95
           );
 
-          // Energy pill top-right
+          // Energy pill top-right with official 16-bit lime Energy Bolt icon!
           ctx.textAlign = "right";
           ctx.fillStyle = "#bef264";
           ctx.font = `900 14px ${fonts.mono}`;
-          ctx.fillText(`⚡ ${seat.energy}`, padX + hudW - 14, yPos + 19);
+          ctx.fillText(`${seat.energy}`, padX + hudW - 14, yPos + 19);
+          const eWidth = ctx.measureText(`${seat.energy}`).width;
+          drawKotIcon2D(ctx, padX + hudW - 24 - eWidth, yPos + 18.5, 16, "energy");
 
           // HP Bar
-          const barY = yPos + 33;
+          const barY = yPos + 31;
           const barW = Math.min(260, infoW - 10);
           const barH = 16;
           drawRoundedRect(ctx, infoX, barY, barW, barH, 8);
@@ -746,12 +762,13 @@ export function KingOfTokyoDuelCanvas({
           drawRoundedRect(ctx, infoX, barY, barW, barH, 8);
           ctx.stroke();
 
+          drawKotIcon2D(ctx, infoX + 12, barY + barH / 2, 13, seat.hp <= 0 ? "skull" : "heart");
           ctx.textAlign = "center";
           ctx.fillStyle = "#ffffff";
           ctx.font = `800 10.5px ${fonts.mono}`;
           ctx.fillText(
-            `❤️ ${seat.hp} / ${seat.maxHp} HP`,
-            infoX + barW / 2,
+            `${seat.hp} / ${seat.maxHp} HP`,
+            infoX + barW / 2 + 5,
             barY + barH / 2 + 0.5
           );
 

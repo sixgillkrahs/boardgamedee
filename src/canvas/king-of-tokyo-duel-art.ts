@@ -11,7 +11,32 @@ export const KOT_MONSTER_ATLAS_URL = "/sprites/kot-duel-monsters-pixel.png";
 export const KOT_BOARD_ATLAS_URL = "/sprites/kot-duel-boards-pixel.png";
 export const KOT_GAME_BOARD_URL = "/sprites/kot-duel-board-map-pixel.png";
 export const KOT_TOKENS_ATLAS_URL = "/sprites/kot-duel-tokens-pixel.png";
+export const KOT_ICONS_ATLAS_URL = "/sprites/kot-duel-icons-pixel.png";
 export const KOT_DICE_ATLAS_URL = "/sprites/kot-duel-dice-pixel.png";
+
+export type KotIconName =
+  | "heart"
+  | "energy"
+  | "dice"
+  | "star"
+  | "building"
+  | "burst"
+  | "skull"
+  | "claw";
+
+export const KOT_ICON_RECTS: Record<
+  KotIconName,
+  { sx: number; sy: number; sw: number; sh: number }
+> = {
+  heart: { sx: 0, sy: 0, sw: 64, sh: 64 },
+  energy: { sx: 64, sy: 0, sw: 64, sh: 64 },
+  dice: { sx: 128, sy: 0, sw: 64, sh: 64 },
+  star: { sx: 192, sy: 0, sw: 64, sh: 64 },
+  building: { sx: 256, sy: 0, sw: 64, sh: 64 },
+  burst: { sx: 320, sy: 0, sw: 64, sh: 64 },
+  skull: { sx: 384, sy: 0, sw: 64, sh: 64 },
+  claw: { sx: 448, sy: 0, sw: 64, sh: 64 },
+};
 
 export const KOT_BOARD_RECTS: Record<
   KotMonsterId,
@@ -145,6 +170,58 @@ export function getKotTokensAtlas(onLoad?: () => void): HTMLImageElement | null 
     cachedTokensImg = img;
   }
   return tokensLoaded ? cachedTokensImg : null;
+}
+
+let cachedIconsImg: HTMLImageElement | null = null;
+let iconsLoaded = false;
+const iconsListeners = new Set<() => void>();
+
+export function getKotIconsAtlas(onLoad?: () => void): HTMLImageElement | null {
+  if (typeof window === "undefined") return null;
+  if (iconsLoaded && cachedIconsImg) return cachedIconsImg;
+  if (onLoad) iconsListeners.add(onLoad);
+  if (!cachedIconsImg) {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      iconsLoaded = true;
+      iconsListeners.forEach((fn) => fn());
+      iconsListeners.clear();
+    };
+    img.src = KOT_ICONS_ATLAS_URL;
+    cachedIconsImg = img;
+  }
+  return iconsLoaded ? cachedIconsImg : null;
+}
+
+/**
+ * Draws one of the 8 official 16-bit King of Tokyo: Duel icons centered at `(cx, cy)`.
+ */
+export function drawKotIcon2D(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  size: number,
+  icon: KotIconName
+) {
+  const atlas = getKotIconsAtlas();
+  if (!atlas) return;
+  const r = KOT_ICON_RECTS[icon];
+  ctx.save();
+  ctx.imageSmoothingEnabled = size < 24;
+  if (ctx.imageSmoothingEnabled) ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(
+    atlas,
+    r.sx,
+    r.sy,
+    r.sw,
+    r.sh,
+    Math.round(cx - size / 2),
+    Math.round(cy - size / 2),
+    size,
+    size
+  );
+  ctx.restore();
 }
 
 let cachedDiceImg: HTMLImageElement | null = null;
@@ -579,11 +656,19 @@ export function getKotTrackNodeNorm(
 }
 
 const BUZZ_SHORT_LABEL: Record<KotBuzzKind, string> = {
-  ENERGY_2: "+2⚡",
-  HEAL_2: "+2❤️",
-  DMG_1: "1🐾",
-  BONUS_DIE: "+1🎲",
-  PULL_1: "+1➡",
+  ENERGY_2: "+2",
+  HEAL_2: "+2",
+  DMG_1: "1",
+  BONUS_DIE: "+1",
+  PULL_1: "+1",
+};
+
+const BUZZ_ICON: Record<KotBuzzKind, KotIconName> = {
+  ENERGY_2: "energy",
+  HEAL_2: "heart",
+  DMG_1: "claw",
+  BONUS_DIE: "dice",
+  PULL_1: "burst",
 };
 
 /**
@@ -682,11 +767,13 @@ export function drawKotGameBoard2D(
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    ctx.textAlign = "center";
+    const icSize = Math.max(10, Math.round(tokenR * 1.05));
+    drawKotIcon2D(ctx, bx + tokenR * 0.28, by, icSize, BUZZ_ICON[bz.kind]);
+    ctx.textAlign = "right";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#fef08a";
-    ctx.font = `900 ${Math.max(8, Math.round(tokenR * 0.68))}px ${fonts.sans}`;
-    ctx.fillText(BUZZ_SHORT_LABEL[bz.kind], bx, by + 0.5);
+    ctx.font = `900 ${Math.max(8, Math.round(tokenR * 0.66))}px ${fonts.mono}`;
+    ctx.fillText(BUZZ_SHORT_LABEL[bz.kind], bx - 1, by + 0.5);
     ctx.restore();
   }
 
