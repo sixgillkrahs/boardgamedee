@@ -4,6 +4,7 @@ import { coupCartridge } from "@/cartridges/coup";
 import { splendorCartridge } from "@/cartridges/splendor";
 import { splendorDuelCartridge } from "@/cartridges/splendor-duel";
 import { deadMansDrawCartridge } from "@/cartridges/dead-mans-draw";
+import { kingOfTokyoDuelCartridge } from "@/cartridges/king-of-tokyo-duel";
 
 export interface CatalogEntry {
   cartridgeId: string;
@@ -25,6 +26,7 @@ const CARTRIDGES = new Map<string, GameCartridge<any, any, any, any>>([
   [splendorCartridge.cartridgeId, splendorCartridge],
   [splendorDuelCartridge.cartridgeId, splendorDuelCartridge],
   [deadMansDrawCartridge.cartridgeId, deadMansDrawCartridge],
+  [kingOfTokyoDuelCartridge.cartridgeId, kingOfTokyoDuelCartridge],
 ]);
 
 export function getCartridge(
@@ -117,6 +119,19 @@ export function listCartridges(): CatalogEntry[] {
       badgeVi: "Đang mở • Pixel 2D",
       accentColor: "#f59e0b",
       coverImage: "/covers/dead-mans-draw-pixel.png",
+    },
+    {
+      cartridgeId: kingOfTokyoDuelCartridge.cartridgeId,
+      title: kingOfTokyoDuelCartridge.title,
+      genreVi: "Đối kháng 1v1 • Kaiju Xúc Xắc",
+      subtitle: kingOfTokyoDuelCartridge.subtitle,
+      description: kingOfTokyoDuelCartridge.description,
+      minSeats: kingOfTokyoDuelCartridge.minSeats,
+      maxSeats: kingOfTokyoDuelCartridge.maxSeats,
+      available: true,
+      badgeVi: "Đang mở • Pixel 2D",
+      accentColor: "#f97316",
+      coverImage: "/covers/king-of-tokyo-duel-pixel.png",
     },
     {
       cartridgeId: "secret-hitler",

@@ -20,6 +20,15 @@ import {
   DMD_SUIT_META,
   type DmdPlayerView,
 } from "@/cartridges/dead-mans-draw";
+import { KingOfTokyoDuelCanvas } from "@/components/king-of-tokyo-duel-canvas";
+import {
+  getEffectiveCardCost,
+  KOT_DIE_FACES,
+  KOT_DIE_META,
+  KOT_MONSTER_IDS,
+  KOT_MONSTERS,
+  type KotPlayerView,
+} from "@/cartridges/king-of-tokyo-duel";
 import {
   ROLE_META,
   WEREWOLF_ROLES,
@@ -262,8 +271,9 @@ function RoomPageContent({
   const isSplendor = snapshot?.room.cartridgeId === "splendor";
   const isDuel = snapshot?.room.cartridgeId === "splendor-duel";
   const isDmd = snapshot?.room.cartridgeId === "dead-mans-draw";
+  const isKot = snapshot?.room.cartridgeId === "king-of-tokyo-duel";
   const pv: WerewolfPlayerView | null =
-    !isCoup && !isSplendor && !isDuel && !isDmd && snapshot?.playerView
+    !isCoup && !isSplendor && !isDuel && !isDmd && !isKot && snapshot?.playerView
       ? snapshot.playerView
       : null;
   const coupView: CoupPlayerView | null =
@@ -274,10 +284,12 @@ function RoomPageContent({
     isDuel && snapshot?.playerView ? snapshot.playerView : null;
   const dmdView: DmdPlayerView | null =
     isDmd && snapshot?.playerView ? snapshot.playerView : null;
+  const kotView: KotPlayerView | null =
+    isKot && snapshot?.playerView ? snapshot.playerView : null;
   const isLobby =
     !snapshot ||
     snapshot.room.status === "lobby" ||
-    (!pv && !coupView && !splendorView && !duelView && !dmdView);
+    (!pv && !coupView && !splendorView && !duelView && !dmdView && !kotView);
 
   // Clear local Splendor selections when turn/step changes
   useEffect(() => {
@@ -534,7 +546,17 @@ function RoomPageContent({
       {/* Full-Width Interactive 2D Canvas Tabletop (Left) + Action Selection Sidebar (Right) */}
       <main className="relative flex-1 flex flex-col lg:flex-row gap-2 sm:gap-2.5 p-2 sm:p-2.5 w-full">
         <div className="flex-1 h-[54vh] min-h-[380px] sm:h-[62vh] sm:min-h-[500px] lg:h-[calc(100vh-62px)] lg:min-h-[620px] relative">
-          {isDmd ? (
+          {isKot ? (
+            <KingOfTokyoDuelCanvas
+              mode={isLobby ? "lobby" : "match"}
+              lobbySeats={snapshot?.seats ?? []}
+              viewerSeatNo={snapshot?.viewerSeatNo ?? null}
+              playerView={kotView}
+              onDispatchCommand={(cmd) =>
+                void sendRoomAction({ type: "MATCH_COMMAND", command: cmd })
+              }
+            />
+          ) : isDmd ? (
             <DeadMansDrawCanvas
               mode={isLobby ? "lobby" : "match"}
               lobbySeats={snapshot?.seats ?? []}
@@ -663,29 +685,33 @@ function RoomPageContent({
                   Bảng Điều Khiển Sảnh Chờ
                 </span>
                 <h2 className="text-sm font-bold text-slate-100 mt-1">
-                  {isDmd
-                    ? `Dead Man's Draw (${snapshot?.seats.length ?? 0}/4 Hải Tặc)`
-                    : isDuel
-                      ? `Splendor Duel (${snapshot?.seats.length ?? 0}/2 người chơi)`
-                      : isSplendor
-                        ? `Splendor (${snapshot?.seats.length ?? 0}/4 người chơi)`
-                        : isCoup
-                          ? `Coup: Đảo Chính (${snapshot?.seats.length ?? 0}/6 người chơi)`
-                          : `Làng Ma Sói (${snapshot?.seats.length ?? 0}/16 người chơi)`}
+                  {isKot
+                    ? `King of Tokyo: Duel (${snapshot?.seats.length ?? 0}/2 Kaiju)`
+                    : isDmd
+                      ? `Dead Man's Draw (${snapshot?.seats.length ?? 0}/4 Hải Tặc)`
+                      : isDuel
+                        ? `Splendor Duel (${snapshot?.seats.length ?? 0}/2 người chơi)`
+                        : isSplendor
+                          ? `Splendor (${snapshot?.seats.length ?? 0}/4 người chơi)`
+                          : isCoup
+                            ? `Coup: Đảo Chính (${snapshot?.seats.length ?? 0}/6 người chơi)`
+                            : `Làng Ma Sói (${snapshot?.seats.length ?? 0}/16 người chơi)`}
                 </h2>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                   {snapshot?.configValidation.valid
                     ? "✓ Đã đủ số lượng người chơi hợp lệ, sẵn sàng bắt đầu ván đấu!"
                     : snapshot?.configValidation.error ??
-                      (isDmd
-                        ? "Cần từ 2 đến 4 người chơi (hoặc thêm Bot) để bắt đầu Dead Man's Draw."
-                        : isDuel
-                          ? "Cần đúng 2 người chơi (hoặc thêm 1 Bot) để bắt đầu Splendor Duel."
-                          : isSplendor
-                            ? "Cần từ 2 đến 4 người chơi (hoặc thêm Bot) để bắt đầu Splendor."
-                            : isCoup
-                              ? "Cần từ 3 đến 6 người chơi (hoặc thêm Bot) để bắt đầu Coup."
-                              : "Cần tối thiểu 4 người chơi (hoặc thêm Bot) để bắt đầu.")}
+                      (isKot
+                        ? "Cần đúng 2 người chơi (hoặc thêm 1 Bot) để bắt đầu King of Tokyo: Duel."
+                        : isDmd
+                          ? "Cần từ 2 đến 4 người chơi (hoặc thêm Bot) để bắt đầu Dead Man's Draw."
+                          : isDuel
+                            ? "Cần đúng 2 người chơi (hoặc thêm 1 Bot) để bắt đầu Splendor Duel."
+                            : isSplendor
+                              ? "Cần từ 2 đến 4 người chơi (hoặc thêm Bot) để bắt đầu Splendor."
+                              : isCoup
+                                ? "Cần từ 3 đến 6 người chơi (hoặc thêm Bot) để bắt đầu Coup."
+                                : "Cần tối thiểu 4 người chơi (hoặc thêm Bot) để bắt đầu.")}
                 </p>
               </div>
 
@@ -827,6 +853,220 @@ function RoomPageContent({
                 </div>
               )}
             </div>
+          ) : isKot && kotView ? (
+            /* King of Tokyo: Duel Right-Side Action & Power Market Panel */
+            (() => {
+              const mySeat = kotView.seats.find(
+                (s) => s.seatNo === snapshot?.viewerSeatNo
+              );
+              const activeSeat = kotView.seats.find(
+                (s) => s.seatNo === kotView.activeSeatNo
+              );
+              const isMyTurn =
+                kotView.activeSeatNo === snapshot?.viewerSeatNo &&
+                kotView.step !== "Finished";
+              const myMonster = mySeat?.monsterId
+                ? KOT_MONSTERS[mySeat.monsterId]
+                : null;
+
+              return (
+                <div className="flex flex-col gap-3">
+                  {/* Turn & Status Header */}
+                  <div className="rounded-xl border border-orange-500/35 bg-slate-950/75 p-3 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-orange-400">
+                        {kotView.step === "Finished"
+                          ? "👑 VUA TOKYO MỚI!"
+                          : `Lượt ${kotView.turnNumber} • King of Tokyo: Duel`}
+                      </span>
+                      {mySeat && (
+                        <span className="rounded-md bg-lime-500/15 border border-lime-500/40 px-1.5 py-0.5 text-[10px] font-mono font-bold text-lime-300">
+                          ⚡ {mySeat.energy}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs font-bold text-slate-100">
+                      {kotView.step === "Finished"
+                        ? kotView.winReasonVi
+                        : kotView.step === "MonsterPickStep"
+                          ? isMyTurn
+                            ? "🦖 Chọn 1 trong 6 Quái Vật trên bàn để tham chiến!"
+                            : `⏳ Đang chờ ${activeSeat?.displayName ?? "..."} chọn Quái Vật...`
+                          : isMyTurn
+                            ? kotView.step === "RollDiceStep"
+                              ? `🎲 Chạm xúc xắc để khóa 🔒 hoặc tung lại (Còn ${kotView.rollsLeft} lần)`
+                              : "⚡ Mua Thẻ Sức Mạnh bên dưới hoặc Kết Thúc Lượt!"
+                            : `⏳ Đang chờ lượt của ${activeSeat?.displayName ?? "..."}`}
+                    </p>
+                    {myMonster && (
+                      <div className="rounded-lg bg-slate-900/90 border border-slate-800 px-2.5 py-1.5 text-[10.5px] text-slate-300 leading-snug">
+                        <span className="font-bold text-amber-300">
+                          {myMonster.emoji} {myMonster.powerNameVi}:
+                        </span>{" "}
+                        {myMonster.powerDescVi}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Step 1: Roll / Reroll / Resolve Dice */}
+                  {kotView.step === "RollDiceStep" && isMyTurn && (
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        disabled={
+                          busy ||
+                          kotView.rollsLeft <= 0 ||
+                          kotView.dice.every((d) => d.locked)
+                        }
+                        onClick={() =>
+                          sendRoomAction({
+                            type: "MATCH_COMMAND",
+                            command: { type: "REROLL" },
+                          })
+                        }
+                        className="w-full rounded-xl bg-sky-600 hover:bg-sky-500 px-3 py-2.5 text-xs font-extrabold text-white transition cursor-pointer disabled:opacity-35"
+                      >
+                        🎲 Tung Lại Xúc Xắc Chưa Khóa (Còn {kotView.rollsLeft}{" "}
+                        lần)
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          sendRoomAction({
+                            type: "MATCH_COMMAND",
+                            command: { type: "RESOLVE_DICE" },
+                          })
+                        }
+                        className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 shadow transition cursor-pointer disabled:opacity-40"
+                      >
+                        ✅ Chốt Kết Quả Xúc Xắc
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Step 2: Buy Power Cards / Flush / End Turn */}
+                  {kotView.step === "BuyCardsStep" && isMyTurn && (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={
+                            busy ||
+                            (mySeat?.energy ?? 0) < 2 ||
+                            kotView.deckCount === 0
+                          }
+                          onClick={() =>
+                            sendRoomAction({
+                              type: "MATCH_COMMAND",
+                              command: { type: "FLUSH_MARKET" },
+                            })
+                          }
+                          className="flex-1 rounded-xl border border-sky-500/40 bg-sky-500/15 hover:bg-sky-500/25 px-2.5 py-2 text-[11px] font-bold text-sky-200 transition cursor-pointer disabled:opacity-35"
+                        >
+                          🔄 Đổi 3 Thẻ (-2⚡)
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() =>
+                            sendRoomAction({
+                              type: "MATCH_COMMAND",
+                              command: { type: "END_TURN" },
+                            })
+                          }
+                          className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 px-2.5 py-2 text-[11px] font-extrabold text-slate-950 transition cursor-pointer disabled:opacity-40"
+                        >
+                          ⏭ Xong Lượt
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3-Card Power Market (Always Visible for Planning, Clickable in BuyCardsStep!) */}
+                  {kotView.step !== "MonsterPickStep" && (
+                    <div className="rounded-xl border border-slate-800 bg-slate-950/65 p-2.5 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                          ⚡ Chợ Thẻ Sức Mạnh ({kotView.deckCount} lá còn)
+                        </span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {kotView.market.map((card) => {
+                          const effCost = mySeat
+                            ? getEffectiveCardCost(mySeat, card)
+                            : card.cost;
+                          const canBuy =
+                            isMyTurn &&
+                            kotView.step === "BuyCardsStep" &&
+                            (mySeat?.energy ?? 0) >= effCost;
+                          return (
+                            <button
+                              key={card.id}
+                              type="button"
+                              disabled={busy || !canBuy}
+                              onClick={() =>
+                                sendRoomAction({
+                                  type: "MATCH_COMMAND",
+                                  command: { type: "BUY_CARD", cardId: card.id },
+                                })
+                              }
+                              className={`w-full text-left rounded-lg border p-2 transition ${
+                                canBuy
+                                  ? "border-amber-500/60 bg-slate-900 hover:bg-amber-500/15 cursor-pointer"
+                                  : "border-slate-800 bg-slate-900/65 opacity-80"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs font-extrabold text-slate-100">
+                                  {card.emoji} {card.nameVi}
+                                </span>
+                                <span className="shrink-0 flex items-center gap-1">
+                                  <span
+                                    className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${
+                                      card.kind === "KEEP"
+                                        ? "bg-sky-500/20 text-sky-300 border border-sky-500/35"
+                                        : "bg-rose-500/20 text-rose-300 border border-rose-500/35"
+                                    }`}
+                                  >
+                                    {card.kind === "KEEP" ? "GIỮ" : "DÙNG NGAY"}
+                                  </span>
+                                  <span className="rounded bg-lime-500/20 border border-lime-500/40 px-1.5 py-0.5 font-mono text-[10px] font-extrabold text-lime-300">
+                                    {effCost}⚡
+                                  </span>
+                                </span>
+                              </div>
+                              <p className="text-[10.5px] text-slate-400 mt-1 leading-snug">
+                                {card.descVi}
+                              </p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Finished Rematch */}
+                  {kotView.step === "Finished" && (
+                    <div className="space-y-2.5 rounded-xl border border-amber-500/40 bg-amber-950/25 p-3">
+                      <p className="text-xs text-amber-200 font-semibold leading-relaxed">
+                        {kotView.winReasonVi}
+                      </p>
+                      {snapshot?.isHost && (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => sendRoomAction({ type: "REMATCH" })}
+                          className="w-full rounded-xl bg-amber-500 hover:bg-amber-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 transition cursor-pointer"
+                        >
+                          🔁 Chơi Ván Mới (Về Sảnh)
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()
           ) : isDmd && dmdView ? (
             /* Dead Man's Draw Right-Side Action Selection Panel */
             (() => {
@@ -3292,7 +3532,89 @@ function RoomPageContent({
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {isDmd ? (
+              {isKot ? (
+                <div className="space-y-3">
+                  <div className="rounded-xl border border-orange-500/30 bg-slate-950/60 p-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-bold text-orange-300">
+                        Thời Gian Mỗi Lượt Kaiju
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        Hết giờ hệ thống tự chốt xúc xắc hoặc kết thúc lượt (20–180 giây)
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {isLobby && snapshot?.isHost && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            sendRoomAction({
+                              type: "UPDATE_CONFIG",
+                              config: {
+                                ...snapshot.room.config,
+                                timers: {
+                                  turnSeconds: Math.max(
+                                    20,
+                                    (snapshot.room.config?.timers?.turnSeconds ??
+                                      60) - 15
+                                  ),
+                                },
+                              },
+                            })
+                          }
+                          className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 font-bold text-white cursor-pointer"
+                        >
+                          −
+                        </button>
+                      )}
+                      <span className="font-mono font-bold text-orange-300 w-10 text-center">
+                        {snapshot?.room.config?.timers?.turnSeconds ?? 60}s
+                      </span>
+                      {isLobby && snapshot?.isHost && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            sendRoomAction({
+                              type: "UPDATE_CONFIG",
+                              config: {
+                                ...snapshot.room.config,
+                                timers: {
+                                  turnSeconds: Math.min(
+                                    180,
+                                    (snapshot.room.config?.timers?.turnSeconds ??
+                                      60) + 15
+                                  ),
+                                },
+                              },
+                            })
+                          }
+                          className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 font-bold text-white cursor-pointer"
+                        >
+                          +
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 space-y-1.5 text-slate-300">
+                    <p className="font-bold text-orange-300">
+                      Thiết lập chuẩn King of Tokyo: Duel (1v1)
+                    </p>
+                    <p>
+                      • <strong>6 Quái Vật Kaiju bất đối xứng</strong> (12–15 HP)
+                      với kỹ năng riêng kích hoạt bằng mặt xúc xắc ❗.
+                    </p>
+                    <p>
+                      • <strong>Cân bằng lượt đi đầu</strong>: Người đi đầu tung
+                      5 xúc xắc ở Lượt 1; từ Lượt 2 trở đi mỗi bên tung 6 xúc xắc
+                      (tối đa 3 lần tung/lượt).
+                    </p>
+                    <p>
+                      • <strong>2 Thanh Kéo Co + Token Buzz</strong>: Danh Vọng ⭐
+                      và Phá Hủy 🏢 (-6 đến +6) cùng vùng Spotlight (3–5).
+                    </p>
+                  </div>
+                </div>
+              ) : isDmd ? (
                 <div className="space-y-3">
                   <div className="rounded-xl border border-amber-500/30 bg-slate-950/60 p-3 flex items-center justify-between gap-3">
                     <div>
@@ -3684,26 +4006,30 @@ function RoomPageContent({
                 </span>
                 <div>
                   <h2 className="font-bold text-sm text-white">
-                    {isDmd
-                      ? "Luật Chơi Dead Man's Draw (2–4 Hải Tặc)"
-                      : isDuel
-                        ? "Luật Chơi Splendor Duel (Đối Kháng 1v1)"
-                        : isSplendor
-                          ? "Luật Chơi Splendor: Thương Nhân Đá Quý (2–4 Người Chơi)"
-                          : isCoup
-                            ? "Luật Chơi Coup: Đảo Chính (3–6 Người Chơi)"
-                            : "Luật Chơi Làng Ma Sói (4–16 Người Chơi)"}
+                    {isKot
+                      ? "Luật Chơi King of Tokyo: Duel (Đối Kháng 1v1)"
+                      : isDmd
+                        ? "Luật Chơi Dead Man's Draw (2–4 Hải Tặc)"
+                        : isDuel
+                          ? "Luật Chơi Splendor Duel (Đối Kháng 1v1)"
+                          : isSplendor
+                            ? "Luật Chơi Splendor: Thương Nhân Đá Quý (2–4 Người Chơi)"
+                            : isCoup
+                              ? "Luật Chơi Coup: Đảo Chính (3–6 Người Chơi)"
+                              : "Luật Chơi Làng Ma Sói (4–16 Người Chơi)"}
                   </h2>
                   <p className="text-[11px] text-slate-400">
-                    {isDmd
-                      ? "60 lá kho báu • 10 kỹ năng liên hoàn • Cược may rủi hoặc Cháy bài mất trắng"
-                      : isDuel
-                        ? "Luật chuẩn Marc André & Bruno Cathala • Bàn 5×5, Ngọc Trai, Đặc Quyền & 3 Cách Thắng"
-                        : isSplendor
-                          ? "Luật chuẩn Space Cowboys • Thu thập đá quý, đầu tư mỏ & mời Quý Tộc"
-                          : isCoup
-                            ? "Bảng tham chiếu hành động (Play) • Nói dối, Bắt bài & Chặn"
-                            : "Các vai trò, quy trình Đêm/Ngày và điều kiện thắng"}
+                    {isKot
+                      ? "6 Quái Vật Kaiju • 6 Xúc Xắc Tokyo • Kéo co Danh Vọng & Phá Hủy + Spotlight"
+                      : isDmd
+                        ? "60 lá kho báu • 10 kỹ năng liên hoàn • Cược may rủi hoặc Cháy bài mất trắng"
+                        : isDuel
+                          ? "Luật chuẩn Marc André & Bruno Cathala • Bàn 5×5, Ngọc Trai, Đặc Quyền & 3 Cách Thắng"
+                          : isSplendor
+                            ? "Luật chuẩn Space Cowboys • Thu thập đá quý, đầu tư mỏ & mời Quý Tộc"
+                            : isCoup
+                              ? "Bảng tham chiếu hành động (Play) • Nói dối, Bắt bài & Chặn"
+                              : "Các vai trò, quy trình Đêm/Ngày và điều kiện thắng"}
                   </p>
                 </div>
               </div>
@@ -3717,7 +4043,79 @@ function RoomPageContent({
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {isDmd ? (
+              {isKot ? (
+                <>
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-2 leading-relaxed text-slate-300">
+                    <p className="font-bold text-orange-300 text-xs">
+                      1. 3 Cách Chiến Thắng Tức Thì Trong King of Tokyo: Duel
+                    </p>
+                    <p>
+                      • <strong>💀 Hạ Gục KO</strong>: Đưa Máu (HP) của đối thủ
+                      về <strong>0</strong>.
+                    </p>
+                    <p>
+                      • <strong>👑 Chạm Đỉnh Thanh (Ô số 6)</strong>: Kéo thanh{" "}
+                      <strong>⭐ Danh Vọng</strong> HOẶC thanh{" "}
+                      <strong>🏢 Phá Hủy</strong> chạm ô cuối cùng (số 6) về phía
+                      bạn.
+                    </p>
+                    <p>
+                      • <strong>🔦 Chiến Thắng Spotlight Kép</strong>: Kéo{" "}
+                      <strong>CẢ HAI</strong> dấu mốc Danh Vọng & Phá Hủy cùng
+                      nằm trong <strong>Vùng Spotlight (ô 3–5)</strong> bên phía
+                      bạn!
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-2">
+                    <p className="font-bold text-sky-300 text-xs">
+                      2. Ý Nghĩa 6 Mặt Xúc Xắc Kaiju (Tung tối đa 3 lần/lượt)
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {KOT_DIE_FACES.map((face) => (
+                        <div
+                          key={face}
+                          className="rounded-lg border border-slate-800 bg-slate-900/80 p-2 text-[11px]"
+                        >
+                          <span className="font-bold text-slate-100">
+                            {KOT_DIE_META[face].emoji} {KOT_DIE_META[face].nameVi}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-2">
+                    <p className="font-bold text-amber-300 text-xs">
+                      3. 6 Quái Vật Kaiju & Kỹ Năng Độc Quyền (Kích hoạt bằng ❗)
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {KOT_MONSTER_IDS.map((mid) => {
+                        const m = KOT_MONSTERS[mid];
+                        return (
+                          <div
+                            key={mid}
+                            className="rounded-lg border border-slate-800 bg-slate-900/80 p-2 space-y-0.5"
+                          >
+                            <p className="font-bold text-slate-100">
+                              {m.emoji} {m.name}{" "}
+                              <span className="text-[10px] text-emerald-300 font-mono">
+                                ({m.maxHp} HP)
+                              </span>
+                            </p>
+                            <p className="text-[11px] text-slate-400 leading-snug">
+                              <strong className="text-amber-300">
+                                {m.powerNameVi}:
+                              </strong>{" "}
+                              {m.powerDescVi}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              ) : isDmd ? (
                 <>
                   <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-2 leading-relaxed text-slate-300">
                     <p className="font-bold text-amber-300 text-xs">
