@@ -361,47 +361,144 @@ export function KingOfTokyoDuelCanvas({
         ctx.fillStyle = "#fef9c3";
         ctx.fillText(subText, width * 0.5, height * 0.155 + 0.5, subW - 16);
 
-        // Compact 6-Kaiju showcase strip along the lower band so Meka Dragon vs Gigazaur stays wide open!
-        const pGap = Math.max(8, Math.min(14, Math.round(width * 0.014)));
-        const pSize = Math.max(48, Math.min(72, Math.floor((width - 48 - pGap * 5) / 6)));
-        const stripW = pSize * 6 + pGap * 5;
-        const stripX = (width - stripW) / 2;
-        const stripY = Math.round(height * 0.62);
-        KOT_MONSTER_IDS.forEach((mid, i) => {
-          const bob = Math.sin(now / 620 + i * 0.9) * 2.5;
-          drawKotMonsterPortrait2D(
-            ctx,
-            stripX + i * (pSize + pGap),
-            stripY + bob,
-            pSize,
-            mid
-          );
-        });
+        // Single sleek Player Roster Card tucked neatly at bottom-center so the full Meka Dragon vs Gigazaur background shines!
+        const cardW = Math.min(440, Math.max(260, width - 36));
+        const rowH = 44;
+        const rowGap = 8;
+        const headerH = 38;
+        const cardPad = 14;
+        const totalSlots = Math.max(2, curLobby.length);
+        const cardH = headerH + totalSlots * rowH + (totalSlots - 1) * rowGap + cardPad;
+        const cardX = Math.round((width - cardW) / 2);
+        const cardY = Math.round(Math.min(height - cardH - 18, height * 0.62));
 
-        const count = Math.max(1, curLobby.length);
-        const pillW = Math.min(200, Math.floor((width - 48) / count) - 10);
-        const psx = width * 0.5 - ((pillW + 10) * curLobby.length - 10) / 2;
-        curLobby.forEach((s, idx) => {
-          const px = psx + idx * (pillW + 10);
-          const py = Math.round(height * 0.8);
-          drawRoundedRect(ctx, px, py, pillW, 50, 12);
-          ctx.fillStyle = "rgba(10, 15, 30, 0.88)";
+        ctx.save();
+        ctx.shadowColor = "rgba(0, 0, 0, 0.72)";
+        ctx.shadowBlur = 24;
+        ctx.shadowOffsetY = 8;
+        drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 16);
+        ctx.fillStyle = "rgba(8, 13, 26, 0.84)";
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.strokeStyle = "rgba(253, 224, 71, 0.48)";
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+
+        // Card Header: "DANH SÁCH NGƯỜI CHƠI" + "X/2" pill
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#fde047";
+        ctx.font = `900 12px ${fonts.sans}`;
+        ctx.fillText("👥 DANH SÁCH NGƯỜI CHƠI", cardX + cardPad, cardY + 20);
+
+        const countLabel = `${curLobby.length}/2`;
+        const badgeW = 42;
+        const badgeX = cardX + cardW - cardPad - badgeW;
+        const badgeY = cardY + 10;
+        drawRoundedRect(ctx, badgeX, badgeY, badgeW, 20, 999);
+        ctx.fillStyle =
+          curLobby.length >= 2
+            ? "rgba(16, 185, 129, 0.25)"
+            : "rgba(250, 204, 21, 0.18)";
+        ctx.fill();
+        ctx.strokeStyle =
+          curLobby.length >= 2 ? "#34d399" : "rgba(253, 224, 71, 0.55)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.textAlign = "center";
+        ctx.fillStyle = curLobby.length >= 2 ? "#6ee7b7" : "#fde047";
+        ctx.font = `800 11px ${fonts.mono}`;
+        ctx.fillText(countLabel, badgeX + badgeW / 2, badgeY + 10.5);
+
+        // Thin divider line
+        ctx.strokeStyle = "rgba(148, 163, 184, 0.2)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cardX + cardPad, cardY + headerH - 4);
+        ctx.lineTo(cardX + cardW - cardPad, cardY + headerH - 4);
+        ctx.stroke();
+
+        // Render player rows (Seat 1..2)
+        for (let idx = 0; idx < totalSlots; idx++) {
+          const seat = curLobby[idx];
+          const rx = cardX + cardPad;
+          const ry = cardY + headerH + idx * (rowH + rowGap);
+          const rw = cardW - cardPad * 2;
+          const isMe = seat ? seat.seatNo === curViewer : false;
+
+          drawRoundedRect(ctx, rx, ry, rw, rowH, 10);
+          ctx.fillStyle = seat
+            ? isMe
+              ? "rgba(250, 204, 21, 0.14)"
+              : "rgba(30, 41, 59, 0.72)"
+            : "rgba(15, 23, 42, 0.48)";
           ctx.fill();
-          ctx.strokeStyle = s.seatNo === curViewer ? "#facc15" : "rgba(255, 255, 255, 0.25)";
-          ctx.lineWidth = s.seatNo === curViewer ? 2.2 : 1.2;
+          ctx.strokeStyle = seat
+            ? isMe
+              ? "#facc15"
+              : "rgba(148, 163, 184, 0.28)"
+            : "rgba(148, 163, 184, 0.18)";
+          ctx.lineWidth = isMe ? 1.6 : 1;
           ctx.stroke();
 
-          ctx.fillStyle = "#f8fafc";
-          ctx.font = `800 12.5px ${fonts.sans}`;
-          ctx.fillText(s.displayName, px + pillW / 2, py + 18, pillW - 14);
-          ctx.fillStyle = s.isBot ? "#38bdf8" : "#fde047";
-          ctx.font = `700 10.5px ${fonts.sans}`;
-          ctx.fillText(
-            s.isBot ? "🤖 Kaiju Bot" : `Người chơi #${s.seatNo}`,
-            px + pillW / 2,
-            py + 36
-          );
-        });
+          // Seat number circle
+          const circX = rx + 22;
+          const circY = ry + rowH / 2;
+          ctx.beginPath();
+          ctx.arc(circX, circY, 13, 0, Math.PI * 2);
+          ctx.fillStyle = seat
+            ? isMe
+              ? "#facc15"
+              : seat.isBot
+                ? "#0284c7"
+                : "#475569"
+            : "rgba(51, 65, 85, 0.6)";
+          ctx.fill();
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = isMe ? "#0f172a" : "#f8fafc";
+          ctx.font = `900 11px ${fonts.mono}`;
+          ctx.fillText(seat ? `#${seat.seatNo}` : `${idx + 1}`, circX, circY + 0.5);
+
+          if (seat) {
+            ctx.textAlign = "left";
+            ctx.fillStyle = isMe ? "#fef08a" : "#f8fafc";
+            ctx.font = `800 13px ${fonts.sans}`;
+            ctx.fillText(
+              `${seat.displayName}${isMe ? " (BẠN)" : ""}`,
+              rx + 44,
+              ry + rowH / 2 + 0.5,
+              rw - 148
+            );
+
+            // Right role / ready tag
+            const tagText = seat.isBot ? "🤖 Kaiju Bot" : "● Sẵn sàng";
+            const tagW = 86;
+            const tagX = rx + rw - tagW - 8;
+            const tagY = ry + (rowH - 22) / 2;
+            drawRoundedRect(ctx, tagX, tagY, tagW, 22, 999);
+            ctx.fillStyle = seat.isBot
+              ? "rgba(56, 189, 248, 0.2)"
+              : "rgba(16, 185, 129, 0.2)";
+            ctx.fill();
+            ctx.strokeStyle = seat.isBot
+              ? "rgba(56, 189, 248, 0.55)"
+              : "rgba(52, 211, 153, 0.55)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.textAlign = "center";
+            ctx.fillStyle = seat.isBot ? "#7dd3fc" : "#6ee7b7";
+            ctx.font = `800 10px ${fonts.sans}`;
+            ctx.fillText(tagText, tagX + tagW / 2, tagY + 11.5);
+          } else {
+            ctx.textAlign = "left";
+            ctx.fillStyle = "#94a3b8";
+            ctx.font = `600 12px ${fonts.sans}`;
+            ctx.fillText("⏳ Đang chờ đối thủ vào phòng...", rx + 44, ry + rowH / 2 + 0.5, rw - 56);
+          }
+        }
+        ctx.restore();
       } else if (pv.step === "MonsterPickStep") {
         // --- INTERACTIVE 2D MONSTER SELECT SCREEN: LEFT POWER INSPECTOR + RIGHT BIG FULL-ART ROSTER ---
         const isMyPick = pv.activeSeatNo === curViewer;
