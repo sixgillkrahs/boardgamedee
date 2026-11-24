@@ -790,7 +790,7 @@ export function KingOfTokyoDuelCanvas({
           }
         };
 
-        // Shared helper: Draws a vertical tabletop Power Card (Official Art Top + GIỮ/BỎ ĐI Ribbon + Cream Vietnamese Rule Box!)
+        // Shared helper: Draws the 100% official 5:7 Vietnamese-localized HD Power Card cleanly!
         const drawVerticalMarketCard = (
           cx: number,
           cy: number,
@@ -802,86 +802,40 @@ export function KingOfTokyoDuelCanvas({
           hov: boolean,
           isDiscountSlot: boolean
         ) => {
-          const lift = hov ? 6 : 0;
+          const lift = hov ? 7 : 0;
           const dy = cy - lift;
-          const rad = Math.max(7, Math.round(cw * 0.08));
+          const rad = Math.max(7, Math.round(cw * 0.065));
 
           ctx.save();
           ctx.shadowColor = canBuy
             ? hov
-              ? "rgba(250, 204, 21, 0.85)"
-              : "rgba(245, 158, 11, 0.45)"
-            : "rgba(0, 0, 0, 0.65)";
-          ctx.shadowBlur = hov ? 18 : 10;
-          ctx.shadowOffsetY = hov ? 6 : 3;
+              ? "rgba(250, 204, 21, 0.9)"
+              : "rgba(245, 158, 11, 0.5)"
+            : "rgba(0, 0, 0, 0.7)";
+          ctx.shadowBlur = hov ? 20 : 12;
+          ctx.shadowOffsetY = hov ? 7 : 3;
 
-          // Card outer parchment shell
-          drawRoundedRect(ctx, cx, dy, cw, ch, rad);
-          ctx.fillStyle = "#f5ebd6";
-          ctx.fill();
+          drawKotPowerCardArt2D(ctx, cx, dy, cw, ch, card.id, {
+            effCost: effCost !== card.cost ? effCost : undefined,
+            highlighted: canBuy || hov,
+            radius: rad,
+          });
           ctx.shadowBlur = 0;
           ctx.shadowOffsetY = 0;
 
-          // Upper 62% full-color official artwork
-          const pad = 2;
-          const artW = cw - pad * 2;
-          const artH = Math.round(ch * 0.63);
-          drawKotPowerCardArt2D(ctx, cx + pad, dy + pad, artW, artH, card.id, {
-            effCost,
-            highlighted: canBuy || hov,
-            radius: Math.max(5, rad - 1),
-          });
-
-          // Center overlapping GIỮ / BỎ ĐI ribbon right across the art-to-text boundary (matching official BGA cards!)
-          const ribW = Math.min(cw - 14, card.kind === "KEEP" ? 44 : 52);
-          const ribH = 15;
-          const ribX = cx + (cw - ribW) / 2;
-          const ribY = dy + pad + artH - ribH / 2;
-          drawRoundedRect(ctx, ribX, ribY, ribW, ribH, 5);
-          ctx.fillStyle = card.kind === "KEEP" ? "#0284c7" : "#e11d48";
-          ctx.fill();
-          ctx.strokeStyle = "#f5ebd6";
-          ctx.lineWidth = 1.4;
-          ctx.stroke();
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillStyle = "#ffffff";
-          ctx.font = `900 8.5px ${fonts.sans}`;
-          ctx.fillText(
-            card.kind === "KEEP" ? "GIỮ" : "BỎ ĐI",
-            ribX + ribW / 2,
-            ribY + ribH / 2 + 0.5
-          );
-
-          // Lower 37%: Vintage cream rule box with bold Vietnamese Title & crisp wrapped effect!
-          const textTop = ribY + ribH + 4;
-          ctx.textAlign = "center";
-          ctx.fillStyle = "#0f172a";
-          const titlePx = cw < 115 ? 9 : 10;
-          ctx.font = `900 ${titlePx}px ${fonts.sans}`;
-          ctx.fillText(card.nameVi, cx + cw / 2, textTop + 4, cw - 10);
-
-          ctx.fillStyle = "#334155";
-          const bodyPx = cw < 115 ? 8 : 8.8;
-          ctx.font = `700 ${bodyPx}px ${fonts.sans}`;
-          const lines = wrapCanvasText(ctx, card.descVi, cw - 10);
-          const lineStep = bodyPx + 2.5;
-          const availLines = Math.max(1, Math.floor((dy + ch - 4 - (textTop + 13)) / lineStep));
-          lines.slice(0, availLines).forEach((ln, li) => {
-            ctx.fillText(ln, cx + cw / 2, textTop + 14 + li * lineStep, cw - 10);
-          });
-
-          // Outer border highlight
-          drawRoundedRect(ctx, cx, dy, cw, ch, rad);
-          ctx.strokeStyle = canBuy
-            ? hov
-              ? "#fde047"
-              : "#f59e0b"
-            : isDiscountSlot
-              ? "#84cc16"
-              : "#1e293b";
-          ctx.lineWidth = canBuy ? (hov ? 2.8 : 2) : 1.5;
-          ctx.stroke();
+          // Subtle buyable / discount ring around the official card
+          if (canBuy || hov || isDiscountSlot) {
+            drawRoundedRect(ctx, cx, dy, cw, ch, rad);
+            ctx.strokeStyle = canBuy
+              ? hov
+                ? "#fde047"
+                : "#f59e0b"
+              : hov
+                ? "#e2e8f0"
+                : "rgba(132, 204, 22, 0.7)";
+            ctx.lineWidth = canBuy ? (hov ? 3 : 2.2) : hov ? 2 : 1.4;
+            ctx.stroke();
+          }
           ctx.restore();
         };
 
@@ -1275,10 +1229,10 @@ export function KingOfTokyoDuelCanvas({
           drawSideKaijuColumn(mySeat, rightColX, true);
 
           // =================================================================
-          // 3. CENTER TABLETOP: MASSIVE HD TOKYO BOARD + TOP 3 GREEN-SLOT MARKET CARDS + DECK BACK!
+          // 3. CENTER TABLETOP: MASSIVE HD TOKYO BOARD + EXACT 5:7 VIETNAMESE POWER CARDS IN TOP 3 GREEN SLOTS!
           // =================================================================
-          const cardWRatio = 0.205; // aligns dead-center over the 3 green board card slots
-          const cardAspect = 1.24;  // crisp compact portrait card so the Tokyo Board gets maximum vertical size!
+          const cardWRatio = 0.194; // aligns dead-center over the 3 green board card slots
+          const cardAspect = 1.40;  // EXACT 5:7 (200x280) official card aspect ratio — zero stretching!
           const overlapRatio = 0.048; // bottom edge hugs right inside the 3 green board slots
           const deckLeftProtrude = 0.082; // deck back nestled tightly beside Slot 0
           const totalHRatio = 1 + cardWRatio * cardAspect * boardAspect - overlapRatio;
@@ -1395,7 +1349,7 @@ export function KingOfTokyoDuelCanvas({
             }
           });
 
-          // D. Render Full-Art Zoomed Card Tooltip on hover (always razor-sharp & unobstructed!)
+          // D. Render Full-Art Exact 5:7 Vietnamese-Localized Zoomed Card on hover!
           if (zoomedCardInfo) {
             const zi = zoomedCardInfo as {
               card: (typeof pv.market)[number];
@@ -1405,74 +1359,45 @@ export function KingOfTokyoDuelCanvas({
               anchorX: number;
               anchorY: number;
             };
-            const zW = 220;
-            const zH = 308;
+            const zW = 230;
+            const zCardH = Math.round(zW * 1.4); // 230 x 322 exact 5:7 official card!
+            const zFootH = 26;
+            const zH = zCardH + zFootH + 6;
             let zX = Math.round(zi.anchorX - zW / 2);
             let zY = Math.round(zi.anchorY);
-            if (zX < 12) zX = 12;
-            if (zX + zW > width - 12) zX = width - zW - 12;
-            if (zY + zH > height - 12) zY = height - zH - 12;
+            if (zX < 10) zX = 10;
+            if (zX + zW > width - 10) zX = width - zW - 10;
+            if (zY + zH > height - 10) zY = height - zH - 10;
             if (zY < bodyTop) zY = bodyTop;
 
             ctx.save();
-            ctx.shadowColor = "rgba(0, 0, 0, 0.82)";
-            ctx.shadowBlur = 26;
-            ctx.shadowOffsetY = 8;
-            drawRoundedRect(ctx, zX, zY, zW, zH, 14);
-            ctx.fillStyle = "#f5ebd6";
-            ctx.fill();
+            ctx.shadowColor = "rgba(0, 0, 0, 0.85)";
+            ctx.shadowBlur = 28;
+            ctx.shadowOffsetY = 10;
+            drawKotPowerCardArt2D(ctx, zX, zY, zW, zCardH, zi.card.id, {
+              effCost:
+                zi.effCost !== undefined && zi.effCost !== zi.card.cost
+                  ? zi.effCost
+                  : undefined,
+              highlighted: zi.canBuy,
+              radius: 13,
+            });
             ctx.shadowBlur = 0;
             ctx.shadowOffsetY = 0;
-            ctx.strokeStyle = zi.canBuy ? "#fde047" : "#1e293b";
-            ctx.lineWidth = zi.canBuy ? 3 : 2;
-            ctx.stroke();
 
-            const zPad = 6;
-            const zArtW = zW - zPad * 2;
-            const zArtH = Math.round(zH * 0.62);
-            drawKotPowerCardArt2D(ctx, zX + zPad, zY + zPad, zArtW, zArtH, zi.card.id, {
-              effCost: zi.effCost,
-              highlighted: zi.canBuy,
-              radius: 10,
-            });
-
-            const zKindLabel = zi.card.kind === "KEEP" ? "GIỮ VĨNH VIỄN" : "BỎ ĐI (DÙNG NGAY)";
-            const zKindW = zi.card.kind === "KEEP" ? 86 : 104;
-            drawRoundedRect(ctx, zX + zW - zKindW - 10, zY + 10, zKindW, 20, 6);
-            ctx.fillStyle = zi.card.kind === "KEEP" ? "#0284c7" : "#e11d48";
+            // Crisp floating status pill directly beneath the full Vietnamese card
+            const pillY = zY + zCardH + 6;
+            drawRoundedRect(ctx, zX + 6, pillY, zW - 12, zFootH, 8);
+            ctx.fillStyle = zi.canBuy ? "#f59e0b" : "rgba(15, 23, 42, 0.94)";
             ctx.fill();
+            ctx.strokeStyle = zi.canBuy ? "#fde047" : "rgba(148, 163, 184, 0.45)";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillStyle = "#ffffff";
-            ctx.font = `900 8.5px ${fonts.sans}`;
-            ctx.fillText(zKindLabel, zX + zW - zKindW / 2 - 10, zY + 20.5);
-
-            const zTextY = zY + zPad + zArtH + 14;
-            ctx.textAlign = "left";
-            ctx.fillStyle = "#0f172a";
-            ctx.font = `900 13px ${fonts.sans}`;
-            ctx.fillText(
-              `${zi.card.emoji} ${zi.card.nameVi}`,
-              zX + 12,
-              zTextY,
-              zW - 24
-            );
-
-            ctx.fillStyle = "#334155";
-            ctx.font = `700 11px ${fonts.sans}`;
-            const zLines = wrapCanvasText(ctx, zi.card.descVi, zW - 24);
-            zLines.slice(0, 4).forEach((ln, li) => {
-              ctx.fillText(ln, zX + 12, zTextY + 18 + li * 15);
-            });
-
-            const zFootY = zY + zH - 21;
-            drawRoundedRect(ctx, zX + 10, zFootY - 9, zW - 20, 20, 6);
-            ctx.fillStyle = zi.canBuy ? "#f59e0b" : "#cbd5e1";
-            ctx.fill();
-            ctx.textAlign = "center";
-            ctx.fillStyle = "#0f172a";
-            ctx.font = `900 10px ${fonts.sans}`;
-            ctx.fillText(zi.statusText, zX + zW / 2, zFootY + 1.5);
+            ctx.fillStyle = zi.canBuy ? "#0f172a" : "#e2e8f0";
+            ctx.font = `900 10.5px ${fonts.sans}`;
+            ctx.fillText(zi.statusText, zX + zW / 2, pillY + zFootH / 2 + 0.5);
             ctx.restore();
           }
         } else {

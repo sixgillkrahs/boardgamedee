@@ -12,32 +12,32 @@ export const KOT_BOARD_ATLAS_URL = "/sprites/kot-duel-boards-pixel.png";
 export const KOT_GAME_BOARD_URL = "/sprites/kot-duel-board-map-pixel.png";
 export const KOT_TOKENS_ATLAS_URL = "/sprites/kot-duel-tokens-pixel.png";
 export const KOT_ICONS_ATLAS_URL = "/sprites/kot-duel-icons-pixel.png";
-export const KOT_POWER_CARDS_ATLAS_URL = "/sprites/kot-duel-power-cards-pixel.png";
+export const KOT_POWER_CARDS_ATLAS_URL = "/sprites/kot-duel-power-cards-vi.webp";
 export const KOT_CARD_BACK_URL = "/sprites/kot-duel-card-back-pixel.png";
 export const KOT_HP_DIALS_ATLAS_URL = "/sprites/kot-duel-hp-dials-pixel.png";
 export const KOT_DICE_ATLAS_URL = "/sprites/kot-duel-dice-pixel.png";
 
-/** Grid coordinates (col 0..9, row 0..4, each 100x140) in kot-duel-power-cards-pixel.png for every Power Card ID. */
+/** Grid coordinates (col 0..9, row 0..4, each 200x280 exact 5:7 Vietnamese localized card) in kot-duel-power-cards-vi.webp. */
 export const KOT_POWER_CARD_COORDS: Record<string, { col: number; row: number }> = {
-  "kot-beam": { col: 0, row: 2 },
-  "kot-nuke-heal": { col: 5, row: 0 },
-  "kot-media-storm": { col: 6, row: 2 },
-  "kot-quake": { col: 9, row: 0 },
-  "kot-shockwave": { col: 7, row: 1 },
-  "kot-live-tv": { col: 6, row: 1 },
-  "kot-meltdown": { col: 7, row: 0 },
-  "kot-dual-strike": { col: 1, row: 1 },
-  "kot-overcharge": { col: 2, row: 0 },
-  "kot-titan-claws": { col: 0, row: 0 },
-  "kot-armor": { col: 3, row: 2 },
-  "kot-reactor": { col: 7, row: 2 },
-  "kot-extra-die": { col: 1, row: 3 },
-  "kot-regen": { col: 2, row: 3 },
-  "kot-jetpack": { col: 5, row: 4 },
-  "kot-siege": { col: 4, row: 4 },
-  "kot-idol": { col: 3, row: 4 },
-  "kot-vamp": { col: 2, row: 2 },
-  "kot-discount": { col: 8, row: 0 },
+  "kot-titan-claws": { col: 0, row: 0 }, // #0 Acid Attack
+  "kot-vamp": { col: 3, row: 0 },        // #3 Antimatter Pellets
+  "kot-armor": { col: 4, row: 0 },       // #4 Armor Plating
+  "kot-idol": { col: 5, row: 0 },        // #5 Breaking News
+  "kot-extra-die": { col: 1, row: 1 },   // #11 Extra Head
+  "kot-reactor": { col: 2, row: 1 },     // #12 Eye of the Storm
+  "kot-jetpack": { col: 5, row: 1 },     // #15 Giant Brain
+  "kot-meltdown": { col: 0, row: 2 },    // #20 Jets Scrambled
+  "kot-shockwave": { col: 1, row: 2 },   // #21 Kaijutsu
+  "kot-discount": { col: 3, row: 2 },    // #23 Made in a Lab
+  "kot-overcharge": { col: 4, row: 2 },  // #24 Moment of Respite
+  "kot-dual-strike": { col: 6, row: 2 }, // #26 Monumental
+  "kot-media-storm": { col: 9, row: 2 }, // #29 Photoshoot
+  "kot-regen": { col: 1, row: 3 },       // #31 Regeneration
+  "kot-quake": { col: 4, row: 3 },       // #34 Seismic Test
+  "kot-nuke-heal": { col: 6, row: 3 },   // #36 Snack Time
+  "kot-siege": { col: 7, row: 3 },       // #37 Spiked Tail
+  "kot-live-tv": { col: 1, row: 4 },     // #41 Thermonuclear Cooking
+  "kot-beam": { col: 4, row: 4 },        // #44 Too Cute
 };
 
 export type KotIconName =
@@ -305,10 +305,10 @@ export function drawKotPowerCardArt2D(
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(
       atlas,
-      coord.col * 100,
-      coord.row * 140,
-      100,
-      140,
+      coord.col * 200,
+      coord.row * 280,
+      200,
+      280,
       x,
       y,
       w,
@@ -319,11 +319,11 @@ export function drawKotPowerCardArt2D(
     ctx.fillRect(x, y, w, h);
   }
 
-  // Official-style cream cost badge top-left cleanly covering source corner cost!
+  // Optional cost badge override (only drawn when caller passes effCost to reflect live game price/discounts)
   if (opts.effCost !== undefined) {
-    const bw = Math.max(26, Math.min(44, Math.round(w * 0.38)));
-    const bh = Math.max(16, Math.min(26, Math.round(h * 0.22)));
-    drawRoundedRect(ctx, x - 2, y - 2, bw + 2, bh + 2, 6);
+    const bw = Math.max(24, Math.min(46, Math.round(w * 0.28)));
+    const bh = Math.max(16, Math.min(28, Math.round(h * 0.13)));
+    drawRoundedRect(ctx, x - 2, y - 2, bw + 2, bh + 2, 7);
     ctx.fillStyle = "#f5ebd6";
     ctx.fill();
     ctx.strokeStyle = "#1c1917";
@@ -334,7 +334,7 @@ export function drawKotPowerCardArt2D(
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#0f172a";
-    ctx.font = `900 ${Math.max(10, Math.round(bh * 0.65))}px ${fonts.mono}`;
+    ctx.font = `900 ${Math.max(10, Math.round(bh * 0.68))}px ${fonts.mono}`;
     ctx.fillText(`${opts.effCost}`, x + 3, y + bh * 0.52);
     drawKotIcon2D(
       ctx,
