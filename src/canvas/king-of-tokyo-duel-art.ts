@@ -1,10 +1,14 @@
 import { drawRoundedRect, getCanvasFontFamilies } from "@/canvas/engine";
 import {
+  KOT_BUZZ_TILE_DEFS,
   KOT_MONSTERS,
   KOT_WIN_TRACK_POS,
   type KotBuzzKind,
+  type KotBuzzTileId,
   type KotDieFace,
   type KotMonsterId,
+  type KotPlacedBuzzTile,
+  type KotTrackType,
 } from "@/cartridges/king-of-tokyo-duel";
 
 export const KOT_MONSTER_ATLAS_URL = "/sprites/kot-duel-monsters-pixel.png";
@@ -41,6 +45,9 @@ export const KOT_POWER_CARD_COORDS: Record<string, { col: number; row: number }>
   "kot-siege": { col: 7, row: 3 },       // #37 Spiked Tail
   "kot-live-tv": { col: 1, row: 4 },     // #41 Thermonuclear Cooking
   "kot-beam": { col: 4, row: 4 },        // #44 Too Cute
+  "kot-alien-metab": { col: 2, row: 0 }, // #2 Alien Metabolism (Anubis Buzz)
+  "kot-elec-aura": { col: 9, row: 0 },   // #9 Electrical Aura (Cat Zap Buzz)
+  "kot-party-over": { col: 0, row: 4 },  // #40 The Party's Over! (Cat Pink Buzz)
 };
 
 export type KotIconName =
@@ -500,6 +507,65 @@ const BUZZ_MEDAL_SX: Record<KotBuzzKind, number> = {
   BONUS_DIE: 192,
   PULL_1: 256,
 };
+
+let cachedBuzzTilesImg: HTMLImageElement | null = null;
+let buzzTilesLoaded = false;
+const buzzTilesListeners = new Set<() => void>();
+
+export function getKotBuzzTilesAtlas(
+  onLoad?: () => void
+): HTMLImageElement | null {
+  if (typeof window === "undefined") return null;
+  if (buzzTilesLoaded && cachedBuzzTilesImg) return cachedBuzzTilesImg;
+  if (onLoad) buzzTilesListeners.add(onLoad);
+  if (!cachedBuzzTilesImg) {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      buzzTilesLoaded = true;
+      buzzTilesListeners.forEach((fn) => fn());
+      buzzTilesListeners.clear();
+    };
+    img.src = KOT_BUZZ_TILES_URL;
+    cachedBuzzTilesImg = img;
+  }
+  return buzzTilesLoaded ? cachedBuzzTilesImg : null;
+}
+
+/**
+ * Draws a standalone crisp preview thumbnail of a shaped 2-space or 3-space Buzz Tile
+ * inside bounding box `(x, y, w, h)` (used in the top placement prompt banner).
+ */
+export function drawKotBuzzTilePreview2D(
+  ctx: CanvasRenderingContext2D,
+  tileId: KotBuzzTileId,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  const atlas = getKotBuzzTilesAtlas();
+  if (!atlas) return;
+  const def = KOT_BUZZ_TILE_DEFS[tileId];
+  const col = def.spriteIndex % 4;
+  const row = Math.floor(def.spriteIndex / 4);
+  const sx = col * 192;
+  const sy = row * 160;
+  const aspect = 192 / 160;
+  let dw = w;
+  let dh = dw / aspect;
+  if (dh > h) {
+    dh = h;
+    dw = dh * aspect;
+  }
+  const dx = x + (w - dw) / 2;
+  const dy = y + (h - dh) / 2;
+  ctx.save();
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(atlas, sx, sy, 192, 160, dx, dy, dw, dh);
+  ctx.restore();
+}
 
 let cachedHpDialsImg: HTMLImageElement | null = null;
 let hpDialsLoaded = false;
@@ -1259,7 +1325,128 @@ const BUZZ_ICON: Record<KotBuzzKind, KotIconName> = {
 };
 
 /**
- * Draws the detailed 2D 16-bit Pixel Art Tokyo Duel Game Board with live zigzag Buzz Tokens
+ * Returns the exact board pixel center of a 2-space or 3-space Buzz Tile placement
+ * so clickable hit targets align directly with the tile center on the zigzag track.
+ */
+export function getKotBuzzPlacementAnchorPx(
+  boardX: number,
+  boardY: number,
+  boardW: number,
+  boardH: number,
+  track: KotTrackType,
+  startPos: number,
+  span: 2 | 3,
+  sign: -1 | 1
+): { cx: number; cy: number } {
+  if (span === 3) {
+    const pMid = getKotTrackNodeNorm(track, (startPos + 1) * sign);
+    return {
+      cx: boardX + pMid.nx * boardW,
+      cy: boardY + pMid.ny * boardH,
+    };
+  }
+  const p0 = getKotTrackNodeNorm(track, startPos * sign);
+  const p1 = getKotTrackNodeNorm(track, (startPos + 1) * sign);
+  return {
+    cx: boardX + ((p0.nx + p1.nx) / 2) * boardW,
+    cy: boardY + ((p0.ny + p1.ny) / 2) * boardH,
+  };
+}
+
+/**
+ * Draws an official shaped 2-space or 3-space Buzz Tile snapped concentrically
+ * onto its exact 2 or 3 zigzag track circles on the Tokyo board!
+ */
+export function drawKotPlacedBuzzTileOnBoard2D(
+  ctx: CanvasRenderingContext2D,
+  boardX: number,
+  boardY: number,
+  boardW: number,
+  boardH: number,
+  tileId: KotBuzzTileId,
+  track: KotTrackType,
+  startPos: number,
+  sign: -1 | 1,
+  opts: { ghost?: boolean; highlighted?: boolean; nowMs?: number } = {}
+) {
+  const atlas = getKotBuzzTilesAtlas();
+  if (!atlas) return;
+
+  const def = KOT_BUZZ_TILE_DEFS[tileId];
+  const col = def.spriteIndex % 4;
+  const row = Math.floor(def.spriteIndex / 4);
+  const sx = col * 192;
+  const sy = row * 160;
+
+  ctx.save();
+  if (opts.ghost) {
+    ctx.globalAlpha = 0.88;
+    ctx.shadowColor = "rgba(52, 211, 153, 0.95)";
+    ctx.shadowBlur = 16;
+  } else if (opts.highlighted) {
+    const pulse = 0.5 + 0.5 * Math.sin((opts.nowMs ?? 0) / 260);
+    ctx.shadowColor = "rgba(250, 204, 21, 0.9)";
+    ctx.shadowBlur = 8 + pulse * 8;
+  } else {
+    ctx.shadowColor = "rgba(2, 6, 23, 0.72)";
+    ctx.shadowBlur = 7;
+    ctx.shadowOffsetY = 3;
+  }
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+
+  if (def.span === 3) {
+    const n0 = getKotTrackNodeNorm(track, startPos * sign);
+    const n1 = getKotTrackNodeNorm(track, (startPos + 1) * sign);
+    const n2 = getKotTrackNodeNorm(track, (startPos + 2) * sign);
+    const x0 = boardX + n0.nx * boardW;
+    const y0 = boardY + n0.ny * boardH;
+    const x1 = boardX + n1.nx * boardW;
+    const y1 = boardY + n1.ny * boardH;
+    const x2 = boardX + n2.nx * boardW;
+    const y2 = boardY + n2.ny * boardH;
+
+    // In 192x160 cell: left=(47,82), mid=(96,47), right=(145,82) -> spanX=98, dy=-35
+    const ax = (x0 + x2) / 2;
+    const ay = (y0 + y2) / 2;
+    const scaleX = Math.max(0.1, Math.abs(x2 - x0) / 98);
+    const scaleY = Math.max(0.1, Math.abs(y1 - y0) / 35);
+    const flipY = y1 < y0 ? 1 : -1;
+
+    ctx.translate(ax, ay);
+    ctx.scale(scaleX, scaleY * flipY);
+    ctx.drawImage(atlas, sx, sy, 192, 160, -96, -82, 192, 160);
+  } else {
+    const n0 = getKotTrackNodeNorm(track, startPos * sign);
+    const n1 = getKotTrackNodeNorm(track, (startPos + 1) * sign);
+    const x0 = boardX + n0.nx * boardW;
+    const y0 = boardY + n0.ny * boardH;
+    const x1 = boardX + n1.nx * boardW;
+    const y1 = boardY + n1.ny * boardH;
+
+    // In 192x160 cell: left=(52,83), right=(140,83) -> mid=(96,83), dist=88
+    const mx = (x0 + x1) / 2;
+    const my = (y0 + y1) / 2;
+    const dist = Math.max(10, Math.hypot(x1 - x0, y1 - y0));
+    const sc = dist / 88;
+    // Keep chibi mascot upright for both Seat 1 (mirrored X) and Seat 2!
+    const mirrored = x1 < x0;
+    const ang = mirrored
+      ? Math.atan2(y0 - y1, x0 - x1)
+      : Math.atan2(y1 - y0, x1 - x0);
+
+    ctx.translate(mx, my);
+    ctx.rotate(ang);
+    ctx.scale(mirrored ? -sc : sc, sc);
+    ctx.drawImage(atlas, sx, sy, 192, 160, -96, -83, 192, 160);
+  }
+
+  ctx.restore();
+}
+
+/**
+ * Draws the detailed 2D 16-bit Pixel Art Tokyo Duel Game Board with live shaped Buzz Tiles
  * and smoothly gliding Fame (⭐) & Destruction (🏢) markers!
  */
 export function drawKotGameBoard2D(
@@ -1272,6 +1459,13 @@ export function drawKotGameBoard2D(
     nowMs: number;
     smoothFame: number;
     smoothDest: number;
+    sign: -1 | 1;
+    placedBuzzTiles?: KotPlacedBuzzTile[];
+    pendingPlacement?: {
+      tileId: KotBuzzTileId;
+      validSpots: Array<{ track: KotTrackType; startPos: number }>;
+      hoveredSpot: { track: KotTrackType; startPos: number } | null;
+    } | null;
     buzzTokens: Array<{
       id: string;
       track: "fame" | "destruction";
@@ -1334,10 +1528,98 @@ export function drawKotGameBoard2D(
   ctx.fillStyle = "#6ee7b7";
   ctx.fillText("BẠN THẮNG ▶", x + w - rightPillW / 2 - 8, y + h - pillH / 2 - 7.5);
 
-  // Live Buzz Tokens sitting inside their exact zigzag track circles!
+  // 1. Official Shaped 2-Space & 3-Space Buzz Tiles snapped onto their exact zigzag track circles!
+  const pulse = 0.5 + 0.5 * Math.sin(opts.nowMs / 340);
+  if (opts.placedBuzzTiles && opts.placedBuzzTiles.length > 0) {
+    for (const placed of opts.placedBuzzTiles) {
+      const isMovingThis =
+        opts.pendingPlacement?.tileId === placed.tileId;
+      ctx.save();
+      if (isMovingThis) ctx.globalAlpha = 0.35;
+      drawKotPlacedBuzzTileOnBoard2D(
+        ctx,
+        x,
+        y,
+        w,
+        h,
+        placed.tileId,
+        placed.track,
+        placed.startPos,
+        opts.sign,
+        { nowMs: opts.nowMs }
+      );
+      ctx.restore();
+    }
+  }
+
+  // 2. Interactive Placement Targets & Live Ghost Preview during PlaceBuzzStep!
+  if (opts.pendingPlacement) {
+    const { tileId, validSpots, hoveredSpot } = opts.pendingPlacement;
+    const def = KOT_BUZZ_TILE_DEFS[tileId];
+    const dotR = Math.max(8, Math.min(14, Math.round(w * 0.02)));
+
+    for (const spot of validSpots) {
+      const isHov =
+        hoveredSpot?.track === spot.track &&
+        hoveredSpot?.startPos === spot.startPos;
+      const { cx, cy } = getKotBuzzPlacementAnchorPx(
+        x,
+        y,
+        w,
+        h,
+        spot.track,
+        spot.startPos,
+        def.span,
+        opts.sign
+      );
+
+      ctx.save();
+      ctx.shadowColor = isHov
+        ? "rgba(52, 211, 153, 0.95)"
+        : "rgba(250, 204, 21, 0.8)";
+      ctx.shadowBlur = isHov ? 14 : 6 + pulse * 5;
+      ctx.fillStyle = isHov
+        ? "rgba(16, 185, 129, 0.42)"
+        : "rgba(250, 204, 21, 0.24)";
+      ctx.beginPath();
+      ctx.arc(cx, cy, dotR + (isHov ? 3 : 0), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = isHov ? "#34d399" : "#fde047";
+      ctx.lineWidth = isHov ? 2.8 : 1.8;
+      ctx.stroke();
+
+      // Tiny crosshair / "+" inside target ring
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = isHov ? "#ecfdf5" : "#fef9c3";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx - 4, cy);
+      ctx.lineTo(cx + 4, cy);
+      ctx.moveTo(cx, cy - 4);
+      ctx.lineTo(cx, cy + 4);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if (hoveredSpot) {
+      drawKotPlacedBuzzTileOnBoard2D(
+        ctx,
+        x,
+        y,
+        w,
+        h,
+        tileId,
+        hoveredSpot.track,
+        hoveredSpot.startPos,
+        opts.sign,
+        { ghost: true, nowMs: opts.nowMs }
+      );
+    }
+  }
+
+  // 3. Legacy single-circle Buzz Token medallions (if any present)
   const buzzAtlas = getKotBuzzMedalsAtlas();
   const tokenR = Math.max(10, Math.min(18, Math.round(w * 0.0255)));
-  const pulse = 0.5 + 0.5 * Math.sin(opts.nowMs / 340);
 
   for (const bz of opts.buzzTokens) {
     const pt = getKotTrackNodeNorm(bz.track, bz.orientedPos);

@@ -144,10 +144,184 @@ export type KotBuzzKind = "ENERGY_2" | "HEAL_2" | "DMG_1" | "BONUS_DIE" | "PULL_
 export interface KotBuzzToken {
   id: string;
   track: KotTrackType;
-  /** Position on track from -5 to +5 (Seat 1 pulls toward -6, Seat 2 pulls toward +6) */
+  /** Position on track from -6 to +6 (Seat 1 pulls toward -7, Seat 2 pulls toward +7) */
   pos: number;
   kind: KotBuzzKind;
   labelVi: string;
+}
+
+export type KotBuzzTileId =
+  | "space_penguin"
+  | "cat_zap"
+  | "cat_pink"
+  | "anubis"
+  | "meka_dragon"
+  | "cyber_kitty"
+  | "gigazaur"
+  | "pumpkin_jack"
+  | "alienoid"
+  | "emperor"
+  | "kraken"
+  | "the_king";
+
+export type KotBuzzEffect =
+  | "ENERGY_1"
+  | "ENERGY_2"
+  | "HEAL_1"
+  | "HEAL_2"
+  | "CLAW_1"
+  | "BONUS_DIE"
+  | "PULL_1";
+
+export interface KotBuzzTileDef {
+  id: KotBuzzTileId;
+  nameVi: string;
+  span: 2 | 3;
+  /** Cell index 0..11 in kot-duel-buzz-tiles-pixel.png (4 cols x 3 rows, 192x160/cell) */
+  spriteIndex: number;
+  /** Bonus effect at each consecutive space [left, right] (span=2) or [left, mid, right] (span=3) */
+  slotEffects: Array<KotBuzzEffect | null>;
+  summaryVi: string;
+}
+
+export interface KotPlacedBuzzTile {
+  tileId: KotBuzzTileId;
+  track: KotTrackType;
+  /** Canonical leftmost track position (-6 .. +6 - (span - 1)) occupied by this tile */
+  startPos: number;
+}
+
+export const KOT_BUZZ_TILE_DEFS: Record<KotBuzzTileId, KotBuzzTileDef> = {
+  space_penguin: {
+    id: "space_penguin",
+    nameVi: "Cánh Cụt Vũ Trụ",
+    span: 3,
+    spriteIndex: 0,
+    slotEffects: [null, "CLAW_1", null],
+    summaryVi: "3 ô • Ô giữa: +1 🐾 Sát thương",
+  },
+  cat_zap: {
+    id: "cat_zap",
+    nameVi: "Mèo Điện",
+    span: 2,
+    spriteIndex: 1,
+    slotEffects: ["CLAW_1", "BONUS_DIE"],
+    summaryVi: "2 ô • +1 🐾 Sát thương & +1 🎲 Xúc xắc đỏ",
+  },
+  cat_pink: {
+    id: "cat_pink",
+    nameVi: "Mèo Hồng",
+    span: 3,
+    spriteIndex: 2,
+    slotEffects: [null, "HEAL_1", null],
+    summaryVi: "3 ô • Ô giữa: +1 ❤️ Hồi máu",
+  },
+  anubis: {
+    id: "anubis",
+    nameVi: "Anubis",
+    span: 2,
+    spriteIndex: 3,
+    slotEffects: ["ENERGY_1", "HEAL_1"],
+    summaryVi: "2 ô • +1 ⚡ Năng lượng & +1 ❤️ Hồi máu",
+  },
+  meka_dragon: {
+    id: "meka_dragon",
+    nameVi: "Meka Dragon",
+    span: 2,
+    spriteIndex: 4,
+    slotEffects: ["ENERGY_1", "CLAW_1"],
+    summaryVi: "2 ô • +1 ⚡ Năng lượng & +1 🐾 Sát thương",
+  },
+  cyber_kitty: {
+    id: "cyber_kitty",
+    nameVi: "Cyber Kitty",
+    span: 2,
+    spriteIndex: 5,
+    slotEffects: ["ENERGY_1", "BONUS_DIE"],
+    summaryVi: "2 ô • +1 ⚡ Năng lượng & +1 🎲 Xúc xắc đỏ",
+  },
+  gigazaur: {
+    id: "gigazaur",
+    nameVi: "Gigazaur",
+    span: 3,
+    spriteIndex: 6,
+    slotEffects: [null, "CLAW_1", null],
+    summaryVi: "3 ô • Ô giữa: +1 🐾 Sát thương",
+  },
+  pumpkin_jack: {
+    id: "pumpkin_jack",
+    nameVi: "Pumpkin Jack",
+    span: 2,
+    spriteIndex: 7,
+    slotEffects: ["CLAW_1", "HEAL_1"],
+    summaryVi: "2 ô • +1 🐾 Sát thương & +1 ❤️ Hồi máu",
+  },
+  alienoid: {
+    id: "alienoid",
+    nameVi: "Alienoid",
+    span: 3,
+    spriteIndex: 8,
+    slotEffects: [null, "ENERGY_2", null],
+    summaryVi: "3 ô • Ô giữa: +2 ⚡ Năng lượng",
+  },
+  emperor: {
+    id: "emperor",
+    nameVi: "Hoàng Đế Tokyo",
+    span: 2,
+    spriteIndex: 9,
+    slotEffects: ["PULL_1", "ENERGY_1"],
+    summaryVi: "2 ô • +1 Kéo thanh & +1 ⚡ Năng lượng",
+  },
+  kraken: {
+    id: "kraken",
+    nameVi: "Kraken",
+    span: 3,
+    spriteIndex: 10,
+    slotEffects: [null, "HEAL_2", null],
+    summaryVi: "3 ô • Ô giữa: +2 ❤️ Hồi máu",
+  },
+  the_king: {
+    id: "the_king",
+    nameVi: "The King",
+    span: 2,
+    spriteIndex: 11,
+    slotEffects: ["PULL_1", "CLAW_1"],
+    summaryVi: "2 ô • +1 Kéo thanh & +1 🐾 Sát thương",
+  },
+};
+
+export function getValidBuzzPlacements(
+  placedBuzzTiles: KotPlacedBuzzTile[],
+  tileId: KotBuzzTileId
+): Array<{ track: KotTrackType; startPos: number }> {
+  const def = KOT_BUZZ_TILE_DEFS[tileId];
+  const maxStart = 6 - (def.span - 1);
+  const results: Array<{ track: KotTrackType; startPos: number }> = [];
+
+  for (const track of ["fame", "destruction"] as const) {
+    const occupied = new Set<number>();
+    for (const placed of placedBuzzTiles) {
+      if (placed.track !== track || placed.tileId === tileId) continue;
+      const pDef = KOT_BUZZ_TILE_DEFS[placed.tileId];
+      for (let i = 0; i < pDef.span; i++) {
+        occupied.add(placed.startPos + i);
+      }
+    }
+
+    for (let startPos = -6; startPos <= maxStart; startPos++) {
+      let ok = true;
+      for (let i = 0; i < def.span; i++) {
+        if (occupied.has(startPos + i)) {
+          ok = false;
+          break;
+        }
+      }
+      if (ok) {
+        results.push({ track, startPos });
+      }
+    }
+  }
+  return results;
 }
 
 export type KotPowerCardKind = "DISCARD" | "KEEP";
@@ -181,6 +355,8 @@ export interface KotPowerCard {
   effectId: KotPowerEffectId;
   descVi: string;
   emoji: string;
+  /** Matching chibi Buzz Token badge printed on top-left of card (grants Buzz Tile place/move!) */
+  buzzTileId?: KotBuzzTileId;
 }
 
 export const KOT_POWER_DECK_TEMPLATE: KotPowerCard[] = [
@@ -193,6 +369,7 @@ export const KOT_POWER_DECK_TEMPLATE: KotPowerCard[] = [
     effectId: "DMG_3",
     descVi: "Đối thủ chịu sát thương trực tiếp!",
     emoji: "🔥",
+    buzzTileId: "kraken",
   },
   {
     id: "kot-nuke-heal",
@@ -211,6 +388,7 @@ export const KOT_POWER_DECK_TEMPLATE: KotPowerCard[] = [
     effectId: "FAME_2",
     descVi: "Kéo thanh Danh Vọng ⭐ về phía bạn!",
     emoji: "📺",
+    buzzTileId: "kraken",
   },
   {
     id: "kot-quake",
@@ -229,6 +407,7 @@ export const KOT_POWER_DECK_TEMPLATE: KotPowerCard[] = [
     effectId: "DMG_2_DESTRUCT_1",
     descVi: "Kéo 1 🏢. Đối thủ chịu 2 sát thương.",
     emoji: "💥",
+    buzzTileId: "pumpkin_jack",
   },
   {
     id: "kot-live-tv",
@@ -238,6 +417,7 @@ export const KOT_POWER_DECK_TEMPLATE: KotPowerCard[] = [
     effectId: "FAME_2_HEAL_1",
     descVi: "Kéo thanh & hồi Máu ngay lập tức.",
     emoji: "🎬",
+    buzzTileId: "emperor",
   },
   {
     id: "kot-meltdown",
@@ -247,6 +427,7 @@ export const KOT_POWER_DECK_TEMPLATE: KotPowerCard[] = [
     effectId: "DMG_4_SELF_1",
     descVi: "Gây sát thương lớn lên đối thủ (bạn chịu 1 sát thương).",
     emoji: "☢️",
+    buzzTileId: "space_penguin",
   },
   {
     id: "kot-dual-strike",
@@ -256,6 +437,7 @@ export const KOT_POWER_DECK_TEMPLATE: KotPowerCard[] = [
     effectId: "BOTH_TRACKS_1",
     descVi: "Kéo 1 🏢 và 1 ⭐ về phía bạn!",
     emoji: "🚀",
+    buzzTileId: "emperor",
   },
   {
     id: "kot-overcharge",
@@ -265,6 +447,17 @@ export const KOT_POWER_DECK_TEMPLATE: KotPowerCard[] = [
     effectId: "ENERGY_3_HEAL_2",
     descVi: "Hồi +2 ❤️ Máu & nhận thưởng năng lượng.",
     emoji: "🔋",
+    buzzTileId: "alienoid",
+  },
+  {
+    id: "kot-party-over",
+    nameVi: "Tàn Tiệc! (The Party's Over!)",
+    cost: 4,
+    kind: "DISCARD",
+    effectId: "DMG_3",
+    descVi: "Gây sát thương lớn & điều khiển Token Buzz Mèo Hồng!",
+    emoji: "💥",
+    buzzTileId: "cat_pink",
   },
   // KEEP (Permanent Kaiju Evolutions!)
   {
@@ -275,6 +468,7 @@ export const KOT_POWER_DECK_TEMPLATE: KotPowerCard[] = [
     effectId: "BONUS_CLAW_1",
     descVi: "Thêm 1 🐾 vào kết quả tung của bạn.",
     emoji: "⚔️",
+    buzzTileId: "meka_dragon",
   },
   {
     id: "kot-armor",
@@ -284,6 +478,7 @@ export const KOT_POWER_DECK_TEMPLATE: KotPowerCard[] = [
     effectId: "ARMOR_1",
     descVi: "Chặn 1 sát thương đầu tiên bạn chịu mỗi lượt đối thủ.",
     emoji: "🛡️",
+    buzzTileId: "cyber_kitty",
   },
   {
     id: "kot-reactor",
@@ -293,6 +488,7 @@ export const KOT_POWER_DECK_TEMPLATE: KotPowerCard[] = [
     effectId: "TURN_ENERGY_1",
     descVi: "Đầu mỗi lượt nhận thêm +1 ⚡ Năng Lượng.",
     emoji: "⚡",
+    buzzTileId: "gigazaur",
   },
   {
     id: "kot-extra-die",
@@ -338,6 +534,7 @@ export const KOT_POWER_DECK_TEMPLATE: KotPowerCard[] = [
     effectId: "BOOST_FAME_1",
     descVi: "Mỗi khi kéo Danh Vọng ⭐ bằng xúc xắc, kéo thêm +1 bước!",
     emoji: "🌟",
+    buzzTileId: "gigazaur",
   },
   {
     id: "kot-vamp",
@@ -356,6 +553,27 @@ export const KOT_POWER_DECK_TEMPLATE: KotPowerCard[] = [
     effectId: "DISCOUNT_1",
     descVi: "Mua Thẻ Sức Mạnh giảm 1 ⚡ (tối thiểu 1 ⚡).",
     emoji: "🏷️",
+    buzzTileId: "meka_dragon",
+  },
+  {
+    id: "kot-alien-metab",
+    nameVi: "Chuyển Hóa Ngoài Hành Tinh",
+    cost: 2,
+    kind: "KEEP",
+    effectId: "TURN_ENERGY_1",
+    descVi: "Đầu mỗi lượt nhận thêm +1 ⚡ & đặt/di chuyển Buzz Anubis!",
+    emoji: "🧪",
+    buzzTileId: "anubis",
+  },
+  {
+    id: "kot-elec-aura",
+    nameVi: "Hào Quang Điện (Electrical Aura)",
+    cost: 4,
+    kind: "KEEP",
+    effectId: "BOOST_DESTRUCT_1",
+    descVi: "Tăng lực kéo Phá Hủy 🏢 +1 & đặt/di chuyển Buzz Mèo Điện!",
+    emoji: "⚡",
+    buzzTileId: "cat_zap",
   },
 ];
 
@@ -363,6 +581,7 @@ export type KotStep =
   | "MonsterPickStep"
   | "RollDiceStep"
   | "BuyCardsStep"
+  | "PlaceBuzzStep"
   | "Finished";
 
 export interface KotConfig {
@@ -418,6 +637,10 @@ export interface KotMatchState {
   /** Destruction tug-of-war: -6 (Seat 1 Win) .. 0 (Center) .. +6 (Seat 2 Win) */
   destructionPos: number;
   buzzTokens: KotBuzzToken[];
+  /** Official shaped 2-space and 3-space Buzz Tiles currently placed on the Tokyo board */
+  placedBuzzTiles: KotPlacedBuzzTile[];
+  /** Active Buzz Tile waiting to be placed or moved by the active player during PlaceBuzzStep */
+  pendingBuzzTileId: KotBuzzTileId | null;
   dice: KotDieState[];
   rollsLeft: number;
   maxRollsThisTurn: number;
@@ -436,6 +659,8 @@ export type KotCommand =
   | { type: "REROLL" }
   | { type: "RESOLVE_DICE" }
   | { type: "BUY_CARD"; cardId: string }
+  | { type: "PLACE_BUZZ"; track: KotTrackType; startPos: number }
+  | { type: "SKIP_BUZZ" }
   | { type: "FLUSH_MARKET" }
   | { type: "END_TURN" };
 
@@ -449,6 +674,8 @@ export interface KotPlayerView {
   famePos: number;
   destructionPos: number;
   buzzTokens: KotBuzzToken[];
+  placedBuzzTiles: KotPlacedBuzzTile[];
+  pendingBuzzTileId: KotBuzzTileId | null;
   dice: KotDieState[];
   rollsLeft: number;
   maxRollsThisTurn: number;
@@ -497,6 +724,7 @@ function cloneState(state: KotMatchState): KotMatchState {
       keepCards: [...s.keepCards],
     })),
     buzzTokens: state.buzzTokens.map((b) => ({ ...b })),
+    placedBuzzTiles: state.placedBuzzTiles.map((b) => ({ ...b })),
     dice: state.dice.map((d) => ({ ...d })),
     market: [...state.market],
     deck: [...state.deck],
@@ -629,6 +857,75 @@ function applyHeal(seat: KotSeatState, amount: number): number {
   return seat.hp - before;
 }
 
+function describeBuzzEffectVi(effect: KotBuzzEffect): string {
+  switch (effect) {
+    case "ENERGY_1":
+      return "+1 ⚡ Năng Lượng";
+    case "ENERGY_2":
+      return "+2 ⚡ Năng Lượng";
+    case "HEAL_1":
+      return "+1 ❤️ Hồi Máu";
+    case "HEAL_2":
+      return "+2 ❤️ Hồi Máu";
+    case "CLAW_1":
+      return "Gây ngay +1 🐾 Sát thương";
+    case "BONUS_DIE":
+      return "+1 🎲 Xúc xắc đỏ lượt sau";
+    case "PULL_1":
+      return "Kéo thêm +1 bước thanh";
+  }
+}
+
+function applyBuzzSlotEffect(
+  state: KotMatchState,
+  actorSeatNo: number,
+  track: KotTrackType,
+  effect: KotBuzzEffect,
+  tileNameVi: string,
+  events: MatchEventRecord[]
+) {
+  const actor = getSeat(state, actorSeatNo);
+  const opp = getOpponent(state, actorSeatNo);
+  const dir = pullDirForSeat(state, actorSeatNo);
+
+  switch (effect) {
+    case "ENERGY_1":
+      actor.energy += 1;
+      break;
+    case "ENERGY_2":
+      actor.energy += 2;
+      break;
+    case "HEAL_1":
+      applyHeal(actor, 1);
+      break;
+    case "HEAL_2":
+      applyHeal(actor, 2);
+      break;
+    case "CLAW_1":
+      applyDamage(opp, 1, true);
+      break;
+    case "BONUS_DIE":
+      actor.bonusDiceNextTurn = Math.min(2, actor.bonusDiceNextTurn + 1);
+      break;
+    case "PULL_1": {
+      const cur = track === "fame" ? state.famePos : state.destructionPos;
+      const extra = Math.max(
+        -KOT_WIN_TRACK_POS,
+        Math.min(KOT_WIN_TRACK_POS, cur + dir)
+      );
+      if (track === "fame") state.famePos = extra;
+      else state.destructionPos = extra;
+      break;
+    }
+  }
+
+  events.push({
+    eventType: "KOT_BUZZ_TRIGGERED",
+    message: `✨ Token Buzz **${tileNameVi}** kích hoạt! ${actor.displayName} nhận: ${describeBuzzEffectVi(effect)}`,
+    visibleToSeatNos: "all",
+  });
+}
+
 function pullTrack(
   state: KotMatchState,
   actorSeatNo: number,
@@ -654,7 +951,20 @@ function pullTrack(
     else state.destructionPos = next;
     moved += 1;
 
-    // Trigger & consume any Buzz Token landed on!
+    // 1. Trigger any persistent shaped Buzz Tile covering this track space!
+    for (const placed of state.placedBuzzTiles) {
+      if (placed.track !== track) continue;
+      const def = KOT_BUZZ_TILE_DEFS[placed.tileId];
+      const slotIdx = next - placed.startPos;
+      if (slotIdx >= 0 && slotIdx < def.span) {
+        const eff = def.slotEffects[slotIdx];
+        if (eff) {
+          applyBuzzSlotEffect(state, actorSeatNo, track, eff, def.nameVi, events);
+        }
+      }
+    }
+
+    // 2. Legacy single-use Buzz Token fallback (if any present)
     const buzzIdx = state.buzzTokens.findIndex(
       (b) => b.track === track && b.pos === next
     );
@@ -745,16 +1055,42 @@ function refillMarketSlot(state: KotMatchState) {
 }
 
 function createInitialBuzzTokens(): KotBuzzToken[] {
-  return [
-    { id: "buzz-f-n2", track: "fame", pos: -2, kind: "ENERGY_2", labelVi: "+2 ⚡ Năng Lượng" },
-    { id: "buzz-f-p2", track: "fame", pos: 2, kind: "ENERGY_2", labelVi: "+2 ⚡ Năng Lượng" },
-    { id: "buzz-d-n2", track: "destruction", pos: -2, kind: "HEAL_2", labelVi: "+2 ❤️ Hồi Máu" },
-    { id: "buzz-d-p2", track: "destruction", pos: 2, kind: "HEAL_2", labelVi: "+2 ❤️ Hồi Máu" },
-    { id: "buzz-f-n4", track: "fame", pos: -4, kind: "BONUS_DIE", labelVi: "+1 🎲 Xúc Xắc lượt sau" },
-    { id: "buzz-f-p4", track: "fame", pos: 4, kind: "BONUS_DIE", labelVi: "+1 🎲 Xúc Xắc lượt sau" },
-    { id: "buzz-d-n4", track: "destruction", pos: -4, kind: "DMG_1", labelVi: "Gây ngay 1 🐾 sát thương" },
-    { id: "buzz-d-p4", track: "destruction", pos: 4, kind: "DMG_1", labelVi: "Gây ngay 1 🐾 sát thương" },
-  ];
+  return [];
+}
+
+function chooseBestBuzzPlacement(
+  state: KotMatchState,
+  seatNo: number,
+  tileId: KotBuzzTileId
+): { track: KotTrackType; startPos: number } | null {
+  const valid = getValidBuzzPlacements(state.placedBuzzTiles, tileId);
+  if (valid.length === 0) return null;
+  const dir = pullDirForSeat(state, seatNo);
+  const def = KOT_BUZZ_TILE_DEFS[tileId];
+
+  // Score placements: strongly prefer putting bonus circles right ahead of our marker toward our win side!
+  let best = valid[0];
+  let bestScore = -Infinity;
+  for (const cand of valid) {
+    const markerPos = cand.track === "fame" ? state.famePos : state.destructionPos;
+    let score = 0;
+    for (let i = 0; i < def.span; i++) {
+      const pos = cand.startPos + i;
+      const eff = def.slotEffects[i];
+      if (!eff) continue;
+      const ahead = (pos - markerPos) * dir;
+      if (ahead === 0) score += 10; // Immediate trigger!
+      else if (ahead === 1) score += 9;
+      else if (ahead === 2) score += 7;
+      else if (ahead > 2) score += Math.max(1, 5 - ahead);
+      else score -= 4; // Behind us (helps opponent)
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      best = cand;
+    }
+  }
+  return best;
 }
 
 function chooseBotCommand(state: KotMatchState): KotCommand {
@@ -768,6 +1104,14 @@ function chooseBotCommand(state: KotMatchState): KotCommand {
     );
     const available = KOT_MONSTER_IDS.filter((id) => !taken.has(id));
     return { type: "PICK_MONSTER", monsterId: available[0] ?? "gigazaur" };
+  }
+
+  if (state.step === "PlaceBuzzStep" && state.pendingBuzzTileId) {
+    const best = chooseBestBuzzPlacement(state, actor.seatNo, state.pendingBuzzTileId);
+    if (best) {
+      return { type: "PLACE_BUZZ", track: best.track, startPos: best.startPos };
+    }
+    return { type: "SKIP_BUZZ" };
   }
 
   if (state.step === "RollDiceStep") {
@@ -897,6 +1241,8 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
       famePos: 0,
       destructionPos: 0,
       buzzTokens: createInitialBuzzTokens(),
+      placedBuzzTiles: [],
+      pendingBuzzTileId: null,
       dice: [],
       rollsLeft: 0,
       maxRollsThisTurn: 3,
@@ -1067,26 +1413,16 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
           totalEnergy += bonusE;
           monsterPowerMsg = `🐱 Cyber Kitty: +${bonusE} ⚡ Năng Lượng!`;
         } else if (actor.monsterId === "the_king" && counts.special >= 2) {
-          // Place a PULL_1 Buzz Token right ahead on the track toward The King!
-          const dir = pullDirForSeat(state, actor.seatNo);
-          const targetTrack: KotTrackType =
-            dir * state.famePos >= dir * state.destructionPos
-              ? "fame"
-              : "destruction";
-          const curPos =
-            targetTrack === "fame" ? state.famePos : state.destructionPos;
-          const placePos = Math.max(-5, Math.min(5, curPos + dir));
-          if (
-            !state.buzzTokens.some(
-              (b) => b.track === targetTrack && b.pos === placePos
-            )
-          ) {
-            state.buzzTokens.push({
-              id: `king-buzz-${state.turnNumber}-${placePos}`,
-              track: targetTrack,
-              pos: placePos,
-              kind: "PULL_1",
-              labelVi: "+1 bước kéo Lãnh Thổ!",
+          // Place or relocate The King's signature 2-space Buzz Tile right ahead on his best track!
+          const bestKingSpot = chooseBestBuzzPlacement(state, actor.seatNo, "the_king");
+          if (bestKingSpot) {
+            state.placedBuzzTiles = state.placedBuzzTiles.filter(
+              (t) => t.tileId !== "the_king"
+            );
+            state.placedBuzzTiles.push({
+              tileId: "the_king",
+              track: bestKingSpot.track,
+              startPos: bestKingSpot.startPos,
             });
           } else {
             totalHeal += 1;
@@ -1248,6 +1584,109 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
         if (checkVictory(state, events, nowMs)) {
           break;
         }
+
+        // Official King of Tokyo: Duel Buzz Token Rule:
+        // Buying a Power Card with a Buzz mascot badge lets the buyer place (if new)
+        // or relocate (if already on the board from either player!) that shaped Buzz Tile!
+        if (card.buzzTileId) {
+          const validSpots = getValidBuzzPlacements(
+            state.placedBuzzTiles,
+            card.buzzTileId
+          );
+          if (validSpots.length > 0) {
+            const def = KOT_BUZZ_TILE_DEFS[card.buzzTileId];
+            const alreadyPlaced = state.placedBuzzTiles.some(
+              (t) => t.tileId === card.buzzTileId
+            );
+            state.pendingBuzzTileId = card.buzzTileId;
+            state.step = "PlaceBuzzStep";
+            events.push({
+              eventType: "KOT_BUZZ_PENDING",
+              message: `🎯 ${actor.displayName} được ${alreadyPlaced ? "di chuyển" : "đặt"} Token Buzz **${def.nameVi}** (${def.summaryVi}) lên bàn đấu!`,
+              visibleToSeatNos: "all",
+            });
+          }
+        }
+
+        state.phaseDeadlineMs = makeDeadline(state, nowMs);
+        break;
+      }
+
+      case "PLACE_BUZZ": {
+        if (state.step !== "PlaceBuzzStep" || !state.pendingBuzzTileId) {
+          throw new Error("Hiện không có Token Buzz nào cần đặt.");
+        }
+        const tileId = state.pendingBuzzTileId;
+        const validSpots = getValidBuzzPlacements(state.placedBuzzTiles, tileId);
+        const isValid = validSpots.some(
+          (s) => s.track === command.track && s.startPos === command.startPos
+        );
+        if (!isValid) {
+          throw new Error("Vị trí đặt Token Buzz không hợp lệ hoặc bị chồng lấn.");
+        }
+
+        const def = KOT_BUZZ_TILE_DEFS[tileId];
+        const wasMoved = state.placedBuzzTiles.some((t) => t.tileId === tileId);
+        state.placedBuzzTiles = state.placedBuzzTiles.filter(
+          (t) => t.tileId !== tileId
+        );
+        state.placedBuzzTiles.push({
+          tileId,
+          track: command.track,
+          startPos: command.startPos,
+        });
+        state.pendingBuzzTileId = null;
+
+        const trackLabel =
+          command.track === "fame" ? "Danh Vọng ⭐" : "Phá Hủy 🏢";
+        events.push({
+          eventType: "KOT_BUZZ_PLACED",
+          message: `✨ ${actor.displayName} đã ${wasMoved ? "di chuyển" : "đặt"} Token Buzz **${def.nameVi}** lên thanh ${trackLabel}!`,
+          visibleToSeatNos: "all",
+        });
+
+        // If placed directly under the current marker on a bonus slot, trigger it immediately!
+        const markerPos =
+          command.track === "fame" ? state.famePos : state.destructionPos;
+        const slotIdx = markerPos - command.startPos;
+        if (slotIdx >= 0 && slotIdx < def.span) {
+          const eff = def.slotEffects[slotIdx];
+          if (eff) {
+            applyBuzzSlotEffect(
+              state,
+              actor.seatNo,
+              command.track,
+              eff,
+              def.nameVi,
+              events
+            );
+          }
+        }
+
+        setAnim(
+          state,
+          {
+            kind: "BUZZ",
+            actorSeatNo: actor.seatNo,
+            labelVi: `✨ ${wasMoved ? "Di chuyển" : "Đặt"} Buzz ${def.nameVi}!`,
+          },
+          nowMs
+        );
+
+        if (checkVictory(state, events, nowMs)) {
+          break;
+        }
+        state.step = "BuyCardsStep";
+        state.phaseDeadlineMs = makeDeadline(state, nowMs);
+        break;
+      }
+
+      case "SKIP_BUZZ": {
+        if (state.step !== "PlaceBuzzStep") {
+          throw new Error("Hiện không ở bước đặt Token Buzz.");
+        }
+        state.pendingBuzzTileId = null;
+        state.step = "BuyCardsStep";
         state.phaseDeadlineMs = makeDeadline(state, nowMs);
         break;
       }
@@ -1321,6 +1760,14 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
         nowMs,
       });
     }
+    if (state.step === "PlaceBuzzStep") {
+      return this.reduce({
+        state,
+        command: chooseBotCommand(state),
+        actorSeatNo: state.activeSeatNo,
+        nowMs,
+      });
+    }
     return this.reduce({
       state,
       command: { type: "END_TURN" },
@@ -1370,6 +1817,8 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
       famePos: state.famePos,
       destructionPos: state.destructionPos,
       buzzTokens: state.buzzTokens,
+      placedBuzzTiles: state.placedBuzzTiles,
+      pendingBuzzTileId: state.pendingBuzzTileId,
       dice: state.dice,
       rollsLeft: state.rollsLeft,
       maxRollsThisTurn: state.maxRollsThisTurn,

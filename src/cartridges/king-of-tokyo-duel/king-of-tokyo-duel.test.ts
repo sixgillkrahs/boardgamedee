@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   kingOfTokyoDuelCartridge,
   KOT_MONSTERS,
+  KOT_POWER_DECK_TEMPLATE,
   type KotMatchState,
 } from "./index";
 
@@ -19,7 +20,7 @@ describe("King of Tokyo: Duel Cartridge", () => {
     });
     expect(init.state.step).toBe("MonsterPickStep");
     expect(init.state.market).toHaveLength(3);
-    expect(init.state.buzzTokens.length).toBeGreaterThanOrEqual(4);
+    expect(init.state.placedBuzzTiles).toHaveLength(0);
 
     const p1Pick = kingOfTokyoDuelCartridge.reduce({
       state: init.state,
@@ -70,9 +71,11 @@ describe("King of Tokyo: Duel Cartridge", () => {
       nowMs: 3000,
     });
 
-    // Rig 6 dice: 2 claws + 2 special (Meka Dragon +2 dmg = 4 total) + 3 stars? Let's rig 4 stars + 2 special = +2 fame steps (lands on Buzz -2 -> +2 Energy!)
+    // Place Anubis 2-space Buzz Tile ([ENERGY_1, HEAL_1]) at Fame startPos=-2 (covers -2 and -1)
+    // Rig 6 dice: 4 stars (pulls Fame 0 -> -2, crossing -1 HEAL_1 & -2 ENERGY_1) + 2 special (Meka Dragon +2 dmg!)
     const rigged: KotMatchState = {
       ...r2.state,
+      placedBuzzTiles: [{ tileId: "anubis", track: "fame", startPos: -2 }],
       dice: [
         { id: 0, face: "star", locked: true },
         { id: 1, face: "star", locked: true },
@@ -90,12 +93,100 @@ describe("King of Tokyo: Duel Cartridge", () => {
       nowMs: 4000,
     });
 
-    // 4 stars -> pulls Fame from 0 to -2 (triggers buzz-f-n2: +2 Energy!)
+    // 4 stars -> pulls Fame from 0 to -2, triggering Anubis slot 0 (ENERGY_1) & keeping the Buzz tile on board!
     expect(resolved.state.famePos).toBe(-2);
-    expect(resolved.state.seats[0].energy).toBe(2);
+    expect(resolved.state.seats[0].energy).toBe(1);
+    expect(resolved.state.placedBuzzTiles).toHaveLength(1);
     // Meka Dragon 2 '!' -> +2 damage to Seat 2 (15 -> 13 HP)
     expect(resolved.state.seats[1].hp).toBe(13);
     expect(resolved.state.step).toBe("BuyCardsStep");
+  });
+
+  it("places a new Buzz Tile on card purchase and lets either player relocate it when buying a matching Buzz card", () => {
+    const init = kingOfTokyoDuelCartridge.createInitialState({
+      config: kingOfTokyoDuelCartridge.defaultConfig(2),
+      seats: SEATS,
+      nowMs: 1000,
+    });
+    const r1 = kingOfTokyoDuelCartridge.reduce({
+      state: init.state,
+      command: { type: "PICK_MONSTER", monsterId: "gigazaur" },
+      actorSeatNo: 1,
+      nowMs: 2000,
+    });
+    const r2 = kingOfTokyoDuelCartridge.reduce({
+      state: r1.state,
+      command: { type: "PICK_MONSTER", monsterId: "cyber_kitty" },
+      actorSeatNo: 2,
+      nowMs: 3000,
+    });
+
+    const anubisCard = KOT_POWER_DECK_TEMPLATE.find(
+      (c) => c.buzzTileId === "anubis"
+    )!;
+    const krakenCard1 = KOT_POWER_DECK_TEMPLATE.find(
+      (c) => c.id === "kot-media-storm"
+    )!;
+    const krakenCard2 = KOT_POWER_DECK_TEMPLATE.find(
+      (c) => c.id === "kot-beam"
+    )!;
+
+    // Seat 1 in BuyCardsStep buys a Kraken Buzz card -> enters PlaceBuzzStep!
+    const buyReady: KotMatchState = {
+      ...r2.state,
+      step: "BuyCardsStep",
+      seats: r2.state.seats.map((s) => ({ ...s, energy: 10 })),
+      market: [krakenCard1, krakenCard2, anubisCard],
+    };
+
+    const bought1 = kingOfTokyoDuelCartridge.reduce({
+      state: buyReady,
+      command: { type: "BUY_CARD", cardId: krakenCard1.id },
+      actorSeatNo: 1,
+      nowMs: 4000,
+    });
+    expect(bought1.state.step).toBe("PlaceBuzzStep");
+    expect(bought1.state.pendingBuzzTileId).toBe("kraken");
+
+    // Seat 1 places Kraken 3-space Buzz Tile on Fame at startPos = -3 (occupies -3, -2, -1)
+    const placed1 = kingOfTokyoDuelCartridge.reduce({
+      state: bought1.state,
+      command: { type: "PLACE_BUZZ", track: "fame", startPos: -3 },
+      actorSeatNo: 1,
+      nowMs: 4500,
+    });
+    expect(placed1.state.step).toBe("BuyCardsStep");
+    expect(placed1.state.placedBuzzTiles).toEqual([
+      { tileId: "kraken", track: "fame", startPos: -3 },
+    ]);
+
+    // End Seat 1's turn -> Seat 2's turn -> Seat 2 buys another Kraken Buzz card and MOVES the same tile!
+    const p2Ready: KotMatchState = {
+      ...placed1.state,
+      activeSeatNo: 2,
+      step: "BuyCardsStep",
+      market: [krakenCard2, anubisCard],
+    };
+    const bought2 = kingOfTokyoDuelCartridge.reduce({
+      state: p2Ready,
+      command: { type: "BUY_CARD", cardId: krakenCard2.id },
+      actorSeatNo: 2,
+      nowMs: 5000,
+    });
+    expect(bought2.state.step).toBe("PlaceBuzzStep");
+    expect(bought2.state.pendingBuzzTileId).toBe("kraken");
+
+    const moved2 = kingOfTokyoDuelCartridge.reduce({
+      state: bought2.state,
+      command: { type: "PLACE_BUZZ", track: "destruction", startPos: 2 },
+      actorSeatNo: 2,
+      nowMs: 5500,
+    });
+    expect(moved2.state.step).toBe("BuyCardsStep");
+    // Same Kraken tile was relocated (still 1 tile total, now on destruction at startPos 2!)
+    expect(moved2.state.placedBuzzTiles).toEqual([
+      { tileId: "kraken", track: "destruction", startPos: 2 },
+    ]);
   });
 
   it("detects Double Spotlight Victory when both markers enter a player's Spotlight Zone", () => {
