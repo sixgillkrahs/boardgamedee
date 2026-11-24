@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { listCartridges, type CatalogEntry } from "@/cartridges/registry";
 
@@ -29,8 +29,6 @@ export default function HomePage() {
   const [googleEmail, setGoogleEmail] = useState("");
   const [googleName, setGoogleName] = useState("");
 
-  const heroCanvasRef = useRef<HTMLCanvasElement | null>(null);
-
   useEffect(() => {
     fetch("/api/actor")
       .then((res) => res.json())
@@ -43,48 +41,6 @@ export default function HomePage() {
         setGoogleOAuthConfigured(Boolean(data.googleOAuthConfigured));
       })
       .catch(() => {});
-  }, []);
-
-  // Subtle animated 2D Canvas header background (fireflies & moonlight)
-  useEffect(() => {
-    const canvas = heroCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let raf = 0;
-    const dots = Array.from({ length: 34 }, (_, i) => ({
-      x: (i * 37) % 100,
-      y: (i * 53) % 100,
-      r: 1.2 + (i % 3),
-      speed: 0.25 + (i % 5) * 0.12,
-    }));
-
-    const draw = (t: number) => {
-      const parent = canvas.parentElement;
-      if (parent) {
-        const rect = parent.getBoundingClientRect();
-        if (canvas.width !== Math.floor(rect.width)) {
-          canvas.width = Math.floor(rect.width);
-          canvas.height = Math.floor(rect.height);
-        }
-      }
-      const w = canvas.width;
-      const h = canvas.height;
-      ctx.clearRect(0, 0, w, h);
-
-      for (const d of dots) {
-        const px = ((d.x / 100) * w + Math.sin(t / 1200 + d.x) * 18 + w) % w;
-        const py = ((d.y / 100) * h - ((t * d.speed) / 40) % h + h) % h;
-        ctx.fillStyle = "rgba(251, 191, 36, 0.35)";
-        ctx.beginPath();
-        ctx.arc(px, py, d.r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      raf = requestAnimationFrame(draw);
-    };
-    raf = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(raf);
   }, []);
 
   const handleSaveGuestName = async (e: React.FormEvent) => {
@@ -275,71 +231,39 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Hero Section with Canvas Background + Create / Join Room Actions */}
-        <section className="relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-900/95 to-indigo-950/70 p-6 md:p-8 shadow-2xl">
-          <canvas
-            ref={heroCanvasRef}
-            className="pointer-events-none absolute inset-0 w-full h-full"
-          />
-
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            <div className="lg:col-span-7 space-y-3">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-xs font-bold text-amber-300">
-                ✨ Kiến trúc Platform Core + Game Cartridge
-              </span>
-              <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
-                Chơi <span className="text-amber-400">Ma Sói</span> & Board Game
-                trực tiếp trên bàn cờ <span className="text-sky-400">Canvas 2D</span>
+        {/* Quick Join Room Bar */}
+        <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 md:p-5 shadow-lg">
+          <form
+            onSubmit={handleJoinRoom}
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+          >
+            <div>
+              <h2 className="text-sm font-bold text-white">
+                Vào Phòng Bằng Mã Mời
               </h2>
-              <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
-                Không cần người hy sinh làm Quản trò. Mỗi người chơi cầm 1 điện
-                thoại hoặc máy tính, hệ thống tự động chia bài mật, điều phối
-                pha Đêm/Ngày, lọc thông tin ẩn chống gian lận trên server và vẽ
-                bàn chơi động 60fps.
+              <p className="text-xs text-slate-400">
+                Nhập mã phòng 6 ký tự từ bạn bè để ngồi vào bàn ngay lập tức
               </p>
-
-              <div className="pt-2 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => handleCreateRoom("werewolf")}
-                  className="rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-6 py-3.5 text-sm font-extrabold text-slate-950 shadow-xl transition cursor-pointer disabled:opacity-50"
-                >
-                  🔥 Tạo Phòng Ma Sói Mới
-                </button>
-              </div>
             </div>
 
-            {/* Quick Join Room Card */}
-            <div className="lg:col-span-5 rounded-2xl border border-slate-800 bg-slate-950/85 p-5 shadow-xl space-y-4">
-              <div>
-                <h3 className="text-base font-bold text-white">
-                  Vào Phòng Bằng Mã Mời
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Nhập mã phòng 6 ký tự từ bạn bè để ngồi vào bàn ngay lập tức
-                </p>
-              </div>
-
-              <form onSubmit={handleJoinRoom} className="space-y-3">
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={roomCode}
-                  onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                  placeholder="VD: WOLF88"
-                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-center font-mono text-lg font-bold tracking-widest uppercase text-amber-300 placeholder:text-slate-600 focus:border-amber-400 focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="w-full rounded-xl bg-sky-600 hover:bg-sky-500 py-3 text-xs font-bold uppercase tracking-wider text-white shadow transition cursor-pointer disabled:opacity-50"
-                >
-                  Tham Gia Phòng Chơi →
-                </button>
-              </form>
+            <div className="flex items-center gap-2.5 sm:min-w-[340px]">
+              <input
+                type="text"
+                maxLength={6}
+                value={roomCode}
+                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                placeholder="VD: WOLF88"
+                className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-center font-mono text-base font-bold tracking-widest uppercase text-amber-300 placeholder:text-slate-600 focus:border-amber-400 focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={busy}
+                className="shrink-0 rounded-xl bg-sky-600 hover:bg-sky-500 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow transition cursor-pointer disabled:opacity-50"
+              >
+                Tham Gia →
+              </button>
             </div>
-          </div>
+          </form>
         </section>
 
         {/* Extensible Multi-Board-Game Cartridge Catalog */}
