@@ -352,6 +352,194 @@ export function drawKotPowerCardArt2D(
   ctx.restore();
 }
 
+/**
+ * Draws the iconic King of Tokyo: Duel Power Deck card back (stormy dark twilight + glowing lightning bolt)
+ * with remaining deck count badge!
+ */
+export function drawKotDeckBack2D(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  deckCount: number,
+  opts: { canFlush?: boolean; hovered?: boolean } = {}
+) {
+  ctx.save();
+  const r = Math.max(8, Math.round(Math.min(w, h) * 0.08));
+  const fonts = getCanvasFontFamilies();
+
+  ctx.shadowColor = opts.hovered && opts.canFlush ? "rgba(56, 189, 248, 0.7)" : "rgba(0, 0, 0, 0.6)";
+  ctx.shadowBlur = opts.hovered && opts.canFlush ? 16 : 12;
+  ctx.shadowOffsetY = 4;
+
+  // Stacked deck edge layers
+  if (deckCount > 6) {
+    drawRoundedRect(ctx, x + 3, y + 3, w, h, r);
+    ctx.fillStyle = "#1e293b";
+    ctx.fill();
+  }
+  drawRoundedRect(ctx, x, y, w, h, r);
+  const bg = ctx.createLinearGradient(x, y, x + w, y + h);
+  bg.addColorStop(0, "#334155");
+  bg.addColorStop(0.5, "#1e293b");
+  bg.addColorStop(1, "#0f172a");
+  ctx.fillStyle = bg;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+
+  // Subtle diagonal stormy rays
+  ctx.save();
+  drawRoundedRect(ctx, x, y, w, h, r);
+  ctx.clip();
+  ctx.fillStyle = "rgba(148, 163, 184, 0.12)";
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + w * 0.65, y);
+  ctx.lineTo(x + w * 0.25, y + h);
+  ctx.lineTo(x, y + h);
+  ctx.closePath();
+  ctx.fill();
+
+  // Fiery glowing giant lightning bolt centerpiece (matching official King of Tokyo card back!)
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+  const bw = w * 0.34;
+  const bh = h * 0.42;
+  ctx.shadowColor = "#f97316";
+  ctx.shadowBlur = 14;
+  ctx.beginPath();
+  ctx.moveTo(cx + bw * 0.45, cy - bh);
+  ctx.lineTo(cx - bw * 0.75, cy + bh * 0.08);
+  ctx.lineTo(cx - bw * 0.06, cy + bh * 0.12);
+  ctx.lineTo(cx - bw * 0.48, cy + bh);
+  ctx.lineTo(cx + bw * 0.76, cy - bh * 0.08);
+  ctx.lineTo(cx + bw * 0.08, cy - bh * 0.12);
+  ctx.closePath();
+  const boltGrad = ctx.createLinearGradient(cx, cy - bh, cx, cy + bh);
+  boltGrad.addColorStop(0, "#f8fafc");
+  boltGrad.addColorStop(0.5, "#cbd5e1");
+  boltGrad.addColorStop(1, "#94a3b8");
+  ctx.fillStyle = boltGrad;
+  ctx.fill();
+  ctx.strokeStyle = "#f59e0b";
+  ctx.lineWidth = 2.4;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.restore();
+
+  // Outer border
+  drawRoundedRect(ctx, x, y, w, h, r);
+  ctx.strokeStyle = opts.canFlush
+    ? opts.hovered
+      ? "#38bdf8"
+      : "#7dd3fc"
+    : "#0f172a";
+  ctx.lineWidth = opts.canFlush ? 2.2 : 1.8;
+  ctx.stroke();
+
+  // Bottom remaining deck count pill (and Flush hint when clickable)
+  const pillH = 20;
+  const pillW = Math.min(w - 10, opts.canFlush ? w - 8 : 54);
+  drawRoundedRect(ctx, x + (w - pillW) / 2, y + h - pillH - 6, pillW, pillH, 999);
+  ctx.fillStyle = opts.canFlush ? "rgba(2, 132, 199, 0.92)" : "rgba(15, 23, 42, 0.88)";
+  ctx.fill();
+  ctx.strokeStyle = opts.canFlush ? "#bae6fd" : "rgba(148, 163, 184, 0.45)";
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#f8fafc";
+  ctx.font = `800 9.5px ${fonts.sans}`;
+  ctx.fillText(
+    opts.canFlush ? `🔄 Đổi (-2⚡)` : `${deckCount} lá`,
+    x + w / 2,
+    y + h - pillH / 2 - 5.5,
+    pillW - 8
+  );
+
+  ctx.restore();
+}
+
+/**
+ * Draws a sculpted circular Kaiju Health Dial (matching the official red/blue King of Tokyo HP wheel!)
+ */
+export function drawKotHealthDial2D(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  hp: number,
+  maxHp: number,
+  tone: "red" | "blue"
+) {
+  ctx.save();
+  const fonts = getCanvasFontFamilies();
+  const mainCol = tone === "red" ? "#9f2b3b" : "#1e4b7a";
+  const ringCol = tone === "red" ? "#e15b6d" : "#4b9ce2";
+  const darkCol = tone === "red" ? "#4c121b" : "#0e2642";
+
+  // Drop shadow
+  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetY = 3;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.fillStyle = darkCol;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+
+  // Inner patterned dial face
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius - 3, 0, Math.PI * 2);
+  const g = ctx.createRadialGradient(cx, cy - radius * 0.25, radius * 0.1, cx, cy, radius);
+  g.addColorStop(0, ringCol);
+  g.addColorStop(0.75, mainCol);
+  g.addColorStop(1, darkCol);
+  ctx.fillStyle = g;
+  ctx.fill();
+
+  // HP progress arc around rim
+  const frac = Math.max(0, Math.min(1, hp / Math.max(1, maxHp)));
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius - 5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * frac);
+  ctx.strokeStyle = frac > 0.45 ? "#fde047" : "#fb7185";
+  ctx.lineWidth = 3.5;
+  ctx.lineCap = "round";
+  ctx.stroke();
+
+  // Top cutout HP number window (authentic physical board game dial notch!)
+  const winW = Math.max(30, Math.round(radius * 0.72));
+  const winH = Math.max(18, Math.round(radius * 0.42));
+  drawRoundedRect(ctx, cx - winW / 2, cy - radius + 5, winW, winH, 6);
+  ctx.fillStyle = "#f5ebd6";
+  ctx.fill();
+  ctx.strokeStyle = "#1c1917";
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = hp <= 3 ? "#dc2626" : "#0f172a";
+  ctx.font = `900 ${Math.max(12, Math.round(winH * 0.72))}px ${fonts.mono}`;
+  ctx.fillText(`${hp}`, cx, cy - radius + 5 + winH / 2 + 0.5);
+
+  // Center official Heart (or Skull when KO!) + max HP label
+  drawKotIcon2D(ctx, cx, cy + radius * 0.12, Math.round(radius * 0.78), hp <= 0 ? "skull" : "heart");
+  ctx.fillStyle = "rgba(248, 250, 252, 0.85)";
+  ctx.font = `800 ${Math.max(9, Math.round(radius * 0.24))}px ${fonts.mono}`;
+  ctx.fillText(`/${maxHp}`, cx, cy + radius * 0.66);
+
+  // Outer crisp rim
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = "#f5ebd6";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+}
+
 let cachedDiceImg: HTMLImageElement | null = null;
 let diceLoaded = false;
 const diceListeners = new Set<() => void>();
