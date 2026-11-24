@@ -19,6 +19,7 @@ import {
   drawKotPowerCardArt2D,
   drawKotTokyoBackground2D,
   getKotBoardAtlas,
+  getKotCardBackImage,
   getKotDiceAtlas,
   getKotGameBoardImage,
   getKotIconsAtlas,
@@ -256,6 +257,7 @@ export function KingOfTokyoDuelCanvas({
     getKotTokensAtlas();
     getKotIconsAtlas();
     getKotPowerCardsAtlas();
+    getKotCardBackImage();
     getKotDiceAtlas();
 
     const canvas = canvasRef.current;

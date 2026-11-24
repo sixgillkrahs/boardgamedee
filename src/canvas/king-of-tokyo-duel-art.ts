@@ -13,6 +13,7 @@ export const KOT_GAME_BOARD_URL = "/sprites/kot-duel-board-map-pixel.png";
 export const KOT_TOKENS_ATLAS_URL = "/sprites/kot-duel-tokens-pixel.png";
 export const KOT_ICONS_ATLAS_URL = "/sprites/kot-duel-icons-pixel.png";
 export const KOT_POWER_CARDS_ATLAS_URL = "/sprites/kot-duel-power-cards-pixel.png";
+export const KOT_CARD_BACK_URL = "/sprites/kot-duel-card-back-pixel.png";
 export const KOT_DICE_ATLAS_URL = "/sprites/kot-duel-dice-pixel.png";
 
 /** Grid coordinates (col 0..9, row 0..4, each 100x140) in kot-duel-power-cards-pixel.png for every Power Card ID. */
@@ -352,9 +353,31 @@ export function drawKotPowerCardArt2D(
   ctx.restore();
 }
 
+let cachedCardBackImg: HTMLImageElement | null = null;
+let cardBackLoaded = false;
+const cardBackListeners = new Set<() => void>();
+
+export function getKotCardBackImage(onLoad?: () => void): HTMLImageElement | null {
+  if (typeof window === "undefined") return null;
+  if (cardBackLoaded && cachedCardBackImg) return cachedCardBackImg;
+  if (onLoad) cardBackListeners.add(onLoad);
+  if (!cachedCardBackImg) {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      cardBackLoaded = true;
+      cardBackListeners.forEach((fn) => fn());
+      cardBackListeners.clear();
+    };
+    img.src = KOT_CARD_BACK_URL;
+    cachedCardBackImg = img;
+  }
+  return cardBackLoaded ? cachedCardBackImg : null;
+}
+
 /**
- * Draws the iconic King of Tokyo: Duel Power Deck card back (stormy dark twilight + glowing lightning bolt)
- * with remaining deck count badge!
+ * Draws the official King of Tokyo: Duel Power Deck card back (official spotlight-to-magma lightning bolt)
+ * with stacked deck depth and remaining card count badge!
  */
 export function drawKotDeckBack2D(
   ctx: CanvasRenderingContext2D,
@@ -369,64 +392,44 @@ export function drawKotDeckBack2D(
   const r = Math.max(8, Math.round(Math.min(w, h) * 0.08));
   const fonts = getCanvasFontFamilies();
 
-  ctx.shadowColor = opts.hovered && opts.canFlush ? "rgba(56, 189, 248, 0.7)" : "rgba(0, 0, 0, 0.6)";
+  ctx.shadowColor = opts.hovered && opts.canFlush ? "rgba(56, 189, 248, 0.75)" : "rgba(0, 0, 0, 0.65)";
   ctx.shadowBlur = opts.hovered && opts.canFlush ? 16 : 12;
   ctx.shadowOffsetY = 4;
 
-  // Stacked deck edge layers
-  if (deckCount > 6) {
-    drawRoundedRect(ctx, x + 3, y + 3, w, h, r);
+  // Stacked physical deck edge layers
+  if (deckCount > 8) {
+    drawRoundedRect(ctx, x + 4, y + 4, w, h, r);
     ctx.fillStyle = "#1e293b";
     ctx.fill();
   }
+  if (deckCount > 3) {
+    drawRoundedRect(ctx, x + 2, y + 2, w, h, r);
+    ctx.fillStyle = "#334155";
+    ctx.fill();
+  }
+
   drawRoundedRect(ctx, x, y, w, h, r);
-  const bg = ctx.createLinearGradient(x, y, x + w, y + h);
-  bg.addColorStop(0, "#334155");
-  bg.addColorStop(0.5, "#1e293b");
-  bg.addColorStop(1, "#0f172a");
-  ctx.fillStyle = bg;
+  ctx.fillStyle = "#0f172a";
   ctx.fill();
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
 
-  // Subtle diagonal stormy rays
+  // Official Power Card back illustration!
   ctx.save();
   drawRoundedRect(ctx, x, y, w, h, r);
   ctx.clip();
-  ctx.fillStyle = "rgba(148, 163, 184, 0.12)";
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-  ctx.lineTo(x + w * 0.65, y);
-  ctx.lineTo(x + w * 0.25, y + h);
-  ctx.lineTo(x, y + h);
-  ctx.closePath();
-  ctx.fill();
-
-  // Fiery glowing giant lightning bolt centerpiece (matching official King of Tokyo card back!)
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  const bw = w * 0.34;
-  const bh = h * 0.42;
-  ctx.shadowColor = "#f97316";
-  ctx.shadowBlur = 14;
-  ctx.beginPath();
-  ctx.moveTo(cx + bw * 0.45, cy - bh);
-  ctx.lineTo(cx - bw * 0.75, cy + bh * 0.08);
-  ctx.lineTo(cx - bw * 0.06, cy + bh * 0.12);
-  ctx.lineTo(cx - bw * 0.48, cy + bh);
-  ctx.lineTo(cx + bw * 0.76, cy - bh * 0.08);
-  ctx.lineTo(cx + bw * 0.08, cy - bh * 0.12);
-  ctx.closePath();
-  const boltGrad = ctx.createLinearGradient(cx, cy - bh, cx, cy + bh);
-  boltGrad.addColorStop(0, "#f8fafc");
-  boltGrad.addColorStop(0.5, "#cbd5e1");
-  boltGrad.addColorStop(1, "#94a3b8");
-  ctx.fillStyle = boltGrad;
-  ctx.fill();
-  ctx.strokeStyle = "#f59e0b";
-  ctx.lineWidth = 2.4;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
+  const backImg = getKotCardBackImage();
+  if (backImg) {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(backImg, x, y, w, h);
+  } else {
+    const bg = ctx.createLinearGradient(x, y, x + w, y + h);
+    bg.addColorStop(0, "#334155");
+    bg.addColorStop(1, "#0f172a");
+    ctx.fillStyle = bg;
+    ctx.fillRect(x, y, w, h);
+  }
   ctx.restore();
 
   // Outer border
