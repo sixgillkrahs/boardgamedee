@@ -708,7 +708,7 @@ function RoomPageContent({
                           onClick={() => sendRoomAction({ type: "ADD_BOT" })}
                           className="flex-1 rounded-xl border border-sky-400/55 bg-slate-950/85 hover:bg-sky-950/90 backdrop-blur-md px-4 py-3 text-xs font-extrabold text-sky-200 shadow-xl transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                          🤖 + Thêm Bot
+                          + Thêm Bot
                         </button>
                         <button
                           type="button"
@@ -716,7 +716,7 @@ function RoomPageContent({
                           onClick={() => sendRoomAction({ type: "START_MATCH" })}
                           className="flex-[1.35] rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-3 text-xs font-black tracking-wide text-slate-950 shadow-xl shadow-orange-500/25 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                          🔥 BẮT ĐẦU GAME
+                          BẮT ĐẦU GAME
                         </button>
                       </div>
                     ) : snapshot.viewerSeatNo === null ? (

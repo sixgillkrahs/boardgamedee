@@ -345,9 +345,9 @@ export function KingOfTokyoDuelCanvas({
         ctx.lineJoin = "round";
         ctx.lineWidth = 5;
         ctx.strokeStyle = "rgba(6, 10, 22, 0.92)";
-        ctx.strokeText("🦖 KING OF TOKYO: DUEL", width * 0.5, height * 0.09);
+        ctx.strokeText("KING OF TOKYO: DUEL", width * 0.5, height * 0.09);
         ctx.fillStyle = "#fde047";
-        ctx.fillText("🦖 KING OF TOKYO: DUEL", width * 0.5, height * 0.09);
+        ctx.fillText("KING OF TOKYO: DUEL", width * 0.5, height * 0.09);
 
         const subText = "Đại Chiến 1v1 • 6 Quái Vật Kaiju • Kéo Co Danh Vọng & Phá Hủy";
         ctx.font = `700 12px ${fonts.sans}`;
