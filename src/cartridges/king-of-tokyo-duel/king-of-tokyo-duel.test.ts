@@ -253,4 +253,56 @@ describe("King of Tokyo: Duel Cartridge", () => {
     expect(kingOfTokyoDuelCartridge.isMatchOver(cur.state)).toBe(true);
     expect(cur.state.winnerSeatNo).not.toBeNull();
   });
+
+  it("enforces official Dice Token spending (up to 2 held, max 8 total dice with White Bonus Dice)", () => {
+    const init = kingOfTokyoDuelCartridge.createInitialState({
+      config: kingOfTokyoDuelCartridge.defaultConfig(2),
+      seats: SEATS,
+      nowMs: 1000,
+    });
+    const r1 = kingOfTokyoDuelCartridge.reduce({
+      state: init.state,
+      command: { type: "PICK_MONSTER", monsterId: "space_penguin" },
+      actorSeatNo: 1,
+      nowMs: 2000,
+    });
+    const r2 = kingOfTokyoDuelCartridge.reduce({
+      state: r1.state,
+      command: { type: "PICK_MONSTER", monsterId: "gigazaur" },
+      actorSeatNo: 2,
+      nowMs: 3000,
+    });
+
+    // Turn 1 starts with 5 Red core dice; give Seat 1 two held Dice Tokens
+    const withTokens: KotMatchState = {
+      ...r2.state,
+      turnNumber: 2,
+      dice: Array.from({ length: 6 }, (_, id) => ({
+        id,
+        face: "energy",
+        locked: false,
+      })),
+      seats: r2.state.seats.map((s) =>
+        s.seatNo === 1 ? { ...s, bonusDiceNextTurn: 2 } : s
+      ),
+    };
+
+    const used1 = kingOfTokyoDuelCartridge.reduce({
+      state: withTokens,
+      command: { type: "USE_DICE_TOKEN" },
+      actorSeatNo: 1,
+      nowMs: 4000,
+    });
+    expect(used1.state.dice).toHaveLength(7);
+    expect(used1.state.seats[0].bonusDiceNextTurn).toBe(1);
+
+    const used2 = kingOfTokyoDuelCartridge.reduce({
+      state: used1.state,
+      command: { type: "USE_DICE_TOKEN" },
+      actorSeatNo: 1,
+      nowMs: 4200,
+    });
+    expect(used2.state.dice).toHaveLength(8);
+    expect(used2.state.seats[0].bonusDiceNextTurn).toBe(0);
+  });
 });

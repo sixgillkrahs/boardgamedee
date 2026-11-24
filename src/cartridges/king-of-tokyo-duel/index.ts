@@ -74,7 +74,7 @@ export const KOT_MONSTERS: Record<KotMonsterId, KotMonsterMeta> = {
     maxHp: 13,
     powerNameVi: "Thiết Bị Đông Lạnh",
     powerDescVi:
-      "Ra ≥ 2 [!] nhận +1 Xúc Xắc thưởng cho lượt kế tiếp (tối đa +2) & hồi +1 ❤️!",
+      "Ra ≥ 2 [!] nhận +1 Token Xúc Xắc Trắng (giữ tối đa 2) & hồi +1 ❤️!",
     accentColor: "#38bdf8",
     emoji: "🐧",
   },
@@ -206,7 +206,7 @@ export const KOT_BUZZ_TILE_DEFS: Record<KotBuzzTileId, KotBuzzTileDef> = {
     span: 2,
     spriteIndex: 1,
     slotEffects: ["CLAW_1", "BONUS_DIE"],
-    summaryVi: "2 ô • +1 🐾 Sát thương & +1 🎲 Xúc xắc đỏ",
+    summaryVi: "2 ô • +1 🐾 Sát thương & +1 🎲 Token Xúc xắc trắng",
   },
   cat_pink: {
     id: "cat_pink",
@@ -238,7 +238,7 @@ export const KOT_BUZZ_TILE_DEFS: Record<KotBuzzTileId, KotBuzzTileDef> = {
     span: 2,
     spriteIndex: 5,
     slotEffects: ["ENERGY_1", "BONUS_DIE"],
-    summaryVi: "2 ô • +1 ⚡ Năng lượng & +1 🎲 Xúc xắc đỏ",
+    summaryVi: "2 ô • +1 ⚡ Năng lượng & +1 🎲 Token Xúc xắc trắng",
   },
   gigazaur: {
     id: "gigazaur",
@@ -656,6 +656,7 @@ export interface KotMatchState {
 export type KotCommand =
   | { type: "PICK_MONSTER"; monsterId: KotMonsterId }
   | { type: "TOGGLE_DIE"; dieIndex: number }
+  | { type: "USE_DICE_TOKEN" }
   | { type: "REROLL" }
   | { type: "RESOLVE_DICE" }
   | { type: "BUY_CARD"; cardId: string }
@@ -870,7 +871,7 @@ function describeBuzzEffectVi(effect: KotBuzzEffect): string {
     case "CLAW_1":
       return "Gây ngay +1 🐾 Sát thương";
     case "BONUS_DIE":
-      return "+1 🎲 Xúc xắc đỏ lượt sau";
+      return "+1 🎲 Token Xúc xắc trắng (tối đa 2)";
     case "PULL_1":
       return "Kéo thêm +1 bước thanh";
   }
@@ -1013,11 +1014,13 @@ function beginTurnRoll(
     applyHeal(actor, 1);
   }
 
-  // Official first-turn balancing: Seat 1 rolls 5 dice on Turn 1; standard turns roll 6 dice!
+  // Official King of Tokyo: Duel dice rules:
+  // - Turn 1: 5 Red core dice; Turn 2+: 6 Red core dice
+  // - Extra Head (KEEP) adds +1 White bonus die automatically
+  // - Held Dice Tokens (max 2) are spent voluntarily via USE_DICE_TOKEN during RollDiceStep (max 8 dice total)
   const baseDice = state.turnNumber === 1 ? 5 : 6;
   const keepExtra = hasKeepEffect(actor, "EXTRA_DIE_1") ? 1 : 0;
-  const totalDice = Math.min(8, baseDice + keepExtra + actor.bonusDiceNextTurn);
-  actor.bonusDiceNextTurn = 0;
+  const totalDice = Math.min(8, baseDice + keepExtra);
 
   const maxRolls = hasKeepEffect(actor, "EXTRA_ROLL_1") ? 4 : 3;
   state.maxRollsThisTurn = maxRolls;
@@ -1115,6 +1118,10 @@ function chooseBotCommand(state: KotMatchState): KotCommand {
   }
 
   if (state.step === "RollDiceStep") {
+    // Bot spends held Dice Token to add a White Bonus Die (up to max 8 dice)!
+    if (actor.bonusDiceNextTurn > 0 && state.dice.length < 8) {
+      return { type: "USE_DICE_TOKEN" };
+    }
     if (state.rollsLeft <= 0) {
       return { type: "RESOLVE_DICE" };
     }
@@ -1325,6 +1332,41 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
         const die = state.dice[command.dieIndex];
         if (!die) throw new Error("Xúc xắc không hợp lệ.");
         die.locked = !die.locked;
+        break;
+      }
+
+      case "USE_DICE_TOKEN": {
+        if (state.step !== "RollDiceStep") {
+          throw new Error("Chỉ có thể dùng Token Xúc Xắc trong bước tung xúc xắc.");
+        }
+        if (actor.bonusDiceNextTurn <= 0) {
+          throw new Error("Bạn không có Token Xúc Xắc nào để dùng.");
+        }
+        if (state.dice.length >= 8) {
+          throw new Error("Đã đạt giới hạn tối đa 8 xúc xắc trong lượt này.");
+        }
+        actor.bonusDiceNextTurn -= 1;
+        const newFace = rollRandomFace(rng);
+        state.dice.push({
+          id: state.dice.length,
+          face: newFace,
+          locked: false,
+        });
+        state.phaseDeadlineMs = makeDeadline(state, nowMs);
+        setAnim(
+          state,
+          {
+            kind: "ROLL",
+            actorSeatNo: actor.seatNo,
+            labelVi: `🎲 Dùng Token! +1 Xúc Xắc Trắng (${state.dice.length}/8)`,
+          },
+          nowMs
+        );
+        events.push({
+          eventType: "KOT_DICE_TOKEN_USED",
+          message: `🎲 ${actor.displayName} bỏ 1 Token Xúc Xắc để tung thêm 1 Xúc Xắc Trắng (${state.dice.length}/8)!`,
+          visibleToSeatNos: "all",
+        });
         break;
       }
 

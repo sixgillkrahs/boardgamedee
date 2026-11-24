@@ -143,9 +143,9 @@ export function KingOfTokyoDuelCanvas({
       onDispatchCommand,
     };
 
-    // Trigger staggered 3D dice tumble animation on any fresh turn roll OR reroll!
+    // Trigger staggered 3D dice tumble animation on any fresh turn roll, reroll, or adding a White Bonus Die!
     if (mode === "match" && playerView && playerView.step === "RollDiceStep") {
-      const rollKey = `${playerView.turnNumber}-${playerView.activeSeatNo}-${playerView.rollsLeft}`;
+      const rollKey = `${playerView.turnNumber}-${playerView.activeSeatNo}-${playerView.rollsLeft}-${playerView.dice.length}`;
       if (rollKey !== lastRollKeyRef.current) {
         lastRollKeyRef.current = rollKey;
         rollStartMsRef.current = performance.now();
@@ -924,11 +924,18 @@ export function KingOfTokyoDuelCanvas({
           const dieSize = 36;
           const dieGap = 6;
           const diceRowW = diceCount * dieSize + Math.max(0, diceCount - 1) * dieGap;
+          const canUseDiceToken =
+            isMyTurn &&
+            pv.step === "RollDiceStep" &&
+            mySeat.bonusDiceNextTurn > 0 &&
+            pv.dice.length < 8;
           const actionsW =
             isMyTurn && pv.step === "PlaceBuzzStep"
               ? 430
               : isMyTurn && pv.step === "RollDiceStep"
-                ? 236
+                ? canUseDiceToken
+                  ? 344
+                  : 236
                 : isMyTurn && pv.step === "BuyCardsStep"
                   ? 236
                   : 186;
@@ -1048,29 +1055,63 @@ export function KingOfTokyoDuelCanvas({
               const canReroll = pv.rollsLeft > 0 && pv.dice.some((d) => !d.locked);
               const w1 = 114;
               const w2 = 114;
+              const wTok = 100;
+              let cursorX = actX;
+
+              if (canUseDiceToken) {
+                const tokId = "kot-btn-use-dice-token";
+                const tokHov = hoveredIdRef.current === tokId;
+                newHitRegions.push({
+                  id: tokId,
+                  shape: "rect",
+                  x: cursorX,
+                  y: actBtnY,
+                  width: wTok,
+                  height: actBtnH,
+                  cursor: "pointer",
+                  data: { type: "use-dice-token" },
+                });
+                drawRoundedRect(ctx, cursorX, actBtnY, wTok, actBtnH, 10);
+                ctx.fillStyle = tokHov ? "#fef3c7" : "#f4e0ba";
+                ctx.fill();
+                ctx.strokeStyle = "#fde047";
+                ctx.lineWidth = 1.6;
+                ctx.stroke();
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = "#1c1917";
+                ctx.font = `900 10.5px ${fonts.sans}`;
+                ctx.fillText(
+                  `+1 🎲 Trắng (${mySeat.bonusDiceNextTurn})`,
+                  cursorX + wTok / 2,
+                  actBtnY + actBtnH / 2 + 0.5
+                );
+                cursorX += wTok + 8;
+              }
+
               if (canReroll) {
                 const id = "kot-btn-reroll";
                 const hov = hoveredIdRef.current === id;
                 newHitRegions.push({
                   id,
                   shape: "rect",
-                  x: actX,
+                  x: cursorX,
                   y: actBtnY,
                   width: w1,
                   height: actBtnH,
                   cursor: "pointer",
                   data: { type: "reroll" },
                 });
-                drawRoundedRect(ctx, actX, actBtnY, w1, actBtnH, 10);
+                drawRoundedRect(ctx, cursorX, actBtnY, w1, actBtnH, 10);
                 ctx.fillStyle = hov ? "#38bdf8" : "#0284c7";
                 ctx.fill();
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillStyle = "#ffffff";
                 ctx.font = `900 11px ${fonts.sans}`;
-                ctx.fillText(`🎲 Tung lại (${pv.rollsLeft})`, actX + w1 / 2, actBtnY + actBtnH / 2 + 0.5);
+                ctx.fillText(`🎲 Tung lại (${pv.rollsLeft})`, cursorX + w1 / 2, actBtnY + actBtnH / 2 + 0.5);
               }
-              const resX = canReroll ? actX + w1 + 8 : actX;
+              const resX = canReroll ? cursorX + w1 + 8 : cursorX;
               const resW = canReroll ? w2 : w1 + w2 + 8;
               const resId = "kot-btn-resolve";
               const resHov = hoveredIdRef.current === resId;
@@ -1254,26 +1295,46 @@ export function KingOfTokyoDuelCanvas({
             const enBoxY = dialY - enBoxH / 2;
             drawKotEnergyStash2D(ctx, enBoxX, enBoxY, enBoxW, enBoxH, seat.energy);
 
-            // Bonus dice next turn badge if any
+            // Held Dice Tokens badge (up to 2 White Bonus Dice tokens — clickable during your RollDiceStep!)
             let curRowY = dialY + dialR + 14;
             if (seat.bonusDiceNextTurn > 0) {
-              drawRoundedRect(ctx, colX + 12, curRowY, sideW - 24, 22, 8);
-              ctx.fillStyle = "rgba(226, 80, 90, 0.22)";
+              const canClickBadge =
+                isViewer && isMyTurn && pv.step === "RollDiceStep" && pv.dice.length < 8;
+              const bId = `kot-side-dice-tok-${seat.seatNo}`;
+              const bHov = hoveredIdRef.current === bId;
+              if (canClickBadge) {
+                newHitRegions.push({
+                  id: bId,
+                  shape: "rect",
+                  x: colX + 12,
+                  y: curRowY,
+                  width: sideW - 24,
+                  height: 24,
+                  cursor: "pointer",
+                  data: { type: "use-dice-token" },
+                });
+              }
+              drawRoundedRect(ctx, colX + 12, curRowY, sideW - 24, 24, 8);
+              ctx.fillStyle = canClickBadge && bHov
+                ? "rgba(254, 243, 199, 0.34)"
+                : "rgba(244, 224, 186, 0.18)";
               ctx.fill();
-              ctx.strokeStyle = "#f43f5e";
-              ctx.lineWidth = 1.2;
+              ctx.strokeStyle = canClickBadge ? "#fde047" : "#f4e0ba";
+              ctx.lineWidth = canClickBadge ? 1.6 : 1.2;
               ctx.stroke();
-              drawKotIcon2D(ctx, colX + 28, curRowY + 11, 16, "dice");
+              drawKotIcon2D(ctx, colX + 27, curRowY + 12, 16, "dice");
               ctx.textAlign = "left";
-              ctx.fillStyle = "#fecdd3";
+              ctx.fillStyle = "#fef3c7";
               ctx.font = `800 10.5px ${fonts.sans}`;
               ctx.fillText(
-                `+${seat.bonusDiceNextTurn} Xúc Xắc Đỏ lượt tới`,
-                colX + 40,
-                curRowY + 11.5,
-                sideW - 54
+                canClickBadge
+                  ? `Dùng Token Xúc Xắc (${seat.bonusDiceNextTurn}/2)`
+                  : `${seat.bonusDiceNextTurn}/2 Token Xúc Xắc Trắng`,
+                colX + 39,
+                curRowY + 12.5,
+                sideW - 52
               );
-              curRowY += 28;
+              curRowY += 30;
             }
 
             // Owned Keep Power Cards Grid (mini illustrated cards — hover to zoom!)
@@ -1802,6 +1863,8 @@ export function KingOfTokyoDuelCanvas({
       dispatch({ type: "PICK_MONSTER", monsterId: data.monsterId });
     } else if (data.type === "toggle-die") {
       dispatch({ type: "TOGGLE_DIE", dieIndex: data.dieIndex });
+    } else if (data.type === "use-dice-token") {
+      dispatch({ type: "USE_DICE_TOKEN" });
     } else if (data.type === "reroll") {
       rollStartMsRef.current = performance.now();
       rollSeedRef.current = Math.floor(Math.random() * 10000) + 1;

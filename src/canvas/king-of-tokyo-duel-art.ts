@@ -1150,8 +1150,8 @@ export function drawKotMonsterBoard2D(
 }
 
 /**
- * Draws a crisp 16-bit Kaiju Die at `(x, y, size, size)` — Ivory/Cream for standard dice,
- * Coral-Red for bonus extra dice (`isBonus = true`), with golden lock ring, padlock badge,
+ * Draws a crisp 16-bit Kaiju Die at `(x, y, size, size)` — official Coral-Red for the 6 core dice
+ * and Ivory/White for the 2 bonus extra dice (`isBonus = true`), with golden lock ring, padlock badge,
  * and optional 3D tumble / jump / squash-and-stretch landing animation!
  */
 export function drawKotDie2D(
@@ -1220,13 +1220,14 @@ export function drawKotDie2D(
   const atlas = getKotDiceAtlas();
   if (atlas) {
     const r = KOT_DICE_RECTS[face];
-    const sy = isBonus ? 64 : r.sy;
+    // Official King of Tokyo: Duel dice: 6 Red core dice (row 1: sy=64) + 2 White/Cream bonus dice (row 0: sy=0)
+    const sy = isBonus ? 0 : 64;
     ctx.imageSmoothingEnabled = size < 44 || angle !== 0;
     if (ctx.imageSmoothingEnabled) ctx.imageSmoothingQuality = "high";
     ctx.drawImage(atlas, r.sx, sy, r.sw, r.sh, lx, ly, size, size);
   } else {
     drawRoundedRect(ctx, lx, ly, size, size, 10);
-    ctx.fillStyle = isBonus ? "#e2505a" : "#f4e0ba";
+    ctx.fillStyle = isBonus ? "#f4e0ba" : "#e2505a";
     ctx.fill();
   }
 
