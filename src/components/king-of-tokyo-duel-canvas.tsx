@@ -22,6 +22,7 @@ import {
   getKotCardBackImage,
   getKotDiceAtlas,
   getKotGameBoardImage,
+  getKotHpDialsAtlas,
   getKotIconsAtlas,
   getKotMonsterAtlas,
   getKotPowerCardsAtlas,
@@ -107,6 +108,8 @@ export function KingOfTokyoDuelCanvas({
   const lastAnimIdRef = useRef<number>(0);
   const smoothFameRef = useRef<number>(0);
   const smoothDestRef = useRef<number>(0);
+  const smoothMyHpRef = useRef<number | null>(null);
+  const smoothOppHpRef = useRef<number | null>(null);
   const anchorsRef = useRef<{
     topY: number;
     botY: number;
@@ -258,6 +261,7 @@ export function KingOfTokyoDuelCanvas({
     getKotIconsAtlas();
     getKotPowerCardsAtlas();
     getKotCardBackImage();
+    getKotHpDialsAtlas();
     getKotDiceAtlas();
 
     const canvas = canvasRef.current;
@@ -691,6 +695,10 @@ export function KingOfTokyoDuelCanvas({
         const targetDest = orient(pv.destructionPos);
         smoothFameRef.current += (targetFame - smoothFameRef.current) * Math.min(1, dt * 10);
         smoothDestRef.current += (targetDest - smoothDestRef.current) * Math.min(1, dt * 10);
+        if (smoothMyHpRef.current === null) smoothMyHpRef.current = mySeat.hp;
+        else smoothMyHpRef.current += (mySeat.hp - smoothMyHpRef.current) * Math.min(1, dt * 7);
+        if (smoothOppHpRef.current === null) smoothOppHpRef.current = oppSeat.hp;
+        else smoothOppHpRef.current += (oppSeat.hp - smoothOppHpRef.current) * Math.min(1, dt * 7);
 
         const boardAspect = 1024 / 650;
         const orientedBuzz = pv.buzzTokens.map((b) => ({
@@ -1145,10 +1153,10 @@ export function KingOfTokyoDuelCanvas({
               selected: active,
             });
 
-            // Sculpted Circular Health Dial + Energy Counter right beneath Monster Board!
-            const dialY = mbY + mbH + 44;
-            const dialR = Math.max(28, Math.min(38, Math.round(sideW * 0.145)));
-            const dialX = colX + Math.round(sideW * 0.31);
+            // Official Rotating Two-Layer Health Dial + Energy Counter right beneath Monster Board!
+            const dialR = Math.max(36, Math.min(48, Math.round(sideW * 0.19)));
+            const dialY = mbY + mbH + dialR + 10;
+            const dialX = colX + Math.round(sideW * 0.34);
             drawKotHealthDial2D(
               ctx,
               dialX,
@@ -1156,13 +1164,14 @@ export function KingOfTokyoDuelCanvas({
               dialR,
               seat.hp,
               seat.maxHp,
-              isViewer ? "blue" : "red"
+              isViewer ? "blue" : "red",
+              isViewer ? (smoothMyHpRef.current ?? seat.hp) : (smoothOppHpRef.current ?? seat.hp)
             );
 
             // Glowing Energy Box on the right half next to Health Dial
-            const enBoxX = colX + Math.round(sideW * 0.56);
-            const enBoxW = sideW - Math.round(sideW * 0.56) - 10;
-            const enBoxH = dialR * 1.75;
+            const enBoxX = colX + Math.round(sideW * 0.62);
+            const enBoxW = sideW - Math.round(sideW * 0.62) - 10;
+            const enBoxH = Math.round(dialR * 1.55);
             const enBoxY = dialY - enBoxH / 2;
             drawRoundedRect(ctx, enBoxX, enBoxY, enBoxW, enBoxH, 12);
             ctx.fillStyle = "rgba(15, 23, 42, 0.9)";

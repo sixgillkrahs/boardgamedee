@@ -14,6 +14,7 @@ export const KOT_TOKENS_ATLAS_URL = "/sprites/kot-duel-tokens-pixel.png";
 export const KOT_ICONS_ATLAS_URL = "/sprites/kot-duel-icons-pixel.png";
 export const KOT_POWER_CARDS_ATLAS_URL = "/sprites/kot-duel-power-cards-pixel.png";
 export const KOT_CARD_BACK_URL = "/sprites/kot-duel-card-back-pixel.png";
+export const KOT_HP_DIALS_ATLAS_URL = "/sprites/kot-duel-hp-dials-pixel.png";
 export const KOT_DICE_ATLAS_URL = "/sprites/kot-duel-dice-pixel.png";
 
 /** Grid coordinates (col 0..9, row 0..4, each 100x140) in kot-duel-power-cards-pixel.png for every Power Card ID. */
@@ -465,8 +466,66 @@ export function drawKotDeckBack2D(
   ctx.restore();
 }
 
+let cachedHpDialsImg: HTMLImageElement | null = null;
+let hpDialsLoaded = false;
+const hpDialsListeners = new Set<() => void>();
+
+export function getKotHpDialsAtlas(onLoad?: () => void): HTMLImageElement | null {
+  if (typeof window === "undefined") return null;
+  if (hpDialsLoaded && cachedHpDialsImg) return cachedHpDialsImg;
+  if (onLoad) hpDialsListeners.add(onLoad);
+  if (!cachedHpDialsImg) {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      hpDialsLoaded = true;
+      hpDialsListeners.forEach((fn) => fn());
+      hpDialsListeners.clear();
+    };
+    img.src = KOT_HP_DIALS_ATLAS_URL;
+    cachedHpDialsImg = img;
+  }
+  return hpDialsLoaded ? cachedHpDialsImg : null;
+}
+
+// Exact measured angular position (degrees CW from 12 o'clock) of each HP value 0 (💀) .. 20 on the pink number wheel!
+const HP_WHEEL_ANGLES_DEG = [
+  336.5, // 0 (💀)
+  320.5, // 1
+  304.0, // 2
+  288.0, // 3
+  272.5, // 4
+  257.0, // 5
+  240.0, // 6
+  224.5, // 7
+  209.0, // 8
+  192.5, // 9
+  175.0, // 10
+  158.5, // 11
+  140.8, // 12
+  123.8, // 13
+  106.8, // 14
+  89.3,  // 15
+  72.0,  // 16
+  55.5,  // 17
+  38.8,  // 18
+  21.5,  // 19
+  1.5,   // 20
+];
+
+function getHpWheelAngleDeg(smoothHp: number): number {
+  const clamped = Math.max(0, Math.min(20, smoothHp));
+  const lo = Math.floor(clamped);
+  const hi = Math.ceil(clamped);
+  if (lo === hi) return HP_WHEEL_ANGLES_DEG[lo];
+  const t = clamped - lo;
+  return HP_WHEEL_ANGLES_DEG[lo] * (1 - t) + HP_WHEEL_ANGLES_DEG[hi] * t;
+}
+
 /**
- * Draws a sculpted circular Kaiju Health Dial (matching the official red/blue King of Tokyo HP wheel!)
+ * Draws the official physical two-layer King of Tokyo: Duel Health Dial:
+ * - Bottom rotating pink HP number wheel (`💀, 1..20`) spinning smoothly to `smoothHp`
+ * - Top Red (Opponent) or Blue (Player) Kaiju Blueprint Dial Cover with U-shaped top readout notch!
  */
 export function drawKotHealthDial2D(
   ctx: CanvasRenderingContext2D,
@@ -475,71 +534,80 @@ export function drawKotHealthDial2D(
   radius: number,
   hp: number,
   maxHp: number,
-  tone: "red" | "blue"
+  tone: "red" | "blue",
+  smoothHp?: number
 ) {
   ctx.save();
-  const fonts = getCanvasFontFamilies();
-  const mainCol = tone === "red" ? "#9f2b3b" : "#1e4b7a";
-  const ringCol = tone === "red" ? "#e15b6d" : "#4b9ce2";
-  const darkCol = tone === "red" ? "#4c121b" : "#0e2642";
+  const dialsAtlas = getKotHpDialsAtlas();
+  const displayHp = smoothHp ?? hp;
+  const diameter = radius * 2;
 
-  // Drop shadow
-  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-  ctx.shadowBlur = 10;
-  ctx.shadowOffsetY = 3;
+  // Tabletop drop shadow
+  ctx.shadowColor = "rgba(0, 0, 0, 0.58)";
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetY = 4;
   ctx.beginPath();
   ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-  ctx.fillStyle = darkCol;
+  ctx.fillStyle = tone === "red" ? "#4c121b" : "#0e2642";
   ctx.fill();
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
 
-  // Inner patterned dial face
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius - 3, 0, Math.PI * 2);
-  const g = ctx.createRadialGradient(cx, cy - radius * 0.25, radius * 0.1, cx, cy, radius);
-  g.addColorStop(0, ringCol);
-  g.addColorStop(0.75, mainCol);
-  g.addColorStop(1, darkCol);
-  ctx.fillStyle = g;
-  ctx.fill();
+  if (dialsAtlas) {
+    // 1. Rotating Pink HP Number Wheel underneath (slot 0: sx=0, sy=0, 250x250)
+    const wheelDeg = getHpWheelAngleDeg(displayHp);
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate((-wheelDeg * Math.PI) / 180);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    // Slightly inset wheel by ~2% so pink edge never pokes out behind the vintage cream cover rim
+    const wDiam = diameter * 0.985;
+    ctx.drawImage(
+      dialsAtlas,
+      0,
+      0,
+      250,
+      250,
+      -wDiam / 2,
+      -wDiam / 2,
+      wDiam,
+      wDiam
+    );
+    ctx.restore();
 
-  // HP progress arc around rim
-  const frac = Math.max(0, Math.min(1, hp / Math.max(1, maxHp)));
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius - 5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * frac);
-  ctx.strokeStyle = frac > 0.45 ? "#fde047" : "#fb7185";
-  ctx.lineWidth = 3.5;
-  ctx.lineCap = "round";
-  ctx.stroke();
+    // 2. Official Red (slot 1: sx=250) or Blue (slot 2: sx=500) Blueprint Cover with U-shaped cutout notch!
+    const coverSx = tone === "red" ? 250 : 500;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(
+      dialsAtlas,
+      coverSx,
+      0,
+      250,
+      250,
+      cx - radius,
+      cy - radius,
+      diameter,
+      diameter
+    );
+  } else {
+    // Crisp fallback before atlas finishes loading
+    const fonts = getCanvasFontFamilies();
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius - 2, 0, Math.PI * 2);
+    ctx.fillStyle = tone === "red" ? "#9f2b3b" : "#1e4b7a";
+    ctx.fill();
+    ctx.strokeStyle = "#f5ebd6";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `900 ${Math.round(radius * 0.55)}px ${fonts.mono}`;
+    ctx.fillText(`${hp}/${maxHp}`, cx, cy);
+  }
 
-  // Top cutout HP number window (authentic physical board game dial notch!)
-  const winW = Math.max(30, Math.round(radius * 0.72));
-  const winH = Math.max(18, Math.round(radius * 0.42));
-  drawRoundedRect(ctx, cx - winW / 2, cy - radius + 5, winW, winH, 6);
-  ctx.fillStyle = "#f5ebd6";
-  ctx.fill();
-  ctx.strokeStyle = "#1c1917";
-  ctx.lineWidth = 1.6;
-  ctx.stroke();
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = hp <= 3 ? "#dc2626" : "#0f172a";
-  ctx.font = `900 ${Math.max(12, Math.round(winH * 0.72))}px ${fonts.mono}`;
-  ctx.fillText(`${hp}`, cx, cy - radius + 5 + winH / 2 + 0.5);
-
-  // Center official Heart (or Skull when KO!) + max HP label
-  drawKotIcon2D(ctx, cx, cy + radius * 0.12, Math.round(radius * 0.78), hp <= 0 ? "skull" : "heart");
-  ctx.fillStyle = "rgba(248, 250, 252, 0.85)";
-  ctx.font = `800 ${Math.max(9, Math.round(radius * 0.24))}px ${fonts.mono}`;
-  ctx.fillText(`/${maxHp}`, cx, cy + radius * 0.66);
-
-  // Outer crisp rim
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-  ctx.strokeStyle = "#f5ebd6";
-  ctx.lineWidth = 2;
-  ctx.stroke();
   ctx.restore();
 }
 
