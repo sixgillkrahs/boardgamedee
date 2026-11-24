@@ -24,9 +24,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BoardGame Arena VN • Ma Sói & Đa Board Game (Canvas 2D)",
-  description:
-    "Nền tảng chơi Ma Sói (Werewolf) và Đa Board Game thời gian thực trên HTML5 2D Canvas với Quản trò tự động.",
+  title: "BoardGameDee",
+  description: "Chơi Board Game trực tuyến cùng bạn bè trên BoardGameDee.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

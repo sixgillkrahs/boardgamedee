@@ -162,14 +162,9 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <span className="text-2xl">🐺</span>
-            <div>
-              <h1 className="text-sm font-extrabold tracking-wide text-amber-400 uppercase">
-                BoardGame Arena VN
-              </h1>
-              <p className="text-[11px] text-slate-400">
-                Nền tảng Đa Board Game • HTML5 2D Canvas • Quản trò Tự động
-              </p>
-            </div>
+            <h1 className="text-base font-extrabold tracking-wide text-amber-400">
+              BoardGameDee
+            </h1>
           </div>
 
           {/* Unified Actor Bar: Guest Nickname + Google Upgrade */}
@@ -266,19 +261,9 @@ export default function HomePage() {
           </form>
         </section>
 
-        {/* Extensible Multi-Board-Game Cartridge Catalog */}
+        {/* Game Catalog */}
         <section className="space-y-4">
-          <div className="flex flex-wrap items-end justify-between gap-2">
-            <div>
-              <h3 className="text-lg font-extrabold text-white">
-                Kho Trò Chơi (`Game Cartridges`)
-              </h3>
-              <p className="text-xs text-slate-400">
-                Mỗi tựa game là một module độc lập gắn vào Platform Core mà
-                không cần thay đổi cấu trúc Database hay hệ thống phòng chờ.
-              </p>
-            </div>
-          </div>
+          <h3 className="text-lg font-extrabold text-white">Kho Trò Chơi</h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
             {cartridges.map((item) => {
