@@ -91,6 +91,7 @@ export function KingOfTokyoDuelRoom({
   snapshot,
   isLobby,
   busy,
+  soundEnabled,
   sendRoomAction,
 }: GameRoomModuleProps) {
   const kotView: KotPlayerView | null =
@@ -104,6 +105,7 @@ export function KingOfTokyoDuelRoom({
           lobbySeats={snapshot?.seats ?? []}
           viewerSeatNo={snapshot?.viewerSeatNo ?? null}
           playerView={kotView}
+          soundEnabled={soundEnabled}
           onDispatchCommand={(cmd) =>
             void sendRoomAction({ type: "MATCH_COMMAND", command: cmd })
           }

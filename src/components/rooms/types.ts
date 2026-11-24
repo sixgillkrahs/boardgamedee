@@ -7,6 +7,7 @@ export interface GameRoomModuleProps {
   normalizedCode: string;
   isLobby: boolean;
   busy: boolean;
+  soundEnabled: boolean;
   sendRoomAction: SendRoomAction;
   setErrorMsg: (msg: string | null) => void;
   onOpenDrawer: (tab: "chat" | "events") => void;

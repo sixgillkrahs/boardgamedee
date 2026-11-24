@@ -52,12 +52,12 @@ const RULES_MODAL_META: Record<string, { title: string; subtitle: string }> = {
       "Luật chuẩn Marc André & Bruno Cathala • Bàn 5×5, Ngọc Trai, Đặc Quyền & 3 Cách Thắng",
   },
   splendor: {
-    title: "Luật Chơi Splendor: Thương Nhân Đá Quý (2–4 Người Chơi)",
+    title: "Luật Chơi Splendor (2–4 Người Chơi)",
     subtitle:
       "Luật chuẩn Space Cowboys • Thu thập đá quý, đầu tư mỏ & mời Quý Tộc",
   },
   coup: {
-    title: "Luật Chơi Coup: Đảo Chính (3–6 Người Chơi)",
+    title: "Luật Chơi Coup (3–6 Người Chơi)",
     subtitle: "Bảng tham chiếu hành động (Play) • Nói dối, Bắt bài & Chặn",
   },
   werewolf: {
@@ -187,6 +187,7 @@ function RoomPageContent({
     normalizedCode,
     isLobby,
     busy,
+    soundEnabled,
     sendRoomAction,
     setErrorMsg,
     onOpenDrawer: openDrawer,

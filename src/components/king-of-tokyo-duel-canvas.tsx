@@ -51,29 +51,19 @@ import {
   type KotPlayerView,
   type KotTrackType,
 } from "@/cartridges/king-of-tokyo-duel";
+import {
+  KotFxManager,
+  playKotSfx,
+  type KotFxAnchors,
+} from "@/canvas/king-of-tokyo-duel-fx";
 import type { LobbySeatItem } from "@/components/werewolf-canvas";
-
-interface KotBannerFx {
-  text: string;
-  color: string;
-  x: number;
-  y: number;
-  startMs: number;
-  durationMs: number;
-}
-
-interface KotSlashFx {
-  x: number;
-  y: number;
-  startMs: number;
-  durationMs: number;
-}
 
 interface KingOfTokyoDuelCanvasProps {
   mode: "lobby" | "match";
   lobbySeats: LobbySeatItem[];
   viewerSeatNo: number | null;
   playerView: KotPlayerView | null;
+  soundEnabled?: boolean;
   onDispatchCommand: (cmd: KotCommand) => void;
 }
 
@@ -103,6 +93,7 @@ export function KingOfTokyoDuelCanvas({
   lobbySeats,
   viewerSeatNo,
   playerView,
+  soundEnabled = true,
   onDispatchCommand,
 }: KingOfTokyoDuelCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -110,8 +101,7 @@ export function KingOfTokyoDuelCanvas({
   const hoveredIdRef = useRef<string | null>(null);
   const inspectedMonsterRef = useRef<KotMonsterId>("gigazaur");
   const particlesRef = useRef<ParticleSystem>(new ParticleSystem());
-  const bannersRef = useRef<KotBannerFx[]>([]);
-  const slashesRef = useRef<KotSlashFx[]>([]);
+  const fxRef = useRef<KotFxManager>(new KotFxManager());
   const rollStartMsRef = useRef<number>(0);
   const rollSeedRef = useRef<number>(1);
   const landedDiceRef = useRef<Set<number>>(new Set());
@@ -119,25 +109,29 @@ export function KingOfTokyoDuelCanvas({
   const lastRollKeyRef = useRef<string>("");
   const lastRollTurnRef = useRef<string>("");
   const lastDiceLenRef = useRef<number>(0);
-  const screenShakeEndRef = useRef<number>(0);
-  const screenShakeMagRef = useRef<number>(0);
   const lastAnimIdRef = useRef<number>(0);
   const smoothFameRef = useRef<number>(0);
   const smoothDestRef = useRef<number>(0);
   const smoothMyHpRef = useRef<number | null>(null);
   const smoothOppHpRef = useRef<number | null>(null);
-  const anchorsRef = useRef<{
-    topY: number;
-    botY: number;
-    midX: number;
-    midY: number;
-  }>({ topY: 70, botY: 500, midX: 450, midY: 280 });
+  const anchorsRef = useRef<KotFxAnchors>({
+    leftBoard: { x: 110, y: 155 },
+    rightBoard: { x: 890, y: 155 },
+    leftDial: { x: 80, y: 275 },
+    rightDial: { x: 860, y: 275 },
+    leftEnergy: { x: 145, y: 275 },
+    rightEnergy: { x: 925, y: 275 },
+    diceCenter: { x: 500, y: 30 },
+    boardCenter: { x: 500, y: 360 },
+    boardRect: { x: 250, y: 160, w: 500, h: 317 },
+  });
 
   const stateRef = useRef({
     mode,
     lobbySeats,
     viewerSeatNo,
     playerView,
+    soundEnabled,
     onDispatchCommand,
   });
 
@@ -147,6 +141,7 @@ export function KingOfTokyoDuelCanvas({
       lobbySeats,
       viewerSeatNo,
       playerView,
+      soundEnabled,
       onDispatchCommand,
     };
 
@@ -165,15 +160,14 @@ export function KingOfTokyoDuelCanvas({
 
         const nowMs = performance.now();
         if (addedOnlyBonusDie) {
-          // Only tumble the newly added White Bonus Die(s)!
           const addedSet = new Set<number>();
           for (let i = prevLen; i < playerView.dice.length; i++) addedSet.add(i);
           rollingIndicesRef.current = addedSet;
           rollStartMsRef.current = nowMs;
           rollSeedRef.current = Math.floor(Math.random() * 10000) + 1;
           landedDiceRef.current = new Set();
+          playKotSfx("roll", soundEnabled);
         } else {
-          // If user click already started rolling within the last 280ms, keep spinning seamlessly into server result!
           const alreadyOptimisticRolling =
             rollStartMsRef.current > 0 && nowMs - rollStartMsRef.current < 280;
           if (!alreadyOptimisticRolling) {
@@ -181,6 +175,7 @@ export function KingOfTokyoDuelCanvas({
             rollStartMsRef.current = nowMs;
             rollSeedRef.current = Math.floor(Math.random() * 10000) + 1;
             landedDiceRef.current = new Set();
+            playKotSfx("roll", soundEnabled);
           }
         }
       }
@@ -190,11 +185,9 @@ export function KingOfTokyoDuelCanvas({
     if (mode === "match" && anim && anim.id !== lastAnimIdRef.current) {
       lastAnimIdRef.current = anim.id;
       const now = performance.now();
-      const { topY, botY, midX, midY } = anchorsRef.current;
-      const particles = particlesRef.current;
       const viewerSeat = viewerSeatNo ?? playerView?.seats[0]?.seatNo ?? 1;
-      const actorY = anim.actorSeatNo === viewerSeat ? botY : topY;
-      const targetY = anim.targetSeatNo === viewerSeat ? botY : topY;
+      const viewerIsSeat1 = viewerSeat === playerView?.seats[0]?.seatNo;
+      const trackSign: -1 | 1 = viewerIsSeat1 ? -1 : 1;
 
       if (anim.kind === "ROLL") {
         const alreadyRolling =
@@ -204,100 +197,21 @@ export function KingOfTokyoDuelCanvas({
           rollStartMsRef.current = now;
           rollSeedRef.current = anim.id * 37 + 13;
           landedDiceRef.current = new Set();
+          playKotSfx("roll", soundEnabled);
         }
       }
 
-      if ((anim.damage ?? 0) > 0) {
-        screenShakeEndRef.current = now + 360;
-        screenShakeMagRef.current = Math.min(12, 4 + (anim.damage ?? 1) * 2);
-        slashesRef.current.push({
-          x: midX,
-          y: targetY,
-          startMs: now,
-          durationMs: 480,
-        });
-        for (let i = 0; i < 28; i++) {
-          const ang = Math.random() * Math.PI * 2;
-          const spd = 65 + Math.random() * 145;
-          particles.spawn({
-            x: midX + (Math.random() - 0.5) * 80,
-            y: targetY,
-            vx: Math.cos(ang) * spd,
-            vy: Math.sin(ang) * spd,
-            radius: 2 + Math.random() * 2.8,
-            color: i % 2 === 0 ? "#ef4444" : "#fde047",
-            life: 0.65,
-            maxLife: 0.65,
-          });
-        }
-        bannersRef.current.push({
-          text: `-${anim.damage} HP`,
-          color: "#fca5a5",
-          x: midX,
-          y: targetY,
-          startMs: now,
-          durationMs: 1350,
-        });
-      }
-
-      if ((anim.heal ?? 0) > 0) {
-        for (let i = 0; i < 18; i++) {
-          particles.spawn({
-            x: midX + (Math.random() - 0.5) * 140,
-            y: actorY + 12,
-            vx: (Math.random() - 0.5) * 35,
-            vy: -45 - Math.random() * 55,
-            radius: 2.2 + Math.random() * 2,
-            color: "#34d399",
-            life: 0.85,
-            maxLife: 0.85,
-          });
-        }
-        bannersRef.current.push({
-          text: `+${anim.heal} HP`,
-          color: "#6ee7b7",
-          x: midX - 95,
-          y: actorY - 10,
-          startMs: now + 80,
-          durationMs: 1200,
-        });
-      }
-
-      if ((anim.energyGain ?? 0) > 0) {
-        for (let i = 0; i < 14; i++) {
-          particles.spawn({
-            x: midX + (Math.random() - 0.5) * 140,
-            y: actorY,
-            vx: (Math.random() - 0.5) * 70,
-            vy: -35 - Math.random() * 50,
-            radius: 2,
-            color: "#a3e635",
-            life: 0.65,
-            maxLife: 0.65,
-          });
-        }
-        bannersRef.current.push({
-          text: `+${anim.energyGain} NL`,
-          color: "#bef264",
-          x: midX + 95,
-          y: actorY - 10,
-          startMs: now + 100,
-          durationMs: 1200,
-        });
-      }
-
-      if ((anim.kind === "BUY_CARD" || anim.kind === "BUZZ") && anim.labelVi) {
-        bannersRef.current.push({
-          text: anim.labelVi,
-          color: anim.kind === "BUZZ" ? "#6ee7b7" : "#fde047",
-          x: midX,
-          y: midY - 10,
-          startMs: now,
-          durationMs: 1400,
-        });
-      }
+      fxRef.current.triggerAnim(
+        anim,
+        viewerSeat,
+        trackSign,
+        anchorsRef.current,
+        particlesRef.current,
+        now,
+        soundEnabled
+      );
     }
-  }, [mode, lobbySeats, viewerSeatNo, playerView, onDispatchCommand]);
+  }, [mode, lobbySeats, viewerSeatNo, playerView, soundEnabled, onDispatchCommand]);
 
   useEffect(() => {
     getKotMonsterAtlas();
@@ -354,9 +268,9 @@ export function KingOfTokyoDuelCanvas({
       ctx.save();
       ctx.scale(dpr, dpr);
 
-      if (now < screenShakeEndRef.current) {
-        const rem = (screenShakeEndRef.current - now) / 360;
-        const mag = screenShakeMagRef.current * rem;
+      if (now < fxRef.current.screenShakeEndMs) {
+        const rem = Math.max(0, (fxRef.current.screenShakeEndMs - now) / 420);
+        const mag = fxRef.current.screenShakeMag * rem;
         ctx.translate(
           (Math.random() - 0.5) * 2 * mag,
           (Math.random() - 0.5) * 2 * mag
@@ -1231,24 +1145,19 @@ export function KingOfTokyoDuelCanvas({
           const centerColX = leftColX + sideW + colGap;
           const centerColW = Math.max(400, rightColX - colGap - centerColX);
 
-          // Update FX anchors to hit Opponent Board (Left) and Your Board (Right)!
-          anchorsRef.current = {
-            topY: bodyTop + 95,
-            botY: bodyTop + 95,
-            midX: centerColX + centerColW / 2,
-            midY: bodyTop + bodyH * 0.55,
-          };
-
           // Helper: Draw a full vertical Side Kaiju Column (Monster Board + Health Dial + Energy + Owned Keep Cards!)
           const drawSideKaijuColumn = (
             seat: typeof mySeat,
             colX: number,
             isViewer: boolean
           ) => {
+            const side = isViewer ? "right" : "left";
             const active = seat.seatNo === pv.activeSeatNo && pv.step !== "Finished";
             const winner = pv.winnerSeatNo === seat.seatNo;
             const mId = seat.monsterId ?? "gigazaur";
             const meta = KOT_MONSTERS[mId];
+            const motion = fxRef.current.getBoardMotion(side, now);
+            const dShake = fxRef.current.getDialShake(side, now);
 
             drawRoundedRect(ctx, colX, bodyTop, sideW, bodyH, 16);
             ctx.fillStyle = winner
@@ -1277,15 +1186,43 @@ export function KingOfTokyoDuelCanvas({
               sideW - 16
             );
 
-            // Official Full-Art Kaiju Monster Board (440:336 ratio)
+            // Official Full-Art Kaiju Monster Board (440:336 ratio) with live lunge/knockback/heal/power kinetic motion!
             const mbPad = 10;
             const mbW = sideW - mbPad * 2;
             const mbH = Math.round(mbW * (336 / 440));
             const mbX = colX + mbPad;
             const mbY = bodyTop + 30;
-            drawKotMonsterBoard2D(ctx, mbX, mbY, mbW, mbH, mId, {
+            const mbCx = mbX + mbW / 2;
+            const mbCy = mbY + mbH / 2;
+
+            ctx.save();
+            ctx.translate(mbCx + motion.dx, mbCy + motion.dy);
+            if (motion.angle !== 0) ctx.rotate(motion.angle);
+            if (motion.scaleX !== 1 || motion.scaleY !== 1) {
+              ctx.scale(motion.scaleX, motion.scaleY);
+            }
+            if (motion.auraColor && motion.auraAlpha > 0.02) {
+              ctx.shadowColor = motion.auraColor;
+              ctx.shadowBlur = 24 * motion.auraAlpha;
+            } else if (motion.healGlow > 0.02) {
+              ctx.shadowColor = "#34d399";
+              ctx.shadowBlur = 22 * motion.healGlow;
+            }
+            drawKotMonsterBoard2D(ctx, -mbW / 2, -mbH / 2, mbW, mbH, mId, {
               selected: active,
             });
+            ctx.shadowBlur = 0;
+
+            if (motion.hitFlash > 0.02) {
+              drawRoundedRect(ctx, -mbW / 2, -mbH / 2, mbW, mbH, 10);
+              ctx.fillStyle = `rgba(239, 68, 68, ${motion.hitFlash * 0.52})`;
+              ctx.fill();
+            } else if (motion.healGlow > 0.02) {
+              drawRoundedRect(ctx, -mbW / 2, -mbH / 2, mbW, mbH, 10);
+              ctx.fillStyle = `rgba(52, 211, 153, ${motion.healGlow * 0.24})`;
+              ctx.fill();
+            }
+            ctx.restore();
 
             // Official Rotating Two-Layer Health Dial + Energy Counter right beneath Monster Board!
             const dialR = Math.max(36, Math.min(48, Math.round(sideW * 0.19)));
@@ -1293,8 +1230,8 @@ export function KingOfTokyoDuelCanvas({
             const dialX = colX + Math.round(sideW * 0.34);
             drawKotHealthDial2D(
               ctx,
-              dialX,
-              dialY,
+              dialX + dShake.dx,
+              dialY + dShake.dy,
               dialR,
               seat.hp,
               seat.maxHp,
@@ -1308,6 +1245,17 @@ export function KingOfTokyoDuelCanvas({
             const enBoxH = Math.round(dialR * 1.85);
             const enBoxY = dialY - enBoxH / 2;
             drawKotEnergyStash2D(ctx, enBoxX, enBoxY, enBoxW, enBoxH, seat.energy);
+
+            // Store exact FX anchors for this column!
+            if (isViewer) {
+              anchorsRef.current.rightBoard = { x: mbCx, y: mbCy };
+              anchorsRef.current.rightDial = { x: dialX, y: dialY };
+              anchorsRef.current.rightEnergy = { x: enBoxX + enBoxW / 2, y: dialY };
+            } else {
+              anchorsRef.current.leftBoard = { x: mbCx, y: mbCy };
+              anchorsRef.current.leftDial = { x: dialX, y: dialY };
+              anchorsRef.current.leftEnergy = { x: enBoxX + enBoxW / 2, y: dialY };
+            }
 
             // Held Dice Tokens badge (up to 2 White Bonus Dice tokens — clickable during your RollDiceStep!)
             let curRowY = dialY + dialR + 14;
@@ -1451,6 +1399,22 @@ export function KingOfTokyoDuelCanvas({
 
           const boardX = groupX + deckOffsetLeft;
           const boardY = groupY + mCardH - overlapPx;
+
+          // Sync live Tokyo Board & Dice Bar anchors for FX Manager
+          anchorsRef.current.diceCenter = {
+            x: width * 0.5,
+            y: topBarY + topBarH / 2,
+          };
+          anchorsRef.current.boardCenter = {
+            x: boardX + boardW / 2,
+            y: boardY + boardH / 2,
+          };
+          anchorsRef.current.boardRect = {
+            x: boardX,
+            y: boardY,
+            w: boardW,
+            h: boardH,
+          };
 
           // A. Draw the HUGE 1024x650 HD Tokyo Board FIRST (so the 3 top cards tuck cleanly onto its top 3 green slots!)
           const hoveredBuzzSpot = registerBuzzPlacementHitRegions(
@@ -1803,50 +1767,10 @@ export function KingOfTokyoDuelCanvas({
         }
       }
 
-      // Render Kaiju Claw Slash FX
-      slashesRef.current = slashesRef.current.filter((sl) => {
-        const p = (now - sl.startMs) / sl.durationMs;
-        if (p < 0) return true;
-        if (p >= 1) return false;
-        const fade = 1 - p;
-        ctx.save();
-        ctx.translate(sl.x, sl.y);
-        ctx.globalAlpha = fade;
-        ctx.strokeStyle = "#ef4444";
-        ctx.shadowColor = "#ef4444";
-        ctx.shadowBlur = 14;
-        ctx.lineCap = "round";
-        for (const off of [-22, 0, 22]) {
-          ctx.lineWidth = 7 * fade;
-          ctx.beginPath();
-          ctx.moveTo(-55 + off, -32);
-          ctx.lineTo(55 + off, 32);
-          ctx.stroke();
-        }
-        ctx.restore();
-        return true;
-      });
-
+      // Render all rich Kaiju Action FX (Claw Slashes, Shockwaves, Flying Energy Cubes, Hearts, Signature Powers, Banners!)
       particles.update(dt);
       particles.draw(ctx);
-
-      bannersRef.current = bannersRef.current.filter((bn) => {
-        const p = (now - bn.startMs) / bn.durationMs;
-        if (p < 0) return true;
-        if (p >= 1) return false;
-        const alpha = p < 0.15 ? p / 0.15 : p > 0.7 ? (1 - p) / 0.3 : 1;
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.font = `900 15px ${fonts.sans}`;
-        ctx.fillStyle = "rgba(2, 6, 23, 0.92)";
-        ctx.fillText(bn.text, bn.x + 1.5, bn.y - p * 26 + 1.5);
-        ctx.fillStyle = bn.color;
-        ctx.fillText(bn.text, bn.x, bn.y - p * 26);
-        ctx.restore();
-        return true;
-      });
+      fxRef.current.render(ctx, particles, now);
 
       hitRegionsRef.current = newHitRegions;
       ctx.restore();
@@ -1892,6 +1816,7 @@ export function KingOfTokyoDuelCanvas({
       rollStartMsRef.current = performance.now();
       rollSeedRef.current = Math.floor(Math.random() * 10000) + 1;
       landedDiceRef.current = new Set();
+      playKotSfx("roll", stateRef.current.soundEnabled);
       dispatch({ type: "REROLL" });
     } else if (data.type === "resolve") {
       dispatch({ type: "RESOLVE_DICE" });

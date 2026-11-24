@@ -655,6 +655,12 @@ export interface KotLastAnim {
   energyGain?: number;
   fameDelta?: number;
   destructionDelta?: number;
+  /** Set when a Kaiju triggers its signature [!] Special Power */
+  monsterPowerId?: KotMonsterId;
+  /** Set when a Buzz Tile is placed or moved on the Tokyo board */
+  buzzTrack?: KotTrackType;
+  buzzStartPos?: number;
+  buzzSpan?: 2 | 3;
   labelVi?: string;
   atMs: number;
 }
@@ -1477,6 +1483,8 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
 
         // Resolve Monster Special Power from '!' dice!
         let monsterPowerMsg: string | null = null;
+        let monsterPowerId: KotMonsterId | undefined;
+        let kingBuzzPlaced: { track: KotTrackType; startPos: number } | null = null;
         if (actor.monsterId === "gigazaur" && counts.special >= 2) {
           // Pull whichever track is less favorable by +1
           const dir = pullDirForSeat(state, actor.seatNo);
@@ -1485,11 +1493,13 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
           } else {
             destructSteps += 1;
           }
-          monsterPowerMsg = "🦖 Bom Tấn Gigazaur: +1 bước kéo thanh!";
+          monsterPowerId = "gigazaur";
+          monsterPowerMsg = "Bom Tấn Gigazaur: +1 bước kéo thanh!";
         } else if (actor.monsterId === "cyber_kitty" && counts.special >= 2) {
           const bonusE = counts.special >= 3 ? 4 : 2;
           totalEnergy += bonusE;
-          monsterPowerMsg = `🐱 Cyber Kitty: +${bonusE} ⚡ Năng Lượng!`;
+          monsterPowerId = "cyber_kitty";
+          monsterPowerMsg = `Cơn Bão Năng Lượng: +${bonusE} NL!`;
         } else if (actor.monsterId === "the_king" && counts.special >= 2) {
           // Place or relocate The King's signature 2-space Buzz Tile right ahead on his best track!
           const bestKingSpot = chooseBestBuzzPlacement(state, actor.seatNo, "the_king");
@@ -1502,23 +1512,28 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
               track: bestKingSpot.track,
               startPos: bestKingSpot.startPos,
             });
+            kingBuzzPlaced = bestKingSpot;
           } else {
             totalHeal += 1;
           }
-          monsterPowerMsg = "🦍 The King đặt Token Buzz Lãnh Thổ!";
+          monsterPowerId = "the_king";
+          monsterPowerMsg = "The King đặt Token Buzz Lãnh Thổ!";
         } else if (actor.monsterId === "space_penguin" && counts.special >= 2) {
           actor.bonusDiceNextTurn = Math.min(2, actor.bonusDiceNextTurn + 1);
           totalHeal += 1;
-          monsterPowerMsg = "🐧 Space Penguin: +1 🎲 lượt sau & +1 ❤️!";
+          monsterPowerId = "space_penguin";
+          monsterPowerMsg = "Thiết Bị Đông Lạnh: +1 Xúc Xắc Trắng & +1 HP!";
         } else if (actor.monsterId === "meka_dragon" && counts.special >= 2) {
           const bonusDmg = counts.special >= 3 ? 4 : 2;
           totalRawDamage += bonusDmg;
-          monsterPowerMsg = `🐉 Hơi Thở Hạt Nhân: +${bonusDmg} sát thương!`;
+          monsterPowerId = "meka_dragon";
+          monsterPowerMsg = `Hơi Thở Hạt Nhân: +${bonusDmg} sát thương!`;
         } else if (actor.monsterId === "alienoid" && counts.special >= 2) {
           totalEnergy += 1;
           totalHeal += 1;
           totalRawDamage += 1;
-          monsterPowerMsg = "👽 Alienoid: +1 ⚡, +1 ❤️, +1 🐾!";
+          monsterPowerId = "alienoid";
+          monsterPowerMsg = "Công Nghệ Vũ Trụ: +1 NL, +1 HP, +1 sát thương!";
         }
 
         // Apply Energy, Heal, Damage, Lifesteal, and Track Pulls!
@@ -1553,7 +1568,13 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
         setAnim(
           state,
           {
-            kind: actualDmg > 0 ? "ATTACK" : actualHeal > 0 ? "HEAL" : "RESOLVE",
+            kind: monsterPowerId
+              ? "MONSTER_POWER"
+              : actualDmg > 0
+                ? "ATTACK"
+                : actualHeal > 0
+                  ? "HEAL"
+                  : "RESOLVE",
             actorSeatNo: actor.seatNo,
             targetSeatNo: opp.seatNo,
             damage: actualDmg,
@@ -1561,6 +1582,10 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
             energyGain: totalEnergy,
             fameDelta: fameMoved,
             destructionDelta: destMoved,
+            monsterPowerId,
+            buzzTrack: kingBuzzPlaced?.track,
+            buzzStartPos: kingBuzzPlaced?.startPos,
+            buzzSpan: kingBuzzPlaced ? 2 : undefined,
             labelVi: monsterPowerMsg ?? (parts.join(" • ") || "Chốt xúc xắc"),
           },
           nowMs
@@ -1652,9 +1677,10 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
             targetSeatNo: opp.seatNo,
             damage: dmg,
             heal,
+            energyGain: card.effectId === "ENERGY_3_HEAL_2" ? 3 : 0,
             fameDelta: fameMoved,
             destructionDelta: destMoved,
-            labelVi: `${card.emoji} ${card.nameVi}!`,
+            labelVi: card.nameVi,
           },
           nowMs
         );
@@ -1762,6 +1788,9 @@ export const kingOfTokyoDuelCartridge: GameCartridge<
           {
             kind: "BUZZ",
             actorSeatNo: actor.seatNo,
+            buzzTrack: command.track,
+            buzzStartPos: command.startPos,
+            buzzSpan: def.span,
             labelVi: `${wasMoved ? "Di chuyển" : "Đặt"} Buzz ${def.nameVi}`,
           },
           nowMs
