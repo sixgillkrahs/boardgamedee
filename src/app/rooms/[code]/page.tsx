@@ -456,15 +456,41 @@ function RoomPageContent({
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 text-xs">
-          {/* Quick Button to Open Chat & Event Log Drawer */}
+          {/* Quick Buttons to Open Chat & Event Log Drawer separately */}
           <button
             type="button"
-            onClick={() => setDrawerOpen(true)}
+            onClick={() => {
+              setDrawerTab("chat");
+              setDrawerOpen(true);
+            }}
             className="h-8 rounded-lg border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-2.5 text-xs font-bold text-amber-300 transition cursor-pointer inline-flex items-center gap-1.5"
-            title="Mở Kênh Chat & Nhật Ký"
+            title="Mở Kênh Chat"
           >
             <span>💬</span>
-            <span className="hidden sm:inline">Chat & Nhật Ký</span>
+            <span className="hidden sm:inline">Chat</span>
+            {(snapshot?.messages.length ?? 0) > 0 && (
+              <span className="rounded bg-amber-500/25 px-1.5 py-0.5 text-[10px] font-mono leading-none">
+                {snapshot?.messages.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setDrawerTab("events");
+              setDrawerOpen(true);
+            }}
+            className="h-8 rounded-lg border border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25 px-2.5 text-xs font-bold text-emerald-300 transition cursor-pointer inline-flex items-center gap-1.5"
+            title="Mở Nhật Ký Trận Đấu"
+          >
+            <span>📜</span>
+            <span className="hidden sm:inline">Nhật Ký</span>
+            {(snapshot?.events.length ?? 0) > 0 && (
+              <span className="rounded bg-emerald-500/25 px-1.5 py-0.5 text-[10px] font-mono leading-none">
+                {snapshot?.events.length}
+              </span>
+            )}
           </button>
 
           {/* Info 'i' Button for Viewing Game Rules */}
@@ -3508,17 +3534,32 @@ function RoomPageContent({
             </div>
           ) : null}
 
-          {/* Bottom quick button inside Right Action Sidebar to open Chat & Event Log */}
-          <div className="border-t border-slate-800 pt-3">
+          {/* Bottom quick buttons inside Right Action Sidebar to open Chat & Event Log separately */}
+          <div className="border-t border-slate-800 pt-3 grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={() => setDrawerOpen(true)}
-              className="w-full rounded-xl border border-amber-500/30 bg-slate-950/70 hover:bg-slate-800 px-3.5 py-2.5 text-xs font-bold text-amber-300 flex items-center justify-between transition cursor-pointer"
+              onClick={() => {
+                setDrawerTab("chat");
+                setDrawerOpen(true);
+              }}
+              className="rounded-xl border border-amber-500/35 bg-slate-950/70 hover:bg-slate-800 px-3 py-2 text-xs font-bold text-amber-300 flex items-center justify-between gap-1.5 transition cursor-pointer"
             >
-              <span>💬 Kênh Chat & Nhật Ký</span>
-              <span className="rounded-md bg-amber-500/20 px-2 py-0.5 text-[11px]">
-                {(snapshot?.messages.length ?? 0) +
-                  (snapshot?.events.length ?? 0)}
+              <span>💬 Chat</span>
+              <span className="rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-mono">
+                {snapshot?.messages.length ?? 0}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setDrawerTab("events");
+                setDrawerOpen(true);
+              }}
+              className="rounded-xl border border-emerald-500/35 bg-slate-950/70 hover:bg-slate-800 px-3 py-2 text-xs font-bold text-emerald-300 flex items-center justify-between gap-1.5 transition cursor-pointer"
+            >
+              <span>📜 Nhật Ký</span>
+              <span className="rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-mono">
+                {snapshot?.events.length ?? 0}
               </span>
             </button>
           </div>
