@@ -18,6 +18,7 @@ import {
   getKotDiceAtlas,
   getKotGameBoardImage,
   getKotMonsterAtlas,
+  getKotTokensAtlas,
 } from "@/canvas/king-of-tokyo-duel-art";
 import {
   KOT_MONSTER_IDS,
@@ -239,6 +240,7 @@ export function KingOfTokyoDuelCanvas({
     getKotMonsterAtlas();
     getKotBoardAtlas();
     getKotGameBoardImage();
+    getKotTokensAtlas();
     getKotDiceAtlas();
 
     const canvas = canvasRef.current;

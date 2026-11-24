@@ -10,6 +10,7 @@ import {
 export const KOT_MONSTER_ATLAS_URL = "/sprites/kot-duel-monsters-pixel.png";
 export const KOT_BOARD_ATLAS_URL = "/sprites/kot-duel-boards-pixel.png";
 export const KOT_GAME_BOARD_URL = "/sprites/kot-duel-board-map-pixel.png";
+export const KOT_TOKENS_ATLAS_URL = "/sprites/kot-duel-tokens-pixel.png";
 export const KOT_DICE_ATLAS_URL = "/sprites/kot-duel-dice-pixel.png";
 
 export const KOT_BOARD_RECTS: Record<
@@ -122,6 +123,28 @@ export function getKotGameBoardImage(onLoad?: () => void): HTMLImageElement | nu
     cachedGameBoardImg = img;
   }
   return gameBoardLoaded ? cachedGameBoardImg : null;
+}
+
+let cachedTokensImg: HTMLImageElement | null = null;
+let tokensLoaded = false;
+const tokensListeners = new Set<() => void>();
+
+export function getKotTokensAtlas(onLoad?: () => void): HTMLImageElement | null {
+  if (typeof window === "undefined") return null;
+  if (tokensLoaded && cachedTokensImg) return cachedTokensImg;
+  if (onLoad) tokensListeners.add(onLoad);
+  if (!cachedTokensImg) {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      tokensLoaded = true;
+      tokensListeners.forEach((fn) => fn());
+      tokensListeners.clear();
+    };
+    img.src = KOT_TOKENS_ATLAS_URL;
+    cachedTokensImg = img;
+  }
+  return tokensLoaded ? cachedTokensImg : null;
 }
 
 let cachedDiceImg: HTMLImageElement | null = null;
@@ -667,8 +690,9 @@ export function drawKotGameBoard2D(
     ctx.restore();
   }
 
-  // 3D embossed arcade puck markers (⭐ Fame / 🏢 Destruction)
-  const drawTrackPuck = (
+  // Sculpted 3D 16-bit wooden meeple markers (Fame Star Trophy / Destruction Crumbling Building)
+  const tokensAtlas = getKotTokensAtlas();
+  const drawTrackToken = (
     track: "fame" | "destruction",
     smoothPos: number,
     emoji: string,
@@ -679,53 +703,64 @@ export function drawKotGameBoard2D(
     const pt = getKotTrackNodeNorm(track, smoothPos);
     const mx = x + pt.nx * w;
     const my = y + pt.ny * h;
-    const puckR = Math.max(12, Math.min(22, Math.round(w * 0.031)));
+    // Slight lively hop while gliding between zigzag spaces!
+    const frac = Math.abs(smoothPos - Math.round(smoothPos));
+    const glideHop = Math.sin(frac * Math.PI) * Math.max(5, Math.round(h * 0.032));
+    const idleBob = Math.sin(opts.nowMs / 480 + (track === "fame" ? 0 : 1.7)) * 1.5;
 
     ctx.save();
-    ctx.fillStyle = "rgba(2, 6, 23, 0.72)";
-    ctx.beginPath();
-    ctx.arc(mx, my + 4, puckR, 0, Math.PI * 2);
-    ctx.fill();
+    if (tokensAtlas) {
+      const spriteSize = Math.max(30, Math.min(58, Math.round(w * 0.082)));
+      const sx = track === "fame" ? 0 : 64;
 
-    ctx.shadowColor = glowColor;
-    ctx.shadowBlur = 14 + pulse * 6;
+      // Grounded elliptical tabletop drop shadow right inside the circular track space
+      ctx.fillStyle = "rgba(2, 6, 23, 0.58)";
+      ctx.beginPath();
+      ctx.ellipse(
+        mx,
+        my + spriteSize * 0.14,
+        spriteSize * 0.34,
+        spriteSize * 0.14,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
 
-    const g = ctx.createRadialGradient(
-      mx - puckR * 0.3,
-      my - puckR * 0.35,
-      puckR * 0.15,
-      mx,
-      my,
-      puckR
-    );
-    g.addColorStop(0, "#ffffff");
-    g.addColorStop(0.28, fillCore);
-    g.addColorStop(1, "#0f172a");
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(mx, my, puckR, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = rimColor;
-    ctx.lineWidth = 2.6;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(mx, my, puckR - 3, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.font = `900 ${Math.round(puckR * 1.05)}px ${fonts.sans}`;
-    ctx.fillText(emoji, mx, my + 1);
+      // Subtle glowing halo behind the wooden meeple so it stands out on bright spotlight beams!
+      ctx.shadowColor = glowColor;
+      ctx.shadowBlur = 10 + pulse * 6;
+      ctx.imageSmoothingEnabled = false;
+      // Anchor pedestal bottom cleanly into the circle center!
+      const drawX = Math.round(mx - spriteSize * 0.5);
+      const drawY = Math.round(my - spriteSize * 0.72 - glideHop - idleBob);
+      ctx.drawImage(tokensAtlas, sx, 0, 64, 64, drawX, drawY, spriteSize, spriteSize);
+    } else {
+      const puckR = Math.max(12, Math.min(22, Math.round(w * 0.031)));
+      ctx.fillStyle = "rgba(2, 6, 23, 0.72)";
+      ctx.beginPath();
+      ctx.arc(mx, my + 4, puckR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowColor = glowColor;
+      ctx.shadowBlur = 14 + pulse * 6;
+      ctx.fillStyle = fillCore;
+      ctx.beginPath();
+      ctx.arc(mx, my, puckR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = rimColor;
+      ctx.lineWidth = 2.6;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = `900 ${Math.round(puckR * 1.05)}px ${fonts.sans}`;
+      ctx.fillText(emoji, mx, my + 1);
+    }
     ctx.restore();
   };
 
-  drawTrackPuck("fame", opts.smoothFame, "⭐", "#06b6d4", "#fef08a", "#22d3ee");
-  drawTrackPuck(
+  drawTrackToken("fame", opts.smoothFame, "⭐", "#06b6d4", "#fef08a", "#22d3ee");
+  drawTrackToken(
     "destruction",
     opts.smoothDest,
     "🏢",
