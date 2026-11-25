@@ -119,6 +119,12 @@ export const IK_PIXEL_CARD_URLS: Partial<Record<IkCardType, string[]>> = {
     "/sprites/ik-card-potluck-1-pixel.png",
     "/sprites/ik-card-potluck-2-pixel.png",
   ],
+  personal_attack: [
+    "/sprites/ik-card-personal-attack-1-pixel.png",
+    "/sprites/ik-card-personal-attack-2-pixel.png",
+    "/sprites/ik-card-personal-attack-3-pixel.png",
+    "/sprites/ik-card-personal-attack-4-pixel.png",
+  ],
 };
 
 const cachedPixelUrlImages = new Map<string, HTMLImageElement>();
