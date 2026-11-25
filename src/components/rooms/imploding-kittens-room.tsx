@@ -57,6 +57,7 @@ export function ImplodingKittensRoom({
   const [wantedCardType, setWantedCardType] = useState<IkCardType>("defuse");
   const [wantedDiscardId, setWantedDiscardId] = useState<string>("");
   const [alterOrderIds, setAlterOrderIds] = useState<string[]>([]);
+  const [insertIndex, setInsertIndex] = useState<number>(0);
 
   // Sync default target opponent and Alter Future order
   useEffect(() => {
@@ -89,6 +90,12 @@ export function ImplodingKittensRoom({
       setAlterOrderIds(ikView.pendingAlterFuture.cards.map((c) => c.id));
     }
   }, [ikView?.step, ikView?.pendingAlterFuture?.seatNo]);
+
+  useEffect(() => {
+    if (ikView?.step === "DefuseInsertStep" && ikView.pendingInsert) {
+      setInsertIndex(0);
+    }
+  }, [ikView?.step, ikView?.pendingInsert?.card.id]);
 
   const handleToggleCard = (cardId: string) => {
     if (!ikView) return;
@@ -563,63 +570,216 @@ export function ImplodingKittensRoom({
             </div>
           )}
 
-        {/* 5. DEFUSE / IMPLODING FACE-UP / BURY INSERT MODAL */}
+        {/* 5. DEFUSE / IMPLODING FACE-UP / BURY INSERT MODAL WITH DEPTH SLIDER */}
         {!isLobby &&
           ikView?.step === "DefuseInsertStep" &&
           ikView.pendingInsert &&
-          ikView.pendingInsert.seatNo === snapshot?.viewerSeatNo && (
-            <div className="absolute inset-0 z-30 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="w-full max-w-md rounded-2xl border border-emerald-500/60 bg-slate-900 p-4 shadow-2xl space-y-3">
-                <p className="text-sm font-extrabold text-emerald-300">
-                  {ikView.pendingInsert.reason === "INSERT_IMPLODING_FACEUP"
-                    ? "🕳️ Chọn Vị Trí Cài Mèo Hố Đen (LẬT NGỬA) Vào Bộ Bài"
-                    : ikView.pendingInsert.reason === "BURY_CARD"
-                      ? `🪏 Chôn Giấu Lá [${IK_CARD_META[ikView.pendingInsert.card.type].nameVi}] Vào Bộ Bài`
-                      : "🛠️ Tháo Ngòi Thành Công! Chọn Vị Trí Gài Lại Mèo Nổ:"}
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { label: "🔥 Ngay Trên Đỉnh (#1)", idx: 0 },
-                    { label: "⚡ Vị Trí #2 Từ Đỉnh", idx: 1 },
-                    { label: "🎯 Vị Trí #3 Từ Đỉnh", idx: 2 },
-                    {
-                      label: "🌀 Giữa Bộ Bài",
-                      idx: Math.floor(ikView.pendingInsert.maxInsertIndex / 2),
-                    },
-                    {
-                      label: "⏬ Dưới Đáy Cùng",
-                      idx: ikView.pendingInsert.maxInsertIndex,
-                    },
-                    {
-                      label: "🎲 Ngẫu Nhiên Bí Mật",
-                      idx: Math.floor(
-                        Math.random() *
-                          (ikView.pendingInsert.maxInsertIndex + 1)
-                      ),
-                    },
-                  ].map((opt, i) => (
+          ikView.pendingInsert.seatNo === snapshot?.viewerSeatNo &&
+          (() => {
+            const pi = ikView.pendingInsert!;
+            const maxIdx = Math.max(0, pi.maxInsertIndex);
+            const clampedIdx = Math.max(0, Math.min(maxIdx, insertIndex));
+            const pct = maxIdx > 0 ? (clampedIdx / maxIdx) * 100 : 0;
+            const isImploding = pi.reason === "INSERT_IMPLODING_FACEUP";
+            const isBury = pi.reason === "BURY_CARD";
+            const cardImgUrl = getIkPixelCardUrl(pi.card.type, pi.card.id);
+            const cardMeta = IK_CARD_META[pi.card.type];
+            const accentBorder = isImploding
+              ? "border-purple-500/70"
+              : isBury
+                ? "border-amber-500/70"
+                : "border-rose-500/70";
+            const accentTitle = isImploding
+              ? "text-purple-300"
+              : isBury
+                ? "text-amber-300"
+                : "text-rose-300";
+            const accentBadgeBg = isImploding
+              ? "bg-purple-500/20 border-purple-400/50 text-purple-200"
+              : isBury
+                ? "bg-amber-500/20 border-amber-400/50 text-amber-200"
+                : "bg-rose-500/20 border-rose-400/50 text-rose-200";
+            const accentMarker = isImploding
+              ? "bg-purple-400 shadow-purple-500/80"
+              : isBury
+                ? "bg-amber-400 shadow-amber-500/80"
+                : "bg-rose-500 shadow-rose-500/80";
+
+            const posDesc =
+              clampedIdx === 0
+                ? "Ngay trên ĐỈNH (#1) — người rút tiếp theo sẽ bốc trúng ngay!"
+                : clampedIdx === maxIdx
+                  ? `Dưới ĐÁY CÙNG (#${maxIdx + 1}) — sau toàn bộ ${maxIdx} lá trong bộ bài`
+                  : `Vị trí #${clampedIdx + 1} từ đỉnh — nằm dưới ${clampedIdx} lá bài`;
+
+            return (
+              <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+                <div
+                  className={`w-full max-w-md rounded-2xl border ${accentBorder} bg-slate-900/95 p-5 shadow-2xl space-y-4`}
+                >
+                  {/* Header with mini pixel card preview */}
+                  <div className="flex items-center gap-3">
+                    {cardImgUrl && (
+                      <div className="shrink-0 w-12 aspect-[5/7] rounded-lg overflow-hidden border border-slate-700 bg-slate-950 shadow">
+                        <img
+                          src={cardImgUrl}
+                          alt={cardMeta.nameVi}
+                          className="w-full h-full object-cover"
+                          style={{ imageRendering: "pixelated" }}
+                        />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className={`text-sm font-extrabold ${accentTitle}`}>
+                        {isImploding
+                          ? "🕳️ Cài Mèo Hố Đen (LẬT NGỬA) Vào Bộ Bài"
+                          : isBury
+                            ? `🪏 Chôn Giấu [${cardMeta.shortVi}] Vào Bộ Bài`
+                            : "🛠️ Tháo Ngòi Thành Công! Gài Lại Mèo Nổ"}
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Kéo thanh bên dưới để chọn chính xác vị trí giấu lá bài
+                        trong chồng {maxIdx} lá hiện tại.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Live Position Readout */}
+                  <div
+                    className={`rounded-xl border px-3 py-2 text-center ${accentBadgeBg}`}
+                  >
+                    <p className="text-base font-black tracking-tight">
+                      Vị trí #{clampedIdx + 1}{" "}
+                      <span className="text-xs font-bold opacity-80">
+                        / {maxIdx + 1}
+                      </span>
+                    </p>
+                    <p className="text-[11px] font-semibold opacity-90 mt-0.5">
+                      {posDesc}
+                    </p>
+                  </div>
+
+                  {/* Visual Deck Depth Bar + Range Slider */}
+                  <div className="space-y-2.5">
+                    {/* Deck Depth Visualization */}
+                    <div className="relative h-7 rounded-xl border border-slate-700/80 bg-slate-950/90 px-2 flex items-center overflow-hidden">
+                      <div className="w-full h-2.5 rounded-full bg-gradient-to-r from-rose-500/35 via-amber-500/25 to-emerald-500/30" />
+                      {/* Sliding Bomb Indicator */}
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-75 flex flex-col items-center pointer-events-none"
+                        style={{
+                          left: `calc(14px + (100% - 28px) * ${pct / 100})`,
+                        }}
+                      >
+                        <span
+                          className={`w-4 h-4 rounded-full border-2 border-white shadow-lg ${accentMarker}`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Interactive Slider with -1 / +1 fine-tune */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={busy || clampedIdx <= 0}
+                        onClick={() =>
+                          setInsertIndex(Math.max(0, clampedIdx - 1))
+                        }
+                        className="shrink-0 w-8 h-8 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-sm font-black text-white disabled:opacity-35 cursor-pointer"
+                        title="Lùi lên gần Đỉnh hơn 1 lá"
+                      >
+                        −
+                      </button>
+                      <input
+                        type="range"
+                        min={0}
+                        max={maxIdx}
+                        step={1}
+                        value={clampedIdx}
+                        onChange={(e) => setInsertIndex(Number(e.target.value))}
+                        className="w-full h-2.5 rounded-lg appearance-none bg-slate-800 accent-rose-500 cursor-pointer"
+                      />
+                      <button
+                        type="button"
+                        disabled={busy || clampedIdx >= maxIdx}
+                        onClick={() =>
+                          setInsertIndex(Math.min(maxIdx, clampedIdx + 1))
+                        }
+                        className="shrink-0 w-8 h-8 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-sm font-black text-white disabled:opacity-35 cursor-pointer"
+                        title="Đẩy sâu về Đáy hơn 1 lá"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10.5px] font-bold text-slate-400 px-1">
+                      <span className="text-rose-300">🔥 Đỉnh (#1)</span>
+                      <span>Giữa (#{Math.floor(maxIdx / 2) + 1})</span>
+                      <span className="text-emerald-300">
+                        ⏬ Đáy (#{maxIdx + 1})
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Quick Snap Shortcuts */}
+                  <div className="grid grid-cols-4 gap-1.5">
                     <button
-                      key={i}
+                      type="button"
+                      disabled={busy}
+                      onClick={() => setInsertIndex(0)}
+                      className="rounded-lg border border-slate-700 bg-slate-800/90 hover:border-rose-400 px-2 py-1.5 text-[11px] font-bold text-slate-200 cursor-pointer"
+                    >
+                      Đỉnh #1
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => setInsertIndex(Math.floor(maxIdx / 2))}
+                      className="rounded-lg border border-slate-700 bg-slate-800/90 hover:border-amber-400 px-2 py-1.5 text-[11px] font-bold text-slate-200 cursor-pointer"
+                    >
+                      Giữa
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => setInsertIndex(maxIdx)}
+                      className="rounded-lg border border-slate-700 bg-slate-800/90 hover:border-emerald-400 px-2 py-1.5 text-[11px] font-bold text-slate-200 cursor-pointer"
+                    >
+                      Đáy
+                    </button>
+                    <button
                       type="button"
                       disabled={busy}
                       onClick={() =>
-                        sendRoomAction({
-                          type: "MATCH_COMMAND",
-                          command: {
-                            type: "INSERT_CARD",
-                            insertIndex: opt.idx,
-                          },
-                        })
+                        setInsertIndex(Math.floor(Math.random() * (maxIdx + 1)))
                       }
-                      className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-emerald-500/25 hover:border-emerald-400 px-3 py-2.5 text-xs font-extrabold text-white transition cursor-pointer"
+                      className="rounded-lg border border-slate-700 bg-slate-800/90 hover:border-sky-400 px-2 py-1.5 text-[11px] font-bold text-sky-200 cursor-pointer"
                     >
-                      {opt.label}
+                      🎲 Ngẫu nhiên
                     </button>
-                  ))}
+                  </div>
+
+                  {/* Confirm Insert Button */}
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() =>
+                      sendRoomAction({
+                        type: "MATCH_COMMAND",
+                        command: {
+                          type: "INSERT_CARD",
+                          insertIndex: clampedIdx,
+                        },
+                      })
+                    }
+                    className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 px-4 py-2.5 text-xs font-extrabold text-slate-950 shadow-lg transition cursor-pointer disabled:opacity-45"
+                  >
+                    ✓ Xác Nhận Đặt Vào Vị Trí #{clampedIdx + 1}
+                  </button>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
         {/* 6. ALTER / SHARE THE FUTURE MODAL */}
         {!isLobby &&
