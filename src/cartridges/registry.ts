@@ -5,6 +5,8 @@ import { splendorCartridge } from "@/cartridges/splendor";
 import { splendorDuelCartridge } from "@/cartridges/splendor-duel";
 import { deadMansDrawCartridge } from "@/cartridges/dead-mans-draw";
 import { kingOfTokyoDuelCartridge } from "@/cartridges/king-of-tokyo-duel";
+import { heatCartridge } from "@/cartridges/heat";
+import { implodingKittensCartridge } from "@/cartridges/imploding-kittens";
 
 export interface CatalogEntry {
   cartridgeId: string;
@@ -27,6 +29,8 @@ const CARTRIDGES = new Map<string, GameCartridge<any, any, any, any>>([
   [splendorDuelCartridge.cartridgeId, splendorDuelCartridge],
   [deadMansDrawCartridge.cartridgeId, deadMansDrawCartridge],
   [kingOfTokyoDuelCartridge.cartridgeId, kingOfTokyoDuelCartridge],
+  [heatCartridge.cartridgeId, heatCartridge],
+  [implodingKittensCartridge.cartridgeId, implodingKittensCartridge],
 ]);
 
 export function getCartridge(
@@ -132,6 +136,32 @@ export function listCartridges(): CatalogEntry[] {
       badgeVi: "Đang mở • Pixel 2D",
       accentColor: "#f97316",
       coverImage: "/covers/king-of-tokyo-duel-pixel.png",
+    },
+    {
+      cartridgeId: heatCartridge.cartridgeId,
+      title: heatCartridge.title,
+      genreVi: "Đua xe F1 • Quản lý nhiệt & Núp gió",
+      subtitle: heatCartridge.subtitle,
+      description: heatCartridge.description,
+      minSeats: heatCartridge.minSeats,
+      maxSeats: heatCartridge.maxSeats,
+      available: true,
+      badgeVi: "Đang mở • Canvas 2D",
+      accentColor: "#ef4444",
+      coverImage: "/covers/heat-pixel.png",
+    },
+    {
+      cartridgeId: implodingKittensCartridge.cartridgeId,
+      title: implodingKittensCartridge.title,
+      genreVi: "Rút bài sinh tồn • 4 Bản mở rộng Mèo Nổ",
+      subtitle: implodingKittensCartridge.subtitle,
+      description: implodingKittensCartridge.description,
+      minSeats: implodingKittensCartridge.minSeats,
+      maxSeats: implodingKittensCartridge.maxSeats,
+      available: true,
+      badgeVi: "Đang mở • Full 4 DLC",
+      accentColor: "#a855f7",
+      coverImage: "/covers/imploding-kittens-pixel.png",
     },
     {
       cartridgeId: "secret-hitler",

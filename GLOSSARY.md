@@ -113,3 +113,37 @@ _Avoid_: Call bluff, doubt, accuse
 **Block**:
 A counter-claim by a Seat declaring they hold a specific Character (`Duke`, `Contessa`, `Captain`, or `Ambassador`) to prevent `Foreign Aid`, `Assassinate`, or `Steal`.
 _Avoid_: Counter, cancel, shield
+
+### Heat Cartridge
+
+**Gear**:
+A race car's active transmission setting (`1` through `4`), determining the exact number of cards a Seat must play face-down during the simultaneous planning step and the base Cooldown available in the React step.
+_Avoid_: Speed level, tier, dice count
+
+**Engine Spot**:
+The dedicated reserve on a driver's mat holding available **Heat** cards that can be spent to shift two gears at once, Boost, or cross a **Corner Line** above its speed limit.
+_Avoid_: Mana pool, energy bank, fuel tank
+
+**Cooldown**:
+An ability during the React step (granted by 1st Gear, 2nd Gear, or Adrenaline) that transfers a **Heat** card out of the driver's hand back into their **Engine Spot**.
+_Avoid_: Vent, heal, discard heat
+
+**Slipstream**:
+An optional +2 space movement bonus triggered when a car ends its move alongside or immediately behind another car, without increasing the car's speed for **Corner Line** checks.
+_Avoid_: Draft, tow, free boost
+
+**Spin Out**:
+The penalty suffered when a car crosses a **Corner Line** above the speed limit without enough **Heat** in its **Engine Spot** to pay the difference, forcing the car back before the corner, resetting its **Gear** to `1`, and adding penalty **Stress** cards to the driver's hand.
+_Avoid_: Crash, bust, elimination
+
+### Imploding Kittens Cartridge
+
+**Imploding Kitten**:
+The two-stage singularity bomb card that, when drawn face-down for the first time, is secretly reinserted into the Draw Pile **face-up**, and when subsequently drawn while face-up, immediately eliminates the drawer bypassing any **Defuse** or **Streaking Kitten**.
+_Avoid_: Black cat, super bomb, second bomb
+
+**Streaking Kitten**:
+A passive expansion card that allows a Seat to safely hold one **Exploding Kitten** in their hand without exploding for as long as the **Streaking Kitten** remains in their hand.
+_Avoid_: Shield card, second defuse, bomb holder
+
+

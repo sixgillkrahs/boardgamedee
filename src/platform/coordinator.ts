@@ -270,7 +270,11 @@ async function allocateNextSeat(
   const nextRoomUpdate: Partial<typeof rooms.$inferInsert> = {
     updatedAt: new Date(),
   };
-  if (cartridge && newCount >= cartridge.minSeats) {
+  if (
+    cartridge &&
+    newCount >= cartridge.minSeats &&
+    !cartridge.validateConfig(room.config, newCount).valid
+  ) {
     nextRoomUpdate.config = cartridge.defaultConfig(newCount);
   }
   await db
@@ -403,7 +407,11 @@ export async function leaveRoom(input: { code: string; actorId: string }) {
     hostActorId: nextHostActorId,
     updatedAt: new Date(),
   };
-  if (cartridge && remaining.length >= cartridge.minSeats) {
+  if (
+    cartridge &&
+    remaining.length >= cartridge.minSeats &&
+    !cartridge.validateConfig(room.config, remaining.length).valid
+  ) {
     updatedFields.config = cartridge.defaultConfig(remaining.length);
   }
 
@@ -458,7 +466,11 @@ export async function removeSeatFromRoom(input: {
   const updatedFields: Partial<typeof rooms.$inferInsert> = {
     updatedAt: new Date(),
   };
-  if (cartridge && remaining.length >= cartridge.minSeats) {
+  if (
+    cartridge &&
+    remaining.length >= cartridge.minSeats &&
+    !cartridge.validateConfig(room.config, remaining.length).valid
+  ) {
     updatedFields.config = cartridge.defaultConfig(remaining.length);
   }
 

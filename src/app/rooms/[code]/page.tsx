@@ -9,6 +9,16 @@ import {
   KingOfTokyoDuelRulesContent,
 } from "@/components/rooms/king-of-tokyo-duel-room";
 import {
+  HeatConfigContent,
+  HeatRoom,
+  HeatRulesContent,
+} from "@/components/rooms/heat-room";
+import {
+  ImplodingKittensConfigContent,
+  ImplodingKittensRoom,
+  ImplodingKittensRulesContent,
+} from "@/components/rooms/imploding-kittens-room";
+import {
   DeadMansDrawConfigContent,
   DeadMansDrawRoom,
   DeadMansDrawRulesContent,
@@ -36,6 +46,16 @@ import {
 import type { GameRoomModuleProps } from "@/components/rooms/types";
 
 const RULES_MODAL_META: Record<string, { title: string; subtitle: string }> = {
+  "imploding-kittens": {
+    title: "Luật Chơi Imploding Kittens (2–6 Người Chơi • Full 4 Bản Mở Rộng)",
+    subtitle:
+      "Mèo Nổ & Mèo Hố Đen (Imploding) • Streaking • Barking • Zombie Kittens",
+  },
+  heat: {
+    title: "Luật Chơi Heat: Pedal to the Metal (2–6 Tay Đua)",
+    subtitle:
+      "Hộp số 4 cấp • Quản lý nhiệt Engine (Heat) • Làm mát, Núp gió & 3 Bản đồ USA / South Africa / Deutschland",
+  },
   "king-of-tokyo-duel": {
     title: "Luật Chơi King of Tokyo: Duel (Đối Kháng 1v1)",
     subtitle:
@@ -350,7 +370,11 @@ function RoomPageContent({
       )}
 
       {/* Active Game Room Module */}
-      {cartridgeId === "king-of-tokyo-duel" ? (
+      {cartridgeId === "imploding-kittens" ? (
+        <ImplodingKittensRoom {...roomProps} />
+      ) : cartridgeId === "heat" ? (
+        <HeatRoom {...roomProps} />
+      ) : cartridgeId === "king-of-tokyo-duel" ? (
         <KingOfTokyoDuelRoom {...roomProps} />
       ) : cartridgeId === "dead-mans-draw" ? (
         <DeadMansDrawRoom {...roomProps} />
@@ -415,7 +439,21 @@ function RoomPageContent({
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {cartridgeId === "king-of-tokyo-duel" ? (
+              {cartridgeId === "imploding-kittens" ? (
+                <ImplodingKittensConfigContent
+                  snapshot={snapshot}
+                  isLobby={isLobby}
+                  busy={busy}
+                  sendRoomAction={sendRoomAction}
+                />
+              ) : cartridgeId === "heat" ? (
+                <HeatConfigContent
+                  snapshot={snapshot}
+                  isLobby={isLobby}
+                  busy={busy}
+                  sendRoomAction={sendRoomAction}
+                />
+              ) : cartridgeId === "king-of-tokyo-duel" ? (
                 <KingOfTokyoDuelConfigContent
                   snapshot={snapshot}
                   isLobby={isLobby}
@@ -487,7 +525,11 @@ function RoomPageContent({
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {cartridgeId === "king-of-tokyo-duel" ? (
+              {cartridgeId === "imploding-kittens" ? (
+                <ImplodingKittensRulesContent />
+              ) : cartridgeId === "heat" ? (
+                <HeatRulesContent />
+              ) : cartridgeId === "king-of-tokyo-duel" ? (
                 <KingOfTokyoDuelRulesContent />
               ) : cartridgeId === "dead-mans-draw" ? (
                 <DeadMansDrawRulesContent />
