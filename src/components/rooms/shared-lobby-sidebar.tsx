@@ -168,35 +168,24 @@ export function SharedLobbySidebar({
 
 interface SidebarDrawerButtonsProps {
   messagesCount: number;
-  eventsCount: number;
-  onOpenDrawer: (tab: "chat" | "events") => void;
+  eventsCount?: number;
+  onOpenDrawer: () => void;
 }
 
 export function SidebarDrawerButtons({
   messagesCount,
-  eventsCount,
   onOpenDrawer,
 }: SidebarDrawerButtonsProps) {
   return (
-    <div className="border-t border-slate-800 pt-3 grid grid-cols-2 gap-2">
+    <div className="border-t border-slate-800 pt-3">
       <button
         type="button"
-        onClick={() => onOpenDrawer("chat")}
-        className="rounded-xl border border-amber-500/35 bg-slate-950/70 hover:bg-slate-800 px-3 py-2 text-xs font-bold text-amber-300 flex items-center justify-between gap-1.5 transition cursor-pointer"
+        onClick={() => onOpenDrawer()}
+        className="w-full rounded-xl border border-amber-500/35 bg-slate-950/70 hover:bg-slate-800 px-3 py-2 text-xs font-bold text-amber-300 flex items-center justify-between gap-1.5 transition cursor-pointer"
       >
-        <span>💬 Chat</span>
+        <span>💬 Kênh Chat</span>
         <span className="rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-mono">
           {messagesCount}
-        </span>
-      </button>
-      <button
-        type="button"
-        onClick={() => onOpenDrawer("events")}
-        className="rounded-xl border border-emerald-500/35 bg-slate-950/70 hover:bg-slate-800 px-3 py-2 text-xs font-bold text-emerald-300 flex items-center justify-between gap-1.5 transition cursor-pointer"
-      >
-        <span>📜 Nhật Ký</span>
-        <span className="rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-mono">
-          {eventsCount}
         </span>
       </button>
     </div>

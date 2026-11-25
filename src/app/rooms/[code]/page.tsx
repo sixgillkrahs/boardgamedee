@@ -126,7 +126,6 @@ function RoomPageContent({
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerTab, setDrawerTab] = useState<"chat" | "events">("chat");
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [rulesModalOpen, setRulesModalOpen] = useState(false);
 
@@ -205,8 +204,7 @@ function RoomPageContent({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const openDrawer = (tab: "chat" | "events") => {
-    setDrawerTab(tab);
+  const openDrawer = () => {
     setDrawerOpen(true);
   };
 
@@ -261,10 +259,10 @@ function RoomPageContent({
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 text-xs">
-          {/* Quick Buttons to Open Chat & Event Log Drawer separately */}
+          {/* Quick Button to Open Chat Drawer */}
           <button
             type="button"
-            onClick={() => openDrawer("chat")}
+            onClick={() => openDrawer()}
             className="h-8 rounded-lg border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-2.5 text-xs font-bold text-amber-300 transition cursor-pointer inline-flex items-center gap-1.5"
             title="Mở Kênh Chat"
           >
@@ -273,21 +271,6 @@ function RoomPageContent({
             {(snapshot?.messages.length ?? 0) > 0 && (
               <span className="rounded bg-amber-500/25 px-1.5 py-0.5 text-[10px] font-mono leading-none">
                 {snapshot?.messages.length}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => openDrawer("events")}
-            className="h-8 rounded-lg border border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25 px-2.5 text-xs font-bold text-emerald-300 transition cursor-pointer inline-flex items-center gap-1.5"
-            title="Mở Nhật Ký Trận Đấu"
-          >
-            <span>📜</span>
-            <span className="hidden sm:inline">Nhật Ký</span>
-            {(snapshot?.events.length ?? 0) > 0 && (
-              <span className="rounded bg-emerald-500/25 px-1.5 py-0.5 text-[10px] font-mono leading-none">
-                {snapshot?.events.length}
               </span>
             )}
           </button>
@@ -388,11 +371,9 @@ function RoomPageContent({
         <WerewolfRoom {...roomProps} />
       )}
 
-      {/* Slide-Over Right Drawer: Chat & Event Log */}
+      {/* Slide-Over Right Drawer: Chat */}
       <RoomChatDrawer
         open={drawerOpen}
-        tab={drawerTab}
-        onChangeTab={setDrawerTab}
         onClose={() => setDrawerOpen(false)}
         snapshot={snapshot}
         isLobby={isLobby}

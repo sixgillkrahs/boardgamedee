@@ -10,7 +10,7 @@ export interface GameRoomModuleProps {
   soundEnabled: boolean;
   sendRoomAction: SendRoomAction;
   setErrorMsg: (msg: string | null) => void;
-  onOpenDrawer: (tab: "chat" | "events") => void;
+  onOpenDrawer: () => void;
 }
 
 export interface GameConfigModalProps {
