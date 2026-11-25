@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   drawRoundedRect,
   findHitRegionAtPoint,
@@ -11,16 +11,43 @@ import {
 import {
   drawIkBackground2D,
   drawIkCard2D,
+  getIkPixelCardUrl,
 } from "@/canvas/imploding-kittens-art";
 import {
   ImplodingKittensFxEngine,
   type IkTableAnchors,
 } from "@/canvas/imploding-kittens-fx";
 import {
+  IK_CARD_META,
+  IK_EXPANSION_META,
+  type IkCard,
+  type IkCardCategory,
   type IkCommand,
   type IkPlayerView,
 } from "@/cartridges/imploding-kittens";
 import type { LobbySeatItem } from "@/components/werewolf-canvas";
+
+const HOLD_INSPECT_DURATION_MS = 1000;
+
+const CATEGORY_LABEL_VI: Record<IkCardCategory, string> = {
+  bomb: "Bom Nguy Hiểm",
+  defense: "Phòng Thủ / Phản Đòn",
+  action: "Lá Hành Động",
+  cat: "Lá Mèo (Ghép Combo)",
+  wildcard_cat: "Lá Mèo Wildcard",
+  passive: "Nội Tại (Giữ Trên Tay)",
+};
+
+interface ActiveHoldState {
+  pointerId: number;
+  card: IkCard | null;
+  hitData: Record<string, any>;
+  startX: number;
+  startY: number;
+  startMs: number;
+  triggered: boolean;
+  timerId: number | null;
+}
 
 interface HandCardSpring {
   x: number;
@@ -62,6 +89,31 @@ export function ImplodingKittensCanvas({
   const anchorsRef = useRef<IkTableAnchors | null>(null);
   const lastAnimIdRef = useRef<number>(0);
   const lastConfettiMsRef = useRef<number>(0);
+  const holdStateRef = useRef<ActiveHoldState | null>(null);
+  const [inspectedCard, setInspectedCard] = useState<IkCard | null>(null);
+
+  const clearHoldTimer = () => {
+    const h = holdStateRef.current;
+    if (h?.timerId !== null && h?.timerId !== undefined) {
+      window.clearTimeout(h.timerId);
+    }
+    holdStateRef.current = null;
+  };
+
+  useEffect(() => {
+    return () => {
+      clearHoldTimer();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!inspectedCard) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setInspectedCard(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [inspectedCard]);
 
   const stateRef = useRef({
     mode,
@@ -496,7 +548,7 @@ export function ImplodingKittensCanvas({
         // Reverse spin vortex overlay if active
         fx.drawReverseSwirl(ctx, width * 0.5, arenaY, now);
 
-        // Draw Pile (Clickable when isMyTurn to end 1 turn by drawing!)
+        // Draw Pile (Clickable when isMyTurn to end 1 turn by drawing; hold 1s on face-up Imploding Kitten to inspect)
         if (isMyTurn && pv.drawPileCount > 0) {
           newHitRegions.push({
             id: "ik-draw-pile",
@@ -506,7 +558,18 @@ export function ImplodingKittensCanvas({
             width: pileW + 12,
             height: pileH + 12,
             cursor: "pointer",
-            data: { type: "draw_card" },
+            data: { type: "draw_card", card: pv.topDrawCardFaceUp },
+          });
+        } else if (pv.topDrawCardFaceUp) {
+          newHitRegions.push({
+            id: "ik-draw-pile-inspect",
+            shape: "rect",
+            x: drawX,
+            y: drawY,
+            width: pileW,
+            height: pileH,
+            cursor: "help",
+            data: { type: "inspect_card", card: pv.topDrawCardFaceUp },
           });
         }
 
@@ -634,6 +697,16 @@ export function ImplodingKittensCanvas({
         ctx.stroke();
 
         if (pv.discardTopCard) {
+          newHitRegions.push({
+            id: "ik-discard-pile",
+            shape: "rect",
+            x: discardX,
+            y: discardY,
+            width: pileW,
+            height: pileH,
+            cursor: "help",
+            data: { type: "inspect_card", card: pv.discardTopCard },
+          });
           const popScale = fx.getDiscardPopScale(now);
           ctx.save();
           ctx.translate(discardX + pileW * 0.5, discardY + pileH * 0.5);
@@ -683,6 +756,16 @@ export function ImplodingKittensCanvas({
           24,
           dockY + 16
         );
+        if (width >= 540) {
+          ctx.textAlign = "right";
+          ctx.fillStyle = "rgba(148, 163, 184, 0.85)";
+          ctx.font = `600 10.5px ${fonts.sans}`;
+          ctx.fillText(
+            "💡 Giữ 1s vào lá bài để xem chức năng",
+            width - 24,
+            dockY + 16
+          );
+        }
 
         const handCards = pv.myHand;
         const cCount = Math.max(1, handCards.length);
@@ -753,7 +836,22 @@ export function ImplodingKittensCanvas({
               width: cardW,
               height: cardH,
               cursor: "pointer",
-              data: { type: "toggle_hand_card", cardId: card.id },
+              data: {
+                type: "toggle_hand_card",
+                cardId: card.id,
+                card: pv.myIsBlind ? null : card,
+              },
+            });
+          } else if (!pv.myIsBlind) {
+            newHitRegions.push({
+              id: regId,
+              shape: "rect",
+              x: targetX,
+              y: targetY,
+              width: cardW,
+              height: cardH,
+              cursor: "help",
+              data: { type: "inspect_card", card },
             });
           }
 
@@ -800,6 +898,53 @@ export function ImplodingKittensCanvas({
       fx.update(dt);
       fx.drawAllOverlays(ctx, width, height, now);
 
+      // Draw circular 1s press-and-hold charge ring when holding on an inspectable card
+      const activeHold = holdStateRef.current;
+      if (activeHold && activeHold.card && !activeHold.triggered) {
+        const elapsed = performance.now() - activeHold.startMs;
+        if (elapsed > 140) {
+          const prog = Math.min(1, elapsed / HOLD_INSPECT_DURATION_MS);
+          const hx = activeHold.startX;
+          const hy = Math.max(46, activeHold.startY - 26);
+          const ringR = 20;
+
+          ctx.save();
+          ctx.fillStyle = "rgba(9, 13, 22, 0.86)";
+          ctx.beginPath();
+          ctx.arc(hx, hy, ringR + 4, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.arc(hx, hy, ringR, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.strokeStyle = "#fde047";
+          ctx.shadowColor = "#f59e0b";
+          ctx.shadowBlur = 10;
+          ctx.lineWidth = 4;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.arc(
+            hx,
+            hy,
+            ringR,
+            -Math.PI * 0.5,
+            -Math.PI * 0.5 + prog * Math.PI * 2
+          );
+          ctx.stroke();
+
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#fef08a";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.font = `800 10px ${fonts.sans}`;
+          ctx.fillText("?", hx, hy + 0.5);
+          ctx.restore();
+        }
+      }
+
       hitRegionsRef.current = newHitRegions;
       ctx.restore();
 
@@ -824,23 +969,7 @@ export function ImplodingKittensCanvas({
     };
   };
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const pt = getCanvasPoint(e);
-    if (!pt) return;
-    const hit = findHitRegionAtPoint(hitRegionsRef.current, pt.x, pt.y);
-    hoveredIdRef.current = hit ? hit.id : null;
-    if (canvasRef.current) {
-      canvasRef.current.style.cursor = hit?.cursor ?? "default";
-    }
-  };
-
-  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const pt = getCanvasPoint(e);
-    if (!pt) return;
-    const hit = findHitRegionAtPoint(hitRegionsRef.current, pt.x, pt.y);
-    if (!hit || !hit.data) return;
-
-    const d = hit.data;
+  const executeTapAction = (d: Record<string, any>) => {
     const s = stateRef.current;
     if (d.type === "toggle_hand_card") {
       s.onToggleCard(d.cardId);
@@ -851,14 +980,200 @@ export function ImplodingKittensCanvas({
     }
   };
 
+  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const pt = getCanvasPoint(e);
+    if (!pt) return;
+    const hit = findHitRegionAtPoint(hitRegionsRef.current, pt.x, pt.y);
+    hoveredIdRef.current = hit ? hit.id : null;
+    if (canvasRef.current) {
+      canvasRef.current.style.cursor = hit?.cursor ?? "default";
+    }
+
+    const activeHold = holdStateRef.current;
+    if (
+      activeHold &&
+      activeHold.pointerId === e.pointerId &&
+      !activeHold.triggered
+    ) {
+      const dist = Math.hypot(
+        pt.x - activeHold.startX,
+        pt.y - activeHold.startY
+      );
+      if (dist > 16) {
+        clearHoldTimer();
+      }
+    }
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+    const pt = getCanvasPoint(e);
+    if (!pt) return;
+    const hit = findHitRegionAtPoint(hitRegionsRef.current, pt.x, pt.y);
+    if (!hit || !hit.data) return;
+
+    const d = hit.data;
+    const inspectableCard = (d.card as IkCard | null | undefined) ?? null;
+
+    if (inspectableCard) {
+      clearHoldTimer();
+      const holdObj: ActiveHoldState = {
+        pointerId: e.pointerId,
+        card: inspectableCard,
+        hitData: d,
+        startX: pt.x,
+        startY: pt.y,
+        startMs: performance.now(),
+        triggered: false,
+        timerId: null,
+      };
+      holdObj.timerId = window.setTimeout(() => {
+        if (holdStateRef.current === holdObj) {
+          holdObj.triggered = true;
+          holdObj.timerId = null;
+          setInspectedCard(inspectableCard);
+        }
+      }, HOLD_INSPECT_DURATION_MS);
+      holdStateRef.current = holdObj;
+      return;
+    }
+
+    executeTapAction(d);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const activeHold = holdStateRef.current;
+    if (!activeHold || activeHold.pointerId !== e.pointerId) return;
+    const wasTriggered = activeHold.triggered;
+    const hitData = activeHold.hitData;
+    clearHoldTimer();
+    if (!wasTriggered) {
+      executeTapAction(hitData);
+    }
+  };
+
+  const handlePointerCancelOrLeave = () => {
+    clearHoldTimer();
+  };
+
+  const inspectedMeta = inspectedCard ? IK_CARD_META[inspectedCard.type] : null;
+  const inspectedImgUrl = inspectedCard
+    ? getIkPixelCardUrl(inspectedCard.type, inspectedCard.id)
+    : null;
+  const inspectedPackLabel =
+    inspectedMeta && inspectedMeta.pack !== "core"
+      ? IK_EXPANSION_META[inspectedMeta.pack].nameVi
+      : "Bộ Cơ Bản (Core)";
+
   return (
     <div className="relative w-full h-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl">
       <canvas
         ref={canvasRef}
         onPointerMove={handlePointerMove}
         onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancelOrLeave}
+        onPointerLeave={handlePointerCancelOrLeave}
+        onContextMenu={(e) => e.preventDefault()}
         className="w-full h-full block touch-none select-none"
       />
+
+      {/* 1s Hold Vietnamese Card Info Overlay */}
+      {inspectedCard && inspectedMeta && (
+        <div
+          onClick={() => setInspectedCard(null)}
+          className="absolute inset-0 z-40 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg rounded-2xl border border-amber-400/50 bg-slate-900/95 p-4 sm:p-5 shadow-2xl flex flex-col sm:flex-row items-center sm:items-start gap-4"
+          >
+            {/* Enlarged Card Preview */}
+            <div className="shrink-0 w-36 sm:w-44 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 bg-slate-950 shadow-xl flex items-center justify-center">
+              {inspectedImgUrl ? (
+                <img
+                  src={inspectedImgUrl}
+                  alt={inspectedMeta.nameVi}
+                  className="w-full h-full object-cover"
+                  style={{ imageRendering: "pixelated" }}
+                />
+              ) : (
+                <div
+                  className="w-full h-full flex flex-col items-center justify-center p-3 text-center gap-2"
+                  style={{
+                    background: `linear-gradient(155deg, ${inspectedMeta.colorHex}, ${inspectedMeta.secondaryHex})`,
+                  }}
+                >
+                  <span className="text-4xl">{inspectedMeta.emoji}</span>
+                  <span className="text-xs font-extrabold uppercase tracking-wide text-white">
+                    {inspectedMeta.shortVi}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Vietnamese Rule Dossier */}
+            <div className="flex-1 min-w-0 space-y-2.5 text-left">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h3 className="text-base font-extrabold text-amber-300 leading-snug">
+                    {inspectedMeta.nameVi}
+                  </h3>
+                  <p className="text-xs font-semibold text-slate-300 mt-0.5">
+                    {inspectedMeta.subtitleVi}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setInspectedCard(null)}
+                  className="shrink-0 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2.5 py-1 text-xs font-bold text-slate-200 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span
+                  className="rounded-full px-2.5 py-0.5 text-[10.5px] font-extrabold text-white"
+                  style={{ backgroundColor: inspectedMeta.colorHex }}
+                >
+                  {CATEGORY_LABEL_VI[inspectedMeta.category]}
+                </span>
+                <span className="rounded-full border border-slate-700 bg-slate-800/90 px-2.5 py-0.5 text-[10.5px] font-bold text-slate-300">
+                  {inspectedPackLabel}
+                </span>
+              </div>
+
+              <div className="rounded-xl border border-slate-800 bg-slate-950/85 p-3 space-y-1.5">
+                <p className="text-[10.5px] font-extrabold uppercase tracking-wider text-sky-400">
+                  Chức Năng Lá Bài
+                </p>
+                <p className="text-xs sm:text-[13px] text-slate-100 leading-relaxed">
+                  {inspectedMeta.ruleVi}
+                </p>
+              </div>
+
+              {inspectedMeta.needsTargetSeat && (
+                <p className="text-[11px] font-semibold text-amber-300/90">
+                  Lưu ý: Bấm chọn 1 đối thủ ở hàng trên cùng làm mục tiêu trước
+                  khi đánh lá này.
+                </p>
+              )}
+              {inspectedCard.type === "imploding_kitten" &&
+                inspectedCard.faceUp && (
+                  <p className="text-[11px] font-extrabold text-fuchsia-300">
+                    Cảnh báo: Mèo Hố Đen đang ở trạng thái LẬT NGỬA — rút phải
+                    sẽ nổ ngay lập tức, không thể Tháo Ngòi!
+                  </p>
+                )}
+
+              <p className="text-[10.5px] text-slate-500 pt-0.5">
+                Bấm ra ngoài hoặc nhấn ESC để đóng.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

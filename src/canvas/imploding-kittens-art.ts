@@ -162,14 +162,22 @@ function hashCardIdToVariantIndex(cardId: string, count: number): number {
   return h % count;
 }
 
+export function getIkPixelCardUrl(
+  type: IkCardType,
+  cardId = "0"
+): string | null {
+  const urls = IK_PIXEL_CARD_URLS[type];
+  if (!urls || urls.length === 0) return null;
+  return urls[hashCardIdToVariantIndex(cardId, urls.length)];
+}
+
 export function getIkPixelCardImage(
   type: IkCardType,
   cardId = "0"
 ): HTMLImageElement | null {
   if (typeof window === "undefined") return null;
-  const urls = IK_PIXEL_CARD_URLS[type];
-  if (!urls || urls.length === 0) return null;
-  const url = urls[hashCardIdToVariantIndex(cardId, urls.length)];
+  const url = getIkPixelCardUrl(type, cardId);
+  if (!url) return null;
   if (loadedPixelUrls.has(url)) {
     return cachedPixelUrlImages.get(url) ?? null;
   }
