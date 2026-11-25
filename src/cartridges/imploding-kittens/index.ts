@@ -781,6 +781,16 @@ export interface IkPendingAction {
   passedSeatNos: number[];
 }
 
+export interface IkVisionCardItem {
+  labelVi: string;
+  emoji: string;
+  colorHex: string;
+  cardId?: string;
+  cardType?: IkCardType;
+  positionLabelVi?: string;
+  faceUp?: boolean;
+}
+
 export interface IkSeatState {
   seatNo: number;
   actorId: string;
@@ -795,7 +805,7 @@ export interface IkSeatState {
   /** Private temporary knowledge (See Future / Clairvoyance / Share Future) */
   privateVision: {
     titleVi: string;
-    cards: { labelVi: string; emoji: string; colorHex: string }[];
+    cards: IkVisionCardItem[];
   } | null;
 }
 
@@ -981,7 +991,7 @@ export interface IkPlayerView {
   myIsBlind: boolean;
   myPrivateVision: {
     titleVi: string;
-    cards: { labelVi: string; emoji: string; colorHex: string }[];
+    cards: IkVisionCardItem[];
   } | null;
   pendingAction: {
     kind: IkPendingAction["kind"];
@@ -1911,6 +1921,10 @@ function executeResolvedAction(
           labelVi: `#${idx + 1}: ${IK_CARD_META[c.type].shortVi}${c.faceUp ? " (NGỬA)" : ""}`,
           emoji: IK_CARD_META[c.type].emoji,
           colorHex: IK_CARD_META[c.type].colorHex,
+          cardId: c.id,
+          cardType: c.type,
+          positionLabelVi: idx === 0 ? "#1 (ĐỈNH)" : `#${idx + 1}`,
+          faceUp: c.faceUp,
         })),
       };
       state.step = "TurnPlayStep";
@@ -1924,8 +1938,7 @@ function executeResolvedAction(
     }
 
     case "clairvoyance": {
-      const bombLocations: { labelVi: string; emoji: string; colorHex: string }[] =
-        [];
+      const bombLocations: IkVisionCardItem[] = [];
       for (let i = state.drawPile.length - 1; i >= 0; i--) {
         const c = state.drawPile[i];
         const posFromTop = state.drawPile.length - i;
@@ -1934,6 +1947,11 @@ function executeResolvedAction(
             labelVi: `Lá #${posFromTop} từ đỉnh: ${IK_CARD_META[c.type].shortVi}`,
             emoji: IK_CARD_META[c.type].emoji,
             colorHex: IK_CARD_META[c.type].colorHex,
+            cardId: c.id,
+            cardType: c.type,
+            positionLabelVi:
+              posFromTop === 1 ? "#1 (ĐỈNH)" : `Lá #${posFromTop} từ đỉnh`,
+            faceUp: c.faceUp,
           });
         }
       }
@@ -3020,6 +3038,10 @@ export const implodingKittensCartridge: GameCartridge<
             labelVi: `#${idx + 1}: ${IK_CARD_META[c.type].shortVi}`,
             emoji: IK_CARD_META[c.type].emoji,
             colorHex: IK_CARD_META[c.type].colorHex,
+            cardId: c.id,
+            cardType: c.type,
+            positionLabelVi: idx === 0 ? "#1 (ĐỈNH)" : `#${idx + 1}`,
+            faceUp: c.faceUp,
           })),
         };
       }

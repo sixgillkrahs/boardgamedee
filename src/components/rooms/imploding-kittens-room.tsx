@@ -58,6 +58,11 @@ export function ImplodingKittensRoom({
   const [wantedDiscardId, setWantedDiscardId] = useState<string>("");
   const [alterOrderIds, setAlterOrderIds] = useState<string[]>([]);
   const [insertIndex, setInsertIndex] = useState<number>(0);
+  const [dismissedVisionKey, setDismissedVisionKey] = useState<string | null>(
+    null
+  );
+  const [focusedPreviewType, setFocusedPreviewType] =
+    useState<IkCardType | null>(null);
 
   // Sync default target opponent and Alter Future order
   useEffect(() => {
@@ -96,6 +101,14 @@ export function ImplodingKittensRoom({
       setInsertIndex(0);
     }
   }, [ikView?.step, ikView?.pendingInsert?.card.id]);
+
+  const visionKey = ikView?.myPrivateVision
+    ? `${ikView.turnNumber}-${ikView.myPrivateVision.titleVi}-${ikView.myPrivateVision.cards.map((c) => c.cardId ?? c.labelVi).join(",")}`
+    : null;
+
+  useEffect(() => {
+    setFocusedPreviewType(null);
+  }, [visionKey, ikView?.step]);
 
   const handleToggleCard = (cardId: string) => {
     if (!ikView) return;
@@ -492,26 +505,135 @@ export function ImplodingKittensRoom({
           </div>
         )}
 
-        {/* 3. PRIVATE VISION BANNER (See the Future / Clairvoyance / Share the Future) */}
-        {!isLobby && ikView?.myPrivateVision && (
-          <div className="absolute top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-lg px-3">
-            <div className="rounded-2xl border border-purple-400/60 bg-slate-950/95 p-3.5 shadow-2xl space-y-2">
-              <p className="text-xs font-extrabold text-purple-300">
-                {ikView.myPrivateVision.titleVi}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {ikView.myPrivateVision.cards.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs font-bold text-white"
-                  >
-                    <span>{item.emoji}</span> <span>{item.labelVi}</span>
+        {/* 3. PRIVATE VISION BANNER (See the Future / Clairvoyance / Share the Future) — Full Cards + Vietnamese Functions */}
+        {!isLobby &&
+          ikView?.myPrivateVision &&
+          visionKey !== dismissedVisionKey && (
+            <div className="absolute inset-0 z-30 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="w-full max-w-2xl rounded-2xl border border-purple-400/65 bg-slate-900/95 p-4 sm:p-5 shadow-2xl space-y-3.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-extrabold text-purple-300">
+                      {ikView.myPrivateVision.titleVi}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Bấm vào từng lá bài để đọc chi tiết chức năng tiếng Việt.
+                    </p>
                   </div>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => setDismissedVisionKey(visionKey)}
+                    className="shrink-0 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-2.5 py-1 text-xs font-bold text-slate-200 cursor-pointer"
+                  >
+                    Đóng ✕
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap items-start justify-center gap-3">
+                  {ikView.myPrivateVision.cards.map((item, idx) => {
+                    const meta = item.cardType
+                      ? IK_CARD_META[item.cardType]
+                      : null;
+                    const imgUrl = item.cardType
+                      ? getIkPixelCardUrl(item.cardType, item.cardId ?? String(idx))
+                      : null;
+                    const isFocused =
+                      meta !== null && focusedPreviewType === meta.type;
+
+                    if (!meta) {
+                      return (
+                        <div
+                          key={idx}
+                          className="rounded-xl border border-emerald-500/40 bg-emerald-950/50 px-4 py-3 text-xs font-bold text-emerald-200"
+                        >
+                          <span>{item.emoji}</span> <span>{item.labelVi}</span>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() =>
+                          setFocusedPreviewType((prev) =>
+                            prev === meta.type ? null : meta.type
+                          )
+                        }
+                        className={`w-28 sm:w-32 rounded-xl border p-1.5 bg-slate-950/90 flex flex-col items-center gap-1.5 text-center transition cursor-pointer ${
+                          isFocused
+                            ? "border-amber-400 ring-2 ring-amber-400/40 -translate-y-1"
+                            : "border-slate-700 hover:border-purple-400 hover:-translate-y-0.5"
+                        }`}
+                      >
+                        <span
+                          className={`w-full rounded-md px-1.5 py-0.5 text-[10px] font-extrabold ${
+                            idx === 0
+                              ? "bg-amber-500/25 text-amber-300"
+                              : "bg-slate-800 text-slate-300"
+                          }`}
+                        >
+                          {item.positionLabelVi ?? `#${idx + 1}`}
+                          {item.faceUp ? " • NGỬA" : ""}
+                        </span>
+
+                        <div className="w-full aspect-[5/7] rounded-lg overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center">
+                          {imgUrl ? (
+                            <img
+                              src={imgUrl}
+                              alt={meta.nameVi}
+                              className="w-full h-full object-cover"
+                              style={{ imageRendering: "pixelated" }}
+                            />
+                          ) : (
+                            <div
+                              className="w-full h-full flex flex-col items-center justify-center p-2 gap-1"
+                              style={{
+                                background: `linear-gradient(155deg, ${meta.colorHex}, ${meta.secondaryHex})`,
+                              }}
+                            >
+                              <span className="text-3xl">{meta.emoji}</span>
+                              <span className="text-[10px] font-extrabold text-white leading-tight">
+                                {meta.shortVi}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="w-full px-0.5 space-y-0.5">
+                          <p className="text-[11px] font-extrabold text-white truncate">
+                            {meta.shortVi}
+                          </p>
+                          <p className="text-[9.5px] text-slate-400 leading-tight line-clamp-2">
+                            {meta.subtitleVi}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {focusedPreviewType && (
+                  <div className="rounded-xl border border-amber-400/45 bg-slate-950/90 p-3 text-left space-y-1">
+                    <p className="text-xs font-extrabold text-amber-300">
+                      {IK_CARD_META[focusedPreviewType].nameVi}
+                    </p>
+                    <p className="text-xs text-slate-200 leading-relaxed">
+                      {IK_CARD_META[focusedPreviewType].ruleVi}
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setDismissedVisionKey(visionKey)}
+                  className="w-full rounded-xl bg-purple-600 hover:bg-purple-500 px-4 py-2 text-xs font-extrabold text-white shadow cursor-pointer"
+                >
+                  ✓ Đã Xem Xong
+                </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* 4. NOPE! WINDOW OVERLAY */}
         {!isLobby &&
@@ -781,55 +903,129 @@ export function ImplodingKittensRoom({
             );
           })()}
 
-        {/* 6. ALTER / SHARE THE FUTURE MODAL */}
+        {/* 6. ALTER / SHARE THE FUTURE MODAL — Visual Pixel Cards + Vietnamese Functions */}
         {!isLobby &&
           ikView?.step === "AlterFutureStep" &&
           ikView.pendingAlterFuture &&
           ikView.pendingAlterFuture.seatNo === snapshot?.viewerSeatNo && (
-            <div className="absolute inset-0 z-30 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="w-full max-w-lg rounded-2xl border border-indigo-500/60 bg-slate-900 p-4 shadow-2xl space-y-3">
-                <p className="text-sm font-extrabold text-indigo-300">
-                  🪄 Sắp Xếp Lại {ikView.pendingAlterFuture.count} Lá Đầu Bộ Bài
-                  Rút (#1 Là Lá Trên Đỉnh Sẽ Rút Đầu Tiên)
-                </p>
-                <div className="space-y-2">
+            <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="w-full max-w-3xl rounded-2xl border border-indigo-500/65 bg-slate-900/95 p-4 sm:p-5 shadow-2xl space-y-3.5">
+                <div>
+                  <p className="text-sm font-extrabold text-indigo-300">
+                    🪄 Sắp Xếp Lại {ikView.pendingAlterFuture.count} Lá Đầu Bộ
+                    Bài Rút (#1 Là Lá Trên Đỉnh Sẽ Rút Đầu Tiên)
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Dùng nút ◀ / ▶ dưới mỗi lá để đổi vị trí • Bấm vào lá bài để
+                    xem đầy đủ chức năng tiếng Việt.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-start justify-center gap-2.5 sm:gap-3 max-h-[56vh] overflow-y-auto py-1">
                   {alterOrderIds.map((cid, idx) => {
                     const card = ikView.pendingAlterFuture?.cards.find(
                       (c) => c.id === cid
                     );
                     if (!card) return null;
                     const meta = IK_CARD_META[card.type];
+                    const imgUrl = getIkPixelCardUrl(card.type, card.id);
+                    const isFocused = focusedPreviewType === card.type;
+
                     return (
                       <div
                         key={cid}
-                        className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"
+                        className={`w-28 sm:w-32 rounded-xl border p-1.5 bg-slate-950/90 flex flex-col items-center gap-1.5 transition ${
+                          isFocused
+                            ? "border-amber-400 ring-2 ring-amber-400/35"
+                            : "border-slate-700"
+                        }`}
                       >
-                        <span className="text-xs font-extrabold text-white">
-                          #{idx + 1} {idx === 0 ? "(ĐỈNH)" : ""}: {meta.emoji}{" "}
-                          {meta.nameVi}
+                        <span
+                          className={`w-full text-center rounded-md px-1.5 py-0.5 text-[10px] font-extrabold ${
+                            idx === 0
+                              ? "bg-amber-500/25 text-amber-300"
+                              : "bg-slate-800 text-slate-300"
+                          }`}
+                        >
+                          #{idx + 1} {idx === 0 ? "(ĐỈNH)" : ""}
                         </span>
-                        <div className="flex items-center gap-1.5">
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFocusedPreviewType((prev) =>
+                              prev === card.type ? null : card.type
+                            )
+                          }
+                          className="w-full aspect-[5/7] rounded-lg overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center cursor-pointer"
+                        >
+                          {imgUrl ? (
+                            <img
+                              src={imgUrl}
+                              alt={meta.nameVi}
+                              className="w-full h-full object-cover"
+                              style={{ imageRendering: "pixelated" }}
+                            />
+                          ) : (
+                            <div
+                              className="w-full h-full flex flex-col items-center justify-center p-2 text-center gap-1"
+                              style={{
+                                background: `linear-gradient(155deg, ${meta.colorHex}, ${meta.secondaryHex})`,
+                              }}
+                            >
+                              <span className="text-3xl">{meta.emoji}</span>
+                              <span className="text-[10px] font-extrabold text-white leading-tight">
+                                {meta.shortVi}
+                              </span>
+                            </div>
+                          )}
+                        </button>
+
+                        <div className="w-full text-center px-0.5">
+                          <p className="text-[11px] font-extrabold text-white truncate">
+                            {meta.shortVi}
+                          </p>
+                          <p className="text-[9.5px] text-slate-400 leading-tight line-clamp-2">
+                            {meta.subtitleVi}
+                          </p>
+                        </div>
+
+                        <div className="w-full grid grid-cols-2 gap-1 pt-0.5">
                           <button
                             type="button"
                             disabled={idx === 0}
                             onClick={() => swapAlterPos(idx, idx - 1)}
-                            className="rounded bg-slate-800 hover:bg-slate-700 px-2 py-1 text-xs font-bold text-slate-200 disabled:opacity-30 cursor-pointer"
+                            className="rounded-lg bg-slate-800 hover:bg-indigo-500/35 border border-slate-700 py-1 text-[11px] font-extrabold text-slate-200 disabled:opacity-30 cursor-pointer"
+                            title="Đẩy lên gần Đỉnh hơn"
                           >
-                            ▲ Lên
+                            ◀
                           </button>
                           <button
                             type="button"
                             disabled={idx === alterOrderIds.length - 1}
                             onClick={() => swapAlterPos(idx, idx + 1)}
-                            className="rounded bg-slate-800 hover:bg-slate-700 px-2 py-1 text-xs font-bold text-slate-200 disabled:opacity-30 cursor-pointer"
+                            className="rounded-lg bg-slate-800 hover:bg-indigo-500/35 border border-slate-700 py-1 text-[11px] font-extrabold text-slate-200 disabled:opacity-30 cursor-pointer"
+                            title="Đẩy sâu xuống hơn"
                           >
-                            ▼ Xuống
+                            ▶
                           </button>
                         </div>
                       </div>
                     );
                   })}
                 </div>
+
+                {focusedPreviewType && (
+                  <div className="rounded-xl border border-amber-400/45 bg-slate-950/90 p-3 text-left space-y-1">
+                    <p className="text-xs font-extrabold text-amber-300">
+                      {IK_CARD_META[focusedPreviewType].nameVi}
+                    </p>
+                    <p className="text-xs text-slate-200 leading-relaxed">
+                      {IK_CARD_META[focusedPreviewType].ruleVi}
+                    </p>
+                  </div>
+                )}
+
                 <button
                   type="button"
                   disabled={busy}
@@ -850,42 +1046,62 @@ export function ImplodingKittensRoom({
             </div>
           )}
 
-        {/* 7. DIG DEEPER MODAL */}
+        {/* 7. DIG DEEPER MODAL — Full Pixel Card #1 + Vietnamese Function */}
         {!isLobby &&
           ikView?.step === "DigDeeperStep" &&
           ikView.pendingDigDeeper &&
           ikView.pendingDigDeeper.seatNo === snapshot?.viewerSeatNo &&
-          ikView.pendingDigDeeper.topCard && (
-            <div className="absolute inset-0 z-30 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="w-full max-w-md rounded-2xl border border-amber-500/60 bg-slate-900 p-4 shadow-2xl space-y-3 text-center">
-                <p className="text-sm font-extrabold text-amber-300">
-                  ⛏️ Đào Sâu Hơn (Dig Deeper)
-                </p>
-                <p className="text-xs text-slate-200">
-                  Lá trên cùng (#1) đang là:{" "}
-                  <strong className="text-white">
-                    {IK_CARD_META[ikView.pendingDigDeeper.topCard.type].emoji}{" "}
-                    {IK_CARD_META[ikView.pendingDigDeeper.topCard.type].nameVi}
-                  </strong>
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() =>
-                      sendRoomAction({
-                        type: "MATCH_COMMAND",
-                        command: {
-                          type: "DIG_DEEPER_DECIDE",
-                          keepFirst: true,
-                        },
-                      })
-                    }
-                    className="rounded-xl bg-emerald-500 hover:bg-emerald-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 cursor-pointer"
-                  >
-                    ✓ Lấy Lá #1 Này
-                  </button>
-                  {ikView.pendingDigDeeper.hasSecondCard && (
+          ikView.pendingDigDeeper.topCard &&
+          (() => {
+            const topCard = ikView.pendingDigDeeper!.topCard!;
+            const topMeta = IK_CARD_META[topCard.type];
+            const topImgUrl = getIkPixelCardUrl(topCard.type, topCard.id);
+
+            return (
+              <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="w-full max-w-md rounded-2xl border border-amber-500/65 bg-slate-900/95 p-5 shadow-2xl space-y-4">
+                  <p className="text-sm font-extrabold text-amber-300 text-center">
+                    ⛏️ Đào Sâu Hơn (Dig Deeper) — Lá #1 Trên Đỉnh
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3.5">
+                    <div className="shrink-0 w-32 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 bg-slate-950 shadow-xl flex items-center justify-center">
+                      {topImgUrl ? (
+                        <img
+                          src={topImgUrl}
+                          alt={topMeta.nameVi}
+                          className="w-full h-full object-cover"
+                          style={{ imageRendering: "pixelated" }}
+                        />
+                      ) : (
+                        <div
+                          className="w-full h-full flex flex-col items-center justify-center p-2 text-center gap-1"
+                          style={{
+                            background: `linear-gradient(155deg, ${topMeta.colorHex}, ${topMeta.secondaryHex})`,
+                          }}
+                        >
+                          <span className="text-4xl">{topMeta.emoji}</span>
+                          <span className="text-xs font-extrabold text-white">
+                            {topMeta.shortVi}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0 space-y-1.5 text-left">
+                      <p className="text-sm font-extrabold text-white">
+                        {topMeta.nameVi}
+                      </p>
+                      <p className="text-[11px] font-semibold text-amber-300/90">
+                        {topMeta.subtitleVi}
+                      </p>
+                      <p className="text-xs text-slate-200 leading-relaxed rounded-lg border border-slate-800 bg-slate-950/80 p-2.5">
+                        {topMeta.ruleVi}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       disabled={busy}
@@ -894,19 +1110,37 @@ export function ImplodingKittensRoom({
                           type: "MATCH_COMMAND",
                           command: {
                             type: "DIG_DEEPER_DECIDE",
-                            keepFirst: false,
+                            keepFirst: true,
                           },
                         })
                       }
-                      className="rounded-xl bg-amber-500 hover:bg-amber-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 cursor-pointer"
+                      className="rounded-xl bg-emerald-500 hover:bg-emerald-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 cursor-pointer"
                     >
-                      ⛏️ Bỏ Qua & Đào Lá #2 Bên Dưới!
+                      ✓ Lấy Lá #1 Này
                     </button>
-                  )}
+                    {ikView.pendingDigDeeper!.hasSecondCard && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          sendRoomAction({
+                            type: "MATCH_COMMAND",
+                            command: {
+                              type: "DIG_DEEPER_DECIDE",
+                              keepFirst: false,
+                            },
+                          })
+                        }
+                        className="rounded-xl bg-amber-500 hover:bg-amber-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 cursor-pointer"
+                      >
+                        ⛏️ Bỏ Qua & Đào Lá #2!
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
         {/* 7.5. COMBO 2 OPPONENT CARD PICKER MODAL */}
         {!isLobby &&
