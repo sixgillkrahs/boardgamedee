@@ -376,6 +376,9 @@ export function ImplodingKittensCanvas({
           );
 
           const badges: string[] = [];
+          if (pv.towerHolderSeatNo === opp.seatNo && pv.towerStashCount > 0) {
+            badges.push(`👑 Tháp Quyền Lực (${pv.towerStashCount} lá)`);
+          }
           if (opp.isBlind) badges.push("🍑 Đang Mù Bài");
           if (opp.barkingPlayedFaceUp) badges.push("🐶 Đã Thả Mèo Sủa");
           if (opp.illTakeThatFromSeatNo !== null)
@@ -676,7 +679,7 @@ export function ImplodingKittensCanvas({
         ctx.fillStyle = isMyTurn ? "#fde047" : "#f8fafc";
         ctx.font = `800 11.5px ${fonts.sans}`;
         ctx.fillText(
-          `${mySeat.displayName} (${pv.myHand.length} lá trên tay)${pv.myIsBlind ? " • 🍑 ĐANG BỊ ÚP MÙ BÀI!" : ""}${!mySeat.alive ? " • 💀 ĐÃ BỊ LOẠI" : ""}`,
+          `${mySeat.displayName} (${pv.myHand.length} lá trên tay)${pv.towerHolderSeatNo === mySeat.seatNo && pv.towerStashCount > 0 ? ` • 👑 ĐANG ĐỘI THÁP QUYỀN LỰC (${pv.towerStashCount} lá dự trữ)` : ""}${pv.myIsBlind ? " • 🍑 ĐANG BỊ ÚP MÙ BÀI!" : ""}${!mySeat.alive ? " • 💀 ĐÃ BỊ LOẠI" : ""}`,
           24,
           dockY + 16
         );

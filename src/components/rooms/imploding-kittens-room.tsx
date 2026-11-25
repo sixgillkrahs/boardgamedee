@@ -30,6 +30,7 @@ const STEALABLE_CARD_TYPES: IkCardType[] = [
   "see_future_5",
   "see_future_3",
   "favor",
+  "tower_of_power",
   "shuffle",
   "feral_cat",
   "tacocat",
@@ -447,6 +448,24 @@ export function ImplodingKittensRoom({
                   </button>
                 </div>
               )}
+
+              {ikView.towerHolderSeatNo === snapshot?.viewerSeatNo &&
+                ikView.towerStashCount > 0 && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() =>
+                      sendRoomAction({
+                        type: "MATCH_COMMAND",
+                        command: { type: "CLAIM_TOWER_STASH" },
+                      })
+                    }
+                    className="rounded-xl border border-amber-400/70 bg-amber-500/20 hover:bg-amber-500/35 px-3.5 py-2 text-xs font-extrabold text-amber-200 shadow cursor-pointer"
+                  >
+                    👑 Rút 1 Lá Từ Tháp Quyền Lực (Còn {ikView.towerStashCount}{" "}
+                    lá)
+                  </button>
+                )}
 
               <button
                 type="button"

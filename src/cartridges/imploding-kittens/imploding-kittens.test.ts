@@ -193,4 +193,96 @@ describe("Imploding Kittens Cartridge (Core + 4 Expansions)", () => {
     expect(afterRev.state.direction).toBe(-1);
     expect(afterRev.state.activeSeatNo).toBe(2);
   });
+
+  it("supports Barking Kittens Tower of Power: 6 stash cards intercept steals (Favor/Combo 2) and holder can claim 1 card + shuffle rest into deck", () => {
+    const init = implodingKittensCartridge.createInitialState({
+      config: implodingKittensCartridge.defaultConfig(2),
+      seats: SAMPLE_SEATS.slice(0, 2),
+      nowMs: 1000,
+    });
+
+    // Barking expansion is enabled by default -> 6 non-bomb stash cards set aside
+    expect(init.state.towerStashCards).toHaveLength(6);
+    expect(init.state.towerHolderSeatNo).toBeNull();
+
+    const [s1, s2] = init.state.seats;
+    s1.hand = [
+      { id: "s1-tower", type: "tower_of_power" },
+      { id: "s1-secret-defuse", type: "defuse" },
+      { id: "s1-skip", type: "skip" },
+    ];
+    s2.hand = [
+      { id: "s2-favor", type: "favor" },
+      { id: "s2-cat1", type: "tacocat" },
+      { id: "s2-cat2", type: "tacocat" },
+      { id: "s2-skip", type: "skip" },
+    ];
+
+    // Seat 1 wears Tower of Power, then skips turn to Seat 2
+    const afterTower = implodingKittensCartridge.reduce({
+      state: init.state,
+      actorSeatNo: 1,
+      nowMs: 1100,
+      command: { type: "PLAY_CARD", cardId: "s1-tower" },
+    });
+    expect(afterTower.state.towerHolderSeatNo).toBe(1);
+    expect(afterTower.state.towerStashCards).toHaveLength(6);
+
+    const afterSkip1 = implodingKittensCartridge.reduce({
+      state: afterTower.state,
+      actorSeatNo: 1,
+      nowMs: 1200,
+      command: { type: "PLAY_CARD", cardId: "s1-skip" },
+    });
+    expect(afterSkip1.state.activeSeatNo).toBe(2);
+
+    // Seat 2 plays Favor on Seat 1 -> intercepted by Tower! Seat 1's hand is untouched, stash drops 6 -> 5
+    const afterFavor = implodingKittensCartridge.reduce({
+      state: afterSkip1.state,
+      actorSeatNo: 2,
+      nowMs: 1300,
+      command: { type: "PLAY_CARD", cardId: "s2-favor", targetSeatNo: 1 },
+    });
+    expect(afterFavor.state.step).toBe("TurnPlayStep");
+    expect(afterFavor.state.towerStashCards).toHaveLength(5);
+    expect(afterFavor.state.seats[0].hand.map((c) => c.id)).toEqual([
+      "s1-secret-defuse",
+    ]);
+
+    // Seat 2 plays Combo 2 on Seat 1 -> intercepted again! Stash drops 5 -> 4
+    const afterCombo2 = implodingKittensCartridge.reduce({
+      state: afterFavor.state,
+      actorSeatNo: 2,
+      nowMs: 1400,
+      command: {
+        type: "PLAY_COMBO_2",
+        cardIds: ["s2-cat1", "s2-cat2"],
+        targetSeatNo: 1,
+      },
+    });
+    expect(afterCombo2.state.towerStashCards).toHaveLength(4);
+    expect(afterCombo2.state.seats[0].hand.map((c) => c.id)).toEqual([
+      "s1-secret-defuse",
+    ]);
+
+    // Seat 2 skips back to Seat 1; Seat 1 claims 1 card from Tower and shuffles the remaining 3 into drawPile!
+    const afterSkip2 = implodingKittensCartridge.reduce({
+      state: afterCombo2.state,
+      actorSeatNo: 2,
+      nowMs: 1500,
+      command: { type: "PLAY_CARD", cardId: "s2-skip" },
+    });
+    const deckCountBeforeClaim = afterSkip2.state.drawPile.length;
+
+    const afterClaim = implodingKittensCartridge.reduce({
+      state: afterSkip2.state,
+      actorSeatNo: 1,
+      nowMs: 1600,
+      command: { type: "CLAIM_TOWER_STASH" },
+    });
+    expect(afterClaim.state.towerHolderSeatNo).toBeNull();
+    expect(afterClaim.state.towerStashCards).toHaveLength(0);
+    expect(afterClaim.state.seats[0].hand).toHaveLength(2); // secret-defuse + 1 card taken from Tower
+    expect(afterClaim.state.drawPile).toHaveLength(deckCountBeforeClaim + 3);
+  });
 });

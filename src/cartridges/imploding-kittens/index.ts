@@ -49,7 +49,7 @@ export const IK_EXPANSION_META: Record<IkExpansionId, IkExpansionMeta> = {
     shortVi: "Barking",
     badgeVi: "20 Lá Mở Rộng #3",
     descriptionVi:
-      "Thêm cặp Mèo Sủa kích nổ từ xa, Chôn Giấu (Bury), Tự Tấn Công 3x, Chia Sẻ Tương Lai 3x, Góp Bài (Potluck) & Đưa Đây Cho Tôi (I'll Take That).",
+      "Thêm cặp Mèo Sủa kích nổ từ xa, Tháp Quyền Lực (Tower of Power), Chôn Giấu (Bury), Tự Tấn Công 3x, Chia Sẻ Tương Lai 3x, Góp Bài (Potluck) & Đưa Đây Cho Tôi (I'll Take That).",
     accentColor: "#ec4899",
   },
   zombie: {
@@ -99,6 +99,7 @@ export type IkCardType =
   | "mark"
   // Barking Kittens Expansion
   | "barking_kitten"
+  | "tower_of_power"
   | "bury"
   | "personal_attack"
   | "share_future_3"
@@ -547,6 +548,19 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     category: "action",
     pack: "barking",
   },
+  tower_of_power: {
+    type: "tower_of_power",
+    nameVi: "Tháp Quyền Lực (Tower of Power)",
+    shortVi: "Tháp Quyền Lực",
+    subtitleVi: "Đội Vương Miện 6 lá dự trữ chống cướp bài",
+    ruleVi:
+      "Đội Tháp Quyền Lực chứa 6 lá dự trữ bí mật lên đầu. Mỗi khi bị ai cướp bài (Combo 2/3 hoặc Xin Xỏ), họ buộc phải rút mù từ đỉnh Tháp thay vì đụng vào bài trên tay bạn! Bất cứ lúc nào trong lượt, bạn có thể rút 1 lá từ Tháp về tay và xáo phần còn lại vào Bộ bài rút.",
+    emoji: "👑",
+    colorHex: "#94a3b8",
+    secondaryHex: "#1e293b",
+    category: "action",
+    pack: "barking",
+  },
   clone: {
     type: "clone",
     nameVi: "Nhân Bản (Clone)",
@@ -817,6 +831,10 @@ export interface IkMatchState {
   seats: IkSeatState[];
   drawPile: IkCard[];
   discardPile: IkCard[];
+  /** Barking Kittens: Seat currently wearing the Tower of Power crown */
+  towerHolderSeatNo: number | null;
+  /** Barking Kittens: Face-down Stash cards (6 cards set aside at match start) protecting the Tower holder */
+  towerStashCards: IkCard[];
   pendingAction: IkPendingAction | null;
   /** Holds the bomb or bury card currently waiting to be inserted into Draw Pile during DefuseInsertStep */
   pendingInsert: {
@@ -908,6 +926,9 @@ export type IkCommand =
   | {
       type: "SUBMIT_GROUP_CARD";
       cardId: string;
+    }
+  | {
+      type: "CLAIM_TOWER_STASH";
     };
 
 export interface IkSeatView {
@@ -943,6 +964,8 @@ export interface IkPlayerView {
   discardTopCard: IkCard | null;
   /** Recent discard pile cards (for 5-card combo selection & inspection) */
   discardPileCards: IkCard[];
+  towerHolderSeatNo: number | null;
+  towerStashCount: number;
   myHand: IkCard[];
   myIsBlind: boolean;
   myPrivateVision: {
@@ -1018,6 +1041,8 @@ function cloneState(state: IkMatchState): IkMatchState {
     })),
     drawPile: state.drawPile.map((c) => ({ ...c })),
     discardPile: state.discardPile.map((c) => ({ ...c })),
+    towerHolderSeatNo: state.towerHolderSeatNo ?? null,
+    towerStashCards: (state.towerStashCards ?? []).map((c) => ({ ...c })),
     pendingAction: state.pendingAction
       ? {
           ...state.pendingAction,
@@ -1153,6 +1178,7 @@ export function buildImplodingDeck(
   // 4. Expansion #3: Barking Kittens
   if (expansions.barking) {
     add("barking_kitten", 2);
+    add("tower_of_power", 1);
     add("bury", 2);
     add("personal_attack", 2);
     add("share_future_3", 2);
@@ -1574,7 +1600,32 @@ function executeResolvedAction(
   // Special Combos:
   if (pending.kind === "COMBO_2") {
     const target = getSeat(state, pending.targetSeatNo!);
-    if (target.hand.length > 0) {
+    if (
+      state.towerHolderSeatNo === target.seatNo &&
+      state.towerStashCards.length > 0
+    ) {
+      const stolen = state.towerStashCards.pop()!;
+      stolen.marked = false;
+      actor.hand.push(stolen);
+      if (state.towerStashCards.length === 0) {
+        state.towerHolderSeatNo = null;
+      }
+      setAnim(
+        state,
+        {
+          kind: "COMBO_STEAL",
+          actorSeatNo: actor.seatNo,
+          targetSeatNo: target.seatNo,
+          card: stolen,
+        },
+        nowMs
+      );
+      events.push({
+        eventType: "IK_TOWER_INTERCEPT",
+        message: `👑 Tháp Quyền Lực chắn đòn! ${actor.displayName} đánh Combo 2 Lá vào ${target.displayName} nhưng buộc phải rút mù 1 lá từ đỉnh Tháp (còn ${state.towerStashCards.length} lá trong Tháp)!`,
+        visibleToSeatNos: "all",
+      });
+    } else if (target.hand.length > 0) {
       const randIdx = Math.floor(Math.random() * target.hand.length);
       const [stolen] = target.hand.splice(randIdx, 1);
       stolen.marked = false;
@@ -1607,6 +1658,37 @@ function executeResolvedAction(
     const target = getSeat(state, pending.targetSeatNo!);
     const wanted = pending.wantedCardType!;
     const wantedMeta = IK_CARD_META[wanted];
+
+    if (
+      state.towerHolderSeatNo === target.seatNo &&
+      state.towerStashCards.length > 0
+    ) {
+      const stolen = state.towerStashCards.pop()!;
+      stolen.marked = false;
+      actor.hand.push(stolen);
+      if (state.towerStashCards.length === 0) {
+        state.towerHolderSeatNo = null;
+      }
+      setAnim(
+        state,
+        {
+          kind: "COMBO_STEAL",
+          actorSeatNo: actor.seatNo,
+          targetSeatNo: target.seatNo,
+          card: stolen,
+        },
+        nowMs
+      );
+      events.push({
+        eventType: "IK_TOWER_INTERCEPT",
+        message: `👑 Tháp Quyền Lực chắn đòn Combo 3 Lá! ${actor.displayName} buộc phải rút mù 1 lá từ đỉnh Tháp của ${target.displayName} thay vì lấy bài trên tay (còn ${state.towerStashCards.length} lá)!`,
+        visibleToSeatNos: "all",
+      });
+      state.step = "TurnPlayStep";
+      state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+      return;
+    }
+
     const foundIdx = target.hand.findIndex((c) => c.type === wanted);
 
     if (foundIdx !== -1) {
@@ -1890,6 +1972,36 @@ function executeResolvedAction(
 
     case "favor": {
       const target = getSeat(state, pending.targetSeatNo!);
+      if (
+        target.alive &&
+        state.towerHolderSeatNo === target.seatNo &&
+        state.towerStashCards.length > 0
+      ) {
+        const stolen = state.towerStashCards.pop()!;
+        stolen.marked = false;
+        actor.hand.push(stolen);
+        if (state.towerStashCards.length === 0) {
+          state.towerHolderSeatNo = null;
+        }
+        setAnim(
+          state,
+          {
+            kind: "COMBO_STEAL",
+            actorSeatNo: actor.seatNo,
+            targetSeatNo: target.seatNo,
+            card: stolen,
+          },
+          nowMs
+        );
+        state.step = "TurnPlayStep";
+        state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+        events.push({
+          eventType: "IK_TOWER_INTERCEPT",
+          message: `👑 Tháp Quyền Lực chắn đòn Xin Xỏ (Favor)! ${actor.displayName} buộc phải rút mù 1 lá từ đỉnh Tháp của ${target.displayName} (còn ${state.towerStashCards.length} lá)!`,
+          visibleToSeatNos: "all",
+        });
+        return;
+      }
       if (!target.alive || target.hand.length === 0) {
         state.step = "TurnPlayStep";
         state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
@@ -1904,6 +2016,29 @@ function executeResolvedAction(
       events.push({
         eventType: "IK_FAVOR_ASKED",
         message: `🤲 ${actor.displayName} dùng Xin Xỏ (Favor) yêu cầu ${target.displayName} tự chọn 1 lá bài trên tay cống nạp!`,
+        visibleToSeatNos: "all",
+      });
+      return;
+    }
+
+    case "tower_of_power": {
+      // Nếu kho dự trữ chưa có lá (ví dụ khi Clone lại sau khi Tháp đã cạn), rút tạm tối đa 6 lá thường từ Bộ bài rút
+      if (state.towerStashCards.length === 0) {
+        for (let i = state.drawPile.length - 1; i >= 0 && state.towerStashCards.length < 6; i--) {
+          const c = state.drawPile[i];
+          if (c.type !== "exploding_kitten" && c.type !== "imploding_kitten") {
+            state.drawPile.splice(i, 1);
+            state.towerStashCards.push(c);
+          }
+        }
+      }
+      state.towerHolderSeatNo =
+        state.towerStashCards.length > 0 ? actor.seatNo : null;
+      state.step = "TurnPlayStep";
+      state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+      events.push({
+        eventType: "IK_TOWER_OF_POWER",
+        message: `👑 ${actor.displayName} đội Tháp Quyền Lực (Tower of Power) chứa ${state.towerStashCards.length} lá dự trữ lên đầu! Ai cướp bài đều phải rút mù từ đỉnh Tháp!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2429,9 +2564,19 @@ function chooseBotCommand(
       }
     }
 
+    // Claim Tower of Power stash when low on cards or down to last stash card
+    if (
+      state.towerHolderSeatNo === botSeatNo &&
+      state.towerStashCards.length > 0 &&
+      (bot.hand.length <= 2 || state.towerStashCards.length === 1)
+    ) {
+      return { type: "CLAIM_TOWER_STASH" };
+    }
+
     // Occasionally play utility/attack cards from hand
     const utilityCard = bot.hand.find((c) =>
       [
+        "tower_of_power",
         "favor",
         "mark",
         "curse_cat_butt",
@@ -2543,6 +2688,16 @@ export const implodingKittensCartridge: GameCartridge<
       };
     });
 
+    // 2.5. Barking Kittens: Set aside 6 random non-bomb Stash cards for the Tower of Power
+    const towerStashCards: IkCard[] = [];
+    if (normalizedConfig.expansions.barking) {
+      for (let i = preBombDeck.length - 1; i >= 0 && towerStashCards.length < 6; i--) {
+        if (preBombDeck[i].type !== "tower_of_power") {
+          towerStashCards.push(preBombDeck.splice(i, 1)[0]);
+        }
+      }
+    }
+
     // 3. Insert Bombs into Draw Pile:
     // Standard rule: (N - 1) total bombs. If Imploding pack is ON, 1 of those is the Imploding Kitten and (N - 2) are Exploding Kittens.
     // If Streaking pack is ON (which includes Streaking Kitten allowing 1 bomb in hand), add +1 extra Exploding Kitten!
@@ -2578,6 +2733,8 @@ export const implodingKittensCartridge: GameCartridge<
       seats: seatStates,
       drawPile,
       discardPile: [],
+      towerHolderSeatNo: null,
+      towerStashCards,
       pendingAction: null,
       pendingInsert: null,
       pendingAlterFuture: null,
@@ -2965,6 +3122,37 @@ export const implodingKittensCartridge: GameCartridge<
     // --- STEP: NORMAL TURN PLAY OR DRAW ---
     if (state.activeSeatNo !== actor.seatNo) {
       throw new Error("Chưa đến lượt của bạn.");
+    }
+
+    if (command.type === "CLAIM_TOWER_STASH") {
+      if (
+        state.towerHolderSeatNo !== actor.seatNo ||
+        state.towerStashCards.length === 0
+      ) {
+        throw new Error("Bạn hiện không đội Tháp Quyền Lực hoặc Tháp đã hết bài.");
+      }
+      const taken = state.towerStashCards.pop()!;
+      taken.marked = false;
+      actor.hand.push(taken);
+
+      const remainingCount = state.towerStashCards.length;
+      if (remainingCount > 0) {
+        state.drawPile.push(...state.towerStashCards);
+        state.drawPile = shuffle(state.drawPile, Math.random);
+      }
+      state.towerStashCards = [];
+      state.towerHolderSeatNo = null;
+      state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+
+      events.push({
+        eventType: "IK_TOWER_CLAIMED",
+        message:
+          remainingCount > 0
+            ? `👑 ${actor.displayName} tháo Tháp Quyền Lực: rút 1 lá bí mật về tay và xáo ${remainingCount} lá còn lại vào Bộ bài rút!`
+            : `👑 ${actor.displayName} rút lá cuối cùng từ Tháp Quyền Lực về tay!`,
+        visibleToSeatNos: "all",
+      });
+      return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
     }
 
     if (command.type === "DRAW_CARD") {
@@ -3426,6 +3614,8 @@ export const implodingKittensCartridge: GameCartridge<
           ? state.discardPile[state.discardPile.length - 1]
           : null,
       discardPileCards: state.discardPile.slice(-14),
+      towerHolderSeatNo: state.towerHolderSeatNo ?? null,
+      towerStashCount: (state.towerStashCards ?? []).length,
       myHand: mySeat ? mySeat.hand : [],
       myIsBlind: Boolean(mySeat?.isBlind),
       myPrivateVision: mySeat?.privateVision ?? null,
