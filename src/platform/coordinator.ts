@@ -5,7 +5,6 @@ import {
   actors,
   channelMessages,
   matches,
-  matchEvents,
   rooms,
   seats,
 } from "@/db/schema";
@@ -13,7 +12,6 @@ import { getCartridge } from "@/cartridges/registry";
 import type {
   ChannelId,
   ChannelPermission,
-  MatchEventRecord,
   SeatDescriptor,
 } from "@/cartridges/types";
 import { publishRoomUpdate } from "@/platform/event-bus";
@@ -503,27 +501,6 @@ export async function updateRoomConfig(input: {
   return updated;
 }
 
-async function appendMatchEvents(
-  matchId: string,
-  version: number,
-  events: MatchEventRecord[]
-): Promise<(typeof matchEvents.$inferSelect)[]> {
-  if (events.length === 0) return [];
-  return db
-    .insert(matchEvents)
-    .values(
-      events.map((ev) => ({
-        matchId,
-        version,
-        eventType: ev.eventType,
-        message: ev.message,
-        visibleToSeatNos: ev.visibleToSeatNos ?? "all",
-        payload: ev.payload ?? {},
-      }))
-    )
-    .returning();
-}
-
 export async function startMatch(input: {
   code: string;
   actorId: string;
@@ -579,8 +556,6 @@ export async function startMatch(input: {
     })
     .returning();
 
-  await appendMatchEvents(match.id, 1, initial.events);
-
   await db
     .update(rooms)
     .set({
@@ -599,6 +574,7 @@ async function executeMatchCommandCore(input: {
   actorId: string;
   command: unknown;
   preloadedRoom?: typeof rooms.$inferSelect | null;
+  includeMessages?: boolean;
 }) {
   const room =
     input.preloadedRoom !== undefined
@@ -608,7 +584,7 @@ async function executeMatchCommandCore(input: {
     throw new Error("Phòng chưa có trận đấu đang diễn ra.");
   }
 
-  const [[match], roomSeats] = await Promise.all([
+  const [[match], roomSeats, allMessages] = await Promise.all([
     db
       .select()
       .from(matches)
@@ -619,6 +595,13 @@ async function executeMatchCommandCore(input: {
       .from(seats)
       .where(eq(seats.roomId, room.id))
       .orderBy(asc(seats.seatNo)),
+    input.includeMessages
+      ? db
+          .select()
+          .from(channelMessages)
+          .where(eq(channelMessages.matchId, room.activeMatchId))
+          .orderBy(asc(channelMessages.id))
+      : Promise.resolve([]),
   ]);
 
   if (!match || match.status !== "active") {
@@ -677,8 +660,7 @@ async function executeMatchCommandCore(input: {
     room,
     roomSeats,
     updatedMatch: updatedRows[0],
-    nextVersion,
-    newEvents: transition.events,
+    allMessages,
   };
 }
 
@@ -687,9 +669,7 @@ export async function submitMatchCommand(input: {
   actorId: string;
   command: unknown;
 }) {
-  const { room, updatedMatch, nextVersion, newEvents } =
-    await executeMatchCommandCore(input);
-  await appendMatchEvents(updatedMatch.id, nextVersion, newEvents);
+  const { room, updatedMatch } = await executeMatchCommandCore(input);
   publishRoomUpdate(room.code);
   return updatedMatch;
 }
@@ -700,37 +680,19 @@ export async function submitMatchCommandAndGetSnapshot(input: {
   command: unknown;
   preloadedRoom?: typeof rooms.$inferSelect | null;
 }): Promise<RoomSnapshotForActor> {
-  const { room, roomSeats, updatedMatch, nextVersion, newEvents } =
-    await executeMatchCommandCore(input);
-
-  // Chạy song song: ghi match_events mới + đọc messages & events hiện tại (1 round-trip thay vì 7)
-  const [insertedEvents, allMessages, existingEvents] = await Promise.all([
-    appendMatchEvents(updatedMatch.id, nextVersion, newEvents),
-    db
-      .select()
-      .from(channelMessages)
-      .where(eq(channelMessages.matchId, updatedMatch.id))
-      .orderBy(asc(channelMessages.id)),
-    db
-      .select()
-      .from(matchEvents)
-      .where(eq(matchEvents.matchId, updatedMatch.id))
-      .orderBy(asc(matchEvents.id)),
-  ]);
+  const { room, roomSeats, updatedMatch, allMessages } =
+    await executeMatchCommandCore({
+      ...input,
+      includeMessages: true,
+    });
 
   publishRoomUpdate(room.code);
-
-  const eventMap = new Map<number, typeof matchEvents.$inferSelect>();
-  for (const ev of existingEvents) eventMap.set(ev.id, ev);
-  for (const ev of insertedEvents) eventMap.set(ev.id, ev);
-  const mergedEvents = Array.from(eventMap.values()).sort((a, b) => a.id - b.id);
 
   return buildRoomSnapshotFromData({
     room,
     roomSeats,
     match: updatedMatch,
     allMessages,
-    allEvents: mergedEvents,
     actorId: input.actorId,
   });
 }
@@ -809,7 +771,6 @@ export async function checkAndAdvanceExpiredMatch(input: {
     .returning();
 
   if (updated.length > 0) {
-    await appendMatchEvents(match.id, nextVersion, transition.events);
     publishRoomUpdate(room.code);
     return true;
   }
@@ -962,10 +923,9 @@ function buildRoomSnapshotFromData(input: {
   roomSeats: (typeof seats.$inferSelect)[];
   match: typeof matches.$inferSelect | null;
   allMessages: (typeof channelMessages.$inferSelect)[];
-  allEvents: (typeof matchEvents.$inferSelect)[];
   actorId: string | null;
 }): RoomSnapshotForActor {
-  const { room, roomSeats, match, allMessages, allEvents, actorId } = input;
+  const { room, roomSeats, match, allMessages, actorId } = input;
   const viewerSeat =
     actorId !== null
       ? roomSeats.find((s) => s.actorId === actorId) ?? null
@@ -981,7 +941,6 @@ function buildRoomSnapshotFromData(input: {
   let playerView: any | null = null;
   let channels: ChannelPermission[] = [];
   let visibleMessages: RoomSnapshotForActor["messages"] = [];
-  let visibleEvents: RoomSnapshotForActor["events"] = [];
 
   if (match && cartridge) {
     matchVersion = match.version;
@@ -1007,22 +966,6 @@ function buildRoomSnapshotFromData(input: {
         senderName: m.senderName,
         content: m.content,
         createdAt: m.createdAt.toISOString(),
-      }));
-
-    visibleEvents = allEvents
-      .filter((ev) => {
-        if (ev.visibleToSeatNos === "all") return true;
-        if (Array.isArray(ev.visibleToSeatNos) && viewerSeatNo !== null) {
-          return ev.visibleToSeatNos.includes(viewerSeatNo);
-        }
-        return false;
-      })
-      .map((ev) => ({
-        id: ev.id,
-        version: ev.version,
-        eventType: ev.eventType,
-        message: ev.message,
-        createdAt: ev.createdAt.toISOString(),
       }));
   }
 
@@ -1051,7 +994,7 @@ function buildRoomSnapshotFromData(input: {
     playerView,
     channels,
     messages: visibleMessages,
-    events: visibleEvents,
+    events: [],
   };
 }
 
@@ -1100,8 +1043,8 @@ export async function getRoomSnapshotForActor(input: {
     }
   }
 
-  // Round-trip 2: Đọc seats + messages + events song song (Promise.all)
-  const [roomSeats, allMessages, allEvents] = await Promise.all([
+  // Round-trip 2: Đọc seats + messages song song (Promise.all)
+  const [roomSeats, allMessages] = await Promise.all([
     db
       .select()
       .from(seats)
@@ -1114,13 +1057,6 @@ export async function getRoomSnapshotForActor(input: {
           .where(eq(channelMessages.matchId, match.id))
           .orderBy(asc(channelMessages.id))
       : Promise.resolve([]),
-    match
-      ? db
-          .select()
-          .from(matchEvents)
-          .where(eq(matchEvents.matchId, match.id))
-          .orderBy(asc(matchEvents.id))
-      : Promise.resolve([]),
   ]);
 
   return buildRoomSnapshotFromData({
@@ -1128,7 +1064,6 @@ export async function getRoomSnapshotForActor(input: {
     roomSeats,
     match,
     allMessages,
-    allEvents,
     actorId: input.actorId,
   });
 }
