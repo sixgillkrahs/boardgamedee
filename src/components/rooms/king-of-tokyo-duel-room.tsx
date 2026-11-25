@@ -99,11 +99,15 @@ export function KingOfTokyoDuelRoom({
     snapshot?.playerView ? (snapshot.playerView as KotPlayerView) : null;
 
   return (
-    <main className="relative flex-1 flex flex-col lg:flex-row w-full gap-1 p-1 sm:p-1.5">
+    <main
+      className={`relative flex-1 min-h-0 flex flex-col lg:flex-row w-full gap-1 ${
+        isExpanded ? "p-0" : "p-1 sm:p-1.5"
+      }`}
+    >
       <div
         className={`flex-1 relative min-h-[280px] ${
           isExpanded
-            ? "h-[calc(100dvh-8px)]"
+            ? "h-full"
             : "h-[calc(100dvh-50px)] [@media(max-height:500px)]:h-[calc(100dvh-44px)]"
         }`}
       >

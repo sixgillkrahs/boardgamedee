@@ -191,17 +191,27 @@ export function ImplodingKittensCanvas({
       if (!parent) return;
       const rect = parent.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = Math.max(320, Math.floor(rect.width * dpr));
-      canvas.height = Math.max(240, Math.floor(rect.height * dpr));
+      const nextW = Math.max(320, Math.floor(rect.width * dpr));
+      const nextH = Math.max(240, Math.floor(rect.height * dpr));
+      if (canvas.width !== nextW || canvas.height !== nextH) {
+        canvas.width = nextW;
+        canvas.height = nextH;
+      }
     };
 
     resize();
     const observer = new ResizeObserver(resize);
     if (canvas.parentElement) observer.observe(canvas.parentElement);
+    window.addEventListener("resize", resize);
+    document.addEventListener("fullscreenchange", resize);
+    document.addEventListener("webkitfullscreenchange", resize);
 
     const renderFrame = (now: number) => {
       const dt = Math.min(0.1, (now - lastTime) / 1000);
       lastTime = now;
+
+      // Luôn tự đồng bộ kích thước Canvas theo khung cha mỗi frame (tránh lệch kích thước khi bật/tắt Fullscreen)
+      resize();
 
       const dpr = window.devicePixelRatio || 1;
       const width = canvas.width / dpr;
@@ -1016,6 +1026,9 @@ export function ImplodingKittensCanvas({
     return () => {
       cancelAnimationFrame(rafId);
       observer.disconnect();
+      window.removeEventListener("resize", resize);
+      document.removeEventListener("fullscreenchange", resize);
+      document.removeEventListener("webkitfullscreenchange", resize);
     };
   }, []);
 

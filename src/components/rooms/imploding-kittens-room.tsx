@@ -195,11 +195,15 @@ export function ImplodingKittensRoom({
   };
 
   return (
-    <main className="relative flex-1 flex flex-col w-full p-1 sm:p-1.5">
+    <main
+      className={`relative flex-1 min-h-0 flex flex-col w-full ${
+        isExpanded ? "p-0" : "p-1 sm:p-1.5"
+      }`}
+    >
       <div
         className={`flex-1 relative w-full min-h-[280px] ${
           isExpanded
-            ? "h-[calc(100dvh-8px)]"
+            ? "h-full"
             : "h-[calc(100dvh-52px)] [@media(max-height:500px)]:h-[calc(100dvh-44px)]"
         }`}
       >
@@ -351,7 +355,7 @@ export function ImplodingKittensRoom({
 
         {/* 2. FLOATING ACTION BAR WHEN PLAYER SELECTS CARDS ON THEIR TURN */}
         {!isLobby && ikView && isMyTurn && (
-          <div className="absolute inset-x-0 bottom-[37%] [@media(min-height:520px)]:bottom-[210px] z-20 flex justify-center pointer-events-none px-2 sm:px-3">
+          <div className="absolute inset-x-0 bottom-[calc(clamp(104px,35%,140px)+10px)] [@media(min-height:520px)]:bottom-[calc(clamp(176px,28%,220px)+14px)] z-20 flex justify-center pointer-events-none px-2 sm:px-3">
             <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 rounded-2xl border border-amber-400/50 bg-slate-950/92 backdrop-blur-md px-2.5 py-1.5 sm:px-3.5 sm:py-2 shadow-2xl max-w-[96vw]">
               {canPlaySingle && (
                 <button

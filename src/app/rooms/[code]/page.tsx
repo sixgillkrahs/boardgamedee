@@ -305,7 +305,13 @@ function RoomPageContent({
     RULES_MODAL_META[cartridgeId] ?? RULES_MODAL_META.werewolf;
 
   return (
-    <div className="min-h-[100dvh] bg-slate-950 text-slate-100 flex flex-col overflow-x-hidden">
+    <div
+      className={
+        isExpanded
+          ? "fixed inset-0 h-[100dvh] w-screen bg-slate-950 text-slate-100 flex flex-col overflow-hidden z-30"
+          : "min-h-[100dvh] bg-slate-950 text-slate-100 flex flex-col overflow-x-hidden"
+      }
+    >
       {/* Compact Floating Controls when Expanded / iPhone Zen Fullscreen is active */}
       {isExpanded && (
         <div className="fixed top-1.5 right-1.5 z-40 flex items-center gap-1 rounded-xl border border-slate-700/80 bg-slate-900/85 backdrop-blur-md p-1 shadow-xl">
