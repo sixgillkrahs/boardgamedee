@@ -15,6 +15,7 @@ export function HeatRoom({
   snapshot,
   isLobby,
   busy,
+  isExpanded,
   sendRoomAction,
 }: GameRoomModuleProps) {
   const heatView: HeatPlayerView | null =
@@ -80,7 +81,7 @@ export function HeatRoom({
       <div
         className={`relative w-full ${
           isLobby || !heatView
-            ? "h-[calc(100vh-52px)] min-h-[560px]"
+            ? `${isExpanded ? "h-[calc(100dvh-8px)]" : "h-[calc(100dvh-52px)]"} min-h-[280px]`
             : "h-[1260px] sm:h-[1340px]"
         }`}
       >

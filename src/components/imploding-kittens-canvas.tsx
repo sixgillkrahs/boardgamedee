@@ -192,7 +192,7 @@ export function ImplodingKittensCanvas({
       const rect = parent.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       canvas.width = Math.max(320, Math.floor(rect.width * dpr));
-      canvas.height = Math.max(460, Math.floor(rect.height * dpr));
+      canvas.height = Math.max(240, Math.floor(rect.height * dpr));
     };
 
     resize();
@@ -236,6 +236,7 @@ export function ImplodingKittensCanvas({
       );
 
       const newHitRegions: HitRegion[] = [];
+      const isShort = height < 520;
 
       if (curMode === "lobby" || !pv) {
         fx.activeFavorPaw = null;
@@ -243,19 +244,21 @@ export function ImplodingKittensCanvas({
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillStyle = "#fde047";
-        ctx.font = `900 ${Math.min(30, Math.round(width * 0.045))}px ${fonts.sans}`;
+        ctx.font = `900 ${isShort ? Math.min(20, Math.round(height * 0.06)) : Math.min(30, Math.round(width * 0.045))}px ${fonts.sans}`;
         ctx.fillText(
           "💣🕳️ IMPLODING KITTENS",
           width * 0.5,
-          height * 0.16
+          isShort ? height * 0.09 : height * 0.16
         );
-        ctx.fillStyle = "#cbd5e1";
-        ctx.font = `600 12px ${fonts.sans}`;
-        ctx.fillText(
-          "Mèo Nổ + 4 Bản Mở Rộng (Imploding • Streaking • Barking • Zombie Kittens)",
-          width * 0.5,
-          height * 0.22
-        );
+        if (!isShort) {
+          ctx.fillStyle = "#cbd5e1";
+          ctx.font = `600 12px ${fonts.sans}`;
+          ctx.fillText(
+            "Mèo Nổ + 4 Bản Mở Rộng (Imploding • Streaking • Barking • Zombie Kittens)",
+            width * 0.5,
+            height * 0.22
+          );
+        }
 
         const sampleTypes = [
           "tacocat",
@@ -266,17 +269,21 @@ export function ImplodingKittensCanvas({
           "attack",
           "see_future_3",
         ] as const;
-        const cardW = Math.min(92, Math.round(width * 0.11));
+        const cardW = isShort
+          ? Math.min(54, Math.max(38, Math.round(height * 0.14)))
+          : Math.min(92, Math.round(width * 0.11));
         const cardH = Math.round(cardW * 1.44);
 
         sampleTypes.forEach((t, i) => {
           const off = i - 3;
-          const waveY = Math.sin(now / 480 + i * 0.75) * 6;
+          const waveY = Math.sin(now / 480 + i * 0.75) * (isShort ? 3 : 6);
           const waveRot = Math.cos(now / 720 + i * 0.6) * 0.025;
           ctx.save();
           ctx.translate(
             width * 0.5 + off * (cardW * 0.74),
-            height * 0.44 + Math.abs(off) * 7 + waveY
+            (isShort ? height * 0.28 : height * 0.44) +
+              Math.abs(off) * (isShort ? 3 : 7) +
+              waveY
           );
           ctx.rotate(off * 0.08 + waveRot);
           drawIkCard2D(
@@ -294,33 +301,35 @@ export function ImplodingKittensCanvas({
           ctx.restore();
         });
 
-        // Lobby seated players strip
-        const count = Math.max(1, curLobbySeats.length);
-        const pillW = Math.min(165, Math.floor((width - 40) / count) - 8);
-        const startX =
-          width * 0.5 - ((pillW + 8) * curLobbySeats.length - 8) / 2;
-        curLobbySeats.forEach((s, idx) => {
-          const px = startX + idx * (pillW + 8);
-          const py = height * 0.66 + Math.sin(now / 600 + idx) * 2;
-          drawRoundedRect(ctx, px, py, pillW, 44, 11);
-          ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
-          ctx.fill();
-          ctx.strokeStyle =
-            s.seatNo === curViewer ? "#facc15" : "rgba(148, 163, 184, 0.4)";
-          ctx.lineWidth = s.seatNo === curViewer ? 2 : 1.2;
-          ctx.stroke();
+        // Lobby seated players strip (only on tall screens; short landscape uses the floating lobby panel)
+        if (!isShort) {
+          const count = Math.max(1, curLobbySeats.length);
+          const pillW = Math.min(165, Math.floor((width - 40) / count) - 8);
+          const startX =
+            width * 0.5 - ((pillW + 8) * curLobbySeats.length - 8) / 2;
+          curLobbySeats.forEach((s, idx) => {
+            const px = startX + idx * (pillW + 8);
+            const py = height * 0.66 + Math.sin(now / 600 + idx) * 2;
+            drawRoundedRect(ctx, px, py, pillW, 44, 11);
+            ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
+            ctx.fill();
+            ctx.strokeStyle =
+              s.seatNo === curViewer ? "#facc15" : "rgba(148, 163, 184, 0.4)";
+            ctx.lineWidth = s.seatNo === curViewer ? 2 : 1.2;
+            ctx.stroke();
 
-          ctx.fillStyle = "#f8fafc";
-          ctx.font = `700 11.5px ${fonts.sans}`;
-          ctx.fillText(s.displayName, px + pillW / 2, py + 16, pillW - 12);
-          ctx.fillStyle = s.isBot ? "#38bdf8" : "#fde047";
-          ctx.font = `600 10px ${fonts.sans}`;
-          ctx.fillText(
-            s.isBot ? "🤖 Mèo Máy Bot" : `Ghế #${s.seatNo}`,
-            px + pillW / 2,
-            py + 32
-          );
-        });
+            ctx.fillStyle = "#f8fafc";
+            ctx.font = `700 11.5px ${fonts.sans}`;
+            ctx.fillText(s.displayName, px + pillW / 2, py + 16, pillW - 12);
+            ctx.fillStyle = s.isBot ? "#38bdf8" : "#fde047";
+            ctx.font = `600 10px ${fonts.sans}`;
+            ctx.fillText(
+              s.isBot ? "🤖 Mèo Máy Bot" : `Ghế #${s.seatNo}`,
+              px + pillW / 2,
+              py + 32
+            );
+          });
+        }
       } else {
         // --- ACTIVE MATCH TABLETOP ---
         const mySeat =
@@ -333,18 +342,21 @@ export function ImplodingKittensCanvas({
 
         // 1. TOP ROW: Opponents around the table (clickable as targets!)
         const oppCount = Math.max(1, opponents.length);
-        const oppGap = 10;
+        const oppGap = isShort ? 6 : 10;
         const oppW = Math.min(
-          235,
-          Math.floor((width - 28 - oppGap * (oppCount - 1)) / oppCount)
+          isShort ? 210 : 235,
+          Math.floor((width - (isShort ? 16 : 28) - oppGap * (oppCount - 1)) / oppCount)
         );
-        const oppH = 112;
+        const oppY = isShort ? 6 : 12;
+        const oppH = isShort
+          ? Math.max(46, Math.min(58, Math.round(height * 0.15)))
+          : 112;
         const oppStartX =
           width * 0.5 - (oppW * oppCount + oppGap * (oppCount - 1)) / 2;
 
         opponents.forEach((opp, idx) => {
           const ox = oppStartX + idx * (oppW + oppGap);
-          const oy = 12;
+          const oy = oppY;
           const isTarget = curTargetSeatNo === opp.seatNo;
           const isActing = pv.activeSeatNo === opp.seatNo;
           const regId = `opp-seat-${opp.seatNo}`;
@@ -429,20 +441,40 @@ export function ImplodingKittensCanvas({
 
           const badges: string[] = [];
           if (pv.towerHolderSeatNo === opp.seatNo && pv.towerStashCount > 0) {
-            badges.push(`👑 Tháp Quyền Lực (${pv.towerStashCount} lá)`);
+            badges.push(`👑 Tháp (${pv.towerStashCount})`);
           }
-          if (opp.isBlind) badges.push("🍑 Đang Mù Bài");
-          if (opp.barkingPlayedFaceUp) badges.push("🐶 Đã Thả Mèo Sủa");
+          if (opp.isBlind) badges.push("🍑 Mù Bài");
+          if (opp.barkingPlayedFaceUp) badges.push("🐶 Mèo Sủa");
           if (opp.illTakeThatFromSeatNo !== null)
-            badges.push("🪝 Bị Gài Cướp Rút");
+            badges.push("🪝 Cướp Rút");
+          if (oppH < 82 && opp.markedCards.length > 0) {
+            badges.push(
+              `🎯 ${opp.markedCards.map((mc) => IK_CARD_META[mc.type].shortVi).join(", ")}`
+            );
+          }
           if (badges.length > 0) {
             ctx.textAlign = "left";
             ctx.fillStyle = "#fda4af";
             ctx.font = `700 9.5px ${fonts.sans}`;
-            ctx.fillText(badges.join(" • "), ox + 10, oy + 36, oppW - 20);
+            ctx.fillText(
+              badges.join(" • "),
+              ox + 10,
+              oy + (oppH < 82 ? 36 : 36),
+              oppW - 20
+            );
+          } else if (oppH < 82 && opp.alive) {
+            ctx.textAlign = "left";
+            ctx.fillStyle = "#94a3b8";
+            ctx.font = `600 9.5px ${fonts.sans}`;
+            ctx.fillText(
+              isTarget ? "Đang chọn làm mục tiêu" : "Bấm chọn làm mục tiêu",
+              ox + 10,
+              oy + 36,
+              oppW - 20
+            );
           }
 
-          if (opp.alive) {
+          if (opp.alive && oppH >= 82) {
             const miniW = 28;
             const miniH = 40;
             const showCount = Math.min(7, opp.handCount);
@@ -468,18 +500,36 @@ export function ImplodingKittensCanvas({
           }
         });
 
-        // 2. CENTER ARENA: DRAW PILE (LEFT) + ANIMATED CONE OF SHAME RING (CENTER) + DISCARD PILE (RIGHT)
-        const arenaY = height * 0.43;
-        const pileW = Math.min(116, Math.max(88, Math.round(width * 0.1)));
-        const pileH = Math.round(pileW * 1.44);
+        // 2. CENTER ARENA & BOTTOM DOCK — Responsive for BOTH Desktop & Short Phone Landscape!
+        const dockH = isShort
+          ? Math.max(104, Math.min(140, Math.round(height * 0.35)))
+          : Math.max(176, Math.min(220, Math.round(height * 0.28)));
+        const dockY = height - dockH - (isShort ? 4 : 6);
 
-        const drawX = Math.round(width * 0.5 - pileW - 88);
+        const oppBottom = oppY + oppH + (isShort ? 6 : 12);
+        const arenaAvailH = Math.max(82, dockY - oppBottom - (isShort ? 26 : 34));
+        const arenaY = oppBottom + arenaAvailH * 0.5;
+        const maxPileHBySpace = Math.max(
+          64,
+          Math.min(168, arenaAvailH - (isShort ? 6 : 12))
+        );
+        const pileH = isShort
+          ? Math.round(maxPileHBySpace)
+          : Math.round(
+              Math.min(
+                maxPileHBySpace,
+                Math.min(116, Math.max(88, width * 0.1)) * 1.44
+              )
+            );
+        const pileW = Math.round(pileH / 1.44);
+        const pileGap = isShort
+          ? Math.max(54, Math.min(96, Math.round(width * 0.11)))
+          : 88;
+
+        const drawX = Math.round(width * 0.5 - pileW - pileGap);
         const drawY = Math.round(arenaY - pileH * 0.5);
-        const discardX = Math.round(width * 0.5 + 88);
+        const discardX = Math.round(width * 0.5 + pileGap);
         const discardY = drawY;
-
-        const dockH = Math.max(176, Math.min(220, Math.round(height * 0.28)));
-        const dockY = height - dockH - 6;
 
         seatPositions.set(mySeat.seatNo, {
           x: width * 0.5,
@@ -769,13 +819,15 @@ export function ImplodingKittensCanvas({
 
         const handCards = pv.myHand;
         const cCount = Math.max(1, handCards.length);
-        const cardH = Math.min(dockH - 36, 156);
+        const cardH = isShort
+          ? Math.min(dockH - 24, 112)
+          : Math.min(dockH - 36, 156);
         const cardW = Math.round(cardH * 0.69);
-        const availHandW = width - 56;
+        const availHandW = width - (isShort ? 32 : 56);
         const stepX =
           cCount > 1
             ? Math.min(
-                cardW + 10,
+                cardW + (isShort ? 6 : 10),
                 Math.floor((availHandW - cardW) / (cCount - 1))
               )
             : cardW;
@@ -801,9 +853,17 @@ export function ImplodingKittensCanvas({
           const isSelected = curSelectedCards.includes(card.id);
           const regId = `my-card-${card.id}`;
           const hovered = hoveredIdRef.current === regId;
-          const liftY = isSelected ? -20 : hovered ? -15 : 0;
+          const liftY = isSelected
+            ? isShort
+              ? -12
+              : -20
+            : hovered
+              ? isShort
+                ? -8
+                : -15
+              : 0;
           const targetX = startCardX + idx * stepX;
-          const targetY = dockY + 28 + liftY;
+          const targetY = dockY + (isShort ? 21 : 28) + liftY;
           const targetScale = isSelected ? 1.07 : hovered ? 1.08 : 1.0;
           const centerNorm =
             cCount > 1 ? (idx / (cCount - 1)) * 2 - 1 : 0;
@@ -1086,10 +1146,10 @@ export function ImplodingKittensCanvas({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-lg rounded-2xl border border-amber-400/50 bg-slate-900/95 p-4 sm:p-5 shadow-2xl flex flex-col sm:flex-row items-center sm:items-start gap-4"
+            className="w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-2xl border border-amber-400/50 bg-slate-900/95 p-3.5 sm:p-5 shadow-2xl flex flex-row items-start gap-3.5 sm:gap-4"
           >
             {/* Enlarged Card Preview */}
-            <div className="shrink-0 w-36 sm:w-44 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 bg-slate-950 shadow-xl flex items-center justify-center">
+            <div className="shrink-0 w-24 [@media(min-height:500px)]:w-36 sm:w-44 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 bg-slate-950 shadow-xl flex items-center justify-center">
               {inspectedImgUrl ? (
                 <img
                   src={inspectedImgUrl}

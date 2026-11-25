@@ -92,6 +92,7 @@ export function KingOfTokyoDuelRoom({
   isLobby,
   busy,
   soundEnabled,
+  isExpanded,
   sendRoomAction,
 }: GameRoomModuleProps) {
   const kotView: KotPlayerView | null =
@@ -99,7 +100,13 @@ export function KingOfTokyoDuelRoom({
 
   return (
     <main className="relative flex-1 flex flex-col lg:flex-row w-full gap-1 p-1 sm:p-1.5">
-      <div className="flex-1 relative h-[66vh] min-h-[460px] sm:h-[74vh] sm:min-h-[540px] lg:h-[calc(100vh-50px)] lg:min-h-[620px]">
+      <div
+        className={`flex-1 relative min-h-[280px] ${
+          isExpanded
+            ? "h-[calc(100dvh-8px)]"
+            : "h-[calc(100dvh-50px)] [@media(max-height:500px)]:h-[calc(100dvh-44px)]"
+        }`}
+      >
         <KingOfTokyoDuelCanvas
           mode={isLobby ? "lobby" : "match"}
           lobbySeats={snapshot?.seats ?? []}

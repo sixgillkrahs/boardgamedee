@@ -124,6 +124,7 @@ function RoomPageContent({
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
@@ -208,6 +209,82 @@ function RoomPageContent({
     setDrawerOpen(true);
   };
 
+  // Sync native fullscreen exits (e.g. pressing ESC on desktop/Android)
+  useEffect(() => {
+    const onFsChange = () => {
+      const doc = document as Document & { webkitFullscreenElement?: Element };
+      if (!document.fullscreenElement && !doc.webkitFullscreenElement) {
+        setIsExpanded(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    document.addEventListener("webkitfullscreenchange", onFsChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFsChange);
+      document.removeEventListener("webkitfullscreenchange", onFsChange);
+    };
+  }, []);
+
+  // Hybrid Fullscreen: Native Fullscreen API on Desktop/Android + Immersive Zen Fullscreen fallback on iPhone Safari
+  const handleToggleExpand = async () => {
+    const doc = document as Document & {
+      webkitFullscreenElement?: Element;
+      webkitExitFullscreen?: () => Promise<void> | void;
+      webkitFullscreenEnabled?: boolean;
+    };
+    const docEl = document.documentElement as HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void> | void;
+    };
+
+    const inNativeFs = Boolean(
+      document.fullscreenElement || doc.webkitFullscreenElement
+    );
+
+    if (inNativeFs) {
+      try {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if (doc.webkitExitFullscreen) {
+          await doc.webkitExitFullscreen();
+        }
+      } catch {
+        // ignore
+      }
+      setIsExpanded(false);
+      return;
+    }
+
+    if (isExpanded) {
+      setIsExpanded(false);
+      return;
+    }
+
+    // Try native Fullscreen API first (Desktop Chrome/Safari/Firefox, Android Chrome)
+    const canNativeFs = Boolean(
+      document.fullscreenEnabled || doc.webkitFullscreenEnabled
+    );
+    if (canNativeFs) {
+      try {
+        if (docEl.requestFullscreen) {
+          await docEl.requestFullscreen();
+          setIsExpanded(true);
+          return;
+        }
+        if (docEl.webkitRequestFullscreen) {
+          await docEl.webkitRequestFullscreen();
+          setIsExpanded(true);
+          return;
+        }
+      } catch {
+        // Fall through to iPhone/iOS Zen Fullscreen mode
+      }
+    }
+
+    // iPhone Safari fallback: collapse header bar & maximize game viewport to 100dvh
+    setIsExpanded(true);
+    window.scrollTo(0, 1);
+  };
+
   const cartridgeId = snapshot?.room.cartridgeId ?? "werewolf";
   const isLobby =
     !snapshot || snapshot.room.status === "lobby" || !snapshot.playerView;
@@ -218,6 +295,7 @@ function RoomPageContent({
     isLobby,
     busy,
     soundEnabled,
+    isExpanded,
     sendRoomAction,
     setErrorMsg,
     onOpenDrawer: openDrawer,
@@ -227,9 +305,40 @@ function RoomPageContent({
     RULES_MODAL_META[cartridgeId] ?? RULES_MODAL_META.werewolf;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col overflow-x-hidden">
-      {/* Top Platform Header Bar */}
-      <header className="border-b border-slate-800/80 bg-slate-900/85 backdrop-blur px-2.5 py-2 sm:px-4 sm:py-2.5 flex flex-wrap items-center justify-between gap-2 z-30">
+    <div className="min-h-[100dvh] bg-slate-950 text-slate-100 flex flex-col overflow-x-hidden">
+      {/* Compact Floating Controls when Expanded / iPhone Zen Fullscreen is active */}
+      {isExpanded && (
+        <div className="fixed top-1.5 right-1.5 z-40 flex items-center gap-1 rounded-xl border border-slate-700/80 bg-slate-900/85 backdrop-blur-md p-1 shadow-xl">
+          <button
+            type="button"
+            onClick={() => openDrawer()}
+            className="h-7 rounded-lg border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-2 text-[11px] font-bold text-amber-300 cursor-pointer"
+            title="Mở Kênh Chat"
+          >
+            💬
+          </button>
+          <button
+            type="button"
+            onClick={() => setRulesModalOpen(true)}
+            className="w-7 h-7 rounded-lg border border-sky-500/40 bg-sky-500/15 hover:bg-sky-500/25 inline-flex items-center justify-center font-serif italic font-extrabold text-xs text-sky-300 cursor-pointer"
+            title="Xem luật chơi"
+          >
+            i
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleToggleExpand()}
+            className="h-7 rounded-lg border border-rose-500/50 bg-rose-500/20 hover:bg-rose-500/35 px-2.5 text-[11px] font-extrabold text-rose-200 cursor-pointer"
+            title="Thu nhỏ / Thoát toàn màn hình"
+          >
+            ✕ Thu nhỏ
+          </button>
+        </div>
+      )}
+
+      {/* Top Platform Header Bar (hidden in Expanded/iPhone Zen Fullscreen mode, slimmed in phone landscape) */}
+      {!isExpanded && (
+      <header className="border-b border-slate-800/80 bg-slate-900/85 backdrop-blur px-2.5 py-2 [@media(max-height:500px)]:py-1 sm:px-4 sm:py-2.5 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 z-30">
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
@@ -309,18 +418,10 @@ function RoomPageContent({
 
           <button
             type="button"
-            onClick={() => {
-              if (!document.fullscreenElement) {
-                void document.documentElement
-                  .requestFullscreen()
-                  .catch(() => {});
-              } else {
-                void document.exitFullscreen().catch(() => {});
-              }
-            }}
-            className="hidden sm:inline-flex w-8 h-8 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 items-center justify-center text-xs text-slate-200 transition cursor-pointer"
-            title="Toàn màn hình"
-            aria-label="Toàn màn hình"
+            onClick={() => void handleToggleExpand()}
+            className="inline-flex w-8 h-8 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 items-center justify-center text-xs text-slate-200 transition cursor-pointer"
+            title="Phóng to toàn màn hình"
+            aria-label="Phóng to toàn màn hình"
           >
             ⛶
           </button>
@@ -337,6 +438,7 @@ function RoomPageContent({
           )}
         </div>
       </header>
+      )}
 
       {/* Error Toast */}
       {errorMsg && (

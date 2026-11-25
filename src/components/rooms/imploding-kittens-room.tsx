@@ -45,6 +45,7 @@ export function ImplodingKittensRoom({
   snapshot,
   isLobby,
   busy,
+  isExpanded,
   sendRoomAction,
 }: GameRoomModuleProps) {
   const ikView: IkPlayerView | null =
@@ -195,7 +196,13 @@ export function ImplodingKittensRoom({
 
   return (
     <main className="relative flex-1 flex flex-col w-full p-1 sm:p-1.5">
-      <div className="flex-1 relative w-full h-[calc(100vh-52px)] min-h-[580px]">
+      <div
+        className={`flex-1 relative w-full min-h-[280px] ${
+          isExpanded
+            ? "h-[calc(100dvh-8px)]"
+            : "h-[calc(100dvh-52px)] [@media(max-height:500px)]:h-[calc(100dvh-44px)]"
+        }`}
+      >
         <ImplodingKittensCanvas
           mode={isLobby ? "lobby" : "match"}
           lobbySeats={snapshot?.seats ?? []}
@@ -212,8 +219,8 @@ export function ImplodingKittensRoom({
 
         {/* 1. LOBBY FLOATING OVERLAY WITH EXPANSION PACK TOGGLES */}
         {(isLobby || !ikView) && snapshot && (
-          <div className="absolute inset-x-0 bottom-3 sm:bottom-5 z-20 flex flex-col items-center pointer-events-none px-3">
-            <div className="pointer-events-auto w-full max-w-2xl rounded-2xl border border-purple-500/45 bg-slate-950/90 backdrop-blur-md p-3.5 shadow-2xl space-y-3">
+          <div className="absolute inset-x-0 bottom-2 sm:bottom-4 z-20 flex flex-col items-center pointer-events-none px-2 sm:px-3">
+            <div className="pointer-events-auto w-full max-w-2xl max-h-[76dvh] overflow-y-auto rounded-2xl border border-purple-500/45 bg-slate-950/92 backdrop-blur-md p-2.5 sm:p-3.5 shadow-2xl space-y-2 sm:space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
                 <div>
                   <span className="text-xs font-extrabold uppercase tracking-wider text-purple-300">
@@ -344,8 +351,8 @@ export function ImplodingKittensRoom({
 
         {/* 2. FLOATING ACTION BAR WHEN PLAYER SELECTS CARDS ON THEIR TURN */}
         {!isLobby && ikView && isMyTurn && (
-          <div className="absolute inset-x-0 bottom-[210px] z-20 flex justify-center pointer-events-none px-3">
-            <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-amber-400/50 bg-slate-950/92 backdrop-blur-md px-3.5 py-2 shadow-2xl">
+          <div className="absolute inset-x-0 bottom-[37%] [@media(min-height:520px)]:bottom-[210px] z-20 flex justify-center pointer-events-none px-2 sm:px-3">
+            <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 rounded-2xl border border-amber-400/50 bg-slate-950/92 backdrop-blur-md px-2.5 py-1.5 sm:px-3.5 sm:py-2 shadow-2xl max-w-[96vw]">
               {canPlaySingle && (
                 <button
                   type="button"
@@ -509,8 +516,8 @@ export function ImplodingKittensRoom({
         {!isLobby &&
           ikView?.myPrivateVision &&
           visionKey !== dismissedVisionKey && (
-            <div className="absolute inset-0 z-30 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="w-full max-w-2xl rounded-2xl border border-purple-400/65 bg-slate-900/95 p-4 sm:p-5 shadow-2xl space-y-3.5">
+            <div className="absolute inset-0 z-30 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+              <div className="w-full max-w-2xl max-h-[92dvh] overflow-y-auto rounded-2xl border border-purple-400/65 bg-slate-900/95 p-3.5 sm:p-5 shadow-2xl space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="text-sm font-extrabold text-purple-300">
@@ -639,7 +646,7 @@ export function ImplodingKittensRoom({
         {!isLobby &&
           ikView?.step === "NopeWindowStep" &&
           ikView.pendingAction && (
-            <div className="absolute top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
+            <div className="absolute top-14 [@media(min-height:520px)]:top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
               <div className="rounded-2xl border border-rose-500/70 bg-slate-950/95 p-4 shadow-2xl space-y-3 text-center">
                 <p className="text-xs font-extrabold uppercase tracking-wider text-rose-300">
                   {ikView.pendingAction.isCanceledByNope
@@ -735,9 +742,9 @@ export function ImplodingKittensRoom({
                   : `Vị trí #${clampedIdx + 1} từ đỉnh — nằm dưới ${clampedIdx} lá bài`;
 
             return (
-              <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
                 <div
-                  className={`w-full max-w-md rounded-2xl border ${accentBorder} bg-slate-900/95 p-5 shadow-2xl space-y-4`}
+                  className={`w-full max-w-md max-h-[92dvh] overflow-y-auto rounded-2xl border ${accentBorder} bg-slate-900/95 p-4 sm:p-5 shadow-2xl space-y-3 sm:space-y-4`}
                 >
                   {/* Header with mini pixel card preview */}
                   <div className="flex items-center gap-3">
@@ -908,8 +915,8 @@ export function ImplodingKittensRoom({
           ikView?.step === "AlterFutureStep" &&
           ikView.pendingAlterFuture &&
           ikView.pendingAlterFuture.seatNo === snapshot?.viewerSeatNo && (
-            <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="w-full max-w-3xl rounded-2xl border border-indigo-500/65 bg-slate-900/95 p-4 sm:p-5 shadow-2xl space-y-3.5">
+            <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+              <div className="w-full max-w-3xl max-h-[92dvh] overflow-y-auto rounded-2xl border border-indigo-500/65 bg-slate-900/95 p-3.5 sm:p-5 shadow-2xl space-y-3">
                 <div>
                   <p className="text-sm font-extrabold text-indigo-300">
                     🪄 Sắp Xếp Lại {ikView.pendingAlterFuture.count} Lá Đầu Bộ
@@ -1058,8 +1065,8 @@ export function ImplodingKittensRoom({
             const topImgUrl = getIkPixelCardUrl(topCard.type, topCard.id);
 
             return (
-              <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="w-full max-w-md rounded-2xl border border-amber-500/65 bg-slate-900/95 p-5 shadow-2xl space-y-4">
+              <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+                <div className="w-full max-w-md max-h-[92dvh] overflow-y-auto rounded-2xl border border-amber-500/65 bg-slate-900/95 p-4 sm:p-5 shadow-2xl space-y-3.5">
                   <p className="text-sm font-extrabold text-amber-300 text-center">
                     ⛏️ Đào Sâu Hơn (Dig Deeper) — Lá #1 Trên Đỉnh
                   </p>
@@ -1147,8 +1154,8 @@ export function ImplodingKittensRoom({
           ikView?.step === "Combo2PickStep" &&
           ikView.pendingCombo2Pick &&
           (ikView.pendingCombo2Pick.actorSeatNo === snapshot?.viewerSeatNo ? (
-            <div className="absolute inset-0 z-30 bg-slate-950/78 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="w-full max-w-2xl rounded-2xl border border-sky-400/60 bg-slate-900/95 p-5 shadow-2xl space-y-4 text-center">
+            <div className="absolute inset-0 z-30 bg-slate-950/78 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+              <div className="w-full max-w-2xl max-h-[92dvh] overflow-y-auto rounded-2xl border border-sky-400/60 bg-slate-900/95 p-4 sm:p-5 shadow-2xl space-y-3 text-center">
                 <div className="space-y-1">
                   <p className="text-sm sm:text-base font-extrabold text-sky-300">
                     🐾 Combo 2 Lá — Chọn 1 Lá Bài Của{" "}
@@ -1228,7 +1235,7 @@ export function ImplodingKittensRoom({
               </div>
             </div>
           ) : (
-            <div className="absolute top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
+            <div className="absolute top-14 [@media(min-height:520px)]:top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
               <div className="rounded-2xl border border-sky-400/60 bg-slate-950/95 p-3.5 shadow-2xl text-center">
                 <p className="text-xs font-extrabold text-sky-300">
                   🐾 Đang chờ{" "}
@@ -1249,7 +1256,7 @@ export function ImplodingKittensRoom({
             ikView.pendingFavor?.fromSeatNo === snapshot?.viewerSeatNo) ||
             (ikView.step === "GarbagePickStep" &&
               ikView.pendingGroupSubmit?.needsViewerCard)) && (
-            <div className="absolute top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
+            <div className="absolute top-14 [@media(min-height:520px)]:top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
               <div className="rounded-2xl border border-amber-400/70 bg-slate-950/95 p-3.5 shadow-2xl text-center">
                 <p className="text-xs font-extrabold text-amber-300">
                   {ikView.step === "FavorGiveStep"
@@ -1264,7 +1271,7 @@ export function ImplodingKittensRoom({
 
         {/* 9. FINISHED REMATCH OVERLAY */}
         {!isLobby && ikView?.step === "Finished" && (
-          <div className="absolute top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
+          <div className="absolute top-14 [@media(min-height:520px)]:top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
             <div className="rounded-2xl border border-amber-400/70 bg-slate-950/95 p-4 shadow-2xl space-y-3 text-center">
               <p className="text-sm font-extrabold text-amber-300">
                 {ikView.winReasonVi}

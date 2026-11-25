@@ -8,6 +8,7 @@ export interface GameRoomModuleProps {
   isLobby: boolean;
   busy: boolean;
   soundEnabled: boolean;
+  isExpanded?: boolean;
   sendRoomAction: SendRoomAction;
   setErrorMsg: (msg: string | null) => void;
   onOpenDrawer: () => void;
