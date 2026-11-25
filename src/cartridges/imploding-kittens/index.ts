@@ -755,6 +755,7 @@ export type IkStep =
   | "DefuseInsertStep"
   | "AlterFutureStep"
   | "FavorGiveStep"
+  | "Combo2PickStep"
   | "DigDeeperStep"
   | "GarbagePickStep"
   | "Finished";
@@ -855,6 +856,11 @@ export interface IkMatchState {
     fromSeatNo: number;
     toSeatNo: number;
   } | null;
+  /** Holds the 2-Card Combo attacker choosing which card slot to draw from target's hand */
+  pendingCombo2Pick: {
+    actorSeatNo: number;
+    targetSeatNo: number;
+  } | null;
   /** Holds the Dig Deeper top card choice during DigDeeperStep */
   pendingDigDeeper: {
     seatNo: number;
@@ -918,6 +924,10 @@ export type IkCommand =
   | {
       type: "GIVE_FAVOR_CARD";
       cardId: string;
+    }
+  | {
+      type: "PICK_COMBO_2_CARD";
+      cardIndex: number;
     }
   | {
       type: "DIG_DEEPER_DECIDE";
@@ -1000,6 +1010,13 @@ export interface IkPlayerView {
     fromSeatNo: number;
     toSeatNo: number;
   } | null;
+  pendingCombo2Pick: {
+    actorSeatNo: number;
+    targetSeatNo: number;
+    targetDisplayName: string;
+    /** Null = face-down card slot; IkCard = publicly Marked card visible face-up */
+    slots: (IkCard | null)[];
+  } | null;
   pendingDigDeeper: {
     seatNo: number;
     topCard: IkCard | null; // Only populated for acting seat
@@ -1063,6 +1080,9 @@ function cloneState(state: IkMatchState): IkMatchState {
         }
       : null,
     pendingFavor: state.pendingFavor ? { ...state.pendingFavor } : null,
+    pendingCombo2Pick: state.pendingCombo2Pick
+      ? { ...state.pendingCombo2Pick }
+      : null,
     pendingDigDeeper: state.pendingDigDeeper
       ? {
           ...state.pendingDigDeeper,
@@ -1220,6 +1240,7 @@ function checkVictory(
   state.pendingInsert = null;
   state.pendingAlterFuture = null;
   state.pendingFavor = null;
+  state.pendingCombo2Pick = null;
   state.pendingDigDeeper = null;
   state.pendingGroupSubmit = null;
   state.phaseDeadlineMs = null;
@@ -1625,29 +1646,23 @@ function executeResolvedAction(
         message: `👑 Tháp Quyền Lực chắn đòn! ${actor.displayName} đánh Combo 2 Lá vào ${target.displayName} nhưng buộc phải rút mù 1 lá từ đỉnh Tháp (còn ${state.towerStashCards.length} lá trong Tháp)!`,
         visibleToSeatNos: "all",
       });
+      state.step = "TurnPlayStep";
+      state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+      return;
     } else if (target.hand.length > 0) {
-      const randIdx = Math.floor(Math.random() * target.hand.length);
-      const [stolen] = target.hand.splice(randIdx, 1);
-      stolen.marked = false;
-      actor.hand.push(stolen);
-
-      setAnim(
-        state,
-        {
-          kind: "COMBO_STEAL",
-          actorSeatNo: actor.seatNo,
-          targetSeatNo: target.seatNo,
-          card: stolen,
-        },
-        nowMs
-      );
-
+      // Cho phép người đánh Combo 2 Lá tự chọn 1 lá trên tay đối thủ để rút!
+      state.step = "Combo2PickStep";
+      state.pendingCombo2Pick = {
+        actorSeatNo: actor.seatNo,
+        targetSeatNo: target.seatNo,
+      };
+      state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
-        eventType: "IK_COMBO_2_RESOLVED",
-        message: `🐾 Combo 2 Lá! ${actor.displayName} cướp ngẫu nhiên 1 lá bài từ tay của ${target.displayName}!`,
+        eventType: "IK_COMBO_2_PICK_START",
+        message: `🐾 Combo 2 Lá! ${actor.displayName} đang chọn rút 1 lá bài từ tay của ${target.displayName}...`,
         visibleToSeatNos: "all",
       });
-      checkExposedHandBomb(state, target, events, nowMs);
+      return;
     }
     state.step = "TurnPlayStep";
     state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
@@ -2441,6 +2456,29 @@ function chooseBotCommand(
   }
 
   if (
+    state.step === "Combo2PickStep" &&
+    state.pendingCombo2Pick?.actorSeatNo === botSeatNo
+  ) {
+    const target = getSeat(state, state.pendingCombo2Pick.targetSeatNo);
+    if (target.hand.length > 0) {
+      // Ưu tiên chọn lá đang bị Đánh Dấu (Marked) có giá trị cao, không thì chọn ngẫu nhiên 1 vị trí
+      const markedDefuseIdx = target.hand.findIndex(
+        (c) =>
+          c.marked &&
+          (c.type === "defuse" || c.type === "zombie_kitten" || c.type === "nope")
+      );
+      const anyMarkedIdx = target.hand.findIndex((c) => c.marked);
+      const pickIdx =
+        markedDefuseIdx !== -1
+          ? markedDefuseIdx
+          : anyMarkedIdx !== -1
+            ? anyMarkedIdx
+            : Math.floor(Math.random() * target.hand.length);
+      return { type: "PICK_COMBO_2_CARD", cardIndex: pickIdx };
+    }
+  }
+
+  if (
     state.step === "AlterFutureStep" &&
     state.pendingAlterFuture?.seatNo === botSeatNo
   ) {
@@ -2739,6 +2777,7 @@ export const implodingKittensCartridge: GameCartridge<
       pendingInsert: null,
       pendingAlterFuture: null,
       pendingFavor: null,
+      pendingCombo2Pick: null,
       pendingDigDeeper: null,
       pendingGroupSubmit: null,
       animSeq: 1,
@@ -3026,6 +3065,56 @@ export const implodingKittensCartridge: GameCartridge<
       });
 
       checkExposedHandBomb(state, actor, events, nowMs);
+      return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
+    }
+
+    // --- STEP: COMBO 2 PICK OPPONENT CARD ---
+    if (state.step === "Combo2PickStep" && state.pendingCombo2Pick) {
+      if (command.type !== "PICK_COMBO_2_CARD") {
+        throw new Error("Đang chờ chọn 1 lá bài từ tay đối thủ.");
+      }
+      const p = state.pendingCombo2Pick;
+      if (p.actorSeatNo !== actor.seatNo) {
+        throw new Error("Không phải lượt của bạn chọn rút bài.");
+      }
+      const target = getSeat(state, p.targetSeatNo);
+      if (target.hand.length === 0) {
+        state.pendingCombo2Pick = null;
+        state.step = "TurnPlayStep";
+        state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+        return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
+      }
+      const safeIdx = Math.max(
+        0,
+        Math.min(target.hand.length - 1, Math.floor(command.cardIndex))
+      );
+      const [stolen] = target.hand.splice(safeIdx, 1);
+      stolen.marked = false;
+      actor.hand.push(stolen);
+      state.pendingCombo2Pick = null;
+
+      setAnim(
+        state,
+        {
+          kind: "COMBO_STEAL",
+          actorSeatNo: actor.seatNo,
+          targetSeatNo: target.seatNo,
+          card: stolen,
+        },
+        nowMs
+      );
+
+      events.push({
+        eventType: "IK_COMBO_2_RESOLVED",
+        message: `🐾 Combo 2 Lá! ${actor.displayName} đã chọn rút lá #${safeIdx + 1} từ tay của ${target.displayName}!`,
+        visibleToSeatNos: "all",
+      });
+      checkExposedHandBomb(state, target, events, nowMs);
+
+      if (state.step === "Combo2PickStep") {
+        state.step = "TurnPlayStep";
+        state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+      }
       return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
     }
 
@@ -3422,6 +3511,20 @@ export const implodingKittensCartridge: GameCartridge<
       }
     }
 
+    if (prevState.step === "Combo2PickStep" && prevState.pendingCombo2Pick) {
+      const target = getSeat(prevState, prevState.pendingCombo2Pick.targetSeatNo);
+      const randIdx =
+        target.hand.length > 0
+          ? Math.floor(Math.random() * target.hand.length)
+          : 0;
+      return this.reduce({
+        state: prevState,
+        actorSeatNo: prevState.pendingCombo2Pick.actorSeatNo,
+        nowMs,
+        command: { type: "PICK_COMBO_2_CARD", cardIndex: randIdx },
+      });
+    }
+
     if (prevState.step === "DigDeeperStep" && prevState.pendingDigDeeper) {
       return this.reduce({
         state: prevState,
@@ -3534,9 +3637,11 @@ export const implodingKittensCartridge: GameCartridge<
             ? st.pendingAlterFuture?.seatNo
             : st.step === "FavorGiveStep"
               ? st.pendingFavor?.fromSeatNo
-              : st.step === "DigDeeperStep"
-                ? st.pendingDigDeeper?.seatNo
-                : st.activeSeatNo;
+              : st.step === "Combo2PickStep"
+                ? st.pendingCombo2Pick?.actorSeatNo
+                : st.step === "DigDeeperStep"
+                  ? st.pendingDigDeeper?.seatNo
+                  : st.activeSeatNo;
 
       if (actingSeatNo !== undefined && botSet.has(actingSeatNo)) {
         const cmd = chooseBotCommand(st, actingSeatNo);
@@ -3658,6 +3763,18 @@ export const implodingKittensCartridge: GameCartridge<
           }
         : null,
       pendingFavor: state.pendingFavor,
+      pendingCombo2Pick: state.pendingCombo2Pick
+        ? (() => {
+            const target = getSeat(state, state.pendingCombo2Pick!.targetSeatNo);
+            return {
+              actorSeatNo: state.pendingCombo2Pick!.actorSeatNo,
+              targetSeatNo: target.seatNo,
+              targetDisplayName: target.displayName,
+              // Chỉ lộ lá nào đã bị Mark công khai; mọi lá thường trả về null (úp mặt chống gian lận)
+              slots: target.hand.map((c) => (c.marked ? c : null)),
+            };
+          })()
+        : null,
       pendingDigDeeper: state.pendingDigDeeper
         ? {
             seatNo: state.pendingDigDeeper.seatNo,

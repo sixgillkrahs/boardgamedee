@@ -110,7 +110,8 @@ describe("Imploding Kittens Cartridge (Core + 4 Expansions)", () => {
     ];
     s2.hand = [
       { id: "s2-nope", type: "nope" },
-      { id: "s2-prize", type: "super_skip" },
+      { id: "s2-hidden", type: "skip" },
+      { id: "s2-prize", type: "super_skip", marked: true },
     ];
     s3.hand = [
       { id: "s3-streaking", type: "streaking_kitten" },
@@ -140,21 +141,39 @@ describe("Imploding Kittens Cartridge (Core + 4 Expansions)", () => {
     });
     expect(afterNope.state.pendingAction?.nopeCount).toBe(1);
 
-    // Seat 1 counter-plays Nope (YUP!) -> no one else has Nope left, so combo resolves immediately and steals Seat 2's 's2-prize'!
+    // Seat 1 counter-plays Nope (YUP!) -> no one else has Nope left, so Combo 2 enters Combo2PickStep for Seat 1 to pick a card from Seat 2!
     const afterYup = implodingKittensCartridge.reduce({
       state: afterNope.state,
       actorSeatNo: 1,
       nowMs: 1300,
       command: { type: "PLAY_NOPE", cardId: "s1-yup" },
     });
-    expect(afterYup.state.step).toBe("TurnPlayStep");
+    expect(afterYup.state.step).toBe("Combo2PickStep");
+
+    // Verify anti-cheat view: unmarked slot #0 is null (face-down), marked slot #1 exposes 's2-prize'!
+    const pickView = implodingKittensCartridge.projectView({
+      state: afterYup.state,
+      viewerSeatNo: 1,
+    });
+    expect(pickView.pendingCombo2Pick?.slots).toHaveLength(2);
+    expect(pickView.pendingCombo2Pick?.slots[0]).toBeNull();
+    expect(pickView.pendingCombo2Pick?.slots[1]?.id).toBe("s2-prize");
+
+    // Seat 1 picks slot index 1 (the marked 's2-prize')!
+    const afterPick = implodingKittensCartridge.reduce({
+      state: afterYup.state,
+      actorSeatNo: 1,
+      nowMs: 1350,
+      command: { type: "PICK_COMBO_2_CARD", cardIndex: 1 },
+    });
+    expect(afterPick.state.step).toBe("TurnPlayStep");
     expect(
-      afterYup.state.seats[0].hand.some((c) => c.id === "s2-prize")
+      afterPick.state.seats[0].hand.some((c) => c.id === "s2-prize")
     ).toBe(true);
 
     // Seat 1 plays Targeted Attack on Seat 3 -> Seat 3 now owes 2 turns!
     const afterTargetAtk = implodingKittensCartridge.reduce({
-      state: afterYup.state,
+      state: afterPick.state,
       actorSeatNo: 1,
       nowMs: 1400,
       command: {

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { getIkPixelCardUrl } from "@/canvas/imploding-kittens-art";
 import { ImplodingKittensCanvas } from "@/components/imploding-kittens-canvas";
 import {
   IK_CARD_META,
@@ -363,7 +364,7 @@ export function ImplodingKittensRoom({
                   }}
                   className="rounded-xl bg-sky-500 hover:bg-sky-400 px-4 py-2 text-xs font-extrabold text-slate-950 shadow cursor-pointer"
                 >
-                  🐾 Đánh Combo 2 Lá (Cướp Ngẫu Nhiên 1 Lá Từ Mục Tiêu 🎯)
+                  🐾 Đánh Combo 2 Lá (Chọn Rút 1 Lá Từ Mục Tiêu 🎯)
                 </button>
               )}
 
@@ -746,6 +747,106 @@ export function ImplodingKittensRoom({
               </div>
             </div>
           )}
+
+        {/* 7.5. COMBO 2 OPPONENT CARD PICKER MODAL */}
+        {!isLobby &&
+          ikView?.step === "Combo2PickStep" &&
+          ikView.pendingCombo2Pick &&
+          (ikView.pendingCombo2Pick.actorSeatNo === snapshot?.viewerSeatNo ? (
+            <div className="absolute inset-0 z-30 bg-slate-950/78 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="w-full max-w-2xl rounded-2xl border border-sky-400/60 bg-slate-900/95 p-5 shadow-2xl space-y-4 text-center">
+                <div className="space-y-1">
+                  <p className="text-sm sm:text-base font-extrabold text-sky-300">
+                    🐾 Combo 2 Lá — Chọn 1 Lá Bài Của{" "}
+                    <span className="text-amber-300">
+                      {ikView.pendingCombo2Pick.targetDisplayName}
+                    </span>{" "}
+                    Để Rút!
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    Bấm trực tiếp vào lá bài bạn muốn rút từ tay đối thủ (các lá
+                    bị Đánh Dấu sẽ lật ngửa).
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 py-2 max-h-[55vh] overflow-y-auto">
+                  {ikView.pendingCombo2Pick.slots.map((markedCard, idx) => {
+                    const markedMeta = markedCard
+                      ? IK_CARD_META[markedCard.type]
+                      : null;
+                    const cardImgUrl = markedCard
+                      ? getIkPixelCardUrl(markedCard.type, markedCard.id)
+                      : "/sprites/ik-card-back-pixel.png";
+
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          sendRoomAction({
+                            type: "MATCH_COMMAND",
+                            command: {
+                              type: "PICK_COMBO_2_CARD",
+                              cardIndex: idx,
+                            },
+                          })
+                        }
+                        className="group relative w-20 sm:w-24 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 hover:border-amber-400 bg-slate-950 shadow-lg hover:shadow-amber-500/30 transition-all duration-150 hover:-translate-y-2.5 cursor-pointer disabled:opacity-50"
+                      >
+                        {cardImgUrl ? (
+                          <img
+                            src={cardImgUrl}
+                            alt={
+                              markedMeta
+                                ? markedMeta.nameVi
+                                : `Lá úp #${idx + 1}`
+                            }
+                            className="w-full h-full object-cover"
+                            style={{ imageRendering: "pixelated" }}
+                          />
+                        ) : (
+                          <div
+                            className="w-full h-full flex flex-col items-center justify-center p-1.5 text-center gap-1"
+                            style={{
+                              background: markedMeta
+                                ? `linear-gradient(155deg, ${markedMeta.colorHex}, ${markedMeta.secondaryHex})`
+                                : undefined,
+                            }}
+                          >
+                            <span className="text-2xl">
+                              {markedMeta?.emoji ?? "🃏"}
+                            </span>
+                            <span className="text-[10px] font-extrabold text-white leading-tight">
+                              {markedMeta?.shortVi ?? `#${idx + 1}`}
+                            </span>
+                          </div>
+                        )}
+                        <span className="absolute bottom-1 inset-x-1 rounded bg-slate-950/85 px-1 py-0.5 text-[10px] font-extrabold text-amber-300 group-hover:bg-amber-400 group-hover:text-slate-950 transition">
+                          {markedMeta
+                            ? `🎯 ${markedMeta.shortVi}`
+                            : `Rút #${idx + 1}`}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="absolute top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
+              <div className="rounded-2xl border border-sky-400/60 bg-slate-950/95 p-3.5 shadow-2xl text-center">
+                <p className="text-xs font-extrabold text-sky-300">
+                  🐾 Đang chờ{" "}
+                  {ikView.seats.find(
+                    (s) => s.seatNo === ikView.pendingCombo2Pick?.actorSeatNo
+                  )?.displayName ?? "đối thủ"}{" "}
+                  chọn rút 1 lá bài từ tay{" "}
+                  {ikView.pendingCombo2Pick.targetDisplayName}...
+                </p>
+              </div>
+            </div>
+          ))}
 
         {/* 8. FAVOR / GARBAGE COLLECTION PROMPT BANNER */}
         {!isLobby &&
