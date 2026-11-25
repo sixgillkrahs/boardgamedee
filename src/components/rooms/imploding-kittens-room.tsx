@@ -924,8 +924,8 @@ export function ImplodingKittensRoom({
                     Để Rút!
                   </p>
                   <p className="text-xs text-slate-400">
-                    Bấm trực tiếp vào lá bài bạn muốn rút từ tay đối thủ (các lá
-                    bị Đánh Dấu sẽ lật ngửa).
+                    Các lá bài của đối thủ đã được xáo trộn ngẫu nhiên — bấm
+                    chọn 1 lá để rút (lá bị Đánh Dấu sẽ lật ngửa).
                   </p>
                 </div>
 

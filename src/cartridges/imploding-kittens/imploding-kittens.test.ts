@@ -150,21 +150,23 @@ describe("Imploding Kittens Cartridge (Core + 4 Expansions)", () => {
     });
     expect(afterYup.state.step).toBe("Combo2PickStep");
 
-    // Verify anti-cheat view: unmarked slot #0 is null (face-down), marked slot #1 exposes 's2-prize'!
+    // Verify anti-cheat view on shuffled slots: unmarked slot is null (face-down), marked slot exposes 's2-prize'!
     const pickView = implodingKittensCartridge.projectView({
       state: afterYup.state,
       viewerSeatNo: 1,
     });
-    expect(pickView.pendingCombo2Pick?.slots).toHaveLength(2);
-    expect(pickView.pendingCombo2Pick?.slots[0]).toBeNull();
-    expect(pickView.pendingCombo2Pick?.slots[1]?.id).toBe("s2-prize");
+    const slots = pickView.pendingCombo2Pick?.slots ?? [];
+    expect(slots).toHaveLength(2);
+    expect(slots.filter((s) => s === null)).toHaveLength(1);
+    const markedSlotIdx = slots.findIndex((s) => s?.id === "s2-prize");
+    expect(markedSlotIdx).toBeGreaterThanOrEqual(0);
 
-    // Seat 1 picks slot index 1 (the marked 's2-prize')!
+    // Seat 1 picks the exact shuffled slot holding the marked 's2-prize'!
     const afterPick = implodingKittensCartridge.reduce({
       state: afterYup.state,
       actorSeatNo: 1,
       nowMs: 1350,
-      command: { type: "PICK_COMBO_2_CARD", cardIndex: 1 },
+      command: { type: "PICK_COMBO_2_CARD", cardIndex: markedSlotIdx },
     });
     expect(afterPick.state.step).toBe("TurnPlayStep");
     expect(

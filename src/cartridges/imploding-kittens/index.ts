@@ -856,10 +856,11 @@ export interface IkMatchState {
     fromSeatNo: number;
     toSeatNo: number;
   } | null;
-  /** Holds the 2-Card Combo attacker choosing which card slot to draw from target's hand */
+  /** Holds the 2-Card Combo attacker choosing which card slot to draw from target's shuffled hand */
   pendingCombo2Pick: {
     actorSeatNo: number;
     targetSeatNo: number;
+    shuffledCardIds: string[];
   } | null;
   /** Holds the Dig Deeper top card choice during DigDeeperStep */
   pendingDigDeeper: {
@@ -1081,7 +1082,10 @@ function cloneState(state: IkMatchState): IkMatchState {
       : null,
     pendingFavor: state.pendingFavor ? { ...state.pendingFavor } : null,
     pendingCombo2Pick: state.pendingCombo2Pick
-      ? { ...state.pendingCombo2Pick }
+      ? {
+          ...state.pendingCombo2Pick,
+          shuffledCardIds: [...(state.pendingCombo2Pick.shuffledCardIds ?? [])],
+        }
       : null,
     pendingDigDeeper: state.pendingDigDeeper
       ? {
@@ -1650,16 +1654,21 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       return;
     } else if (target.hand.length > 0) {
-      // Cho phép người đánh Combo 2 Lá tự chọn 1 lá trên tay đối thủ để rút!
+      // Tráo thứ tự bài của đối thủ khi hiển thị để rút (tránh lộ vị trí lá Defuse luôn nằm đầu tay)
+      const shuffledCardIds = shuffle(
+        target.hand.map((c) => c.id),
+        Math.random
+      );
       state.step = "Combo2PickStep";
       state.pendingCombo2Pick = {
         actorSeatNo: actor.seatNo,
         targetSeatNo: target.seatNo,
+        shuffledCardIds,
       };
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_COMBO_2_PICK_START",
-        message: `🐾 Combo 2 Lá! ${actor.displayName} đang chọn rút 1 lá bài từ tay của ${target.displayName}...`,
+        message: `🐾 Combo 2 Lá! ${actor.displayName} đang chọn rút 1 lá bài (đã xáo trộn) từ tay của ${target.displayName}...`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2460,20 +2469,27 @@ function chooseBotCommand(
     state.pendingCombo2Pick?.actorSeatNo === botSeatNo
   ) {
     const target = getSeat(state, state.pendingCombo2Pick.targetSeatNo);
-    if (target.hand.length > 0) {
+    const handById = new Map(target.hand.map((c) => [c.id, c]));
+    const orderedCards = (
+      state.pendingCombo2Pick.shuffledCardIds ?? target.hand.map((c) => c.id)
+    )
+      .map((id) => handById.get(id))
+      .filter((c): c is IkCard => Boolean(c));
+
+    if (orderedCards.length > 0) {
       // Ưu tiên chọn lá đang bị Đánh Dấu (Marked) có giá trị cao, không thì chọn ngẫu nhiên 1 vị trí
-      const markedDefuseIdx = target.hand.findIndex(
+      const markedDefuseIdx = orderedCards.findIndex(
         (c) =>
           c.marked &&
           (c.type === "defuse" || c.type === "zombie_kitten" || c.type === "nope")
       );
-      const anyMarkedIdx = target.hand.findIndex((c) => c.marked);
+      const anyMarkedIdx = orderedCards.findIndex((c) => c.marked);
       const pickIdx =
         markedDefuseIdx !== -1
           ? markedDefuseIdx
           : anyMarkedIdx !== -1
             ? anyMarkedIdx
-            : Math.floor(Math.random() * target.hand.length);
+            : Math.floor(Math.random() * orderedCards.length);
       return { type: "PICK_COMBO_2_CARD", cardIndex: pickIdx };
     }
   }
@@ -3084,11 +3100,22 @@ export const implodingKittensCartridge: GameCartridge<
         state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
         return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
       }
-      const safeIdx = Math.max(
-        0,
-        Math.min(target.hand.length - 1, Math.floor(command.cardIndex))
+      const handById = new Map(target.hand.map((c) => [c.id, c]));
+      const orderedIds = (p.shuffledCardIds ?? target.hand.map((c) => c.id)).filter(
+        (id) => handById.has(id)
       );
-      const [stolen] = target.hand.splice(safeIdx, 1);
+      const safeSlotIdx = Math.max(
+        0,
+        Math.min(orderedIds.length - 1, Math.floor(command.cardIndex))
+      );
+      const chosenId = orderedIds[safeSlotIdx];
+      const realHandIdx = chosenId
+        ? target.hand.findIndex((c) => c.id === chosenId)
+        : safeSlotIdx;
+      const [stolen] = target.hand.splice(
+        realHandIdx !== -1 ? realHandIdx : 0,
+        1
+      );
       stolen.marked = false;
       actor.hand.push(stolen);
       state.pendingCombo2Pick = null;
@@ -3106,7 +3133,7 @@ export const implodingKittensCartridge: GameCartridge<
 
       events.push({
         eventType: "IK_COMBO_2_RESOLVED",
-        message: `🐾 Combo 2 Lá! ${actor.displayName} đã chọn rút lá #${safeIdx + 1} từ tay của ${target.displayName}!`,
+        message: `🐾 Combo 2 Lá! ${actor.displayName} đã chọn rút lá #${safeSlotIdx + 1} từ tay của ${target.displayName}!`,
         visibleToSeatNos: "all",
       });
       checkExposedHandBomb(state, target, events, nowMs);
@@ -3766,12 +3793,20 @@ export const implodingKittensCartridge: GameCartridge<
       pendingCombo2Pick: state.pendingCombo2Pick
         ? (() => {
             const target = getSeat(state, state.pendingCombo2Pick!.targetSeatNo);
+            const handById = new Map(target.hand.map((c) => [c.id, c]));
+            const orderedIds =
+              state.pendingCombo2Pick!.shuffledCardIds ??
+              target.hand.map((c) => c.id);
+            const slots = orderedIds
+              .map((id) => handById.get(id))
+              .filter((c): c is IkCard => Boolean(c))
+              .map((c) => (c.marked ? c : null));
             return {
               actorSeatNo: state.pendingCombo2Pick!.actorSeatNo,
               targetSeatNo: target.seatNo,
               targetDisplayName: target.displayName,
-              // Chỉ lộ lá nào đã bị Mark công khai; mọi lá thường trả về null (úp mặt chống gian lận)
-              slots: target.hand.map((c) => (c.marked ? c : null)),
+              // Chỉ lộ lá nào đã bị Mark công khai theo thứ tự đã xáo; mọi lá thường trả về null (úp mặt chống gian lận)
+              slots,
             };
           })()
         : null,
