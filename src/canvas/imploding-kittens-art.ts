@@ -162,7 +162,7 @@ export const IK_PIXEL_CARD_URLS: Record<IkCardType, string[]> = {
     "/sprites/ik-card-targeted-attack-2-pixel.png",
     "/sprites/ik-card-targeted-attack-3-pixel.png",
   ],
-  // Good vs. Evil Expansion (sẽ gắn sprite pixel-art khi người dùng gửi ảnh lá bài)
+  // Good vs. Evil Expansion
   armageddon: [
     "/sprites/ik-card-armageddon-1-pixel.png",
     "/sprites/ik-card-armageddon-2-pixel.png",
@@ -174,7 +174,11 @@ export const IK_PIXEL_CARD_URLS: Record<IkCardType, string[]> = {
     "/sprites/ik-card-raising-heck-1-pixel.png",
     "/sprites/ik-card-raising-heck-2-pixel.png",
   ],
-  reveal_future_3: [],
+  reveal_future_3: [
+    "/sprites/ik-card-reveal-future-3x-1-pixel.png",
+    "/sprites/ik-card-reveal-future-3x-2-pixel.png",
+    "/sprites/ik-card-reveal-future-3x-3-pixel.png",
+  ],
   horse_cat: ["/sprites/ik-card-horse-cat-pixel.png"],
   knight_cat: ["/sprites/ik-card-knight-cat-pixel.png"],
   mercat: ["/sprites/ik-card-mercat-pixel.png"],
