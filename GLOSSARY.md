@@ -164,4 +164,32 @@ _Avoid_: Runway map, flight path, distance bar
 The aircraft's roll/tilt state (`-2` to `+2`, with `0` being level) updated whenever both Axis dice are placed; reaching `±3` causes an immediate crash, and it must be `0` to land safely at `0 ft`.
 _Avoid_: Balance meter, tilt bar, wing angle
 
+### Carcassonne Cartridge
+
+**Land Tile**:
+A square medieval terrain tile (72 base tiles + optional 12 River tiles) with matching cardinal edges (`city`, `road`, `field`, `river`), optional Coat of Arms Pennants, Monasteries, and C3 Flower Gardens.
+_Avoid_: Card, square, map piece
+
+**Meeple**:
+A player's wooden follower (7 standard Meeples per Seat) deployed onto a newly placed Land Tile as a **Knight** (city), **Highwayman** (road), **Monk** (monastery), or lying-down **Farmer** (field) to claim majority scoring.
+_Avoid_: Pawn, token, worker
+
+**Abbot**:
+The special C3 follower (1 per Seat) that may be placed in a **Monastery** or **Flower Garden** and optionally recalled early during `PlaceMeepleStep` to immediately score 1–9 points based on surrounding tiles.
+_Avoid_: Priest, bishop, super meeple
+
+### One Night Ultimate Werewolf Cartridge
+
+**Center Cards**:
+The three face-down role cards placed in the middle of the table during every One Night Ultimate Werewolf Match (`seatCount + 3` cards total), which may be peeked or swapped during the single Night Phase.
+_Avoid_: Middle pile, extra deck, leftover cards
+
+**Wake Order**:
+The fixed Bezier Games sequence (`Doppelgänger` → `Werewolf` → `Minion` → `Mason` → `Seer` → `Robber` → `Troublemaker` → `Drunk` → `Insomniac`) in which roles present in the Match's card set wake during `NightStep`.
+_Avoid_: Turn order, night script, call list
+
+**Lone Wolf**:
+A single `Werewolf` Seat on the table (when the second `Werewolf` card is among the **Center Cards**) who is permitted to peek at one Center Card during the Werewolf night phase.
+_Avoid_: Solo wolf, alpha wolf
+
 

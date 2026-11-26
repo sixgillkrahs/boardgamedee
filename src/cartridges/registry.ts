@@ -8,6 +8,8 @@ import { kingOfTokyoDuelCartridge } from "@/cartridges/king-of-tokyo-duel";
 import { heatCartridge } from "@/cartridges/heat";
 import { implodingKittensCartridge } from "@/cartridges/imploding-kittens";
 import { skyTeamCartridge } from "@/cartridges/sky-team";
+import { carcassonneCartridge } from "@/cartridges/carcassonne";
+import { oneNightWerewolfCartridge } from "@/cartridges/one-night-werewolf";
 
 export interface CatalogEntry {
   cartridgeId: string;
@@ -34,6 +36,8 @@ const CARTRIDGES = new Map<string, GameCartridge<any, any, any, any>>([
   [heatCartridge.cartridgeId, heatCartridge],
   [implodingKittensCartridge.cartridgeId, implodingKittensCartridge],
   [skyTeamCartridge.cartridgeId, skyTeamCartridge],
+  [carcassonneCartridge.cartridgeId, carcassonneCartridge],
+  [oneNightWerewolfCartridge.cartridgeId, oneNightWerewolfCartridge],
 ]);
 
 export function getCartridge(
@@ -62,19 +66,6 @@ export function listCartridges(): CatalogEntry[] {
       badgeVi: "Đang mở • Canvas 2D",
       accentColor: "#f59e0b",
       coverImage: "/covers/werewolf-cover.webp",
-    },
-    {
-      cartridgeId: "avalon",
-      title: "The Resistance: Avalon",
-      genreVi: "Ẩn danh tính • Phe phái",
-      subtitle: "Ẩn danh tính • Hiệp sĩ Bàn Tròn • 5–10 người chơi",
-      description:
-        "Cuộc chiến giữa các bề tôi trung thành của Vua Arthur và tay sai của Mordred xoay quanh các chuyến làm nhiệm vụ.",
-      minSeats: 5,
-      maxSeats: 10,
-      available: false,
-      badgeVi: "Sắp ra mắt",
-      accentColor: "#38bdf8",
     },
     {
       cartridgeId: coupCartridge.cartridgeId,
@@ -182,17 +173,30 @@ export function listCartridges(): CatalogEntry[] {
       coverImage: "/covers/sky-team-cover.jpg",
     },
     {
-      cartridgeId: "secret-hitler",
-      title: "Mật Vụ Quốc Hội",
-      genreVi: "Suy luận phe phái • Chiến thuật",
-      subtitle: "Ban hành đạo luật • Suy luận phe phái • 5–10 người chơi",
-      description:
-        "Phân tích từng lá phiếu bầu Thủ tướng và từng đạo luật được thông qua để ngăn chặn phe Phát xít.",
-      minSeats: 5,
-      maxSeats: 10,
-      available: false,
-      badgeVi: "Sắp ra mắt",
-      accentColor: "#ef4444",
+      cartridgeId: carcassonneCartridge.cartridgeId,
+      title: carcassonneCartridge.title,
+      genreVi: "Xếp bản đồ • Chiến thuật trung cổ",
+      subtitle: carcassonneCartridge.subtitle,
+      description: carcassonneCartridge.description,
+      minSeats: carcassonneCartridge.minSeats,
+      maxSeats: carcassonneCartridge.maxSeats,
+      available: true,
+      badgeVi: "Đang mở • Bản C3 (Sông & Tu viện trưởng)",
+      accentColor: "#84cc16",
+      coverImage: "/covers/carcassonne-cover.jpg",
+    },
+    {
+      cartridgeId: oneNightWerewolfCartridge.cartridgeId,
+      title: oneNightWerewolfCartridge.title,
+      genreVi: "Suy luận tốc độ • Tráo vai 1 đêm",
+      subtitle: oneNightWerewolfCartridge.subtitle,
+      description: oneNightWerewolfCartridge.description,
+      minSeats: oneNightWerewolfCartridge.minSeats,
+      maxSeats: oneNightWerewolfCartridge.maxSeats,
+      available: true,
+      badgeVi: "Đang mở • 16 Vai Trò Gốc",
+      accentColor: "#c084fc",
+      coverImage: "/covers/one-night-werewolf-cover.jpg",
     },
   ];
 }

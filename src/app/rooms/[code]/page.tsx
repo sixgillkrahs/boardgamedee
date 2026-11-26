@@ -24,6 +24,16 @@ import {
   SkyTeamRulesContent,
 } from "@/components/rooms/sky-team-room";
 import {
+  CarcassonneConfigContent,
+  CarcassonneRoom,
+  CarcassonneRulesContent,
+} from "@/components/rooms/carcassonne-room";
+import {
+  OnuwConfigContent,
+  OnuwRoom,
+  OnuwRulesContent,
+} from "@/components/rooms/onuw-room";
+import {
   DeadMansDrawConfigContent,
   DeadMansDrawRoom,
   DeadMansDrawRulesContent,
@@ -51,6 +61,16 @@ import {
 import type { GameRoomModuleProps } from "@/components/rooms/types";
 
 const RULES_MODAL_META: Record<string, { title: string; subtitle: string }> = {
+  "one-night-werewolf": {
+    title: "Luật Chơi One Night Ultimate Werewolf (3–10 Người Chơi)",
+    subtitle:
+      "16 Vai Trò Gốc Bezier Games • 1 Đêm Duy Nhất • 3 Lá Giữa Bàn & Tráo Vai",
+  },
+  carcassonne: {
+    title: "Luật Chơi Carcassonne (Bản C3 • 2–5 Người Chơi)",
+    subtitle:
+      "72 Mảnh Đất + 12 Mảnh Sông • Meeple, Tu Viện Trưởng, Vườn Hoa & Nông Dân",
+  },
   "sky-team": {
     title: "Luật Chơi Sky Team (Hợp Tác 2 Người • Cơ Trưởng & Cơ Phó)",
     subtitle:
@@ -469,7 +489,11 @@ function RoomPageContent({
       )}
 
       {/* Active Game Room Module */}
-      {cartridgeId === "sky-team" ? (
+      {cartridgeId === "one-night-werewolf" ? (
+        <OnuwRoom {...roomProps} />
+      ) : cartridgeId === "carcassonne" ? (
+        <CarcassonneRoom {...roomProps} />
+      ) : cartridgeId === "sky-team" ? (
         <SkyTeamRoom {...roomProps} />
       ) : cartridgeId === "imploding-kittens" ? (
         <ImplodingKittensRoom {...roomProps} />
@@ -538,7 +562,21 @@ function RoomPageContent({
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {cartridgeId === "sky-team" ? (
+              {cartridgeId === "one-night-werewolf" ? (
+                <OnuwConfigContent
+                  snapshot={snapshot}
+                  isLobby={isLobby}
+                  busy={busy}
+                  sendRoomAction={sendRoomAction}
+                />
+              ) : cartridgeId === "carcassonne" ? (
+                <CarcassonneConfigContent
+                  snapshot={snapshot}
+                  isLobby={isLobby}
+                  busy={busy}
+                  sendRoomAction={sendRoomAction}
+                />
+              ) : cartridgeId === "sky-team" ? (
                 <SkyTeamConfigContent
                   snapshot={snapshot}
                   isLobby={isLobby}
@@ -631,7 +669,11 @@ function RoomPageContent({
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {cartridgeId === "sky-team" ? (
+              {cartridgeId === "one-night-werewolf" ? (
+                <OnuwRulesContent />
+              ) : cartridgeId === "carcassonne" ? (
+                <CarcassonneRulesContent />
+              ) : cartridgeId === "sky-team" ? (
                 <SkyTeamRulesContent />
               ) : cartridgeId === "imploding-kittens" ? (
                 <ImplodingKittensRulesContent />
