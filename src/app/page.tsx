@@ -319,9 +319,10 @@ export default function HomePage() {
 
                     <div className="pt-2.5 border-t border-slate-800/80 text-xs text-slate-400 font-medium">
                       👥{" "}
-                      {item.minSeats === item.maxSeats
-                        ? `${item.minSeats} người chơi (1v1)`
-                        : `${item.minSeats}–${item.maxSeats} người chơi`}
+                      {item.seatsLabelVi ??
+                        (item.minSeats === item.maxSeats
+                          ? `${item.minSeats} người chơi (1v1)`
+                          : `${item.minSeats}–${item.maxSeats} người chơi`)}
                     </div>
                   </div>
                 </div>

@@ -19,6 +19,11 @@ import {
   ImplodingKittensRulesContent,
 } from "@/components/rooms/imploding-kittens-room";
 import {
+  SkyTeamConfigContent,
+  SkyTeamRoom,
+  SkyTeamRulesContent,
+} from "@/components/rooms/sky-team-room";
+import {
   DeadMansDrawConfigContent,
   DeadMansDrawRoom,
   DeadMansDrawRulesContent,
@@ -46,6 +51,11 @@ import {
 import type { GameRoomModuleProps } from "@/components/rooms/types";
 
 const RULES_MODAL_META: Record<string, { title: string; subtitle: string }> = {
+  "sky-team": {
+    title: "Luật Chơi Sky Team (Hợp Tác 2 Người • Cơ Trưởng & Cơ Phó)",
+    subtitle:
+      "7 vòng hạ độ cao (6000 ft → 0 ft) • Im lặng vô tuyến • Thăng bằng cánh, Càng, Cánh tà & Phanh",
+  },
   "imploding-kittens": {
     title: "Luật Chơi Imploding Kittens (2–6 Người Chơi • Full 5 Bản Mở Rộng)",
     subtitle:
@@ -459,7 +469,9 @@ function RoomPageContent({
       )}
 
       {/* Active Game Room Module */}
-      {cartridgeId === "imploding-kittens" ? (
+      {cartridgeId === "sky-team" ? (
+        <SkyTeamRoom {...roomProps} />
+      ) : cartridgeId === "imploding-kittens" ? (
         <ImplodingKittensRoom {...roomProps} />
       ) : cartridgeId === "heat" ? (
         <HeatRoom {...roomProps} />
@@ -526,7 +538,14 @@ function RoomPageContent({
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {cartridgeId === "imploding-kittens" ? (
+              {cartridgeId === "sky-team" ? (
+                <SkyTeamConfigContent
+                  snapshot={snapshot}
+                  isLobby={isLobby}
+                  busy={busy}
+                  sendRoomAction={sendRoomAction}
+                />
+              ) : cartridgeId === "imploding-kittens" ? (
                 <ImplodingKittensConfigContent
                   snapshot={snapshot}
                   isLobby={isLobby}
@@ -612,7 +631,9 @@ function RoomPageContent({
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {cartridgeId === "imploding-kittens" ? (
+              {cartridgeId === "sky-team" ? (
+                <SkyTeamRulesContent />
+              ) : cartridgeId === "imploding-kittens" ? (
                 <ImplodingKittensRulesContent />
               ) : cartridgeId === "heat" ? (
                 <HeatRulesContent />

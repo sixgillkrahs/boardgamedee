@@ -146,4 +146,22 @@ _Avoid_: Black cat, super bomb, second bomb
 A passive expansion card that allows a Seat to safely hold one **Exploding Kitten** in their hand without exploding for as long as the **Streaking Kitten** remains in their hand.
 _Avoid_: Shield card, second defuse, bomb holder
 
+### Sky Team Cartridge
+
+**Pilot / Co-pilot**:
+The two asymmetric cooperative roles in a Sky Team Match—the **Pilot** (Blue dice; controls Landing Gear, Brakes, 1 Radio, left Axis/Engine) and the **Co-pilot** (Orange dice; controls Flaps, 2 Radios, right Axis/Engine).
+_Avoid_: Driver, captain, player 1/2
+
+**Radio Silence**:
+The communication restriction enforced during `PlacementStep` after dice are rolled, locking the Cockpit Channel to read-only until all 8 dice are placed and the round descends.
+_Avoid_: Mute phase, quiet turn, chat ban
+
+**Approach Track**:
+The sequence of airspace sectors leading to the destination Airport runway, populated with airplane traffic tokens that must be cleared via Radio before advancing past them.
+_Avoid_: Runway map, flight path, distance bar
+
+**Axis**:
+The aircraft's roll/tilt state (`-2` to `+2`, with `0` being level) updated whenever both Axis dice are placed; reaching `±3` causes an immediate crash, and it must be `0` to land safely at `0 ft`.
+_Avoid_: Balance meter, tilt bar, wing angle
+
 

@@ -7,6 +7,7 @@ import { deadMansDrawCartridge } from "@/cartridges/dead-mans-draw";
 import { kingOfTokyoDuelCartridge } from "@/cartridges/king-of-tokyo-duel";
 import { heatCartridge } from "@/cartridges/heat";
 import { implodingKittensCartridge } from "@/cartridges/imploding-kittens";
+import { skyTeamCartridge } from "@/cartridges/sky-team";
 
 export interface CatalogEntry {
   cartridgeId: string;
@@ -16,6 +17,7 @@ export interface CatalogEntry {
   description: string;
   minSeats: number;
   maxSeats: number;
+  seatsLabelVi?: string;
   available: boolean;
   badgeVi: string;
   accentColor: string;
@@ -31,6 +33,7 @@ const CARTRIDGES = new Map<string, GameCartridge<any, any, any, any>>([
   [kingOfTokyoDuelCartridge.cartridgeId, kingOfTokyoDuelCartridge],
   [heatCartridge.cartridgeId, heatCartridge],
   [implodingKittensCartridge.cartridgeId, implodingKittensCartridge],
+  [skyTeamCartridge.cartridgeId, skyTeamCartridge],
 ]);
 
 export function getCartridge(
@@ -163,6 +166,20 @@ export function listCartridges(): CatalogEntry[] {
       badgeVi: "Đang mở • Full 5 DLC",
       accentColor: "#a855f7",
       coverImage: "/covers/imploding-kittens-pixel.png",
+    },
+    {
+      cartridgeId: skyTeamCartridge.cartridgeId,
+      title: skyTeamCartridge.title,
+      genreVi: "Hợp tác 2 người • Hạ cánh máy bay",
+      subtitle: skyTeamCartridge.subtitle,
+      description: skyTeamCartridge.description,
+      minSeats: skyTeamCartridge.minSeats,
+      maxSeats: skyTeamCartridge.maxSeats,
+      seatsLabelVi: "2 người chơi (Hợp tác Co-op)",
+      available: true,
+      badgeVi: "Đang mở • Canvas 2D",
+      accentColor: "#38bdf8",
+      coverImage: "/covers/sky-team-cover.jpg",
     },
     {
       cartridgeId: "secret-hitler",
