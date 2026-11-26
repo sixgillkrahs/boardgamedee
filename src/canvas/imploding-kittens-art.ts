@@ -870,7 +870,7 @@ export function drawIkCard2D(
       ctx.textBaseline = "middle";
       ctx.font = `900 8.5px ${fonts.sans}`;
       ctx.fillText(
-        `🍑 MÙ #${(options?.blindIndex ?? 0) + 1}`,
+        `MÙ #${(options?.blindIndex ?? 0) + 1}`,
         cx,
         y + h - 11
       );
@@ -925,7 +925,7 @@ export function drawIkCard2D(
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.font = `900 8px ${fonts.sans}`;
-        ctx.fillText("🎯 ĐÃ BỊ LỘ", x + w * 0.5, y + 31);
+        ctx.fillText("ĐÃ BỊ LỘ", x + w * 0.5, y + 31);
       }
 
       if (options?.selected) {
@@ -986,7 +986,7 @@ export function drawIkCard2D(
   ctx.textBaseline = "middle";
   ctx.font = `900 ${Math.max(8.5, Math.round(w * 0.135))}px ${fonts.sans}`;
   ctx.fillText(
-    isFaceUpImploding ? "🕳️ ĐÃ LẬT NGỬA!" : meta.shortVi.toUpperCase(),
+    isFaceUpImploding ? "ĐÃ LẬT NGỬA!" : meta.shortVi.toUpperCase(),
     x + w * 0.5,
     y + h * 0.14,
     w - 12
@@ -1024,7 +1024,7 @@ export function drawIkCard2D(
     ctx.fill();
     ctx.fillStyle = "#090d16";
     ctx.font = `900 8px ${fonts.sans}`;
-    ctx.fillText("🎯 ĐÃ BỊ LỘ", x + w * 0.5, y + 31);
+    ctx.fillText("ĐÃ BỊ LỘ", x + w * 0.5, y + 31);
   }
 
   if (options?.selected) {

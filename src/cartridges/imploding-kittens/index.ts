@@ -172,7 +172,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Rút phải là BÙM!",
     ruleVi:
       "Phải dùng lá Tháo Ngòi (Defuse) để cài lại vào bộ bài, hoặc giữ bằng Mèo Chạy Rông, nếu không sẽ bị nổ tung!",
-    emoji: "💣",
+    emoji: "",
     colorHex: "#ef4444",
     secondaryHex: "#7f1d1d",
     category: "bomb",
@@ -185,7 +185,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Không thể Tháo Ngòi khi đã Ngửa!",
     ruleVi:
       "Lần 1 rút phải (đang Úp): Bí mật cài lại vào bộ bài ở trạng thái LẬT NGỬA. Lần 2 rút phải (khi đã Ngửa): Nổ ngay lập tức, không thể Defuse!",
-    emoji: "🕳️",
+    emoji: "",
     colorHex: "#a855f7",
     secondaryHex: "#3b0764",
     category: "bomb",
@@ -198,7 +198,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Bút laser, bạc hà mèo & gãi bụng",
     ruleVi:
       "Hóa giải Mèo Nổ (hoặc Mèo Sủa) và bí mật cài lại Mèo Nổ vào bất kỳ vị trí nào trong Bộ bài rút.",
-    emoji: "🛠️",
+    emoji: "",
     colorHex: "#22c55e",
     secondaryHex: "#14532d",
     category: "defense",
@@ -211,7 +211,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Gỡ Mèo Nổ & Hồi sinh 1 người đã chết!",
     ruleVi:
       "Thay vì nổ khi rút phải Mèo Nổ, bí mật cài lại Mèo Nổ vào Bộ bài rút VÀ hồi sinh 1 người chơi đã bị loại quay lại bàn chơi!",
-    emoji: "🧟",
+    emoji: "",
     colorHex: "#84cc16",
     secondaryHex: "#365314",
     category: "defense",
@@ -224,7 +224,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Mọi người sống đưa 1 lá cho người đã chết",
     ruleVi:
       "Chọn 1 người chơi đã chết. Tất cả người chơi còn sống khác (trừ bạn) phải chọn 1 lá bài trên tay đưa cho người chết đó!",
-    emoji: "🧠",
+    emoji: "",
     colorHex: "#ef4444",
     secondaryHex: "#450a0a",
     category: "action",
@@ -237,7 +237,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Lấy 1 lá từ mọi người chết xáo vào Bộ bài",
     ruleVi:
       "Tất cả người chơi đã chết còn bài trên tay phải trả 1 lá bài vào Bộ bài rút rồi xáo trộn lại!",
-    emoji: "🏮",
+    emoji: "",
     colorHex: "#65a30d",
     secondaryHex: "#365314",
     category: "action",
@@ -250,7 +250,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Hủy bỏ hành động vừa đánh",
     ruleVi:
       "Chặn bất kỳ lá hành động hoặc Combo nào vừa đánh ra. Đánh chồng Nope lên một Nope khác sẽ tạo thành YUP!",
-    emoji: "🚫",
+    emoji: "",
     colorHex: "#dc2626",
     secondaryHex: "#450a0a",
     category: "defense",
@@ -263,7 +263,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Không cần rút • Ép người kế đi +2 lượt",
     ruleVi:
       "Kết thúc ngay lượt của bạn mà không cần rút bài. Người kế tiếp phải đi 2 lượt (hoặc cộng dồn thêm +2 lượt nếu bạn đang bị Attack).",
-    emoji: "⚡",
+    emoji: "",
     colorHex: "#f59e0b",
     secondaryHex: "#78350f",
     category: "action",
@@ -276,7 +276,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Chọn bất kỳ ai chịu +2 lượt!",
     ruleVi:
       "Kết thúc lượt không cần rút bài và chỉ định BẤT KỲ người chơi nào trên bàn phải lập tức đi 2 lượt (cộng dồn nếu đang bị Attack).",
-    emoji: "🎯",
+    emoji: "",
     colorHex: "#f97316",
     secondaryHex: "#7c2d12",
     category: "action",
@@ -290,7 +290,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Tự đi 3 lượt liên tiếp",
     ruleVi:
       "Thực hiện trên chính bạn: buộc bản thân đi 3 lượt liên tiếp (dùng để gom bài đầu trận hoặc kích hoạt chuỗi bài).",
-    emoji: "🪃",
+    emoji: "",
     colorHex: "#d97706",
     secondaryHex: "#451a03",
     category: "action",
@@ -303,7 +303,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Không rút bài • +3 lượt × số người đã chết",
     ruleVi:
       "Kết thúc ngay lượt của bạn mà không cần rút bài và ép người chơi kế tiếp phải đi 3 lượt cho MỖI người chơi đã chết!",
-    emoji: "🧟",
+    emoji: "",
     colorHex: "#84cc16",
     secondaryHex: "#365314",
     category: "action",
@@ -316,7 +316,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Kết thúc 1 lượt không cần rút bài",
     ruleVi:
       "Kết thúc ngay 1 lượt hiện tại của bạn mà không phải rút bài (nếu đang nợ 2 lượt từ Attack thì giảm còn 1 lượt).",
-    emoji: "👟",
+    emoji: "",
     colorHex: "#3b82f6",
     secondaryHex: "#1e3a8a",
     category: "action",
@@ -329,7 +329,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Xóa sạch MỌI lượt đang nợ!",
     ruleVi:
       "Kết thúc ngay lập tức TẤT CẢ các lượt của bạn (dù đang bị cộng dồn 2, 4 hay 6 lượt Attack) mà không cần rút bài!",
-    emoji: "🚀",
+    emoji: "",
     colorHex: "#06b6d4",
     secondaryHex: "#164e63",
     category: "action",
@@ -342,7 +342,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Đổi chiều vòng chơi & Bỏ 1 lượt rút",
     ruleVi:
       "Đảo ngược chiều đánh của bàn chơi (Kim đồng hồ ↔ Ngược kim đồng hồ) và kết thúc 1 lượt hiện tại mà không cần rút bài!",
-    emoji: "🔄",
+    emoji: "",
     colorHex: "#8b5cf6",
     secondaryHex: "#2e1065",
     category: "action",
@@ -355,7 +355,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Rút lá dưới đáy cùng để qua lượt",
     ruleVi:
       "Kết thúc 1 lượt hiện tại bằng cách rút lá dưới ĐÁY CÙNG của Bộ bài rút thay vì lá trên đỉnh (né bom đang nằm trên đỉnh!).",
-    emoji: "⏬",
+    emoji: "",
     colorHex: "#ec4899",
     secondaryHex: "#831843",
     category: "action",
@@ -368,7 +368,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Bắt 1 đối thủ cống nạp 1 lá bài",
     ruleVi:
       "Chọn 1 người chơi khác; người đó buộc phải tự chọn 1 lá bài trên tay họ và đưa cho bạn.",
-    emoji: "🤲",
+    emoji: "",
     colorHex: "#14b8a6",
     secondaryHex: "#134e4a",
     category: "action",
@@ -382,7 +382,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Trộn tung Bộ bài rút",
     ruleVi:
       "Xáo trộn ngẫu nhiên toàn bộ Bộ bài rút (vẫn giữ trạng thái Lật Ngửa của Mèo Hố Đen nếu nó đã lộ diện).",
-    emoji: "🔀",
+    emoji: "",
     colorHex: "#64748b",
     secondaryHex: "#1e293b",
     category: "action",
@@ -395,7 +395,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Soi bí mật 3 lá đầu Bộ bài rút",
     ruleVi:
       "Bí mật xem trước 3 lá bài nằm trên đỉnh Bộ bài rút theo đúng thứ tự.",
-    emoji: "🔮",
+    emoji: "",
     colorHex: "#d946ef",
     secondaryHex: "#701a75",
     category: "action",
@@ -408,7 +408,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Soi bí mật 5 lá đầu Bộ bài rút",
     ruleVi:
       "Bí mật xem trước 5 lá bài nằm trên đỉnh Bộ bài rút theo đúng thứ tự.",
-    emoji: "👁️",
+    emoji: "",
     colorHex: "#c026d3",
     secondaryHex: "#4a044e",
     category: "action",
@@ -421,7 +421,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Xem & Sắp xếp lại 3 lá đầu Bộ bài",
     ruleVi:
       "Bí mật xem 3 lá trên cùng của Bộ bài rút và tự do thay đổi thứ tự của chúng trước khi úp lại!",
-    emoji: "🪄",
+    emoji: "",
     colorHex: "#6366f1",
     secondaryHex: "#312e81",
     category: "action",
@@ -434,7 +434,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Xem & Sắp xếp lại 5 lá đầu Bộ bài",
     ruleVi:
       "Bí mật xem 5 lá trên cùng của Bộ bài rút và tự do thay đổi thứ tự của chúng trước khi úp lại!",
-    emoji: "🌌",
+    emoji: "",
     colorHex: "#4f46e5",
     secondaryHex: "#1e1b4b",
     category: "action",
@@ -447,7 +447,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Sắp xếp 3 lá đầu & Cho người kế xem",
     ruleVi:
       "Xem và sắp xếp lại 3 lá trên cùng của Bộ bài rút, sau đó tiết lộ thứ tự 3 lá đó cho người chơi kế tiếp!",
-    emoji: "🤝",
+    emoji: "",
     colorHex: "#0ea5e9",
     secondaryHex: "#0c4a6e",
     category: "action",
@@ -460,7 +460,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Hoán đổi lá đầu và lá cuối Bộ bài",
     ruleVi:
       "Đổi chỗ ngay lập tức lá trên cùng và lá dưới đáy cùng của Bộ bài rút mà không cần nhìn.",
-    emoji: "🔃",
+    emoji: "",
     colorHex: "#10b981",
     secondaryHex: "#064e3b",
     category: "action",
@@ -473,7 +473,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Kéo MỌI Mèo Nổ lên đỉnh & Qua lượt!",
     ruleVi:
       "Kéo toàn bộ các lá Mèo Nổ (Exploding Kitten) trong Bộ bài rút ra, xáo phần còn lại rồi đặt tất cả Mèo Nổ lên ĐỈNH Bộ bài rút, đồng thời kết thúc lượt không cần rút!",
-    emoji: "☢️",
+    emoji: "",
     colorHex: "#ef4444",
     secondaryHex: "#450a0a",
     category: "action",
@@ -486,7 +486,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Mọi người trả 1 lá trên tay vào Bộ bài",
     ruleVi:
       "Tất cả người chơi còn sống mỗi người phải chọn 1 lá bài từ trên tay bỏ vào Bộ bài rút, sau đó xáo trộn lại toàn bộ Bộ bài rút!",
-    emoji: "🗑️",
+    emoji: "",
     colorHex: "#78716c",
     secondaryHex: "#292524",
     category: "action",
@@ -499,7 +499,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Làm đối thủ bị úp mù toàn bộ bài!",
     ruleVi:
       "Chọn 1 người chơi; bài trên tay người đó bị xáo trộn và ÚP MÙ (không thấy mặt bài của chính mình) cho đến khi họ rút thành công 1 lá bài!",
-    emoji: "🍑",
+    emoji: "",
     colorHex: "#f43f5e",
     secondaryHex: "#881337",
     category: "action",
@@ -513,7 +513,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Bắn lộ diện 1 lá bài trên tay đối thủ",
     ruleVi:
       "Chọn 1 người chơi; 1 lá bài ngẫu nhiên trên tay họ bị ĐÁNH DẤU và lật ngửa công khai cho cả bàn nhìn thấy cho tới khi được đánh hoặc bị cướp!",
-    emoji: "🎯",
+    emoji: "",
     colorHex: "#eab308",
     secondaryHex: "#713f12",
     category: "action",
@@ -527,7 +527,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Xem lá đầu, chôn lại & Kết thúc lượt",
     ruleVi:
       "Bí mật rút lá trên cùng của Bộ bài rút để xem (không kích nổ bom!), sau đó nhét nó vào bất kỳ vị trí nào trong Bộ bài rút và kết thúc 1 lượt!",
-    emoji: "🪏",
+    emoji: "",
     colorHex: "#a16207",
     secondaryHex: "#422006",
     category: "action",
@@ -540,7 +540,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Mỗi người đặt 1 lá lên Đỉnh Bộ bài",
     ruleVi:
       "Mỗi người chơi còn sống phải chọn 1 lá bài trên tay đặt úp lên ĐỈNH Bộ bài rút (không xáo bài)!",
-    emoji: "🍲",
+    emoji: "",
     colorHex: "#f97316",
     secondaryHex: "#431407",
     category: "action",
@@ -553,7 +553,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Cướp lá rút tiếp theo của mục tiêu",
     ruleVi:
       "Gài trước mặt 1 đối thủ: ở lần rút bài kết thúc lượt tiếp theo của họ, lá bài họ rút ra sẽ bay thẳng về tay bạn (kể cả nếu là Bom!).",
-    emoji: "🪝",
+    emoji: "",
     colorHex: "#38bdf8",
     secondaryHex: "#082f49",
     category: "action",
@@ -567,7 +567,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Kích nổ kẻ giữ Mèo Sủa còn lại!",
     ruleVi:
       "Đánh ra để truy lùng lá Mèo Sủa thứ 2: nếu người chơi khác đang cầm nó trên tay (hoặc đã đặt ra bàn), mục tiêu lập tức bị nổ trừ khi mất 1 lá Defuse!",
-    emoji: "🐶",
+    emoji: "",
     colorHex: "#fb7185",
     secondaryHex: "#4c0519",
     category: "action",
@@ -580,7 +580,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Đội Vương Miện 6 lá dự trữ chống cướp bài",
     ruleVi:
       "Đội Tháp Quyền Lực chứa 6 lá dự trữ bí mật lên đầu. Mỗi khi bị ai cướp bài (Combo 2/3 hoặc Xin Xỏ), họ buộc phải rút mù từ đỉnh Tháp thay vì đụng vào bài trên tay bạn! Bất cứ lúc nào trong lượt, bạn có thể rút 1 lá từ Tháp về tay và xáo phần còn lại vào Bộ bài rút.",
-    emoji: "👑",
+    emoji: "",
     colorHex: "#94a3b8",
     secondaryHex: "#1e293b",
     category: "action",
@@ -593,7 +593,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Sao chép lá vừa đánh dưới Mộ bài",
     ruleVi:
       "Biến thành bản sao của lá bài hành động đang nằm trên cùng của Chồng bài bỏ (Discard Pile) và thực thi ngay hiệu ứng của lá đó!",
-    emoji: "🧬",
+    emoji: "",
     colorHex: "#34d399",
     secondaryHex: "#064e3b",
     category: "action",
@@ -606,7 +606,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Xem lá #1: Chọn lấy lá #1 hoặc lá #2",
     ruleVi:
       "Bí mật xem lá trên cùng của Bộ bài rút: bạn có thể lấy luôn lá đó để kết thúc lượt, hoặc bỏ qua nó để rút lá thứ 2 ngay bên dưới!",
-    emoji: "⛏️",
+    emoji: "",
     colorHex: "#fbbf24",
     secondaryHex: "#451a03",
     category: "action",
@@ -619,7 +619,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Soi vị trí mọi quả Bom trong Bộ bài",
     ruleVi:
       "Bí mật soi chính xác vị trí hiện tại của toàn bộ các lá Mèo Nổ và Mèo Hố Đen đang nằm ở lá thứ mấy trong Bộ bài rút!",
-    emoji: "🧿",
+    emoji: "",
     colorHex: "#2dd4bf",
     secondaryHex: "#115e59",
     category: "action",
@@ -632,7 +632,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Nội tại: Giữ 1 Mèo Nổ trên tay an toàn!",
     ruleVi:
       "Lá nội tại (Passive): Miễn là bạn còn giữ Mèo Chạy Rông trên tay, bạn được phép giữ 1 lá Mèo Nổ (Exploding Kitten) trên tay mà không bị nổ!",
-    emoji: "🏃",
+    emoji: "",
     colorHex: "#fb923c",
     secondaryHex: "#7c2d12",
     category: "passive",
@@ -645,7 +645,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Wildcard: Ghép mọi Combo Mèo 2–3 lá",
     ruleVi:
       "Đóng vai trò Wildcard thay thế cho bất kỳ Lá Mèo nào khi bạn đánh Combo 2 lá (cướp bài ngẫu nhiên) hoặc Combo 3 lá (xin bài chỉ định)!",
-    emoji: "😼",
+    emoji: "",
     colorHex: "#facc15",
     secondaryHex: "#713f12",
     category: "wildcard_cat",
@@ -658,7 +658,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Lá Mèo • Ghép đôi / bộ 3 / bộ 5",
     ruleVi:
       "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
-    emoji: "🌮",
+    emoji: "",
     colorHex: "#eab308",
     secondaryHex: "#422006",
     category: "cat",
@@ -671,7 +671,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Lá Mèo • Ghép đôi / bộ 3 / bộ 5",
     ruleVi:
       "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
-    emoji: "🍉",
+    emoji: "",
     colorHex: "#4ade80",
     secondaryHex: "#14532d",
     category: "cat",
@@ -684,7 +684,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Lá Mèo • Ghép đôi / bộ 3 / bộ 5",
     ruleVi:
       "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
-    emoji: "🥔",
+    emoji: "",
     colorHex: "#d97706",
     secondaryHex: "#451a03",
     category: "cat",
@@ -697,7 +697,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Lá Mèo • Ghép đôi / bộ 3 / bộ 5",
     ruleVi:
       "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
-    emoji: "🧔",
+    emoji: "",
     colorHex: "#94a3b8",
     secondaryHex: "#1e293b",
     category: "cat",
@@ -710,7 +710,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Lá Mèo • Ghép đôi / bộ 3 / bộ 5",
     ruleVi:
       "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
-    emoji: "🌈",
+    emoji: "",
     colorHex: "#38bdf8",
     secondaryHex: "#0c4a6e",
     category: "cat",
@@ -723,7 +723,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Lá Mèo Zombie • Ghép đôi / bộ 3 / bộ 5",
     ruleVi:
       "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
-    emoji: "🐈‍⬛",
+    emoji: "⬛",
     colorHex: "#94a3b8",
     secondaryHex: "#1e293b",
     category: "cat",
@@ -736,7 +736,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Lá Mèo Zombie • Ghép đôi / bộ 3 / bộ 5",
     ruleVi:
       "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
-    emoji: "🧛",
+    emoji: "",
     colorHex: "#a855f7",
     secondaryHex: "#3b0764",
     category: "cat",
@@ -749,7 +749,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Lá Mèo Zombie • Ghép đôi / bộ 3 / bộ 5",
     ruleVi:
       "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
-    emoji: "🧟",
+    emoji: "",
     colorHex: "#65a30d",
     secondaryHex: "#1a2e05",
     category: "cat",
@@ -762,7 +762,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Đấu trí Thiện & Ác: Giành Mèo Thần, đẩy Mèo Quỷ!",
     ruleVi:
       "Chỉ đánh được khi cả Mèo Thần (Godcat) và Mèo Quỷ (Devilcat) đang ở trên Thảm đấu. Bạn bí mật chia úp 2 lá cho mình và 1 đối thủ. Đối thủ phải chọn GIỮ hay ĐỔI mà không được xem: ai nhận Mèo Thần sẽ cầm về tay, ai nhận Mèo Quỷ sẽ NỔ NGAY LẬP TỨC (phải dùng Defuse hoặc bị loại)! Sau đó Mèo Quỷ quay lại Thảm và kết thúc lượt của bạn.",
-    emoji: "⚖️",
+    emoji: "",
     colorHex: "#dc2626",
     secondaryHex: "#450a0a",
     category: "action",
@@ -776,7 +776,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Vạn Năng: Hóa thành MỌI lá bài (trừ Nope)!",
     ruleVi:
       "Lá bài tối thượng từ Thảm Thiện & Ác! Có thể đánh hóa thân thành BẤT KỲ lá Hành Động nào bạn muốn (Tấn Công, Bỏ Lượt, Đổi Tương Lai, Xin Xỏ, Bom Nguyên Tử...) HOẶC tự động làm lá Tháo Ngòi (Defuse) khi gặp Bom — ngoại trừ KHÔNG thể dùng làm Nope! Sau khi dùng, Mèo Thần quay trở lại Thảm đấu (không vào Mộ hay Bộ bài rút).",
-    emoji: "✨",
+    emoji: "",
     colorHex: "#facc15",
     secondaryHex: "#854d0e",
     category: "action",
@@ -789,7 +789,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Lật phải trong Armageddon là NỔ NGAY!",
     ruleVi:
       "Nằm cố định trên Thảm Thiện & Ác và chỉ xuất hiện trong màn đấu trí Tận Thế (Armageddon). Ai lật trúng Mèo Quỷ lập tức PHÁT NỔ — buộc phải đốt 1 lá Tháo Ngòi (Defuse) hoặc bị loại ngay lập tức! Dù nổ hay gỡ được, Mèo Quỷ luôn quay trở lại Thảm đấu.",
-    emoji: "😈",
+    emoji: "",
     colorHex: "#991b1b",
     secondaryHex: "#2a0606",
     category: "bomb",
@@ -802,7 +802,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Xem lá ĐÁY: Lấy về tay hoặc đặt lên ĐỈNH!",
     ruleVi:
       "Bí mật xem lá bài nằm dưới ĐÁY CÙNG của Bộ bài rút. Bạn được quyền chọn: lấy lá đó về tay HOẶC đặt thẳng nó lên ĐỈNH Bộ bài rút (không kích nổ bom nếu đặt lên đỉnh!). Dù chọn cách nào, lượt của bạn cũng kết thúc ngay.",
-    emoji: "🔥",
+    emoji: "",
     colorHex: "#ea580c",
     secondaryHex: "#431407",
     category: "action",
@@ -815,7 +815,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Lật công khai 3 lá đầu Bộ bài cho CẢ BÀN xem!",
     ruleVi:
       "Lật mở 3 lá trên cùng của Bộ bài rút cho TẤT CẢ mọi người chơi trên bàn cùng nhìn thấy theo đúng thứ tự, sau đó úp lại nguyên vị trí cũ (không kết thúc lượt).",
-    emoji: "👁️‍🗨️",
+    emoji: "",
     colorHex: "#a855f7",
     secondaryHex: "#3b0764",
     category: "action",
@@ -828,7 +828,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Lá Mèo Thiện & Ác • Ghép đôi / bộ 3 / bộ 5",
     ruleVi:
       "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
-    emoji: "🐴",
+    emoji: "",
     colorHex: "#b45309",
     secondaryHex: "#451a03",
     category: "cat",
@@ -841,7 +841,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Lá Mèo Thiện & Ác • Ghép đôi / bộ 3 / bộ 5",
     ruleVi:
       "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
-    emoji: "⚔️",
+    emoji: "",
     colorHex: "#64748b",
     secondaryHex: "#0f172a",
     category: "cat",
@@ -854,7 +854,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Lá Mèo Thiện & Ác • Ghép đôi / bộ 3 / bộ 5",
     ruleVi:
       "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
-    emoji: "🧜",
+    emoji: "",
     colorHex: "#06b6d4",
     secondaryHex: "#164e63",
     category: "cat",
@@ -867,7 +867,7 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     subtitleVi: "Lá Mèo Thiện & Ác • Ghép đôi / bộ 3 / bộ 5",
     ruleVi:
       "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
-    emoji: "💻",
+    emoji: "",
     colorHex: "#64748b",
     secondaryHex: "#1e293b",
     category: "cat",
@@ -1516,7 +1516,7 @@ function checkVictory(
   state.pendingRaisingHeck = null;
   state.phaseDeadlineMs = null;
   state.winnerSeatNos = [winner.seatNo];
-  state.winReasonVi = `🏆 ${winner.displayName} là người sống sót cuối cùng trong đại chiến Mèo Nổ & Mèo Hố Đen!`;
+  state.winReasonVi = `${winner.displayName} là người sống sót cuối cùng trong đại chiến Mèo Nổ & Mèo Hố Đen!`;
 
   events.push({
     eventType: "IK_MATCH_FINISHED",
@@ -1554,7 +1554,7 @@ function consumeOneTurnOrAdvanceSeat(
     state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
     events.push({
       eventType: "IK_EXTRA_TURN_REMAINING",
-      message: `⏳ ${active.displayName} hoàn thành 1 lượt — vẫn còn ${state.turnsRemaining} lượt phải đi tiếp!`,
+      message: `${active.displayName} hoàn thành 1 lượt — vẫn còn ${state.turnsRemaining} lượt phải đi tiếp!`,
       visibleToSeatNos: "all",
     });
     return;
@@ -1618,14 +1618,14 @@ function checkExposedHandBomb(
         deadSeat.eliminatedBy = null;
         events.push({
           eventType: "IK_ZOMBIE_REVIVE",
-          message: `🧟⚡ ${seat.displayName} dùng Mèo Xác Sống (Zombie Kitten) gỡ bom VÀ HỒI SINH ${deadSeat.displayName} quay lại bàn đấu!`,
+          message: `${seat.displayName} dùng Mèo Xác Sống (Zombie Kitten) gỡ bom VÀ HỒI SINH ${deadSeat.displayName} quay lại bàn đấu!`,
           visibleToSeatNos: "all",
         });
       }
     }
     events.push({
       eventType: "IK_STREAKING_LOST_DEFUSED",
-      message: `💥🛠️ ${seat.displayName} bị mất Mèo Chạy Rông khi đang giấu Mèo Nổ trên tay — buộc phải dùng ngay 1 lá ${defuseCard.type === "godcat" ? "Mèo Thần (Godcat — quay về Thảm đấu)" : defuseCard.type === "zombie_kitten" ? "Mèo Xác Sống (Zombie Kitten)" : "Tháo Ngòi (Defuse)"} và nhét lại bom vào bộ bài!`,
+      message: `${seat.displayName} bị mất Mèo Chạy Rông khi đang giấu Mèo Nổ trên tay — buộc phải dùng ngay 1 lá ${defuseCard.type === "godcat" ? "Mèo Thần (Godcat — quay về Thảm đấu)" : defuseCard.type === "zombie_kitten" ? "Mèo Xác Sống (Zombie Kitten)" : "Tháo Ngòi (Defuse)"} và nhét lại bom vào bộ bài!`,
       visibleToSeatNos: "all",
     });
   } else {
@@ -1644,7 +1644,7 @@ function checkExposedHandBomb(
     );
     events.push({
       eventType: "IK_PLAYER_EXPLODED",
-      message: `💥🙀 BÙM! ${seat.displayName} mất Mèo Chạy Rông khi đang ôm Mèo Nổ trên tay và không còn Defuse — bị nổ văng khỏi bàn!`,
+      message: `BÙM! ${seat.displayName} mất Mèo Chạy Rông khi đang ôm Mèo Nổ trên tay và không còn Defuse — bị nổ văng khỏi bàn!`,
       visibleToSeatNos: "all",
     });
     checkVictory(state, events, nowMs);
@@ -1678,7 +1678,7 @@ function resolveCardDrawnBySeat(
       recipient = thief;
       events.push({
         eventType: "IK_ILL_TAKE_THAT_TRIGGER",
-        message: `🪝 Đưa Đây Cho Tôi! Lá bài ${drawerSeat.displayName} vừa rút được chuyển thẳng sang tay của ${thief.displayName}!`,
+        message: `Đưa Đây Cho Tôi! Lá bài ${drawerSeat.displayName} vừa rút được chuyển thẳng sang tay của ${thief.displayName}!`,
         visibleToSeatNos: "all",
       });
     }
@@ -1689,7 +1689,7 @@ function resolveCardDrawnBySeat(
     drawerSeat.isBlind = false;
     events.push({
       eventType: "IK_BLIND_CLEARED",
-      message: `✨ ${drawerSeat.displayName} đã hóa giải Lời Nguyền Mông Mèo (hết bị mù bài).`,
+      message: `${drawerSeat.displayName} đã hóa giải Lời Nguyền Mông Mèo (hết bị mù bài).`,
       visibleToSeatNos: "all",
     });
   }
@@ -1720,7 +1720,7 @@ function resolveCardDrawnBySeat(
 
       events.push({
         eventType: "IK_IMPLODING_DRAWN_FIRST",
-        message: `🕳️😱 ${recipient.displayName} rút phải MÈO HỐ ĐEN (lần đầu)! Chưa nổ, nhưng nó đã LẬT NGỬA và đang được cài lại vào Bộ bài rút!`,
+        message: `${recipient.displayName} rút phải MÈO HỐ ĐEN (lần đầu)! Chưa nổ, nhưng nó đã LẬT NGỬA và đang được cài lại vào Bộ bài rút!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -1743,7 +1743,7 @@ function resolveCardDrawnBySeat(
 
       events.push({
         eventType: "IK_PLAYER_IMPLODED",
-        message: `🕳️💀 SẬP HỐ ĐEN! ${recipient.displayName} buộc phải rút Mèo Hố Đen đang Lật Ngửa (không thể dùng Defuse) và bị cuốn bay khỏi ván đấu!`,
+        message: `SẬP HỐ ĐEN! ${recipient.displayName} buộc phải rút Mèo Hố Đen đang Lật Ngửa (không thể dùng Defuse) và bị cuốn bay khỏi ván đấu!`,
         visibleToSeatNos: "all",
       });
 
@@ -1774,12 +1774,12 @@ function resolveCardDrawnBySeat(
       );
       events.push({
         eventType: "IK_STREAKING_SAVED",
-        message: `🏃💣 ${recipient.displayName} đã rút bài an toàn và kết thúc lượt!`,
+        message: `${recipient.displayName} đã rút bài an toàn và kết thúc lượt!`,
         visibleToSeatNos: "all",
       });
       events.push({
         eventType: "IK_STREAKING_SECRET",
-        message: `🤫 Bạn vừa rút phải Mèo Nổ nhưng nhờ có 🏃 Mèo Chạy Rông trên tay nên bạn được phép GIẤU KÍN quả bom này trên tay mà không bị nổ!`,
+        message: `Bạn vừa rút phải Mèo Nổ nhưng nhờ có Mèo Chạy Rông trên tay nên bạn được phép GIẤU KÍN quả bom này trên tay mà không bị nổ!`,
         visibleToSeatNos: [recipient.seatNo],
       });
       consumeOneTurnOrAdvanceSeat(state, events, nowMs);
@@ -1805,7 +1805,7 @@ function resolveCardDrawnBySeat(
         if (deadSeat) {
           deadSeat.alive = true;
           deadSeat.eliminatedBy = null;
-          revivedMsg = ` ĐỒNG THỜI HỒI SINH 🧟 ${deadSeat.displayName} quay lại bàn đấu!`;
+          revivedMsg = ` ĐỒNG THỜI HỒI SINH ${deadSeat.displayName} quay lại bàn đấu!`;
         }
       }
 
@@ -1832,10 +1832,10 @@ function resolveCardDrawnBySeat(
         eventType: "IK_EXPLODING_DEFUSED",
         message:
           defuseCard.type === "godcat"
-            ? `💣✨ PHÉP MÀU MÈO THẦN! ${recipient.displayName} hóa Mèo Thần (Godcat) thành Tháo Ngòi gỡ Mèo Nổ (Mèo Thần quay về Thảm đấu) — đang chọn vị trí gài lại bom!`
+            ? `PHÉP MÀU MÈO THẦN! ${recipient.displayName} hóa Mèo Thần (Godcat) thành Tháo Ngòi gỡ Mèo Nổ (Mèo Thần quay về Thảm đấu) — đang chọn vị trí gài lại bom!`
             : defuseCard.type === "zombie_kitten"
-              ? `💣🧟 HÚ HỒN! ${recipient.displayName} rút phải MÈO NỔ nhưng tung lá Mèo Xác Sống (Zombie Kitten) gỡ bom — đang chọn vị trí gài lại bom!${revivedMsg}`
-              : `💣🛠️ HÚ HỒN! ${recipient.displayName} rút phải MÈO NỔ nhưng kịp tung lá Tháo Ngòi (Defuse) — đang chọn vị trí gài lại bom vào Bộ bài!`,
+              ? `HÚ HỒN! ${recipient.displayName} rút phải MÈO NỔ nhưng tung lá Mèo Xác Sống (Zombie Kitten) gỡ bom — đang chọn vị trí gài lại bom!${revivedMsg}`
+              : `HÚ HỒN! ${recipient.displayName} rút phải MÈO NỔ nhưng kịp tung lá Tháo Ngòi (Defuse) — đang chọn vị trí gài lại bom vào Bộ bài!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -1859,7 +1859,7 @@ function resolveCardDrawnBySeat(
 
     events.push({
       eventType: "IK_PLAYER_EXPLODED",
-      message: `💥🙀 BÙM! ${recipient.displayName} rút phải MÈO NỔ mà không còn lá Tháo Ngòi (Defuse) — chính thức bị nổ tung!`,
+      message: `BÙM! ${recipient.displayName} rút phải MÈO NỔ mà không còn lá Tháo Ngòi (Defuse) — chính thức bị nổ tung!`,
       visibleToSeatNos: "all",
     });
 
@@ -1880,8 +1880,8 @@ function resolveCardDrawnBySeat(
   events.push({
     eventType: "IK_CARD_DRAWN",
     message: fromBottom
-      ? `⏬ ${drawerSeat.displayName} rút 1 lá dưới ĐÁY Bộ bài an toàn.`
-      : `🃏 ${drawerSeat.displayName} rút 1 lá từ Bộ bài an toàn.`,
+      ? `${drawerSeat.displayName} rút 1 lá dưới ĐÁY Bộ bài an toàn.`
+      : `${drawerSeat.displayName} rút 1 lá từ Bộ bài an toàn.`,
     visibleToSeatNos: "all",
   });
 
@@ -1906,7 +1906,7 @@ function executeResolvedAction(
     state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
     events.push({
       eventType: "IK_ACTION_NOPED_FINAL",
-      message: `🚫 Hành động của ${actor.displayName} đã bị vô hiệu hóa hoàn toàn bởi Nope!`,
+      message: `Hành động của ${actor.displayName} đã bị vô hiệu hóa hoàn toàn bởi Nope!`,
       visibleToSeatNos: "all",
     });
     return;
@@ -1937,7 +1937,7 @@ function executeResolvedAction(
       );
       events.push({
         eventType: "IK_TOWER_INTERCEPT",
-        message: `👑 Tháp Quyền Lực chắn đòn! ${actor.displayName} đánh Combo 2 Lá vào ${target.displayName} nhưng buộc phải rút mù 1 lá từ đỉnh Tháp (còn ${state.towerStashCards.length} lá trong Tháp)!`,
+        message: `Tháp Quyền Lực chắn đòn! ${actor.displayName} đánh Combo 2 Lá vào ${target.displayName} nhưng buộc phải rút mù 1 lá từ đỉnh Tháp (còn ${state.towerStashCards.length} lá trong Tháp)!`,
         visibleToSeatNos: "all",
       });
       state.step = "TurnPlayStep";
@@ -1958,7 +1958,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_COMBO_2_PICK_START",
-        message: `🐾 Combo 2 Lá! ${actor.displayName} đang chọn rút 1 lá bài (đã xáo trộn) từ tay của ${target.displayName}...`,
+        message: `Combo 2 Lá! ${actor.displayName} đang chọn rút 1 lá bài (đã xáo trộn) từ tay của ${target.displayName}...`,
         visibleToSeatNos: "all",
       });
       return;
@@ -1995,7 +1995,7 @@ function executeResolvedAction(
       );
       events.push({
         eventType: "IK_TOWER_INTERCEPT",
-        message: `👑 Tháp Quyền Lực chắn đòn Combo 3 Lá! ${actor.displayName} buộc phải rút mù 1 lá từ đỉnh Tháp của ${target.displayName} thay vì lấy bài trên tay (còn ${state.towerStashCards.length} lá)!`,
+        message: `Tháp Quyền Lực chắn đòn Combo 3 Lá! ${actor.displayName} buộc phải rút mù 1 lá từ đỉnh Tháp của ${target.displayName} thay vì lấy bài trên tay (còn ${state.towerStashCards.length} lá)!`,
         visibleToSeatNos: "all",
       });
       state.step = "TurnPlayStep";
@@ -2021,14 +2021,14 @@ function executeResolvedAction(
       );
       events.push({
         eventType: "IK_COMBO_3_SUCCESS",
-        message: `🎯 Combo 3 Lá! ${actor.displayName} gọi đúng tên lá [${wantedMeta.emoji} ${wantedMeta.shortVi}] và tịch thu nó từ tay ${target.displayName}!`,
+        message: `Combo 3 Lá! ${actor.displayName} gọi đúng tên lá [${wantedMeta.shortVi}] và tịch thu nó từ tay ${target.displayName}!`,
         visibleToSeatNos: "all",
       });
       checkExposedHandBomb(state, target, events, nowMs);
     } else {
       events.push({
         eventType: "IK_COMBO_3_MISS",
-        message: `💨 Combo 3 Lá! ${actor.displayName} đòi lá [${wantedMeta.emoji} ${wantedMeta.shortVi}] nhưng ${target.displayName} không có lá nào trên tay!`,
+        message: `Combo 3 Lá! ${actor.displayName} đòi lá [${wantedMeta.shortVi}] nhưng ${target.displayName} không có lá nào trên tay!`,
         visibleToSeatNos: "all",
       });
     }
@@ -2046,7 +2046,7 @@ function executeResolvedAction(
       actor.hand.push(recovered);
       events.push({
         eventType: "IK_COMBO_5_SUCCESS",
-        message: `🌟 Combo 5 Lá Khác Nhau! ${actor.displayName} trục vớt thành công 1 lá bài từ Chồng bài bỏ về tay!`,
+        message: `Combo 5 Lá Khác Nhau! ${actor.displayName} trục vớt thành công 1 lá bài từ Chồng bài bỏ về tay!`,
         visibleToSeatNos: "all",
       });
     }
@@ -2062,7 +2062,7 @@ function executeResolvedAction(
     case "skip": {
       events.push({
         eventType: "IK_SKIP",
-        message: `👟 ${actor.displayName} đánh Bỏ Lượt (Skip) — kết thúc 1 lượt mà không cần rút bài!`,
+        message: `${actor.displayName} đánh Bỏ Lượt (Skip) — kết thúc 1 lượt mà không cần rút bài!`,
         visibleToSeatNos: "all",
       });
       consumeOneTurnOrAdvanceSeat(state, events, nowMs);
@@ -2073,7 +2073,7 @@ function executeResolvedAction(
       state.turnsRemaining = 1;
       events.push({
         eventType: "IK_SUPER_SKIP",
-        message: `🚀 ${actor.displayName} tung Siêu Bỏ Lượt (Super Skip) — xóa sạch toàn bộ các lượt đang nợ mà không cần rút bài!`,
+        message: `${actor.displayName} tung Siêu Bỏ Lượt (Super Skip) — xóa sạch toàn bộ các lượt đang nợ mà không cần rút bài!`,
         visibleToSeatNos: "all",
       });
       consumeOneTurnOrAdvanceSeat(state, events, nowMs);
@@ -2092,7 +2092,7 @@ function executeResolvedAction(
       );
       events.push({
         eventType: "IK_REVERSE",
-        message: `🔄 ${actor.displayName} đánh Đảo Chiều (Reverse) — vòng chơi đổi sang ${state.direction === 1 ? "Chiều Kim Đồng Hồ ↻" : "Ngược Kim Đồng Hồ ↺"} và kết thúc 1 lượt không cần rút bài!`,
+        message: `${actor.displayName} đánh Đảo Chiều (Reverse) — vòng chơi đổi sang ${state.direction === 1 ? "Chiều Kim Đồng Hồ ↻" : "Ngược Kim Đồng Hồ ↺"} và kết thúc 1 lượt không cần rút bài!`,
         visibleToSeatNos: "all",
       });
       consumeOneTurnOrAdvanceSeat(state, events, nowMs);
@@ -2125,7 +2125,7 @@ function executeResolvedAction(
 
       events.push({
         eventType: "IK_ATTACK_RESOLVED",
-        message: `⚡ ${actor.displayName} tung ${IK_CARD_META[effType].nameVi} vào ${target.displayName} — ép ${target.displayName} phải đi liên tiếp ${nextTurns} lượt!`,
+        message: `${actor.displayName} tung ${IK_CARD_META[effType].nameVi} vào ${target.displayName} — ép ${target.displayName} phải đi liên tiếp ${nextTurns} lượt!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2138,7 +2138,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_PERSONAL_ATTACK",
-        message: `🪃 ${actor.displayName} đánh Tự Tấn Công 3x — tự nhận đi ${state.turnsRemaining} lượt liên tiếp!`,
+        message: `${actor.displayName} đánh Tự Tấn Công 3x — tự nhận đi ${state.turnsRemaining} lượt liên tiếp!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2161,7 +2161,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_SHUFFLE",
-        message: `🔀 ${actor.displayName} xáo trộn tung toàn bộ Bộ bài rút!`,
+        message: `${actor.displayName} xáo trộn tung toàn bộ Bộ bài rút!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2178,7 +2178,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_SWAP_TOP_BOTTOM",
-        message: `🔃 ${actor.displayName} hoán đổi vị trí lá trên Đỉnh và lá dưới Đáy của Bộ bài rút!`,
+        message: `${actor.displayName} hoán đổi vị trí lá trên Đỉnh và lá dưới Đáy của Bộ bài rút!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2196,7 +2196,7 @@ function executeResolvedAction(
         topCards.push(state.drawPile[i]);
       }
       actor.privateVision = {
-        titleVi: `🔮 Thấu Thị ${topCards.length} lá đầu Bộ bài rút (từ Đỉnh xuống):`,
+        titleVi: `Thấu Thị ${topCards.length} lá đầu Bộ bài rút (từ Đỉnh xuống):`,
         cards: topCards.map((c, idx) => ({
           labelVi: `#${idx + 1}: ${IK_CARD_META[c.type].shortVi}${c.faceUp ? " (NGỬA)" : ""}`,
           emoji: IK_CARD_META[c.type].emoji,
@@ -2211,7 +2211,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_SEE_FUTURE",
-        message: `🔮 ${actor.displayName} dùng ${IK_CARD_META[effType].shortVi} soi bí mật ${topCards.length} lá đầu Bộ bài rút.`,
+        message: `${actor.displayName} dùng ${IK_CARD_META[effType].shortVi} soi bí mật ${topCards.length} lá đầu Bộ bài rút.`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2236,14 +2236,14 @@ function executeResolvedAction(
         }
       }
       actor.privateVision = {
-        titleVi: "🧿 Thấu Tâm — Tọa độ toàn bộ Bom trong Bộ bài rút:",
+        titleVi: "Thấu Tâm — Tọa độ toàn bộ Bom trong Bộ bài rút:",
         cards:
           bombLocations.length > 0
             ? bombLocations
             : [
                 {
                   labelVi: "Không có quả bom nào trong Bộ bài rút!",
-                  emoji: "✨",
+                  emoji: "",
                   colorHex: "#4ade80",
                 },
               ],
@@ -2252,7 +2252,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_CLAIRVOYANCE",
-        message: `🧿 ${actor.displayName} dùng Thấu Tâm (Clairvoyance) quét vị trí mọi quả Bom trong Bộ bài rút!`,
+        message: `${actor.displayName} dùng Thấu Tâm (Clairvoyance) quét vị trí mọi quả Bom trong Bộ bài rút!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2286,7 +2286,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_ALTER_FUTURE_START",
-        message: `🪄 ${actor.displayName} đang xem và sắp xếp lại ${count} lá đầu của Bộ bài rút...`,
+        message: `${actor.displayName} đang xem và sắp xếp lại ${count} lá đầu của Bộ bài rút...`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2319,7 +2319,7 @@ function executeResolvedAction(
         state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
         events.push({
           eventType: "IK_TOWER_INTERCEPT",
-          message: `👑 Tháp Quyền Lực chắn đòn Xin Xỏ (Favor)! ${actor.displayName} buộc phải rút mù 1 lá từ đỉnh Tháp của ${target.displayName} (còn ${state.towerStashCards.length} lá)!`,
+          message: `Tháp Quyền Lực chắn đòn Xin Xỏ (Favor)! ${actor.displayName} buộc phải rút mù 1 lá từ đỉnh Tháp của ${target.displayName} (còn ${state.towerStashCards.length} lá)!`,
           visibleToSeatNos: "all",
         });
         return;
@@ -2337,7 +2337,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_FAVOR_ASKED",
-        message: `🤲 ${actor.displayName} dùng Xin Xỏ (Favor) yêu cầu ${target.displayName} tự chọn 1 lá bài trên tay cống nạp!`,
+        message: `${actor.displayName} dùng Xin Xỏ (Favor) yêu cầu ${target.displayName} tự chọn 1 lá bài trên tay cống nạp!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2360,7 +2360,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_TOWER_OF_POWER",
-        message: `👑 ${actor.displayName} đội Tháp Quyền Lực (Tower of Power) chứa ${state.towerStashCards.length} lá dự trữ lên đầu! Ai cướp bài đều phải rút mù từ đỉnh Tháp!`,
+        message: `${actor.displayName} đội Tháp Quyền Lực (Tower of Power) chứa ${state.towerStashCards.length} lá dự trữ lên đầu! Ai cướp bài đều phải rút mù từ đỉnh Tháp!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2389,7 +2389,7 @@ function executeResolvedAction(
       );
       events.push({
         eventType: "IK_CATOMIC_BOMB",
-        message: `☢️💣 BOM NGUYÊN TỬ MÈO! ${actor.displayName} kéo toàn bộ ${bombs.length} lá Mèo Nổ đặt thẳng lên ĐỈNH Bộ bài rút và kết thúc lượt không cần rút!`,
+        message: `BOM NGUYÊN TỬ MÈO! ${actor.displayName} kéo toàn bộ ${bombs.length} lá Mèo Nổ đặt thẳng lên ĐỈNH Bộ bài rút và kết thúc lượt không cần rút!`,
         visibleToSeatNos: "all",
       });
       consumeOneTurnOrAdvanceSeat(state, events, nowMs);
@@ -2412,7 +2412,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_BURY_START",
-        message: `🪏 ${actor.displayName} dùng Chôn Giấu (Bury): bí mật xem lá đầu Bộ bài và đang chọn vị trí chôn nó xuống...`,
+        message: `${actor.displayName} dùng Chôn Giấu (Bury): bí mật xem lá đầu Bộ bài và đang chọn vị trí chôn nó xuống...`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2437,7 +2437,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_DIG_DEEPER_START",
-        message: `⛏️ ${actor.displayName} dùng Đào Sâu Hơn (Dig Deeper): đang xem lá đầu tiên để quyết định lấy lá #1 hay đào lá #2...`,
+        message: `${actor.displayName} dùng Đào Sâu Hơn (Dig Deeper): đang xem lá đầu tiên để quyết định lấy lá #1 hay đào lá #2...`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2465,8 +2465,8 @@ function executeResolvedAction(
         eventType: "IK_GROUP_SUBMIT_START",
         message:
           effType === "garbage_collection"
-            ? `🗑️ Thu Gom Rác! Mọi người chơi phải chọn 1 lá bài trên tay trả vào Bộ bài rút để xáo lại!`
-            : `🍲 Góp Bài (Potluck)! Mọi người chơi phải chọn 1 lá bài trên tay đặt úp lên Đỉnh Bộ bài rút!`,
+            ? `Thu Gom Rác! Mọi người chơi phải chọn 1 lá bài trên tay trả vào Bộ bài rút để xáo lại!`
+            : `Góp Bài (Potluck)! Mọi người chơi phải chọn 1 lá bài trên tay đặt úp lên Đỉnh Bộ bài rút!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2479,7 +2479,7 @@ function executeResolvedAction(
         state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
         events.push({
           eventType: "IK_FEED_DEAD_NO_TARGET",
-          message: `🧠 ${actor.displayName} đánh Feed the Dead nhưng chưa có người chơi nào chết trên bàn!`,
+          message: `${actor.displayName} đánh Feed the Dead nhưng chưa có người chơi nào chết trên bàn!`,
           visibleToSeatNos: "all",
         });
         return;
@@ -2502,7 +2502,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_GROUP_SUBMIT_START",
-        message: `🧠🧟 Feed the Dead! Tất cả người sống khác (trừ ${actor.displayName}) phải chọn 1 lá bài trên tay cống nạp cho người đã chết ${deadSeat.displayName}!`,
+        message: `Feed the Dead! Tất cả người sống khác (trừ ${actor.displayName}) phải chọn 1 lá bài trên tay cống nạp cho người đã chết ${deadSeat.displayName}!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2529,8 +2529,8 @@ function executeResolvedAction(
         eventType: "IK_GRAVE_ROBBER",
         message:
           takenCount > 0
-            ? `🏮🧟 Kẻ Trộm Mộ (Grave Robber)! ${actor.displayName} thu ${takenCount} lá từ các người chơi đã chết và xáo trộn vào Bộ bài rút!`
-            : `🏮 ${actor.displayName} đánh Kẻ Trộm Mộ (Grave Robber) nhưng không có người chết nào còn bài trên tay!`,
+            ? `Kẻ Trộm Mộ (Grave Robber)! ${actor.displayName} thu ${takenCount} lá từ các người chơi đã chết và xáo trộn vào Bộ bài rút!`
+            : `${actor.displayName} đánh Kẻ Trộm Mộ (Grave Robber) nhưng không có người chết nào còn bài trên tay!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2544,7 +2544,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_CURSE_CAT_BUTT",
-        message: `🍑🙈 Lời Nguyền Mông Mèo! Bài trên tay của ${target.displayName} đã bị xáo trộn và ÚP MÙ cho đến khi rút bài thành công!`,
+        message: `Lời Nguyền Mông Mèo! Bài trên tay của ${target.displayName} đã bị xáo trộn và ÚP MÙ cho đến khi rút bài thành công!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2560,7 +2560,7 @@ function executeResolvedAction(
         const meta = IK_CARD_META[picked.type];
         events.push({
           eventType: "IK_MARK_REVEALED",
-          message: `🎯 Đánh Dấu! ${actor.displayName} bắn lộ diện 1 lá bài trên tay của ${target.displayName}: đó là [${meta.emoji} ${meta.nameVi}]!`,
+          message: `Đánh Dấu! ${actor.displayName} bắn lộ diện 1 lá bài trên tay của ${target.displayName}: đó là [${meta.nameVi}]!`,
           visibleToSeatNos: "all",
         });
       }
@@ -2576,7 +2576,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_ILL_TAKE_THAT_SET",
-        message: `🪝 ${actor.displayName} gài lá [Đưa Đây Cho Tôi] trước mặt ${target.displayName} — lá bài rút tiếp theo của ${target.displayName} sẽ thuộc về ${actor.displayName}!`,
+        message: `${actor.displayName} gài lá [Đưa Đây Cho Tôi] trước mặt ${target.displayName} — lá bài rút tiếp theo của ${target.displayName} sẽ thuộc về ${actor.displayName}!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2600,7 +2600,7 @@ function executeResolvedAction(
         actor.barkingPlayedFaceUp = true;
         events.push({
           eventType: "IK_BARKING_WAITING",
-          message: `🐶 ${actor.displayName} thả Mèo Sủa ra bàn trực chờ — ai giữ lá Mèo Sủa còn lại hãy coi chừng!`,
+          message: `${actor.displayName} thả Mèo Sủa ra bàn trực chờ — ai giữ lá Mèo Sủa còn lại hãy coi chừng!`,
           visibleToSeatNos: "all",
         });
       } else {
@@ -2629,7 +2629,7 @@ function executeResolvedAction(
           );
           events.push({
             eventType: "IK_BARKING_DEFUSED",
-            message: `🐶💥 MÈO SỦA KÍCH NỔ! ${victim.displayName} bị ${actor.displayName} kích nổ Mèo Sủa và buộc phải dùng 1 lá ${defCard.type === "godcat" ? "Mèo Thần (Godcat)" : "Tháo Ngòi (Defuse)"} để thoát chết!`,
+            message: `MÈO SỦA KÍCH NỔ! ${victim.displayName} bị ${actor.displayName} kích nổ Mèo Sủa và buộc phải dùng 1 lá ${defCard.type === "godcat" ? "Mèo Thần (Godcat)" : "Tháo Ngòi (Defuse)"} để thoát chết!`,
             visibleToSeatNos: "all",
           });
         } else {
@@ -2647,7 +2647,7 @@ function executeResolvedAction(
           );
           events.push({
             eventType: "IK_BARKING_KILLED",
-            message: `🐶💀 MÈO SỦA ĐOẠT MẠNG! ${victim.displayName} bị kích nổ Mèo Sủa khi không có Defuse và bị loại khỏi cuộc chơi!`,
+            message: `MÈO SỦA ĐOẠT MẠNG! ${victim.displayName} bị kích nổ Mèo Sủa khi không có Defuse và bị loại khỏi cuộc chơi!`,
             visibleToSeatNos: "all",
           });
           checkVictory(state, events, nowMs);
@@ -2677,7 +2677,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_ARMAGEDDON_START",
-        message: `⚖️ TẬN THẾ (ARMAGEDDON)! ${actor.displayName} cầm Mèo Thần & Mèo Quỷ lên và thách đấu tâm lý với ${target.displayName}!`,
+        message: `TẬN THẾ (ARMAGEDDON)! ${actor.displayName} cầm Mèo Thần & Mèo Quỷ lên và thách đấu tâm lý với ${target.displayName}!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2697,7 +2697,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_RAISING_HECK_START",
-        message: `🔥 ${actor.displayName} đánh Quậy Tưng Bừng (Raising Heck) — đang bí mật xem lá dưới ĐÁY Bộ bài để chọn lấy về tay hay đặt lên ĐỈNH!`,
+        message: `${actor.displayName} đánh Quậy Tưng Bừng (Raising Heck) — đang bí mật xem lá dưới ĐÁY Bộ bài để chọn lấy về tay hay đặt lên ĐỈNH!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2713,7 +2713,7 @@ function executeResolvedAction(
         topCards.push(state.drawPile[i]);
       }
       const visionPayload = {
-        titleVi: `👁️‍🗨️ Tiết Lộ Tương Lai 3x (${actor.displayName} lật công khai cho CẢ BÀN):`,
+        titleVi: `Tiết Lộ Tương Lai 3x (${actor.displayName} lật công khai cho CẢ BÀN):`,
         cards: topCards.map((c, idx) => ({
           labelVi: `#${idx + 1}: ${IK_CARD_META[c.type].shortVi}${c.faceUp ? " (NGỬA)" : ""}`,
           emoji: IK_CARD_META[c.type].emoji,
@@ -2736,7 +2736,7 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_REVEAL_FUTURE",
-        message: `👁️‍🗨️ ${actor.displayName} đánh Tiết Lộ Tương Lai 3x — lật mở công khai ${topCards.length} lá đầu Bộ bài rút cho TẤT CẢ mọi người cùng thấy!`,
+        message: `${actor.displayName} đánh Tiết Lộ Tương Lai 3x — lật mở công khai ${topCards.length} lá đầu Bộ bài rút cho TẤT CẢ mọi người cùng thấy!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -3272,7 +3272,7 @@ export const implodingKittensCartridge: GameCartridge<
     const events: MatchEventRecord[] = [
       {
         eventType: "IK_MATCH_STARTED",
-        message: `💣🕳️ Đại chiến Imploding Kittens bắt đầu (${seats.length} người chơi • Mở rộng: ${enabledNames || "Cơ bản"} • ${explodingCount} Mèo Nổ + ${implodingCount} Mèo Hố Đen trong Bộ bài rút)!`,
+        message: `Đại chiến Imploding Kittens bắt đầu (${seats.length} người chơi • Mở rộng: ${enabledNames || "Cơ bản"} • ${explodingCount} Mèo Nổ + ${implodingCount} Mèo Hố Đen trong Bộ bài rút)!`,
         visibleToSeatNos: "all",
       },
     ];
@@ -3338,8 +3338,8 @@ export const implodingKittensCartridge: GameCartridge<
         events.push({
           eventType: isYup ? "IK_YUP_PLAYED" : "IK_NOPE_PLAYED",
           message: isYup
-            ? `🔥 YUP! ${actor.displayName} đánh chồng Nope thứ ${pa.nopeCount} — khôi phục lại hiệu lực hành động!`
-            : `🚫 NOPE! ${actor.displayName} tung lá Phủ Quyết chặn đứng hành động vừa đánh!`,
+            ? `YUP! ${actor.displayName} đánh chồng Nope thứ ${pa.nopeCount} — khôi phục lại hiệu lực hành động!`
+            : `NOPE! ${actor.displayName} tung lá Phủ Quyết chặn đứng hành động vừa đánh!`,
           visibleToSeatNos: "all",
         });
 
@@ -3419,16 +3419,16 @@ export const implodingKittensCartridge: GameCartridge<
         eventType: "IK_CARD_INSERTED",
         message:
           reason === "INSERT_IMPLODING_FACEUP"
-            ? `🕳️ ${actor.displayName} đã cài Mèo Hố Đen (LẬT NGỬA) trở lại vào Bộ bài rút!`
+            ? `${actor.displayName} đã cài Mèo Hố Đen (LẬT NGỬA) trở lại vào Bộ bài rút!`
             : reason === "BURY_CARD"
-              ? `🪏 ${actor.displayName} đã chôn giấu lá bài trở lại vào Bộ bài rút!`
-              : `🛠️ ${actor.displayName} đã bí mật gài lại Mèo Nổ vào Bộ bài rút!`,
+              ? `${actor.displayName} đã chôn giấu lá bài trở lại vào Bộ bài rút!`
+              : `${actor.displayName} đã bí mật gài lại Mèo Nổ vào Bộ bài rút!`,
         visibleToSeatNos: "all",
       });
 
       events.push({
         eventType: "IK_CARD_INSERTED_SECRET",
-        message: `🤫 Bạn đã cài [${IK_CARD_META[inserted.type].emoji} ${IK_CARD_META[inserted.type].shortVi}] ${posLabel} của Bộ bài rút.`,
+        message: `Bạn đã cài [$${IK_CARD_META[inserted.type].shortVi}] ${posLabel} của Bộ bài rút.`,
         visibleToSeatNos: [actor.seatNo],
       });
 
@@ -3475,7 +3475,7 @@ export const implodingKittensCartridge: GameCartridge<
       if (pf.shareWithNextSeatNo !== null) {
         const nextSeat = getSeat(state, pf.shareWithNextSeatNo);
         nextSeat.privateVision = {
-          titleVi: `🤝 ${actor.displayName} chia sẻ 3 lá đầu Bộ bài rút vừa sắp xếp (từ Đỉnh xuống):`,
+          titleVi: `${actor.displayName} chia sẻ 3 lá đầu Bộ bài rút vừa sắp xếp (từ Đỉnh xuống):`,
           cards: orderedFromTop.map((c, idx) => ({
             labelVi: `#${idx + 1}: ${IK_CARD_META[c.type].shortVi}`,
             emoji: IK_CARD_META[c.type].emoji,
@@ -3496,8 +3496,8 @@ export const implodingKittensCartridge: GameCartridge<
         eventType: "IK_ALTER_FUTURE_DONE",
         message:
           pf.shareWithNextSeatNo !== null
-            ? `🤝 ${actor.displayName} đã sắp xếp lại ${pf.count} lá đầu Bộ bài rút và chia sẻ cho người kế tiếp!`
-            : `🪄 ${actor.displayName} đã thay đổi thứ tự ${pf.count} lá đầu của Bộ bài rút!`,
+            ? `${actor.displayName} đã sắp xếp lại ${pf.count} lá đầu Bộ bài rút và chia sẻ cho người kế tiếp!`
+            : `${actor.displayName} đã thay đổi thứ tự ${pf.count} lá đầu của Bộ bài rút!`,
         visibleToSeatNos: "all",
       });
 
@@ -3540,7 +3540,7 @@ export const implodingKittensCartridge: GameCartridge<
 
       events.push({
         eventType: "IK_FAVOR_GIVEN",
-        message: `🤲 ${actor.displayName} đã đưa 1 lá bài trên tay cho ${recipient.displayName}.`,
+        message: `${actor.displayName} đã đưa 1 lá bài trên tay cho ${recipient.displayName}.`,
         visibleToSeatNos: "all",
       });
 
@@ -3597,7 +3597,7 @@ export const implodingKittensCartridge: GameCartridge<
 
       events.push({
         eventType: "IK_COMBO_2_RESOLVED",
-        message: `🐾 Combo 2 Lá! ${actor.displayName} đã chọn rút lá #${safeSlotIdx + 1} từ tay của ${target.displayName}!`,
+        message: `Combo 2 Lá! ${actor.displayName} đã chọn rút lá #${safeSlotIdx + 1} từ tay của ${target.displayName}!`,
         visibleToSeatNos: "all",
       });
       checkExposedHandBomb(state, target, events, nowMs);
@@ -3629,7 +3629,7 @@ export const implodingKittensCartridge: GameCartridge<
         state.drawPile.push(topCard);
         events.push({
           eventType: "IK_DIG_DEEPER_SECOND",
-          message: `⛏️ ${actor.displayName} bỏ qua lá đầu tiên và đào lấy lá thứ 2 bên dưới (trả lá đầu tiên lên lại Đỉnh Bộ bài)!`,
+          message: `${actor.displayName} bỏ qua lá đầu tiên và đào lấy lá thứ 2 bên dưới (trả lá đầu tiên lên lại Đỉnh Bộ bài)!`,
           visibleToSeatNos: "all",
         });
         resolveCardDrawnBySeat(state, actor, secondCard, false, events, nowMs);
@@ -3671,7 +3671,7 @@ export const implodingKittensCartridge: GameCartridge<
           state.drawPile = shuffle(state.drawPile, Math.random);
           events.push({
             eventType: "IK_GARBAGE_DONE",
-            message: `🗑️🔀 Đã thu gom ${pg.collectedCards.length} lá bài từ mọi người chơi và xáo trộn lại toàn bộ Bộ bài rút!`,
+            message: `Đã thu gom ${pg.collectedCards.length} lá bài từ mọi người chơi và xáo trộn lại toàn bộ Bộ bài rút!`,
             visibleToSeatNos: "all",
           });
         } else if (pg.mode === "FEED_THE_DEAD" && pg.recipientSeatNo) {
@@ -3685,7 +3685,7 @@ export const implodingKittensCartridge: GameCartridge<
           }
           events.push({
             eventType: "IK_FEED_DEAD_DONE",
-            message: `🧠🧟 ${deadRecipient.displayName} đã nhận ${pg.collectedCards.length} lá bài cống nạp từ những người chơi còn sống!`,
+            message: `${deadRecipient.displayName} đã nhận ${pg.collectedCards.length} lá bài cống nạp từ những người chơi còn sống!`,
             visibleToSeatNos: "all",
           });
         } else {
@@ -3699,7 +3699,7 @@ export const implodingKittensCartridge: GameCartridge<
           }
           events.push({
             eventType: "IK_POTLUCK_DONE",
-            message: `🍲 Đã xếp ${pg.collectedCards.length} lá bài góp từ mọi người chơi thẳng lên Đỉnh Bộ bài rút!`,
+            message: `Đã xếp ${pg.collectedCards.length} lá bài góp từ mọi người chơi thẳng lên Đỉnh Bộ bài rút!`,
             visibleToSeatNos: "all",
           });
         }
@@ -3730,7 +3730,7 @@ export const implodingKittensCartridge: GameCartridge<
         const target = getSeat(state, pa.targetSeatNo);
         events.push({
           eventType: "IK_ARMAGEDDON_PLACED",
-          message: `⚖️ ${actor.displayName} đã đặt úp 2 lá bài! Đến lượt ${target.displayName} quyết định GIỮ hay ĐỔI mà không được xem!`,
+          message: `${actor.displayName} đã đặt úp 2 lá bài! Đến lượt ${target.displayName} quyết định GIỮ hay ĐỔI mà không được xem!`,
           visibleToSeatNos: "all",
         });
         return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
@@ -3776,7 +3776,7 @@ export const implodingKittensCartridge: GameCartridge<
           );
         }
 
-        const swapText = command.swap ? "chọn ĐỔI BÀI 🔄" : "chọn GIỮ BÀI 🛡️";
+        const swapText = command.swap ? "chọn ĐỔI BÀI" : "chọn GIỮ BÀI";
 
         if (defuseIdx !== -1) {
           const [defCard] = devilcatVictim.hand.splice(defuseIdx, 1);
@@ -3787,10 +3787,10 @@ export const implodingKittensCartridge: GameCartridge<
             if (deadSeat) {
               deadSeat.alive = true;
               deadSeat.eliminatedBy = null;
-              revivedMsg = ` đồng thời hồi sinh 🧟 ${deadSeat.displayName}!`;
+              revivedMsg = ` đồng thời hồi sinh ${deadSeat.displayName}!`;
             }
           }
-          const outcomeMsg = `⚖️ ${armTarget.displayName} ${swapText}! ✨ ${godcatWinner.displayName} đoạt MÈO THẦN (Godcat) • 😈 ${devilcatVictim.displayName} lật phải MÈO QUỶ nhưng kịp đốt ${defCard.type === "zombie_kitten" ? "Zombie Kitten" : "Defuse"} thoát chết!${revivedMsg}`;
+          const outcomeMsg = `${armTarget.displayName} ${swapText}! ${godcatWinner.displayName} đoạt MÈO THẦN (Godcat) • ${devilcatVictim.displayName} lật phải MÈO QUỶ nhưng kịp đốt ${defCard.type === "zombie_kitten" ? "Zombie Kitten" : "Defuse"} thoát chết!${revivedMsg}`;
           setAnim(
             state,
             {
@@ -3812,7 +3812,7 @@ export const implodingKittensCartridge: GameCartridge<
           devilcatVictim.eliminatedBy = "devilcat";
           discardCardsRespectingPlaymat(state, [...devilcatVictim.hand]);
           devilcatVictim.hand = [];
-          const outcomeMsg = `⚖️💀 ${armTarget.displayName} ${swapText}! ✨ ${godcatWinner.displayName} đoạt MÈO THẦN (Godcat) • 😈 ${devilcatVictim.displayName} lật phải MÈO QUỶ (Devilcat) khi không còn Defuse — NỔ TUNG NGAY LẬP TỨC!`;
+          const outcomeMsg = `${armTarget.displayName} ${swapText}! ${godcatWinner.displayName} đoạt MÈO THẦN (Godcat) • ${devilcatVictim.displayName} lật phải MÈO QUỶ (Devilcat) khi không còn Defuse — NỔ TUNG NGAY LẬP TỨC!`;
           setAnim(
             state,
             {
@@ -3862,7 +3862,7 @@ export const implodingKittensCartridge: GameCartridge<
         state.drawPile.push(bottomCard);
         events.push({
           eventType: "IK_RAISING_HECK_TOP",
-          message: `🔥 ${actor.displayName} xem lá dưới Đáy rồi đặt thẳng nó lên ĐỈNH Bộ bài rút và kết thúc lượt!`,
+          message: `${actor.displayName} xem lá dưới Đáy rồi đặt thẳng nó lên ĐỈNH Bộ bài rút và kết thúc lượt!`,
           visibleToSeatNos: "all",
         });
         consumeOneTurnOrAdvanceSeat(state, events, nowMs);
@@ -3900,8 +3900,8 @@ export const implodingKittensCartridge: GameCartridge<
         eventType: "IK_TOWER_CLAIMED",
         message:
           remainingCount > 0
-            ? `👑 ${actor.displayName} tháo Tháp Quyền Lực: rút 1 lá bí mật về tay và xáo ${remainingCount} lá còn lại vào Bộ bài rút!`
-            : `👑 ${actor.displayName} rút lá cuối cùng từ Tháp Quyền Lực về tay!`,
+            ? `${actor.displayName} tháo Tháp Quyền Lực: rút 1 lá bí mật về tay và xáo ${remainingCount} lá còn lại vào Bộ bài rút!`
+            : `${actor.displayName} rút lá cuối cùng từ Tháp Quyền Lực về tay!`,
         visibleToSeatNos: "all",
       });
       return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
@@ -4019,10 +4019,10 @@ export const implodingKittensCartridge: GameCartridge<
       events.push({
         eventType: "IK_CARD_PLAYED",
         message: isGodcatPlay
-          ? `✨ ${actor.displayName} tung Mèo Thần (Godcat) hóa thân thành [${effMeta.emoji} ${effMeta.nameVi}]${targetName} (Mèo Thần quay về Thảm đấu)!`
+          ? `${actor.displayName} tung Mèo Thần (Godcat) hóa thân thành [${effMeta.nameVi}]${targetName} (Mèo Thần quay về Thảm đấu)!`
           : card.type === "clone"
-            ? `🧬 ${actor.displayName} đánh Nhân Bản (Clone) sao chép lá [${effMeta.emoji} ${effMeta.nameVi}]${targetName}!`
-            : `${meta.emoji} ${actor.displayName} đánh lá [${meta.nameVi}]${targetName}!`,
+            ? `${actor.displayName} đánh Nhân Bản (Clone) sao chép lá [${effMeta.nameVi}]${targetName}!`
+            : `${actor.displayName} đánh lá [${meta.nameVi}]${targetName}!`,
         visibleToSeatNos: "all",
       });
 
@@ -4119,10 +4119,10 @@ export const implodingKittensCartridge: GameCartridge<
         eventType: "IK_COMBO_PLAYED",
         message:
           command.type === "PLAY_COMBO_2"
-            ? `🐾 ${actor.displayName} đánh Combo 2 Lá nhắm vào ${getSeat(state, command.targetSeatNo).displayName}!`
+            ? `${actor.displayName} đánh Combo 2 Lá nhắm vào ${getSeat(state, command.targetSeatNo).displayName}!`
             : command.type === "PLAY_COMBO_3"
-              ? `🎯 ${actor.displayName} đánh Combo 3 Lá đòi lá [${IK_CARD_META[command.wantedCardType].shortVi}] từ ${getSeat(state, command.targetSeatNo).displayName}!`
-              : `🌟 ${actor.displayName} đánh Combo 5 Lá Khác Nhau để trục vớt 1 lá bài từ Chồng bài bỏ!`,
+              ? `${actor.displayName} đánh Combo 3 Lá đòi lá [${IK_CARD_META[command.wantedCardType].shortVi}] từ ${getSeat(state, command.targetSeatNo).displayName}!`
+              : `${actor.displayName} đánh Combo 5 Lá Khác Nhau để trục vớt 1 lá bài từ Chồng bài bỏ!`,
         visibleToSeatNos: "all",
       });
 

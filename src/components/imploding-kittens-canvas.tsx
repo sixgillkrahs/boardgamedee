@@ -256,9 +256,9 @@ export function ImplodingKittensCanvas({
         ctx.lineJoin = "round";
         ctx.lineWidth = Math.max(4, titleSize * 0.2);
         ctx.strokeStyle = "rgba(15, 5, 10, 0.92)";
-        ctx.strokeText("💣 IMPLODING KITTENS", width * 0.5, titleY);
+        ctx.strokeText("IMPLODING KITTENS", width * 0.5, titleY);
         ctx.fillStyle = "#fde047";
-        ctx.fillText("💣 IMPLODING KITTENS", width * 0.5, titleY);
+        ctx.fillText("IMPLODING KITTENS", width * 0.5, titleY);
 
         if (!isShort) {
           const subY = titleY + titleSize * 0.82;
@@ -364,7 +364,7 @@ export function ImplodingKittensCanvas({
           ctx.fillStyle = opp.alive ? "#f8fafc" : "#64748b";
           ctx.font = `800 12px ${fonts.sans}`;
           ctx.fillText(
-            `${isTarget ? "🎯 " : ""}${opp.displayName}`,
+            `${isTarget ? "▸ " : ""}${opp.displayName}`,
             ox + 10,
             oy + 18,
             oppW - 78
@@ -380,31 +380,31 @@ export function ImplodingKittensCanvas({
           ctx.fillText(
             !opp.alive
               ? opp.eliminatedBy === "imploding"
-                ? "🕳️ SẬP HỐ"
+                ? "SẬP HỐ"
                 : opp.eliminatedBy === "devilcat"
-                  ? "😈 MÈO QUỶ"
-                  : "💥 ĐÃ NỔ"
+                  ? "MÈO QUỶ"
+                  : "ĐÃ NỔ"
               : isActing
-                ? `👑 ${pv.turnsRemaining} LƯỢT`
-                : `🃏 ${opp.handCount} LÁ`,
+                ? `${pv.turnsRemaining} LƯỢT`
+                : `${opp.handCount} LÁ`,
             ox + oppW - 10,
             oy + 18
           );
 
           const badges: string[] = [];
           if (opp.hasGodcat) {
-            badges.push("✨ Mèo Thần");
+            badges.push("Mèo Thần");
           }
           if (pv.towerHolderSeatNo === opp.seatNo && pv.towerStashCount > 0) {
-            badges.push(`👑 Tháp (${pv.towerStashCount})`);
+            badges.push(`Tháp (${pv.towerStashCount})`);
           }
-          if (opp.isBlind) badges.push("🍑 Mù Bài");
-          if (opp.barkingPlayedFaceUp) badges.push("🐶 Mèo Sủa");
+          if (opp.isBlind) badges.push("Mù Bài");
+          if (opp.barkingPlayedFaceUp) badges.push("Mèo Sủa");
           if (opp.illTakeThatFromSeatNo !== null)
-            badges.push("🪝 Cướp Rút");
+            badges.push("Cướp Rút");
           if (oppH < 82 && opp.markedCards.length > 0) {
             badges.push(
-              `🎯 ${opp.markedCards.map((mc) => IK_CARD_META[mc.type].shortVi).join(", ")}`
+              `${opp.markedCards.map((mc) => IK_CARD_META[mc.type].shortVi).join(", ")}`
             );
           }
           if (badges.length > 0) {
@@ -653,8 +653,8 @@ export function ImplodingKittensCanvas({
         ctx.font = `900 11px ${fonts.sans}`;
         ctx.fillText(
           pv.topDrawCardFaceUp
-            ? `🕳️ MÈO HỐ ĐEN NGỬA TRÊN ĐỈNH! (${pv.drawPileCount} lá)`
-            : `🃏 BỘ BÀI RÚT (${pv.drawPileCount} LÁ)`,
+            ? `MÈO HỐ ĐEN NGỬA TRÊN ĐỈNH! (${pv.drawPileCount} lá)`
+            : `BỘ BÀI RÚT (${pv.drawPileCount} LÁ)`,
           drawX + pileW * 0.5,
           drawY + pileH + 16
         );
@@ -663,7 +663,7 @@ export function ImplodingKittensCanvas({
           ctx.fillStyle = "#4ade80";
           ctx.font = `800 10px ${fonts.sans}`;
           ctx.fillText(
-            "👆 Bấm để Rút Bài Kết Thúc Lượt",
+            "Bấm để Rút Bài Kết Thúc Lượt",
             drawX + pileW * 0.5,
             drawY + pileH + 31 + arrowBob
           );
@@ -689,7 +689,7 @@ export function ImplodingKittensCanvas({
           ctx.fillStyle = "#e879f9";
           ctx.font = `800 10px ${fonts.sans}`;
           ctx.fillText(
-            "🕳️ Cảnh báo: Đang có Mèo Hố Đen LẬT NGỬA trong Bộ bài!",
+            "Cảnh báo: Đang có Mèo Hố Đen LẬT NGỬA trong Bộ bài!",
             width * 0.5,
             arenaY + 24
           );
@@ -700,8 +700,8 @@ export function ImplodingKittensCanvas({
           ctx.font = `800 9.5px ${fonts.sans}`;
           ctx.fillText(
             pv.godcatOnPlaymat
-              ? "⚖️ Thảm Thiện & Ác: ✨ Mèo Thần + 😈 Mèo Quỷ (Sẵn sàng)"
-              : `⚖️ Thảm Thiện & Ác: ✨ Mèo Thần trong tay ${godcatHolder?.displayName ?? "..."}`,
+              ? "Thảm Thiện & Ác: Mèo Thần + Mèo Quỷ (Sẵn sàng)"
+              : `Thảm Thiện & Ác: Mèo Thần trong tay ${godcatHolder?.displayName ?? "..."}`,
             width * 0.5,
             arenaY + (pv.faceUpImplodingInDeck ? 40 : 24)
           );
@@ -750,7 +750,7 @@ export function ImplodingKittensCanvas({
         ctx.fillStyle = "#cbd5e1";
         ctx.font = `800 11px ${fonts.sans}`;
         ctx.fillText(
-          `🗑️ CHỒNG BÀI BỎ (${pv.discardPileCount} LÁ)`,
+          `CHỒNG BÀI BỎ (${pv.discardPileCount} LÁ)`,
           discardX + pileW * 0.5,
           discardY + pileH + 16
         );
@@ -769,7 +769,7 @@ export function ImplodingKittensCanvas({
         ctx.fillStyle = isMyTurn ? "#fde047" : "#f8fafc";
         ctx.font = `800 11.5px ${fonts.sans}`;
         ctx.fillText(
-          `${mySeat.displayName} (${pv.myHand.length} lá trên tay)${mySeat.hasGodcat ? " • ✨ ĐANG CẦM MÈO THẦN" : ""}${pv.towerHolderSeatNo === mySeat.seatNo && pv.towerStashCount > 0 ? ` • 👑 ĐANG ĐỘI THÁP QUYỀN LỰC (${pv.towerStashCount} lá dự trữ)` : ""}${pv.myIsBlind ? " • 🍑 ĐANG BỊ ÚP MÙ BÀI!" : ""}${!mySeat.alive ? " • 💀 ĐÃ BỊ LOẠI" : ""}`,
+          `${mySeat.displayName} (${pv.myHand.length} lá trên tay)${mySeat.hasGodcat ? " • ĐANG CẦM MÈO THẦN" : ""}${pv.towerHolderSeatNo === mySeat.seatNo && pv.towerStashCount > 0 ? ` • ĐANG ĐỘI THÁP QUYỀN LỰC (${pv.towerStashCount} lá dự trữ)` : ""}${pv.myIsBlind ? " • ĐANG BỊ ÚP MÙ BÀI!" : ""}${!mySeat.alive ? " • ĐÃ BỊ LOẠI" : ""}`,
           24,
           dockY + 16
         );
@@ -778,7 +778,7 @@ export function ImplodingKittensCanvas({
           ctx.fillStyle = "rgba(148, 163, 184, 0.85)";
           ctx.font = `600 10.5px ${fonts.sans}`;
           ctx.fillText(
-            "💡 Giữ 1s vào lá bài để xem chức năng",
+            "Giữ 1s vào lá bài để xem chức năng",
             width - 24,
             dockY + 16
           );

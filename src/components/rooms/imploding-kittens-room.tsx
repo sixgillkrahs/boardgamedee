@@ -273,7 +273,7 @@ export function ImplodingKittensRoom({
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
                 <div>
                   <span className="text-xs font-extrabold uppercase tracking-wider text-purple-300">
-                    💣🕳️ Sảnh Chờ Imploding Kittens ({snapshot.seats.length}/6
+                    Sảnh Chờ Imploding Kittens ({snapshot.seats.length}/6
                     Người Chơi)
                   </span>
                   <p className="text-[11px] text-slate-400">
@@ -335,7 +335,7 @@ export function ImplodingKittensRoom({
                     >
                       <span className="text-xs font-bold text-slate-100 truncate">
                         #{seat.seatNo} {seat.displayName}{" "}
-                        {isRoomHost ? "👑" : seat.isBot ? "🤖" : ""}
+                        {isRoomHost ? "(Host)" : seat.isBot ? "(Bot)" : ""}
                       </span>
                       {canRemove && (
                         <button
@@ -367,7 +367,7 @@ export function ImplodingKittensRoom({
                         onClick={() => sendRoomAction({ type: "ADD_BOT" })}
                         className="rounded-xl border border-sky-500/45 bg-sky-500/15 hover:bg-sky-500/25 px-3.5 py-2 text-xs font-bold text-sky-200 transition cursor-pointer"
                       >
-                        🤖 + Thêm Bot
+                        + Thêm Bot
                       </button>
                     )}
                     <button
@@ -376,7 +376,7 @@ export function ImplodingKittensRoom({
                       onClick={() => sendRoomAction({ type: "START_MATCH" })}
                       className="rounded-xl bg-gradient-to-r from-purple-500 to-rose-500 hover:from-purple-400 hover:to-rose-400 px-5 py-2 text-xs font-extrabold text-white shadow-lg transition cursor-pointer disabled:opacity-40"
                     >
-                      💣 BẮT ĐẦU VÁN ĐẤU
+                      BẮT ĐẦU VÁN ĐẤU
                     </button>
                   </>
                 ) : snapshot.viewerSeatNo === null ? (
@@ -386,7 +386,7 @@ export function ImplodingKittensRoom({
                     onClick={() => sendRoomAction({ type: "JOIN" })}
                     className="rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2 text-xs font-extrabold text-slate-950 transition cursor-pointer"
                   >
-                    🪑 Ngồi Vào Bàn
+                    Ngồi Vào Bàn
                   </button>
                 ) : (
                   <span className="text-xs text-slate-400 italic">
@@ -420,8 +420,8 @@ export function ImplodingKittensRoom({
                   className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-4 py-2 text-xs font-extrabold text-slate-950 shadow cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed"
                 >
                   {isSelectedArmageddonBlocked
-                    ? "⚖️ Cần Mèo Thần Trên Thảm Mới Đánh Được Armageddon"
-                    : `⚡ Đánh Lá [${IK_CARD_META[selectedCards[0].type].nameVi}]`}
+                    ? "Cần Mèo Thần Trên Thảm Mới Đánh Được Armageddon"
+                    : `Đánh Lá [${IK_CARD_META[selectedCards[0].type].nameVi}]`}
                 </button>
               )}
 
@@ -436,7 +436,7 @@ export function ImplodingKittensRoom({
                   >
                     {IK_GODCAT_MIMICABLE_TYPES.map((t) => (
                       <option key={t} value={t}>
-                        {IK_CARD_META[t].emoji} {IK_CARD_META[t].nameVi}
+                        {IK_CARD_META[t].nameVi}
                         {IK_CARD_META[t].needsTargetSeat ? " (Cần Mục Tiêu)" : ""}
                       </option>
                     ))}
@@ -465,7 +465,7 @@ export function ImplodingKittensRoom({
                     }}
                     className="rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 px-3.5 py-2 text-xs font-extrabold text-slate-950 shadow cursor-pointer disabled:opacity-45"
                   >
-                    ✨ Hóa Thân Mèo Thần ({IK_CARD_META[godcatMimicType].shortVi})
+                    Hóa Thân Mèo Thần ({IK_CARD_META[godcatMimicType].shortVi})
                   </button>
                 </div>
               )}
@@ -487,7 +487,7 @@ export function ImplodingKittensRoom({
                   }}
                   className="rounded-xl bg-sky-500 hover:bg-sky-400 px-4 py-2 text-xs font-extrabold text-slate-950 shadow cursor-pointer"
                 >
-                  🐾 Đánh Combo 2 Lá (Chọn Rút 1 Lá Từ Mục Tiêu 🎯)
+                  Đánh Combo 2 Lá (Chọn Rút 1 Lá Từ Mục Tiêu)
                 </button>
               )}
 
@@ -502,7 +502,7 @@ export function ImplodingKittensRoom({
                   >
                     {STEALABLE_CARD_TYPES.map((t) => (
                       <option key={t} value={t}>
-                        {IK_CARD_META[t].emoji} {IK_CARD_META[t].nameVi}
+                        {IK_CARD_META[t].nameVi}
                       </option>
                     ))}
                   </select>
@@ -527,7 +527,7 @@ export function ImplodingKittensRoom({
                     }}
                     className="rounded-xl bg-purple-500 hover:bg-purple-400 px-3.5 py-2 text-xs font-extrabold text-white shadow cursor-pointer"
                   >
-                    🎯 Đánh Combo 3 Lá (Chỉ Định Tên Bài)
+                    Đánh Combo 3 Lá (Chỉ Định Tên Bài)
                   </button>
                 </div>
               )}
@@ -541,7 +541,7 @@ export function ImplodingKittensRoom({
                   >
                     {ikView.discardPileCards.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {IK_CARD_META[c.type].emoji}{" "}
+                        {" "}
                         {IK_CARD_META[c.type].nameVi}
                       </option>
                     ))}
@@ -568,7 +568,7 @@ export function ImplodingKittensRoom({
                     }}
                     className="rounded-xl bg-emerald-500 hover:bg-emerald-400 px-3.5 py-2 text-xs font-extrabold text-slate-950 shadow cursor-pointer"
                   >
-                    🌟 Combo 5 Lá Khác Nhau (Trục Vớt Từ Mộ)
+                    Combo 5 Lá Khác Nhau (Trục Vớt Từ Mộ)
                   </button>
                 </div>
               )}
@@ -586,7 +586,7 @@ export function ImplodingKittensRoom({
                     }
                     className="rounded-xl border border-amber-400/70 bg-amber-500/20 hover:bg-amber-500/35 px-3.5 py-2 text-xs font-extrabold text-amber-200 shadow cursor-pointer"
                   >
-                    👑 Rút 1 Lá Từ Tháp Quyền Lực (Còn {ikView.towerStashCount}{" "}
+                    Rút 1 Lá Từ Tháp Quyền Lực (Còn {ikView.towerStashCount}{" "}
                     lá)
                   </button>
                 )}
@@ -602,7 +602,7 @@ export function ImplodingKittensRoom({
                 }
                 className="rounded-xl border border-emerald-500/50 bg-emerald-500/20 hover:bg-emerald-500/30 px-3.5 py-2 text-xs font-extrabold text-emerald-200 cursor-pointer"
               >
-                🃏 Rút Bài Kết Thúc Lượt
+                Rút Bài Kết Thúc Lượt
               </button>
             </div>
           </div>
@@ -652,7 +652,7 @@ export function ImplodingKittensRoom({
                           key={idx}
                           className="rounded-xl border border-emerald-500/40 bg-emerald-950/50 px-4 py-3 text-xs font-bold text-emerald-200"
                         >
-                          <span>{item.emoji}</span> <span>{item.labelVi}</span>
+                          <span>{item.labelVi}</span>
                         </div>
                       );
                     }
@@ -749,8 +749,8 @@ export function ImplodingKittensRoom({
               <div className="rounded-2xl border border-rose-500/70 bg-slate-950/95 p-4 shadow-2xl space-y-3 text-center">
                 <p className="text-xs font-extrabold uppercase tracking-wider text-rose-300">
                   {ikView.pendingAction.isCanceledByNope
-                    ? `🚫 ĐÃ BỊ NOPE (${ikView.pendingAction.nopeCount} lần) — Ai có Nope để đánh YUP không?`
-                    : "⚡ CỬA SỔ PHỦ QUYẾT (NOPE!)"}
+                    ? `ĐÃ BỊ NOPE (${ikView.pendingAction.nopeCount} lần) — Ai có Nope để đánh YUP không?`
+                    : "CỬA SỔ PHỦ QUYẾT (NOPE!)"}
                 </p>
                 <p className="text-xs text-slate-200">
                   Hành động đang chờ:{" "}
@@ -774,8 +774,8 @@ export function ImplodingKittensRoom({
                       className="rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-extrabold text-white shadow-lg cursor-pointer"
                     >
                       {ikView.pendingAction.isCanceledByNope
-                        ? "🔥 ĐÁNH YUP! (Phản Nope)"
-                        : "🚫 ĐÁNH NOPE! (Hủy Bỏ)"}
+                        ? "ĐÁNH YUP! (Phản Nope)"
+                        : "ĐÁNH NOPE! (Hủy Bỏ)"}
                     </button>
                   )}
                   {!ikView.pendingAction.hasViewerPassedNope && (
@@ -861,10 +861,10 @@ export function ImplodingKittensRoom({
                     <div className="min-w-0">
                       <p className={`text-sm font-extrabold ${accentTitle}`}>
                         {isImploding
-                          ? "🕳️ Cài Mèo Hố Đen (LẬT NGỬA) Vào Bộ Bài"
+                          ? "Cài Mèo Hố Đen (LẬT NGỬA) Vào Bộ Bài"
                           : isBury
-                            ? `🪏 Chôn Giấu [${cardMeta.shortVi}] Vào Bộ Bài`
-                            : "🛠️ Tháo Ngòi Thành Công! Gài Lại Mèo Nổ"}
+                            ? `Chôn Giấu [${cardMeta.shortVi}] Vào Bộ Bài`
+                            : "Tháo Ngòi Thành Công! Gài Lại Mèo Nổ"}
                       </p>
                       <p className="text-[11px] text-slate-400 mt-0.5">
                         Kéo thanh bên dưới để chọn chính xác vị trí giấu lá bài
@@ -942,10 +942,10 @@ export function ImplodingKittensRoom({
                     </div>
 
                     <div className="flex items-center justify-between text-[10.5px] font-bold text-slate-400 px-1">
-                      <span className="text-rose-300">🔥 Đỉnh (#1)</span>
+                      <span className="text-rose-300">Đỉnh (#1)</span>
                       <span>Giữa (#{Math.floor(maxIdx / 2) + 1})</span>
                       <span className="text-emerald-300">
-                        ⏬ Đáy (#{maxIdx + 1})
+                        Đáy (#{maxIdx + 1})
                       </span>
                     </div>
                   </div>
@@ -984,7 +984,7 @@ export function ImplodingKittensRoom({
                       }
                       className="rounded-lg border border-slate-700 bg-slate-800/90 hover:border-sky-400 px-2 py-1.5 text-[11px] font-bold text-sky-200 cursor-pointer"
                     >
-                      🎲 Ngẫu nhiên
+                      Ngẫu nhiên
                     </button>
                   </div>
 
@@ -1019,7 +1019,7 @@ export function ImplodingKittensRoom({
               <div className="w-full max-w-3xl max-h-[92dvh] overflow-y-auto rounded-2xl border border-indigo-500/65 bg-slate-900/95 p-3.5 sm:p-5 shadow-2xl space-y-3">
                 <div>
                   <p className="text-sm font-extrabold text-indigo-300">
-                    🪄 Sắp Xếp Lại {ikView.pendingAlterFuture.count} Lá Đầu Bộ
+                    Sắp Xếp Lại {ikView.pendingAlterFuture.count} Lá Đầu Bộ
                     Bài Rút (#1 Là Lá Trên Đỉnh Sẽ Rút Đầu Tiên)
                   </p>
                   <p className="text-[11px] text-slate-400 mt-0.5">
@@ -1160,7 +1160,7 @@ export function ImplodingKittensRoom({
               <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
                 <div className="w-full max-w-md max-h-[92dvh] overflow-y-auto rounded-2xl border border-amber-500/65 bg-slate-900/95 p-4 sm:p-5 shadow-2xl space-y-3.5">
                   <p className="text-sm font-extrabold text-amber-300 text-center">
-                    ⛏️ Đào Sâu Hơn (Dig Deeper) — Lá #1 Trên Đỉnh
+                    Đào Sâu Hơn (Dig Deeper) — Lá #1 Trên Đỉnh
                   </p>
 
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3.5">
@@ -1218,7 +1218,7 @@ export function ImplodingKittensRoom({
                         }
                         className="rounded-xl bg-amber-500 hover:bg-amber-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 cursor-pointer"
                       >
-                        ⛏️ Bỏ Qua & Đào Lá #2!
+                        Bỏ Qua & Đào Lá #2!
                       </button>
                     )}
                   </div>
@@ -1236,7 +1236,7 @@ export function ImplodingKittensRoom({
               <div className="w-full max-w-2xl max-h-[92dvh] overflow-y-auto rounded-2xl border border-sky-400/60 bg-slate-900/95 p-4 sm:p-5 shadow-2xl space-y-3 text-center">
                 <div className="space-y-1">
                   <p className="text-sm sm:text-base font-extrabold text-sky-300">
-                    🐾 Combo 2 Lá — Chọn 1 Lá Bài Của{" "}
+                    Combo 2 Lá — Chọn 1 Lá Bài Của{" "}
                     <span className="text-amber-300">
                       {ikView.pendingCombo2Pick.targetDisplayName}
                     </span>{" "}
@@ -1285,7 +1285,7 @@ export function ImplodingKittensRoom({
                         />
                         <span className="absolute bottom-1 inset-x-1 rounded bg-slate-950/85 px-1 py-0.5 text-[10px] font-extrabold text-amber-300 group-hover:bg-amber-400 group-hover:text-slate-950 transition">
                           {markedMeta
-                            ? `🎯 ${markedMeta.shortVi}`
+                            ? `${markedMeta.shortVi}`
                             : `Rút #${idx + 1}`}
                         </span>
                       </button>
@@ -1298,7 +1298,7 @@ export function ImplodingKittensRoom({
             <div className="absolute top-14 [@media(min-height:520px)]:top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
               <div className="rounded-2xl border border-sky-400/60 bg-slate-950/95 p-3.5 shadow-2xl text-center">
                 <p className="text-xs font-extrabold text-sky-300">
-                  🐾 Đang chờ{" "}
+                  Đang chờ{" "}
                   {ikView.seats.find(
                     (s) => s.seatNo === ikView.pendingCombo2Pick?.actorSeatNo
                   )?.displayName ?? "đối thủ"}{" "}
@@ -1320,10 +1320,10 @@ export function ImplodingKittensRoom({
               <div className="rounded-2xl border border-amber-400/70 bg-slate-950/95 p-3.5 shadow-2xl text-center">
                 <p className="text-xs font-extrabold text-amber-300">
                   {ikView.step === "FavorGiveStep"
-                    ? "🤲 Hãy bấm chọn 1 lá bài trên tay bạn ở dưới đáy màn hình để đưa cho đối thủ (Favor)!"
+                    ? "Hãy bấm chọn 1 lá bài trên tay bạn ở dưới đáy màn hình để đưa cho đối thủ (Favor)!"
                     : ikView.pendingGroupSubmit?.mode === "GARBAGE_COLLECTION"
-                      ? "🗑️ Thu Gom Rác: Hãy bấm chọn 1 lá bài trên tay bạn để trả vào Bộ bài rút!"
-                      : "🍲 Góp Bài (Potluck): Hãy bấm chọn 1 lá bài trên tay bạn để đặt lên Đỉnh Bộ bài rút!"}
+                      ? "Thu Gom Rác: Hãy bấm chọn 1 lá bài trên tay bạn để trả vào Bộ bài rút!"
+                      : "Góp Bài (Potluck): Hãy bấm chọn 1 lá bài trên tay bạn để đặt lên Đỉnh Bộ bài rút!"}
                 </p>
               </div>
             </div>
@@ -1350,7 +1350,7 @@ export function ImplodingKittensRoom({
                   <div className="w-full max-w-lg max-h-[92dvh] overflow-y-auto rounded-2xl border border-amber-400/70 bg-slate-900/95 p-4 sm:p-5 shadow-2xl space-y-3.5 text-center">
                     <div>
                       <p className="text-sm sm:text-base font-extrabold text-amber-300">
-                        ⚖️ Tận Thế (Armageddon) — Đấu Trí Với{" "}
+                        Tận Thế (Armageddon) — Đấu Trí Với{" "}
                         <span className="text-rose-300">
                           {pa.targetDisplayName}
                         </span>
@@ -1373,7 +1373,7 @@ export function ImplodingKittensRoom({
                           />
                         </div>
                         <p className="text-xs font-extrabold text-yellow-300">
-                          ✨ Mèo Thần (Godcat)
+                          Mèo Thần (Godcat)
                         </p>
                         <p className="text-[10px] text-slate-300">
                           Cầm về tay • Hóa mọi lá (trừ Nope)
@@ -1390,7 +1390,7 @@ export function ImplodingKittensRoom({
                           />
                         </div>
                         <p className="text-xs font-extrabold text-rose-300">
-                          😈 Mèo Quỷ (Devilcat)
+                          Mèo Quỷ (Devilcat)
                         </p>
                         <p className="text-[10px] text-slate-300">
                           Nổ ngay lập tức (phải Defuse!)
@@ -1413,7 +1413,7 @@ export function ImplodingKittensRoom({
                         }
                         className="rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 shadow cursor-pointer"
                       >
-                        ✨ Giữ Mèo Thần • Đẩy 😈 Mèo Quỷ cho{" "}
+                        Giữ Mèo Thần • Đẩy Mèo Quỷ cho{" "}
                         {pa.targetDisplayName}
                       </button>
                       <button
@@ -1430,7 +1430,7 @@ export function ImplodingKittensRoom({
                         }
                         className="rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-400 hover:to-orange-400 px-3 py-2.5 text-xs font-extrabold text-white shadow cursor-pointer"
                       >
-                        😈 Cú Lừa Tâm Lý! Đặt ✨ Mèo Thần cho{" "}
+                        Cú Lừa Tâm Lý! Đặt Mèo Thần cho{" "}
                         {pa.targetDisplayName}
                       </button>
                     </div>
@@ -1445,14 +1445,14 @@ export function ImplodingKittensRoom({
                   <div className="w-full max-w-md max-h-[92dvh] overflow-y-auto rounded-2xl border border-rose-500/70 bg-slate-900/95 p-4 sm:p-5 shadow-2xl space-y-3.5 text-center">
                     <div>
                       <p className="text-sm sm:text-base font-extrabold text-rose-300">
-                        ⚖️ Tận Thế (Armageddon) — Đến Lượt Bạn Chọn!
+                        Tận Thế (Armageddon) — Đến Lượt Bạn Chọn!
                       </p>
                       <p className="text-xs text-slate-300 mt-1">
                         <strong className="text-amber-300">
                           {pa.actorDisplayName}
                         </strong>{" "}
                         đã đặt úp 1 lá trước mặt bạn và 1 lá trước mặt họ (1 lá
-                        là ✨ Mèo Thần, 1 lá là 😈 Mèo Quỷ). Bạn chọn GIỮ hay
+                        là Mèo Thần, 1 lá là Mèo Quỷ). Bạn chọn GIỮ hay
                         ĐỔI?
                       </p>
                     </div>
@@ -1501,7 +1501,7 @@ export function ImplodingKittensRoom({
                         }
                         className="rounded-xl bg-emerald-500 hover:bg-emerald-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 shadow cursor-pointer"
                       >
-                        🛡️ GIỮ Lá Của Mình
+                        GIỮ Lá Của Mình
                       </button>
                       <button
                         type="button"
@@ -1514,7 +1514,7 @@ export function ImplodingKittensRoom({
                         }
                         className="rounded-xl bg-amber-500 hover:bg-amber-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 shadow cursor-pointer"
                       >
-                        🔄 ĐỔI Với {pa.actorDisplayName}
+                        ĐỔI Với {pa.actorDisplayName}
                       </button>
                     </div>
                   </div>
@@ -1527,8 +1527,8 @@ export function ImplodingKittensRoom({
                 <div className="rounded-2xl border border-amber-400/65 bg-slate-950/95 p-3.5 shadow-2xl text-center">
                   <p className="text-xs font-extrabold text-amber-300">
                     {pa.stage === "ACTOR_PLACE"
-                      ? `⚖️ Tận Thế! Đang chờ ${pa.actorDisplayName} đặt úp Mèo Thần & Mèo Quỷ trước mặt ${pa.targetDisplayName}...`
-                      : `⚖️ Tận Thế! Đang chờ ${pa.targetDisplayName} cân não chọn GIỮ hay ĐỔI bài với ${pa.actorDisplayName}...`}
+                      ? `Tận Thế! Đang chờ ${pa.actorDisplayName} đặt úp Mèo Thần & Mèo Quỷ trước mặt ${pa.targetDisplayName}...`
+                      : `Tận Thế! Đang chờ ${pa.targetDisplayName} cân não chọn GIỮ hay ĐỔI bài với ${pa.actorDisplayName}...`}
                   </p>
                 </div>
               </div>
@@ -1554,7 +1554,7 @@ export function ImplodingKittensRoom({
                 <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
                   <div className="w-full max-w-md max-h-[92dvh] overflow-y-auto rounded-2xl border border-orange-500/70 bg-slate-900/95 p-4 sm:p-5 shadow-2xl space-y-3.5">
                     <p className="text-sm font-extrabold text-orange-300 text-center">
-                      🔥 Quậy Tưng Bừng (Raising Heck) — Lá Dưới ĐÁY Bộ Bài
+                      Quậy Tưng Bừng (Raising Heck) — Lá Dưới ĐÁY Bộ Bài
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3.5">
@@ -1600,8 +1600,8 @@ export function ImplodingKittensRoom({
                         }`}
                       >
                         {isBomb
-                          ? "⚠️ Rút Bom Này Về Tay"
-                          : "✋ Lấy Lá Này Về Tay"}
+                          ? "Rút Bom Này Về Tay"
+                          : "Lấy Lá Này Về Tay"}
                       </button>
                       <button
                         type="button"
@@ -1617,7 +1617,7 @@ export function ImplodingKittensRoom({
                         }
                         className="rounded-xl bg-orange-500 hover:bg-orange-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 cursor-pointer"
                       >
-                        🔥 Đặt Lên ĐỈNH Bộ Bài!
+                        Đặt Lên ĐỈNH Bộ Bài!
                       </button>
                     </div>
                   </div>
@@ -1628,7 +1628,7 @@ export function ImplodingKittensRoom({
             <div className="absolute top-14 [@media(min-height:520px)]:top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
               <div className="rounded-2xl border border-orange-500/60 bg-slate-950/95 p-3.5 shadow-2xl text-center">
                 <p className="text-xs font-extrabold text-orange-300">
-                  🔥 Đang chờ{" "}
+                  Đang chờ{" "}
                   {ikView.seats.find(
                     (s) => s.seatNo === ikView.pendingRaisingHeck?.seatNo
                   )?.displayName ?? "đối thủ"}{" "}
@@ -1652,7 +1652,7 @@ export function ImplodingKittensRoom({
                   onClick={() => sendRoomAction({ type: "REMATCH" })}
                   className="w-full rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2.5 text-xs font-extrabold text-slate-950 cursor-pointer"
                 >
-                  🔁 Chơi Ván Mới (Về Sảnh)
+                  Chơi Ván Mới (Về Sảnh)
                 </button>
               )}
             </div>
@@ -1739,13 +1739,13 @@ export function ImplodingKittensRulesContent() {
           1. Mèo Nổ (Exploding Kitten) vs Mèo Hố Đen (Imploding Kitten)
         </p>
         <p>
-          • <strong>💣 Mèo Nổ (Exploding Kitten)</strong>: Rút phải sẽ bị nổ tung
-          trừ khi dùng 1 lá <strong>🛠️ Tháo Ngòi (Defuse)</strong> để bí mật cài
+          • <strong>Mèo Nổ (Exploding Kitten)</strong>: Rút phải sẽ bị nổ tung
+          trừ khi dùng 1 lá <strong>Tháo Ngòi (Defuse)</strong> để bí mật cài
           lại vào Bộ bài rút (hoặc giữ kín trên tay nếu bạn đang cầm lá{" "}
-          <strong>🏃 Mèo Chạy Rông / Streaking Kitten</strong>).
+          <strong>Mèo Chạy Rông / Streaking Kitten</strong>).
         </p>
         <p>
-          • <strong>🕳️ Mèo Hố Đen (Imploding Kitten)</strong>:
+          • <strong>Mèo Hố Đen (Imploding Kitten)</strong>:
           <br />- <strong>Lần 1 rút phải (đang Úp)</strong>: Chưa nổ! Bạn được bí
           mật chọn vị trí bất kỳ trong Bộ bài rút để nhét nó vào ở trạng thái{" "}
           <strong className="text-purple-300">LẬT NGỬA</strong>.
@@ -1762,17 +1762,17 @@ export function ImplodingKittensRulesContent() {
           2. Ba Đòn Combo Đặc Biệt & Mèo Hoang (Feral Cat)
         </p>
         <p>
-          • <strong>🐾 Combo 2 Lá Cùng Loại</strong> (hoặc Lá Mèo +{" "}
-          <strong>😼 Mèo Hoang</strong>): Cướp ngẫu nhiên 1 lá bài từ tay đối
+          • <strong>Combo 2 Lá Cùng Loại</strong> (hoặc Lá Mèo +{" "}
+          <strong>Mèo Hoang</strong>): Cướp ngẫu nhiên 1 lá bài từ tay đối
           thủ.
         </p>
         <p>
-          • <strong>🎯 Combo 3 Lá Cùng Loại</strong>: Chỉ định tên 1 loại lá bài
+          • <strong>Combo 3 Lá Cùng Loại</strong>: Chỉ định tên 1 loại lá bài
           (VD: <em>Defuse, Super Skip, Catomic Bomb...</em>) để tịch thu từ tay
           đối thủ nếu họ có.
         </p>
         <p>
-          • <strong>🌟 Combo 5 Lá Khác Nhau</strong>: Chọn lấy lại bất kỳ 1 lá
+          • <strong>Combo 5 Lá Khác Nhau</strong>: Chọn lấy lại bất kỳ 1 lá
           bài nào từ Chồng bài bỏ (Discard Pile) về tay.
         </p>
       </div>
@@ -1782,26 +1782,26 @@ export function ImplodingKittensRulesContent() {
           3. Gói Mở Rộng Good vs. Evil (Thiện &amp; Ác)
         </p>
         <p>
-          • <strong>⚖️ Tận Thế (Armageddon)</strong>: Chỉ đánh được khi cả{" "}
-          <strong>✨ Mèo Thần (Godcat)</strong> và{" "}
-          <strong>😈 Mèo Quỷ (Devilcat)</strong> đang ở trên Thảm đấu. Người
+          • <strong>Tận Thế (Armageddon)</strong>: Chỉ đánh được khi cả{" "}
+          <strong>Mèo Thần (Godcat)</strong> và{" "}
+          <strong>Mèo Quỷ (Devilcat)</strong> đang ở trên Thảm đấu. Người
           đánh bí mật đặt úp 2 lá cho mình và 1 đối thủ; đối thủ chọn{" "}
           <strong>GIỮ</strong> hoặc <strong>ĐỔI</strong> rồi lật bài — ai nhận{" "}
           <strong>Mèo Thần</strong> cầm về tay, ai nhận{" "}
           <strong>Mèo Quỷ</strong> phát nổ ngay trừ khi đốt Defuse!
         </p>
         <p>
-          • <strong>✨ Mèo Thần (Godcat)</strong>: Biến hóa thành mọi lá Hành
+          • <strong>Mèo Thần (Godcat)</strong>: Biến hóa thành mọi lá Hành
           Động (trừ <em>Nope</em>) hoặc tự động dùng làm <em>Defuse</em> khẩn
           cấp, sau đó quay trở lại Thảm đấu.
         </p>
         <p>
-          • <strong>🔥 Quậy Tưng Bừng (Raising Heck)</strong>: Xem bí mật lá
+          • <strong>Quậy Tưng Bừng (Raising Heck)</strong>: Xem bí mật lá
           dưới Đáy Bộ bài, chọn lấy về tay hoặc đặt thẳng lên Đỉnh Bộ bài để kết
           thúc lượt.
         </p>
         <p>
-          • <strong>👁️‍🗨️ Tiết Lộ Tương Lai 3x (Reveal the Future)</strong>: Lật
+          • <strong>Tiết Lộ Tương Lai 3x (Reveal the Future)</strong>: Lật
           công khai 3 lá trên cùng Bộ bài cho cả bàn cùng xem!
         </p>
       </div>

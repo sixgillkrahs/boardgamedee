@@ -486,7 +486,7 @@ export class ImplodingKittensFxEngine {
         }
         this.spawnStamp(
           nowMs,
-          "💥 BÙM! MÈO NỔ!",
+          "BÙM! MÈO NỔ!",
           "#fca5a5",
           anchors.center.x,
           anchors.center.y - 36,
@@ -526,7 +526,7 @@ export class ImplodingKittensFxEngine {
         }
         this.spawnStamp(
           nowMs,
-          "🕳️💀 SẬP HỐ ĐEN!",
+          "SẬP HỐ ĐEN!",
           "#e879f9",
           anchors.center.x,
           anchors.center.y - 36,
@@ -547,7 +547,7 @@ export class ImplodingKittensFxEngine {
         this.spawnRing(nowMs + 90, drawCenter.x, drawCenter.y, 20, 170, "#a855f7", 3.5, 580);
         this.spawnStamp(
           nowMs,
-          "🕳️😱 MÈO HỐ ĐEN LẬT NGỬA!",
+          "MÈO HỐ ĐEN LẬT NGỬA!",
           "#f0abfc",
           anchors.center.x,
           anchors.center.y - 34,
@@ -569,7 +569,7 @@ export class ImplodingKittensFxEngine {
         this.shuffleRiffle = { startMs: nowMs, durationMs: 750 };
         this.spawnStamp(
           nowMs,
-          "☢️ BOM NGUYÊN TỬ!",
+          "BOM NGUYÊN TỬ!",
           "#fde047",
           anchors.center.x,
           anchors.center.y - 36,
@@ -625,7 +625,7 @@ export class ImplodingKittensFxEngine {
         }
         this.spawnStamp(
           nowMs,
-          "🛠️ ĐÃ THÁO NGÒI!",
+          "ĐÃ THÁO NGÒI!",
           "#4ade80",
           anchors.center.x,
           anchors.center.y - 32,
@@ -674,7 +674,7 @@ export class ImplodingKittensFxEngine {
         }
         this.spawnStamp(
           nowMs,
-          isYup ? "🔥 YUP! PHẢN ĐÒN!" : "🚫 NOPE! HỦY BỎ!",
+          isYup ? "YUP! PHẢN ĐÒN!" : "NOPE! HỦY BỎ!",
           accent,
           anchors.center.x,
           anchors.center.y - 32,
@@ -749,7 +749,7 @@ export class ImplodingKittensFxEngine {
         );
         this.spawnStamp(
           nowMs,
-          "🐾 CƯỚP BÀI THÀNH CÔNG!",
+          "CƯỚP BÀI THÀNH CÔNG!",
           "#38bdf8",
           anchors.center.x,
           anchors.center.y - 30,
@@ -835,7 +835,7 @@ export class ImplodingKittensFxEngine {
           );
           this.spawnStamp(
             nowMs,
-            "🔀 TRÁO BÀI!",
+            "TRÁO BÀI!",
             "#fdba74",
             anchors.center.x,
             anchors.center.y - 32,
@@ -870,10 +870,10 @@ export class ImplodingKittensFxEngine {
           this.spawnStamp(
             nowMs,
             cardType === "attack_of_the_dead"
-              ? "🧟 TẤN CÔNG 3X!"
+              ? "TẤN CÔNG 3X!"
               : cardType === "personal_attack"
-                ? "🪃 TỰ ĐÁNH 3X!"
-                : "⚡ TẤN CÔNG 2X!",
+                ? "TỰ ĐÁNH 3X!"
+                : "TẤN CÔNG 2X!",
             "#fb923c",
             anchors.center.x,
             anchors.center.y - 32,
@@ -899,8 +899,8 @@ export class ImplodingKittensFxEngine {
           this.spawnStamp(
             nowMs,
             cardType.startsWith("alter_")
-              ? "🪄 ĐỔI TƯƠNG LAI!"
-              : "🔮 XEM TƯƠNG LAI!",
+              ? "ĐỔI TƯƠNG LAI!"
+              : "XEM TƯƠNG LAI!",
             "#f472b6",
             anchors.center.x,
             anchors.center.y - 32,
@@ -916,7 +916,7 @@ export class ImplodingKittensFxEngine {
           );
           this.spawnStamp(
             nowMs,
-            cardType === "super_skip" ? "🚀 SIÊU BỎ LƯỢT!" : "👟 BỎ LƯỢT!",
+            cardType === "super_skip" ? "SIÊU BỎ LƯỢT!" : "BỎ LƯỢT!",
             "#60a5fa",
             anchors.center.x,
             anchors.center.y - 30,
@@ -1397,7 +1397,7 @@ export class ImplodingKittensFxEngine {
 
         // 6. Cute comic pleading bubble right above/below the begging cat paw
         if (reach > 0.65) {
-          const bText = "🐾 Cho xin 1 lá đi mà! 🥺";
+          const bText = "Cho xin 1 lá đi mà!";
           ctx.font = `900 12.5px ${fonts.sans}`;
           const bw = ctx.measureText(bText).width + 26;
           const bh = 28;
