@@ -132,6 +132,7 @@ export const IK_PIXEL_CARD_URLS: Partial<Record<IkCardType, string[]>> = {
   tower_of_power: ["/sprites/ik-card-tower-of-power-1-pixel.png"],
   streaking_kitten: ["/sprites/ik-card-streaking-kitten-1-pixel.png"],
   super_skip: ["/sprites/ik-card-super-skip-1-pixel.png"],
+  see_future_5: ["/sprites/ik-card-see-future-5x-1-pixel.png"],
 };
 
 const cachedPixelUrlImages = new Map<string, HTMLImageElement>();
