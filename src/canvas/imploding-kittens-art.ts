@@ -8,7 +8,7 @@ import {
 let cachedIkLogoImg: HTMLImageElement | null = null;
 let ikLogoLoaded = false;
 
-export const IK_PIXEL_CARD_URLS: Partial<Record<IkCardType, string[]>> = {
+export const IK_PIXEL_CARD_URLS: Record<IkCardType, string[]> = {
   tacocat: ["/sprites/ik-card-tacocat-pixel.png"],
   rainbow_cat: ["/sprites/ik-card-rainbow-cat-pixel.png"],
   hairy_potato_cat: ["/sprites/ik-card-hairy-potato-cat-pixel.png"],
@@ -156,6 +156,11 @@ export const IK_PIXEL_CARD_URLS: Partial<Record<IkCardType, string[]>> = {
     "/sprites/ik-card-alter-future-3x-2-pixel.png",
     "/sprites/ik-card-alter-future-3x-3-pixel.png",
     "/sprites/ik-card-alter-future-3x-4-pixel.png",
+  ],
+  targeted_attack: [
+    "/sprites/ik-card-targeted-attack-1-pixel.png",
+    "/sprites/ik-card-targeted-attack-2-pixel.png",
+    "/sprites/ik-card-targeted-attack-3-pixel.png",
   ],
 };
 
