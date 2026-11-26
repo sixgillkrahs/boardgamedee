@@ -4,6 +4,10 @@ import React, { Suspense, use, useEffect, useState } from "react";
 import type { RoomSnapshotForActor } from "@/platform/coordinator";
 import { RoomChatDrawer } from "@/components/rooms/room-chat-drawer";
 import {
+  GameLoadingOverlay,
+  useGameAssetPreloader,
+} from "@/components/rooms/game-asset-loader";
+import {
   KingOfTokyoDuelConfigContent,
   KingOfTokyoDuelRoom,
   KingOfTokyoDuelRulesContent,
@@ -314,6 +318,10 @@ function RoomPageContent({
   };
 
   const cartridgeId = snapshot?.room.cartridgeId ?? "werewolf";
+  const assetLoader = useGameAssetPreloader(
+    snapshot?.room.cartridgeId ?? null,
+    Boolean(snapshot)
+  );
   const isLobby =
     !snapshot || snapshot.room.status === "lobby" || !snapshot.playerView;
 
@@ -488,8 +496,13 @@ function RoomPageContent({
         </div>
       )}
 
-      {/* Active Game Room Module */}
-      {cartridgeId === "one-night-werewolf" ? (
+      {/* Centered Asset Preloading Progress Overlay */}
+      {!assetLoader.ready && <GameLoadingOverlay loader={assetLoader} />}
+
+      {/* Active Game Room Module (mounts once all assets are preloaded) */}
+      {!assetLoader.ready ? (
+        <div className="flex-1 min-h-0 bg-slate-950" />
+      ) : cartridgeId === "one-night-werewolf" ? (
         <OnuwRoom {...roomProps} />
       ) : cartridgeId === "carcassonne" ? (
         <CarcassonneRoom {...roomProps} />

@@ -49,27 +49,27 @@ interface HitBox {
 function phaseLabelVi(phase: OnuwNightPhase): string {
   switch (phase) {
     case "doppelganger":
-      return "🎭 Nhân Bản";
+      return "Nhân Bản";
     case "doppelganger_action":
-      return "🎭 Nhân Bản (Hành động)";
+      return "Nhân Bản (Hành động)";
     case "werewolf":
-      return "🐺 Ma Sói";
+      return "Ma Sói";
     case "minion":
-      return "🗡️ Tay Sai";
+      return "Tay Sai";
     case "mason":
-      return "⚒️ Thợ Xây";
+      return "Thợ Xây";
     case "seer":
-      return "🔮 Tiên Tri";
+      return "Tiên Tri";
     case "robber":
-      return "🦊 Đạo Chích";
+      return "Đạo Chích";
     case "troublemaker":
-      return "🃏 Kẻ Phá Rối";
+      return "Kẻ Phá Rối";
     case "drunk":
-      return "🍺 Kẻ Say Rượu";
+      return "Kẻ Say Rượu";
     case "insomniac":
-      return "👁️ Kẻ Mất Ngủ";
+      return "Kẻ Mất Ngủ";
     case "doppelganger_insomniac":
-      return "🎭👁️ Nhân Bản (Mất Ngủ)";
+      return "Nhân Bản (Mất Ngủ)";
   }
 }
 
@@ -488,7 +488,7 @@ export function OnuwCanvas({
         if (playerView.step === "MatchOver" && p.currentRole) {
           displayRole = p.currentRole;
           if (p.initialRole && p.initialRole !== p.currentRole) {
-            cardBadge = `Đầu: ${ONUW_ROLE_META[p.initialRole].icon}`;
+            cardBadge = `Đầu: ${ONUW_ROLE_META[p.initialRole].nameVi}`;
           }
         } else if (isSelf) {
           // Viewer sees their latest known card (Robber/Insomniac) or initialRole
@@ -539,7 +539,7 @@ export function OnuwCanvas({
             ctx.font = "800 9px system-ui, sans-serif";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText("🐺 MA SÓI", pos.x, cyCard - 2);
+            ctx.fillText("MA SÓI", pos.x, cyCard - 2);
             ctx.restore();
           } else if (seenMasons.has(p.seatNo)) {
             ctx.save();
@@ -550,7 +550,7 @@ export function OnuwCanvas({
             ctx.font = "800 9px system-ui, sans-serif";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText("⚒️ THỢ XÂY", pos.x, cyCard - 2);
+            ctx.fillText("THỢ XÂY", pos.x, cyCard - 2);
             ctx.restore();
           }
         }
@@ -567,7 +567,7 @@ export function OnuwCanvas({
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText(
-              p.isHunterKill ? "🏹 BỊ BẮN" : "☠️ BỊ LOẠI",
+              p.isHunterKill ? "BỊ BẮN" : "BỊ LOẠI",
               pos.x,
               cyCard + seatCardH * 0.36 + 10
             );
@@ -582,7 +582,7 @@ export function OnuwCanvas({
             ctx.font = "900 9px system-ui, sans-serif";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText("👑 THẮNG", pos.x, cyCard - 4.5);
+            ctx.fillText("THẮNG", pos.x, cyCard - 4.5);
             ctx.restore();
           }
         }
@@ -719,18 +719,18 @@ export function OnuwCanvas({
           <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-slate-700/80 bg-slate-950/85 backdrop-blur-md px-3.5 py-1.5 shadow-xl text-xs">
             <span className="font-extrabold text-amber-300">
               {playerView.step === "RoleRevealStep"
-                ? "🃏 Xem Vai Trò Gốc"
+                ? "Xem Vai Trò Gốc"
                 : playerView.step === "NightStep"
-                  ? `🌙 Ban Đêm • ${
+                  ? `Ban Đêm - ${
                       playerView.night.activePhase
                         ? phaseLabelVi(playerView.night.activePhase)
                         : ""
                     }`
                   : playerView.step === "DayDiscussionStep"
-                    ? "☀️ Trời Sáng • Thảo Luận"
+                    ? "Trời Sáng - Thảo Luận"
                     : playerView.step === "DayVotingStep"
-                      ? "👆 Bỏ Phiếu Treo Cổ (Chỉ Tay)"
-                      : "🏆 Kết Quả Ván Đấu"}
+                      ? "Bỏ Phiếu Treo Cổ (Chỉ Tay)"
+                      : "Kết Quả Ván Đấu"}
             </span>
             {remainingSec !== null && (
               <span
@@ -740,7 +740,7 @@ export function OnuwCanvas({
                     : "bg-slate-800 text-sky-300 border border-slate-700"
                 }`}
               >
-                ⏱ {formatSec(remainingSec)}
+                {formatSec(remainingSec)}
               </span>
             )}
           </div>
@@ -777,7 +777,7 @@ export function OnuwCanvas({
         playerView.privateInfo.actionNotes.length > 0 && (
           <div className="pointer-events-auto absolute top-14 left-2.5 z-10 max-w-[260px] rounded-xl border border-indigo-400/35 bg-slate-950/85 backdrop-blur-md p-2.5 text-[11px] text-slate-200 shadow-xl hidden sm:block">
             <div className="font-extrabold text-indigo-300 mb-1">
-              📜 Ghi Chú Bí Mật Của Bạn
+              Ghi Chú Bí Mật Của Bạn
             </div>
             <ul className="space-y-1 text-slate-300 leading-snug">
               {playerView.privateInfo.actionNotes.map((note, idx) => (
@@ -797,7 +797,7 @@ export function OnuwCanvas({
                   Vai trò ban đầu của bạn:{" "}
                   <strong className="text-amber-300">
                     {viewerPlayer.initialRole
-                      ? `${ONUW_ROLE_META[viewerPlayer.initialRole].icon} ${ONUW_ROLE_META[viewerPlayer.initialRole].nameVi}`
+                      ? ONUW_ROLE_META[viewerPlayer.initialRole].nameVi
                       : "Đang chia bài..."}
                   </strong>
                 </span>
@@ -811,8 +811,8 @@ export function OnuwCanvas({
                   className="rounded-xl bg-amber-400 hover:bg-amber-300 px-4 py-1.5 font-extrabold text-slate-950 transition cursor-pointer disabled:opacity-50"
                 >
                   {viewerPlayer.isReady
-                    ? "✓ Đã sẵn sàng (chờ người khác)"
-                    : "✓ Đã nhớ bài — Bắt đầu Đêm"}
+                    ? "Đã sẵn sàng (chờ người khác)"
+                    : "Đã nhớ bài - Bắt đầu Đêm"}
                 </button>
               </>
             )}
@@ -821,7 +821,7 @@ export function OnuwCanvas({
               <>
                 {!playerView.night.isViewerAwake ? (
                   <span className="text-slate-300 italic">
-                    😴 Bạn đang nhắm mắt... Quản trò đang gọi{" "}
+                    Bạn đang nhắm mắt... Quản trò đang gọi{" "}
                     <strong className="text-amber-300">
                       {playerView.night.activePhase
                         ? phaseLabelVi(playerView.night.activePhase)
@@ -830,11 +830,11 @@ export function OnuwCanvas({
                   </span>
                 ) : playerView.night.hasViewerActed ? (
                   <span className="text-emerald-300 font-semibold">
-                    ✓ Bạn đã hoàn tất hành động đêm — chờ các người chơi khác…
+                    Bạn đã hoàn tất hành động đêm - chờ các người chơi khác…
                   </span>
                 ) : effectiveNightAction === "doppelganger" ? (
                   <span className="text-purple-200 font-semibold">
-                    🎭 Hãy <strong>bấm vào lá bài của 1 người chơi khác</strong>{" "}
+                    Hãy <strong>bấm vào lá bài của 1 người chơi khác</strong>{" "}
                     trên bàn để sao chép vai trò của họ!
                   </span>
                 ) : effectiveNightAction === "werewolf" ? (
@@ -842,8 +842,8 @@ export function OnuwCanvas({
                     <span className="text-rose-200 font-semibold">
                       {playerView.night.isLoneWolf &&
                       playerView.allowLoneWolfPeek
-                        ? "🐺 Bạn là Sói đơn độc! Bấm 1 trong 3 lá giữa bàn để soi, hoặc bỏ qua."
-                        : "🐺 Hãy ghi nhớ đồng bọn Ma Sói của bạn (đã đánh dấu đỏ)."}
+                        ? "Bạn là Sói đơn độc! Bấm 1 trong 3 lá giữa bàn để soi, hoặc bỏ qua."
+                        : "Hãy ghi nhớ đồng bọn Ma Sói của bạn (đã đánh dấu đỏ)."}
                     </span>
                     <button
                       type="button"
@@ -852,13 +852,13 @@ export function OnuwCanvas({
                       }
                       className="rounded-xl bg-rose-500 hover:bg-rose-400 px-4 py-1.5 font-extrabold text-white cursor-pointer"
                     >
-                      ✓ Xác nhận & Nhắm mắt
+                      Xác nhận & Nhắm mắt
                     </button>
                   </>
                 ) : effectiveNightAction === "minion" ? (
                   <>
                     <span className="text-orange-200 font-semibold">
-                      🗡️ Ghi nhớ danh sách Ma Sói (đánh dấu đỏ) để bảo vệ họ!
+                      Ghi nhớ danh sách Ma Sói (đánh dấu đỏ) để bảo vệ họ!
                     </span>
                     <button
                       type="button"
@@ -867,13 +867,13 @@ export function OnuwCanvas({
                       }
                       className="rounded-xl bg-orange-500 hover:bg-orange-400 px-4 py-1.5 font-extrabold text-slate-950 cursor-pointer"
                     >
-                      ✓ Xác nhận & Nhắm mắt
+                      Xác nhận & Nhắm mắt
                     </button>
                   </>
                 ) : effectiveNightAction === "mason" ? (
                   <>
                     <span className="text-sky-200 font-semibold">
-                      ⚒️ Ghi nhớ đồng đội Thợ Xây của bạn (đánh dấu xanh).
+                      Ghi nhớ đồng đội Thợ Xây của bạn (đánh dấu xanh).
                     </span>
                     <button
                       type="button"
@@ -882,13 +882,13 @@ export function OnuwCanvas({
                       }
                       className="rounded-xl bg-sky-400 hover:bg-sky-300 px-4 py-1.5 font-extrabold text-slate-950 cursor-pointer"
                     >
-                      ✓ Xác nhận & Nhắm mắt
+                      Xác nhận & Nhắm mắt
                     </button>
                   </>
                 ) : effectiveNightAction === "seer" ? (
                   <>
                     <span className="text-indigo-200 font-semibold">
-                      🔮 Bấm <strong>1 người chơi khác</strong> HOẶC chọn{" "}
+                      Bấm <strong>1 người chơi khác</strong> HOẶC chọn{" "}
                       <strong>2 lá giữa bàn</strong> ({selectedCenters.length}
                       /2).
                     </span>
@@ -903,7 +903,7 @@ export function OnuwCanvas({
                 ) : effectiveNightAction === "robber" ? (
                   <>
                     <span className="text-emerald-200 font-semibold">
-                      🦊 Bấm <strong>1 người chơi khác</strong> để tráo bài và
+                      Bấm <strong>1 người chơi khác</strong> để tráo bài và
                       xem vai trò mới của bạn.
                     </span>
                     <button
@@ -917,7 +917,7 @@ export function OnuwCanvas({
                 ) : effectiveNightAction === "troublemaker" ? (
                   <>
                     <span className="text-pink-200 font-semibold">
-                      🃏 Bấm chọn <strong>2 người chơi khác</strong> để tráo bài
+                      Bấm chọn <strong>2 người chơi khác</strong> để tráo bài
                       của họ ({selectedSeats.length}/2).
                     </span>
                     <button
@@ -932,13 +932,13 @@ export function OnuwCanvas({
                   </>
                 ) : effectiveNightAction === "drunk" ? (
                   <span className="text-amber-200 font-semibold">
-                    🍺 Bắt buộc bấm chọn <strong>1 trong 3 lá giữa bàn</strong>{" "}
+                    Bắt buộc bấm chọn <strong>1 trong 3 lá giữa bàn</strong>{" "}
                     để đổi bài (không được xem).
                   </span>
                 ) : (
                   <>
                     <span className="text-teal-200 font-semibold">
-                      👁️ Hãy xem lá bài hiện tại trước mặt bạn để biết mình có
+                      Hãy xem lá bài hiện tại trước mặt bạn để biết mình có
                       bị tráo không.
                     </span>
                     <button
@@ -948,7 +948,7 @@ export function OnuwCanvas({
                       }
                       className="rounded-xl bg-teal-400 hover:bg-teal-300 px-4 py-1.5 font-extrabold text-slate-950 cursor-pointer"
                     >
-                      ✓ Xác nhận & Kết thúc Đêm
+                      Xác nhận & Kết thúc Đêm
                     </button>
                   </>
                 )}
@@ -958,7 +958,7 @@ export function OnuwCanvas({
             {playerView.step === "DayDiscussionStep" && (
               <>
                 <span className="text-amber-100">
-                  ☀️ Thảo luận qua Chat hoặc thoại để tìm Ma Sói! (Lưu ý: bài có
+                  Thảo luận qua Chat hoặc thoại để tìm Ma Sói! (Lưu ý: bài có
                   thể đã bị tráo trong đêm)
                 </span>
                 {viewerPlayer && (
@@ -971,8 +971,8 @@ export function OnuwCanvas({
                     className="rounded-xl bg-amber-400 hover:bg-amber-300 px-4 py-1.5 font-extrabold text-slate-950 transition cursor-pointer disabled:opacity-50"
                   >
                     {viewerPlayer.isReady
-                      ? `✓ Đã sẵn sàng (${playerView.players.filter((p) => p.isReady).length}/${playerView.players.length})`
-                      : "👆 Sẵn sàng Bỏ Phiếu"}
+                      ? `Đã sẵn sàng (${playerView.players.filter((p) => p.isReady).length}/${playerView.players.length})`
+                      : "Sẵn sàng Bỏ Phiếu"}
                   </button>
                 )}
               </>
@@ -980,7 +980,7 @@ export function OnuwCanvas({
 
             {playerView.step === "DayVotingStep" && (
               <span className="text-rose-200 font-semibold">
-                👆 Bấm trực tiếp vào <strong>1 người chơi khác</strong> trên bàn
+                Bấm trực tiếp vào <strong>1 người chơi khác</strong> trên bàn
                 để chỉ tay treo cổ!{" "}
                 <span className="text-slate-400 font-normal">
                   (Đã bỏ phiếu:{" "}
@@ -1003,7 +1003,7 @@ export function OnuwCanvas({
                       }}
                       className="rounded-lg border px-2.5 py-1 font-extrabold text-xs"
                     >
-                      🏆 {ONUW_FACTION_META[f].nameVi} THẮNG
+                      {ONUW_FACTION_META[f].nameVi} THẮNG
                     </span>
                   ))}
                 </div>
@@ -1017,7 +1017,7 @@ export function OnuwCanvas({
                   onClick={() => setShowHistoryModal(true)}
                   className="rounded-xl border border-indigo-400/50 bg-indigo-500/20 hover:bg-indigo-500/35 px-3 py-1.5 font-bold text-indigo-200 cursor-pointer"
                 >
-                  📜 Diễn Biến Đêm
+                  Diễn Biến Đêm
                 </button>
                 {isHost && (
                   <button
@@ -1025,7 +1025,7 @@ export function OnuwCanvas({
                     onClick={onRematch}
                     className="rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 px-4 py-1.5 font-extrabold text-slate-950 cursor-pointer shadow"
                   >
-                    🔁 Ván Mới
+                    Ván Mới
                   </button>
                 )}
               </div>
@@ -1046,7 +1046,7 @@ export function OnuwCanvas({
           >
             <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3 bg-slate-950/70">
               <span className="font-extrabold text-amber-300 text-sm">
-                📜 Toàn Bộ Diễn Biến Trong Đêm
+                Toàn Bộ Diễn Biến Trong Đêm
               </span>
               <button
                 type="button"

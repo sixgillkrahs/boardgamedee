@@ -78,7 +78,7 @@ export function OnuwRoom({
                       style={{ borderColor: meta.accent }}
                       className="rounded-md border bg-slate-900/90 px-1.5 py-0.5 text-[10px] font-bold text-slate-100"
                     >
-                      {meta.icon} {meta.nameVi}
+                      {meta.nameVi}
                     </span>
                   );
                 })}
@@ -103,11 +103,11 @@ export function OnuwRoom({
                     </span>
                     {isRoomHost ? (
                       <span className="rounded bg-amber-500/20 border border-amber-400/40 px-1.5 py-0.5 text-[9px] font-bold text-amber-300">
-                        👑 Chủ
+                        Chủ
                       </span>
                     ) : seat.isBot ? (
                       <span className="rounded bg-sky-500/20 border border-sky-400/40 px-1.5 py-0.5 text-[9px] font-bold text-sky-300">
-                        🤖 Bot
+                        Bot
                       </span>
                     ) : (
                       <span
@@ -155,7 +155,7 @@ export function OnuwRoom({
                     onClick={() => void sendRoomAction({ type: "ADD_BOT" })}
                     className="rounded-xl border border-sky-400/45 bg-sky-500/20 hover:bg-sky-500/35 px-3.5 py-2 text-xs font-bold text-sky-100 transition cursor-pointer disabled:opacity-40"
                   >
-                    🤖 + Thêm Bot
+                    + Thêm Bot
                   </button>
                   <button
                     type="button"
@@ -163,7 +163,7 @@ export function OnuwRoom({
                     onClick={() => void sendRoomAction({ type: "START_MATCH" })}
                     className="rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 px-5 py-2 text-xs font-extrabold text-slate-950 shadow-lg transition cursor-pointer disabled:opacity-40"
                   >
-                    🌙 BẮT ĐẦU ĐÊM SÓI
+                    BẮT ĐẦU ĐÊM SÓI
                   </button>
                 </>
               )}
@@ -175,7 +175,7 @@ export function OnuwRoom({
                   onClick={() => void sendRoomAction({ type: "JOIN" })}
                   className="rounded-xl bg-amber-400 hover:bg-amber-300 px-4 py-2 text-xs font-extrabold text-slate-950 transition cursor-pointer disabled:opacity-40"
                 >
-                  🪑 Ngồi Vào Bàn
+                  Ngồi Vào Bàn
                 </button>
               )}
 
@@ -190,7 +190,7 @@ export function OnuwRoom({
                     onClick={() => void sendRoomAction({ type: "LEAVE" })}
                     className="rounded-xl border border-slate-600 bg-slate-800/80 hover:bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition cursor-pointer disabled:opacity-40"
                   >
-                    🚪 Rời Bàn
+                    Rời Bàn
                   </button>
                 </>
               )}
@@ -200,7 +200,7 @@ export function OnuwRoom({
                 onClick={() => onOpenDrawer()}
                 className="rounded-xl border border-amber-400/35 bg-slate-900/90 hover:bg-slate-800 px-3 py-2 text-xs font-bold text-amber-300 flex items-center gap-1.5 transition cursor-pointer"
               >
-                <span>💬 Chat</span>
+                <span>Chat</span>
                 <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-mono">
                   {snapshot.messages.length}
                 </span>
@@ -275,7 +275,7 @@ export function OnuwConfigContent({
           onClick={applyDefault}
           className="rounded-lg border border-amber-400/50 bg-amber-500/20 hover:bg-amber-500/35 px-3 py-1.5 text-xs font-bold text-amber-200 cursor-pointer disabled:opacity-40"
         >
-          ✨ Bộ Chuẩn ({required} lá)
+          Bộ Chuẩn ({required} lá)
         </button>
       </div>
 
@@ -296,7 +296,6 @@ export function OnuwConfigContent({
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span>{meta.icon}</span>
                   <span className="font-bold text-white text-xs truncate">
                     {meta.nameVi}
                   </span>
@@ -341,7 +340,7 @@ export function OnuwConfigContent({
       <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3 flex items-center justify-between gap-3">
         <div>
           <div className="font-bold text-white text-xs">
-            🐺 Luật Sói Đơn Độc (Lone Wolf)
+            Luật Sói Đơn Độc (Lone Wolf)
           </div>
           <p className="text-[11px] text-slate-400">
             Nếu chỉ có 1 Ma Sói trên bàn, Sói đó được soi 1 lá ở giữa bàn.
@@ -368,7 +367,7 @@ export function OnuwConfigContent({
 
       <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3 flex items-center justify-between gap-3">
         <div className="font-bold text-white text-xs">
-          ⏱ Thời gian thảo luận ban ngày
+          Thời gian thảo luận ban ngày
         </div>
         <div className="flex items-center gap-1.5">
           {[180, 300, 420].map((sec) => (
@@ -405,7 +404,7 @@ export function OnuwRulesContent() {
           Bộ bài luôn gồm <strong>số người chơi + 3 lá úp ở giữa bàn</strong>.
         </p>
         <p className="text-amber-200 font-semibold">
-          ⭐ Luật Vàng: Phe và điều kiện thắng của bạn được quyết định bởi{" "}
+          Luật Vàng: Phe và điều kiện thắng của bạn được quyết định bởi{" "}
           <u>lá bài trước mặt bạn lúc KẾT THÚC VÁN</u> — ngay cả khi nó đã bị
           tráo đổi trong đêm!
         </p>
@@ -417,44 +416,44 @@ export function OnuwRulesContent() {
         </h3>
         <ol className="list-decimal pl-5 space-y-1">
           <li>
-            <strong>🎭 Nhân Bản (Doppelgänger):</strong> Xem bài 1 người chơi
+            <strong>Nhân Bản (Doppelgänger):</strong> Xem bài 1 người chơi
             khác và sao chép vai trò đó (nếu copy Tiên Tri / Đạo Chích / Kẻ Phá
             Rối / Kẻ Say Rượu thì thực hiện ngay lập tức).
           </li>
           <li>
-            <strong>🐺 Ma Sói (×2):</strong> Nhận diện nhau. Nếu chỉ có 1 Sói
+            <strong>Ma Sói (×2):</strong> Nhận diện nhau. Nếu chỉ có 1 Sói
             trên bàn (Sói đơn độc), được soi 1 lá ở giữa bàn.
           </li>
           <li>
-            <strong>🗡️ Tay Sai (Minion):</strong> Biết ai là Ma Sói (nhưng Sói
+            <strong>Tay Sai (Minion):</strong> Biết ai là Ma Sói (nhưng Sói
             không biết Tay Sai).
           </li>
           <li>
-            <strong>⚒️ Thợ Xây (×2):</strong> Hai Thợ Xây nhận diện nhau.
+            <strong>Thợ Xây (×2):</strong> Hai Thợ Xây nhận diện nhau.
           </li>
           <li>
-            <strong>🔮 Tiên Tri (Seer):</strong> Soi bài 1 người chơi khác{" "}
+            <strong>Tiên Tri (Seer):</strong> Soi bài 1 người chơi khác{" "}
             <em>hoặc</em> soi 2 lá bài ở giữa bàn.
           </li>
           <li>
-            <strong>🦊 Đạo Chích (Robber):</strong> Tráo bài mình với 1 người
+            <strong>Đạo Chích (Robber):</strong> Tráo bài mình với 1 người
             khác rồi xem lá bài mới của mình.
           </li>
           <li>
-            <strong>🃏 Kẻ Phá Rối (Troublemaker):</strong> Bí mật tráo bài
+            <strong>Kẻ Phá Rối (Troublemaker):</strong> Bí mật tráo bài
             giữa 2 người chơi khác (không xem).
           </li>
           <li>
-            <strong>🍺 Kẻ Say Rượu (Drunk):</strong> Bắt buộc đổi bài mình với
+            <strong>Kẻ Say Rượu (Drunk):</strong> Bắt buộc đổi bài mình với
             1 lá ở giữa bàn mà không được xem.
           </li>
           <li>
-            <strong>👁️ Kẻ Mất Ngủ (Insomniac):</strong> Xem lại lá bài hiện
+            <strong>Kẻ Mất Ngủ (Insomniac):</strong> Xem lại lá bài hiện
             tại trước mặt mình vào cuối đêm.
           </li>
         </ol>
         <p className="text-slate-400 text-[11px]">
-          * Dân Làng (×3), Thợ Săn (🏹) và Thợ Thuộc Da (🪓) ngủ yên suốt đêm.
+          * Dân Làng (×3), Thợ Săn và Thợ Thuộc Da ngủ yên suốt đêm.
         </p>
       </section>
 
@@ -474,20 +473,20 @@ export function OnuwRulesContent() {
             1 phiếu) → <strong>KHÔNG AI CHẾT</strong>!
           </li>
           <li>
-            <strong>🏹 Thợ Săn:</strong> Nếu Thợ Săn chết, người mà Thợ Săn đang
+            <strong>Thợ Săn:</strong> Nếu Thợ Săn chết, người mà Thợ Săn đang
             bỏ phiếu vào cũng chết theo ngay lập tức.
           </li>
           <li>
-            <strong>🛡️ Phe Dân Làng thắng:</strong> Có ít nhất 1 Ma Sói bị loại;
+            <strong>Phe Dân Làng thắng:</strong> Có ít nhất 1 Ma Sói bị loại;
             HOẶC nếu cả 2 Ma Sói đều nằm ở giữa bàn thì <em>không ai bị loại</em>.
           </li>
           <li>
-            <strong>🐺 Phe Ma Sói thắng:</strong> Không Ma Sói nào bị loại (và
+            <strong>Phe Ma Sói thắng:</strong> Không Ma Sói nào bị loại (và
             Thợ Thuộc Da không chết). Nếu không có Sói trên bàn, Tay Sai thắng
             khi có ít nhất 1 người chơi khác bị loại.
           </li>
           <li>
-            <strong>🪓 Thợ Thuộc Da thắng:</strong> Chỉ thắng khi chính Thợ
+            <strong>Thợ Thuộc Da thắng:</strong> Chỉ thắng khi chính Thợ
             Thuộc Da bị treo cổ! (Nếu hòa khiến cả Thợ Thuộc Da lẫn Ma Sói cùng
             chết thì cả Thợ Thuộc Da và Dân Làng cùng thắng.)
           </li>

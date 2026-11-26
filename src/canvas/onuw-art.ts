@@ -296,12 +296,12 @@ export function drawOnuwCardBack2D(
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Crescent moon emblem
+  // Fallback emblem
   ctx.fillStyle = "rgba(253, 224, 71, 0.85)";
-  ctx.font = `700 ${Math.max(14, Math.round(w * 0.36))}px system-ui, sans-serif`;
+  ctx.font = `800 ${Math.max(12, Math.round(w * 0.24))}px Georgia, serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("🌙", x + w / 2, y + h * 0.42);
+  ctx.fillText("ONUW", x + w / 2, y + h * 0.42);
 
   // Label
   ctx.fillStyle = "#e2e8f0";
@@ -432,9 +432,10 @@ export function drawOnuwRoleCard2D(
     y + 4 + Math.max(14, h * 0.17) / 2
   );
 
-  // Center icon
-  ctx.font = `${Math.max(18, Math.round(w * 0.42))}px system-ui, sans-serif`;
-  ctx.fillText(meta.icon, x + w / 2, y + h * 0.5);
+  // Center monogram fallback
+  ctx.fillStyle = meta.accent;
+  ctx.font = `900 ${Math.max(18, Math.round(w * 0.34))}px Georgia, serif`;
+  ctx.fillText(meta.nameVi.charAt(0).toUpperCase(), x + w / 2, y + h * 0.5);
 
   // Vietnamese role name (fully localized, no English subtitle)
   ctx.fillStyle = "#ffffff";
