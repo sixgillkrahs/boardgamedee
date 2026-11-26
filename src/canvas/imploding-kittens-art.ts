@@ -168,10 +168,10 @@ export const IK_PIXEL_CARD_URLS: Record<IkCardType, string[]> = {
   devilcat: [],
   raising_heck: [],
   reveal_future_3: [],
-  horse_cat: [],
-  knight_cat: [],
-  mercat: [],
-  troll_cat: [],
+  horse_cat: ["/sprites/ik-card-horse-cat-pixel.png"],
+  knight_cat: ["/sprites/ik-card-knight-cat-pixel.png"],
+  mercat: ["/sprites/ik-card-mercat-pixel.png"],
+  troll_cat: ["/sprites/ik-card-troll-cat-pixel.png"],
 };
 
 const cachedPixelUrlImages = new Map<string, HTMLImageElement>();

@@ -862,14 +862,14 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
   },
   troll_cat: {
     type: "troll_cat",
-    nameVi: "Mèo Yêu Tinh (Troll Cat)",
+    nameVi: "Mèo Cào Phím (Troll Cat)",
     shortVi: "Troll Cat",
     subtitleVi: "Lá Mèo Thiện & Ác • Ghép đôi / bộ 3 / bộ 5",
     ruleVi:
       "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
-    emoji: "👹",
-    colorHex: "#16a34a",
-    secondaryHex: "#14532d",
+    emoji: "💻",
+    colorHex: "#64748b",
+    secondaryHex: "#1e293b",
     category: "cat",
     pack: "good_vs_evil",
   },
