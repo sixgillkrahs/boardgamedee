@@ -123,7 +123,7 @@ export function listCartridges(): CatalogEntry[] {
       available: true,
       badgeVi: "Đang mở • Pixel 2D",
       accentColor: "#f59e0b",
-      coverImage: "/covers/dead-mans-draw-pixel.png",
+      coverImage: "/covers/dead-mans-draw-cover.webp",
     },
     {
       cartridgeId: kingOfTokyoDuelCartridge.cartridgeId,
