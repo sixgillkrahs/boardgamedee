@@ -4090,8 +4090,18 @@ export const implodingKittensCartridge: GameCartridge<
             "Combo 5 lá yêu cầu 5 lá bài phải hoàn toàn KHÁC LOẠI nhau."
           );
         }
-        if (!state.discardPile.some((c) => c.id === command.discardCardId)) {
+        const targetDiscard = state.discardPile.find(
+          (c) => c.id === command.discardCardId
+        );
+        if (!targetDiscard) {
           throw new Error("Lá bài muốn lấy không có trong Chồng bài bỏ.");
+        }
+        if (
+          targetDiscard.type === "exploding_kitten" ||
+          targetDiscard.type === "imploding_kitten" ||
+          targetDiscard.type === "devilcat"
+        ) {
+          throw new Error("Không thể trục vớt lá Bom từ Chồng bài bỏ.");
         }
       }
 
@@ -4457,7 +4467,12 @@ export const implodingKittensCartridge: GameCartridge<
         state.discardPile.length > 0
           ? state.discardPile[state.discardPile.length - 1]
           : null,
-      discardPileCards: state.discardPile.slice(-14),
+      discardPileCards: state.discardPile.filter(
+        (c) =>
+          c.type !== "exploding_kitten" &&
+          c.type !== "imploding_kitten" &&
+          c.type !== "devilcat"
+      ),
       towerHolderSeatNo: state.towerHolderSeatNo ?? null,
       towerStashCount: (state.towerStashCards ?? []).length,
       godcatOnPlaymat: Boolean(state.godcatOnPlaymat),

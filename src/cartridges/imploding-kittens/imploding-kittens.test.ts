@@ -499,4 +499,74 @@ describe("Imploding Kittens Cartridge (Core + 5 Expansions)", () => {
       afterS3DrawBomb.state.discardPile.some((c) => c.type === "godcat")
     ).toBe(false);
   });
+
+  it("allows Combo 5 to recover a Defuse buried >14 cards deep in discardPile and blocks recovering Bombs", () => {
+    const init = implodingKittensCartridge.createInitialState({
+      config: implodingKittensCartridge.defaultConfig(2),
+      seats: SAMPLE_SEATS.slice(0, 2),
+      nowMs: 1000,
+    });
+
+    const [s1, s2] = init.state.seats;
+    s1.hand = [
+      { id: "c1", type: "tacocat" },
+      { id: "c2", type: "catermelon" },
+      { id: "c3", type: "beard_cat" },
+      { id: "c4", type: "rainbow_cat" },
+      { id: "c5", type: "skip" },
+    ];
+    s2.hand = [{ id: "s2-skip", type: "skip" }];
+
+    // Bury a Defuse at index 0 of discardPile under 18 other cards + 1 dead Exploding Kitten
+    init.state.discardPile = [
+      { id: "buried-defuse", type: "defuse" },
+      { id: "dead-bomb", type: "exploding_kitten" },
+      ...Array.from({ length: 18 }, (_, i) => ({
+        id: `filler-${i}`,
+        type: "shuffle" as const,
+      })),
+    ];
+
+    // View exposes buried-defuse (>14 cards deep) and filters out dead-bomb!
+    const view = implodingKittensCartridge.projectView({
+      state: init.state,
+      viewerSeatNo: 1,
+    });
+    expect(view.discardPileCards.some((c) => c.id === "buried-defuse")).toBe(
+      true
+    );
+    expect(view.discardPileCards.some((c) => c.id === "dead-bomb")).toBe(false);
+
+    // Rejects picking a Bomb from discardPile
+    expect(() =>
+      implodingKittensCartridge.reduce({
+        state: init.state,
+        actorSeatNo: 1,
+        nowMs: 1100,
+        command: {
+          type: "PLAY_COMBO_5",
+          cardIds: ["c1", "c2", "c3", "c4", "c5"],
+          discardCardId: "dead-bomb",
+        },
+      })
+    ).toThrow(/Bom/);
+
+    // Recovers the buried Defuse cleanly
+    const afterCombo5 = implodingKittensCartridge.reduce({
+      state: init.state,
+      actorSeatNo: 1,
+      nowMs: 1150,
+      command: {
+        type: "PLAY_COMBO_5",
+        cardIds: ["c1", "c2", "c3", "c4", "c5"],
+        discardCardId: "buried-defuse",
+      },
+    });
+    expect(
+      afterCombo5.state.seats[0].hand.some((c) => c.id === "buried-defuse")
+    ).toBe(true);
+    expect(
+      afterCombo5.state.discardPile.some((c) => c.id === "buried-defuse")
+    ).toBe(false);
+  });
 });
