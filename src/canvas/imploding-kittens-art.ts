@@ -163,7 +163,11 @@ export const IK_PIXEL_CARD_URLS: Record<IkCardType, string[]> = {
     "/sprites/ik-card-targeted-attack-3-pixel.png",
   ],
   // Good vs. Evil Expansion (sẽ gắn sprite pixel-art khi người dùng gửi ảnh lá bài)
-  armageddon: [],
+  armageddon: [
+    "/sprites/ik-card-armageddon-1-pixel.png",
+    "/sprites/ik-card-armageddon-2-pixel.png",
+    "/sprites/ik-card-armageddon-3-pixel.png",
+  ],
   godcat: [],
   devilcat: [],
   raising_heck: [],
