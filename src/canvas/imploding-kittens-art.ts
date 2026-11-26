@@ -151,6 +151,12 @@ export const IK_PIXEL_CARD_URLS: Partial<Record<IkCardType, string[]>> = {
     "/sprites/ik-card-reverse-4-pixel.png",
   ],
   draw_bottom: ["/sprites/ik-card-draw-bottom-1-pixel.png"],
+  alter_future_3: [
+    "/sprites/ik-card-alter-future-3x-1-pixel.png",
+    "/sprites/ik-card-alter-future-3x-2-pixel.png",
+    "/sprites/ik-card-alter-future-3x-3-pixel.png",
+    "/sprites/ik-card-alter-future-3x-4-pixel.png",
+  ],
 };
 
 const cachedPixelUrlImages = new Map<string, HTMLImageElement>();
