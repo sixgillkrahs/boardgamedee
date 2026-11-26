@@ -1,14 +1,28 @@
-// Auto-generated 2D Cel-Shaded Sprite Atlas for all Imploding Kittens cards (Core + 5 Expansions)
-// Single 3360x3920 WebP spritesheet (12x10 grid, 280x392 per card, 120 tiles)
-import type { IkCardType } from "@/cartridges/imploding-kittens";
+// Auto-generated 2D Cel-Shaded Per-Pack Sprite Atlases for Imploding Kittens (Core + 5 Expansions)
+// 6 lightweight WebP sheets (200x280 per card) for lazy per-pack loading & Lobby preloading
+import type { IkCardType, IkExpansionId } from "@/cartridges/imploding-kittens";
 
-export const IK_CARD_ATLAS_URL = "/sprites/ik-cards-atlas-2d.webp";
-export const IK_CARD_ATLAS_COLS = 12;
-export const IK_CARD_ATLAS_ROWS = 10;
-export const IK_CARD_TILE_W = 280;
-export const IK_CARD_TILE_H = 392;
+export type IkAtlasPackId = "core" | IkExpansionId;
+
+export interface IkAtlasPackMeta {
+  url: string;
+  cols: number;
+  rows: number;
+  tileW: number;
+  tileH: number;
+}
+
+export const IK_ATLAS_PACK_META: Record<IkAtlasPackId, IkAtlasPackMeta> = {
+  core: {"url": "/sprites/ik-atlas-core.webp", "cols": 8, "rows": 6, "tileW": 200, "tileH": 280},
+  imploding: {"url": "/sprites/ik-atlas-imploding.webp", "cols": 5, "rows": 3, "tileW": 200, "tileH": 280},
+  streaking: {"url": "/sprites/ik-atlas-streaking.webp", "cols": 5, "rows": 2, "tileW": 200, "tileH": 280},
+  barking: {"url": "/sprites/ik-atlas-barking.webp", "cols": 5, "rows": 4, "tileW": 200, "tileH": 280},
+  zombie: {"url": "/sprites/ik-atlas-zombie.webp", "cols": 6, "rows": 4, "tileW": 200, "tileH": 280},
+  good_vs_evil: {"url": "/sprites/ik-atlas-good-vs-evil.webp", "cols": 5, "rows": 3, "tileW": 200, "tileH": 280},
+};
 
 export interface IkCardAtlasSlot {
+  pack: IkAtlasPackId;
   col: number;
   row: number;
   sx: number;
@@ -17,81 +31,101 @@ export interface IkCardAtlasSlot {
   sh: number;
 }
 
-export const IK_CARD_BACK_SLOT: IkCardAtlasSlot = {"col": 0, "row": 0, "sx": 0, "sy": 0, "sw": 280, "sh": 392};
+export const IK_CARD_BACK_SLOT: IkCardAtlasSlot = {"pack": "core", "col": 0, "row": 0, "sx": 0, "sy": 0, "sw": 200, "sh": 280};
 
 export const IK_CARD_ATLAS_SLOTS: Record<IkCardType, IkCardAtlasSlot[]> = {
-  tacocat: [{"col": 1, "row": 0, "sx": 280, "sy": 0, "sw": 280, "sh": 392}],
-  rainbow_cat: [{"col": 2, "row": 0, "sx": 560, "sy": 0, "sw": 280, "sh": 392}],
-  hairy_potato_cat: [{"col": 3, "row": 0, "sx": 840, "sy": 0, "sw": 280, "sh": 392}],
-  catermelon: [{"col": 4, "row": 0, "sx": 1120, "sy": 0, "sw": 280, "sh": 392}],
-  beard_cat: [{"col": 5, "row": 0, "sx": 1400, "sy": 0, "sw": 280, "sh": 392}],
-  skip: [{"col": 6, "row": 0, "sx": 1680, "sy": 0, "sw": 280, "sh": 392}, {"col": 7, "row": 0, "sx": 1960, "sy": 0, "sw": 280, "sh": 392}, {"col": 8, "row": 0, "sx": 2240, "sy": 0, "sw": 280, "sh": 392}, {"col": 9, "row": 0, "sx": 2520, "sy": 0, "sw": 280, "sh": 392}],
-  shuffle: [{"col": 10, "row": 0, "sx": 2800, "sy": 0, "sw": 280, "sh": 392}, {"col": 11, "row": 0, "sx": 3080, "sy": 0, "sw": 280, "sh": 392}, {"col": 0, "row": 1, "sx": 0, "sy": 392, "sw": 280, "sh": 392}, {"col": 1, "row": 1, "sx": 280, "sy": 392, "sw": 280, "sh": 392}],
-  defuse: [{"col": 2, "row": 1, "sx": 560, "sy": 392, "sw": 280, "sh": 392}, {"col": 3, "row": 1, "sx": 840, "sy": 392, "sw": 280, "sh": 392}, {"col": 4, "row": 1, "sx": 1120, "sy": 392, "sw": 280, "sh": 392}, {"col": 5, "row": 1, "sx": 1400, "sy": 392, "sw": 280, "sh": 392}, {"col": 6, "row": 1, "sx": 1680, "sy": 392, "sw": 280, "sh": 392}],
-  see_future_3: [{"col": 7, "row": 1, "sx": 1960, "sy": 392, "sw": 280, "sh": 392}, {"col": 8, "row": 1, "sx": 2240, "sy": 392, "sw": 280, "sh": 392}, {"col": 9, "row": 1, "sx": 2520, "sy": 392, "sw": 280, "sh": 392}, {"col": 10, "row": 1, "sx": 2800, "sy": 392, "sw": 280, "sh": 392}, {"col": 11, "row": 1, "sx": 3080, "sy": 392, "sw": 280, "sh": 392}],
-  nope: [{"col": 0, "row": 2, "sx": 0, "sy": 784, "sw": 280, "sh": 392}, {"col": 1, "row": 2, "sx": 280, "sy": 784, "sw": 280, "sh": 392}, {"col": 2, "row": 2, "sx": 560, "sy": 784, "sw": 280, "sh": 392}, {"col": 3, "row": 2, "sx": 840, "sy": 784, "sw": 280, "sh": 392}],
-  favor: [{"col": 4, "row": 2, "sx": 1120, "sy": 784, "sw": 280, "sh": 392}, {"col": 5, "row": 2, "sx": 1400, "sy": 784, "sw": 280, "sh": 392}, {"col": 6, "row": 2, "sx": 1680, "sy": 784, "sw": 280, "sh": 392}, {"col": 7, "row": 2, "sx": 1960, "sy": 784, "sw": 280, "sh": 392}],
-  attack: [{"col": 8, "row": 2, "sx": 2240, "sy": 784, "sw": 280, "sh": 392}, {"col": 9, "row": 2, "sx": 2520, "sy": 784, "sw": 280, "sh": 392}, {"col": 10, "row": 2, "sx": 2800, "sy": 784, "sw": 280, "sh": 392}, {"col": 11, "row": 2, "sx": 3080, "sy": 784, "sw": 280, "sh": 392}, {"col": 0, "row": 3, "sx": 0, "sy": 1176, "sw": 280, "sh": 392}],
-  exploding_kitten: [{"col": 1, "row": 3, "sx": 280, "sy": 1176, "sw": 280, "sh": 392}, {"col": 2, "row": 3, "sx": 560, "sy": 1176, "sw": 280, "sh": 392}, {"col": 3, "row": 3, "sx": 840, "sy": 1176, "sw": 280, "sh": 392}, {"col": 4, "row": 3, "sx": 1120, "sy": 1176, "sw": 280, "sh": 392}, {"col": 5, "row": 3, "sx": 1400, "sy": 1176, "sw": 280, "sh": 392}],
-  dig_deeper: [{"col": 6, "row": 3, "sx": 1680, "sy": 1176, "sw": 280, "sh": 392}, {"col": 7, "row": 3, "sx": 1960, "sy": 1176, "sw": 280, "sh": 392}, {"col": 8, "row": 3, "sx": 2240, "sy": 1176, "sw": 280, "sh": 392}, {"col": 9, "row": 3, "sx": 2520, "sy": 1176, "sw": 280, "sh": 392}],
-  zombie_kitten: [{"col": 10, "row": 3, "sx": 2800, "sy": 1176, "sw": 280, "sh": 392}, {"col": 11, "row": 3, "sx": 3080, "sy": 1176, "sw": 280, "sh": 392}, {"col": 0, "row": 4, "sx": 0, "sy": 1568, "sw": 280, "sh": 392}, {"col": 1, "row": 4, "sx": 280, "sy": 1568, "sw": 280, "sh": 392}, {"col": 2, "row": 4, "sx": 560, "sy": 1568, "sw": 280, "sh": 392}],
-  attack_of_the_dead: [{"col": 3, "row": 4, "sx": 840, "sy": 1568, "sw": 280, "sh": 392}, {"col": 4, "row": 4, "sx": 1120, "sy": 1568, "sw": 280, "sh": 392}, {"col": 5, "row": 4, "sx": 1400, "sy": 1568, "sw": 280, "sh": 392}],
-  clairvoyance: [{"col": 6, "row": 4, "sx": 1680, "sy": 1568, "sw": 280, "sh": 392}, {"col": 7, "row": 4, "sx": 1960, "sy": 1568, "sw": 280, "sh": 392}],
-  clone: [{"col": 8, "row": 4, "sx": 2240, "sy": 1568, "sw": 280, "sh": 392}, {"col": 9, "row": 4, "sx": 2520, "sy": 1568, "sw": 280, "sh": 392}, {"col": 10, "row": 4, "sx": 2800, "sy": 1568, "sw": 280, "sh": 392}],
-  feed_the_dead: [{"col": 11, "row": 4, "sx": 3080, "sy": 1568, "sw": 280, "sh": 392}, {"col": 0, "row": 5, "sx": 0, "sy": 1960, "sw": 280, "sh": 392}],
-  grave_robber: [{"col": 1, "row": 5, "sx": 280, "sy": 1960, "sw": 280, "sh": 392}],
-  de_cat_ipated: [{"col": 2, "row": 5, "sx": 560, "sy": 1960, "sw": 280, "sh": 392}],
-  vampire_cat: [{"col": 3, "row": 5, "sx": 840, "sy": 1960, "sw": 280, "sh": 392}],
-  zombie_cat: [{"col": 4, "row": 5, "sx": 1120, "sy": 1960, "sw": 280, "sh": 392}],
-  bury: [{"col": 5, "row": 5, "sx": 1400, "sy": 1960, "sw": 280, "sh": 392}, {"col": 6, "row": 5, "sx": 1680, "sy": 1960, "sw": 280, "sh": 392}],
-  barking_kitten: [{"col": 7, "row": 5, "sx": 1960, "sy": 1960, "sw": 280, "sh": 392}, {"col": 8, "row": 5, "sx": 2240, "sy": 1960, "sw": 280, "sh": 392}],
-  ill_take_that: [{"col": 9, "row": 5, "sx": 2520, "sy": 1960, "sw": 280, "sh": 392}, {"col": 10, "row": 5, "sx": 2800, "sy": 1960, "sw": 280, "sh": 392}, {"col": 11, "row": 5, "sx": 3080, "sy": 1960, "sw": 280, "sh": 392}, {"col": 0, "row": 6, "sx": 0, "sy": 2352, "sw": 280, "sh": 392}],
-  potluck: [{"col": 1, "row": 6, "sx": 280, "sy": 2352, "sw": 280, "sh": 392}, {"col": 2, "row": 6, "sx": 560, "sy": 2352, "sw": 280, "sh": 392}],
-  personal_attack: [{"col": 3, "row": 6, "sx": 840, "sy": 2352, "sw": 280, "sh": 392}, {"col": 4, "row": 6, "sx": 1120, "sy": 2352, "sw": 280, "sh": 392}, {"col": 5, "row": 6, "sx": 1400, "sy": 2352, "sw": 280, "sh": 392}, {"col": 6, "row": 6, "sx": 1680, "sy": 2352, "sw": 280, "sh": 392}],
-  share_future_3: [{"col": 7, "row": 6, "sx": 1960, "sy": 2352, "sw": 280, "sh": 392}, {"col": 8, "row": 6, "sx": 2240, "sy": 2352, "sw": 280, "sh": 392}],
-  tower_of_power: [{"col": 9, "row": 6, "sx": 2520, "sy": 2352, "sw": 280, "sh": 392}],
-  streaking_kitten: [{"col": 10, "row": 6, "sx": 2800, "sy": 2352, "sw": 280, "sh": 392}],
-  super_skip: [{"col": 11, "row": 6, "sx": 3080, "sy": 2352, "sw": 280, "sh": 392}],
-  see_future_5: [{"col": 0, "row": 7, "sx": 0, "sy": 2744, "sw": 280, "sh": 392}],
-  alter_future_5: [{"col": 1, "row": 7, "sx": 280, "sy": 2744, "sw": 280, "sh": 392}],
-  swap_top_bottom: [{"col": 2, "row": 7, "sx": 560, "sy": 2744, "sw": 280, "sh": 392}],
-  garbage_collection: [{"col": 3, "row": 7, "sx": 840, "sy": 2744, "sw": 280, "sh": 392}],
-  catomic_bomb: [{"col": 4, "row": 7, "sx": 1120, "sy": 2744, "sw": 280, "sh": 392}],
-  curse_cat_butt: [{"col": 5, "row": 7, "sx": 1400, "sy": 2744, "sw": 280, "sh": 392}, {"col": 6, "row": 7, "sx": 1680, "sy": 2744, "sw": 280, "sh": 392}],
-  mark: [{"col": 7, "row": 7, "sx": 1960, "sy": 2744, "sw": 280, "sh": 392}],
-  imploding_kitten: [{"col": 8, "row": 7, "sx": 2240, "sy": 2744, "sw": 280, "sh": 392}],
-  feral_cat: [{"col": 9, "row": 7, "sx": 2520, "sy": 2744, "sw": 280, "sh": 392}],
-  reverse: [{"col": 10, "row": 7, "sx": 2800, "sy": 2744, "sw": 280, "sh": 392}, {"col": 11, "row": 7, "sx": 3080, "sy": 2744, "sw": 280, "sh": 392}, {"col": 0, "row": 8, "sx": 0, "sy": 3136, "sw": 280, "sh": 392}, {"col": 1, "row": 8, "sx": 280, "sy": 3136, "sw": 280, "sh": 392}],
-  draw_bottom: [{"col": 2, "row": 8, "sx": 560, "sy": 3136, "sw": 280, "sh": 392}],
-  alter_future_3: [{"col": 3, "row": 8, "sx": 840, "sy": 3136, "sw": 280, "sh": 392}, {"col": 4, "row": 8, "sx": 1120, "sy": 3136, "sw": 280, "sh": 392}, {"col": 5, "row": 8, "sx": 1400, "sy": 3136, "sw": 280, "sh": 392}, {"col": 6, "row": 8, "sx": 1680, "sy": 3136, "sw": 280, "sh": 392}],
-  targeted_attack: [{"col": 7, "row": 8, "sx": 1960, "sy": 3136, "sw": 280, "sh": 392}, {"col": 8, "row": 8, "sx": 2240, "sy": 3136, "sw": 280, "sh": 392}, {"col": 9, "row": 8, "sx": 2520, "sy": 3136, "sw": 280, "sh": 392}],
-  armageddon: [{"col": 10, "row": 8, "sx": 2800, "sy": 3136, "sw": 280, "sh": 392}, {"col": 11, "row": 8, "sx": 3080, "sy": 3136, "sw": 280, "sh": 392}, {"col": 0, "row": 9, "sx": 0, "sy": 3528, "sw": 280, "sh": 392}],
-  godcat: [{"col": 1, "row": 9, "sx": 280, "sy": 3528, "sw": 280, "sh": 392}],
-  devilcat: [{"col": 2, "row": 9, "sx": 560, "sy": 3528, "sw": 280, "sh": 392}],
-  raising_heck: [{"col": 3, "row": 9, "sx": 840, "sy": 3528, "sw": 280, "sh": 392}, {"col": 4, "row": 9, "sx": 1120, "sy": 3528, "sw": 280, "sh": 392}],
-  reveal_future_3: [{"col": 5, "row": 9, "sx": 1400, "sy": 3528, "sw": 280, "sh": 392}, {"col": 6, "row": 9, "sx": 1680, "sy": 3528, "sw": 280, "sh": 392}, {"col": 7, "row": 9, "sx": 1960, "sy": 3528, "sw": 280, "sh": 392}],
-  horse_cat: [{"col": 8, "row": 9, "sx": 2240, "sy": 3528, "sw": 280, "sh": 392}],
-  knight_cat: [{"col": 9, "row": 9, "sx": 2520, "sy": 3528, "sw": 280, "sh": 392}],
-  mercat: [{"col": 10, "row": 9, "sx": 2800, "sy": 3528, "sw": 280, "sh": 392}],
-  troll_cat: [{"col": 11, "row": 9, "sx": 3080, "sy": 3528, "sw": 280, "sh": 392}],
+  tacocat: [{"pack": "core", "col": 1, "row": 0, "sx": 200, "sy": 0, "sw": 200, "sh": 280}],
+  rainbow_cat: [{"pack": "core", "col": 2, "row": 0, "sx": 400, "sy": 0, "sw": 200, "sh": 280}],
+  hairy_potato_cat: [{"pack": "core", "col": 3, "row": 0, "sx": 600, "sy": 0, "sw": 200, "sh": 280}],
+  catermelon: [{"pack": "core", "col": 4, "row": 0, "sx": 800, "sy": 0, "sw": 200, "sh": 280}],
+  beard_cat: [{"pack": "core", "col": 5, "row": 0, "sx": 1000, "sy": 0, "sw": 200, "sh": 280}],
+  skip: [{"pack": "core", "col": 6, "row": 0, "sx": 1200, "sy": 0, "sw": 200, "sh": 280}, {"pack": "core", "col": 7, "row": 0, "sx": 1400, "sy": 0, "sw": 200, "sh": 280}, {"pack": "core", "col": 0, "row": 1, "sx": 0, "sy": 280, "sw": 200, "sh": 280}, {"pack": "core", "col": 1, "row": 1, "sx": 200, "sy": 280, "sw": 200, "sh": 280}],
+  shuffle: [{"pack": "core", "col": 2, "row": 1, "sx": 400, "sy": 280, "sw": 200, "sh": 280}, {"pack": "core", "col": 3, "row": 1, "sx": 600, "sy": 280, "sw": 200, "sh": 280}, {"pack": "core", "col": 4, "row": 1, "sx": 800, "sy": 280, "sw": 200, "sh": 280}, {"pack": "core", "col": 5, "row": 1, "sx": 1000, "sy": 280, "sw": 200, "sh": 280}],
+  defuse: [{"pack": "core", "col": 6, "row": 1, "sx": 1200, "sy": 280, "sw": 200, "sh": 280}, {"pack": "core", "col": 7, "row": 1, "sx": 1400, "sy": 280, "sw": 200, "sh": 280}, {"pack": "core", "col": 0, "row": 2, "sx": 0, "sy": 560, "sw": 200, "sh": 280}, {"pack": "core", "col": 1, "row": 2, "sx": 200, "sy": 560, "sw": 200, "sh": 280}, {"pack": "core", "col": 2, "row": 2, "sx": 400, "sy": 560, "sw": 200, "sh": 280}],
+  see_future_3: [{"pack": "core", "col": 3, "row": 2, "sx": 600, "sy": 560, "sw": 200, "sh": 280}, {"pack": "core", "col": 4, "row": 2, "sx": 800, "sy": 560, "sw": 200, "sh": 280}, {"pack": "core", "col": 5, "row": 2, "sx": 1000, "sy": 560, "sw": 200, "sh": 280}, {"pack": "core", "col": 6, "row": 2, "sx": 1200, "sy": 560, "sw": 200, "sh": 280}, {"pack": "core", "col": 7, "row": 2, "sx": 1400, "sy": 560, "sw": 200, "sh": 280}],
+  nope: [{"pack": "core", "col": 0, "row": 3, "sx": 0, "sy": 840, "sw": 200, "sh": 280}, {"pack": "core", "col": 1, "row": 3, "sx": 200, "sy": 840, "sw": 200, "sh": 280}, {"pack": "core", "col": 2, "row": 3, "sx": 400, "sy": 840, "sw": 200, "sh": 280}, {"pack": "core", "col": 3, "row": 3, "sx": 600, "sy": 840, "sw": 200, "sh": 280}],
+  favor: [{"pack": "core", "col": 4, "row": 3, "sx": 800, "sy": 840, "sw": 200, "sh": 280}, {"pack": "core", "col": 5, "row": 3, "sx": 1000, "sy": 840, "sw": 200, "sh": 280}, {"pack": "core", "col": 6, "row": 3, "sx": 1200, "sy": 840, "sw": 200, "sh": 280}, {"pack": "core", "col": 7, "row": 3, "sx": 1400, "sy": 840, "sw": 200, "sh": 280}],
+  attack: [{"pack": "core", "col": 0, "row": 4, "sx": 0, "sy": 1120, "sw": 200, "sh": 280}, {"pack": "core", "col": 1, "row": 4, "sx": 200, "sy": 1120, "sw": 200, "sh": 280}, {"pack": "core", "col": 2, "row": 4, "sx": 400, "sy": 1120, "sw": 200, "sh": 280}, {"pack": "core", "col": 3, "row": 4, "sx": 600, "sy": 1120, "sw": 200, "sh": 280}, {"pack": "core", "col": 4, "row": 4, "sx": 800, "sy": 1120, "sw": 200, "sh": 280}],
+  exploding_kitten: [{"pack": "core", "col": 5, "row": 4, "sx": 1000, "sy": 1120, "sw": 200, "sh": 280}, {"pack": "core", "col": 6, "row": 4, "sx": 1200, "sy": 1120, "sw": 200, "sh": 280}, {"pack": "core", "col": 7, "row": 4, "sx": 1400, "sy": 1120, "sw": 200, "sh": 280}, {"pack": "core", "col": 0, "row": 5, "sx": 0, "sy": 1400, "sw": 200, "sh": 280}, {"pack": "core", "col": 1, "row": 5, "sx": 200, "sy": 1400, "sw": 200, "sh": 280}],
+  dig_deeper: [{"pack": "zombie", "col": 0, "row": 0, "sx": 0, "sy": 0, "sw": 200, "sh": 280}, {"pack": "zombie", "col": 1, "row": 0, "sx": 200, "sy": 0, "sw": 200, "sh": 280}, {"pack": "zombie", "col": 2, "row": 0, "sx": 400, "sy": 0, "sw": 200, "sh": 280}, {"pack": "zombie", "col": 3, "row": 0, "sx": 600, "sy": 0, "sw": 200, "sh": 280}],
+  zombie_kitten: [{"pack": "zombie", "col": 4, "row": 0, "sx": 800, "sy": 0, "sw": 200, "sh": 280}, {"pack": "zombie", "col": 5, "row": 0, "sx": 1000, "sy": 0, "sw": 200, "sh": 280}, {"pack": "zombie", "col": 0, "row": 1, "sx": 0, "sy": 280, "sw": 200, "sh": 280}, {"pack": "zombie", "col": 1, "row": 1, "sx": 200, "sy": 280, "sw": 200, "sh": 280}, {"pack": "zombie", "col": 2, "row": 1, "sx": 400, "sy": 280, "sw": 200, "sh": 280}],
+  attack_of_the_dead: [{"pack": "zombie", "col": 3, "row": 1, "sx": 600, "sy": 280, "sw": 200, "sh": 280}, {"pack": "zombie", "col": 4, "row": 1, "sx": 800, "sy": 280, "sw": 200, "sh": 280}, {"pack": "zombie", "col": 5, "row": 1, "sx": 1000, "sy": 280, "sw": 200, "sh": 280}],
+  clairvoyance: [{"pack": "zombie", "col": 0, "row": 2, "sx": 0, "sy": 560, "sw": 200, "sh": 280}, {"pack": "zombie", "col": 1, "row": 2, "sx": 200, "sy": 560, "sw": 200, "sh": 280}],
+  clone: [{"pack": "zombie", "col": 2, "row": 2, "sx": 400, "sy": 560, "sw": 200, "sh": 280}, {"pack": "zombie", "col": 3, "row": 2, "sx": 600, "sy": 560, "sw": 200, "sh": 280}, {"pack": "zombie", "col": 4, "row": 2, "sx": 800, "sy": 560, "sw": 200, "sh": 280}],
+  feed_the_dead: [{"pack": "zombie", "col": 5, "row": 2, "sx": 1000, "sy": 560, "sw": 200, "sh": 280}, {"pack": "zombie", "col": 0, "row": 3, "sx": 0, "sy": 840, "sw": 200, "sh": 280}],
+  grave_robber: [{"pack": "zombie", "col": 1, "row": 3, "sx": 200, "sy": 840, "sw": 200, "sh": 280}],
+  de_cat_ipated: [{"pack": "zombie", "col": 2, "row": 3, "sx": 400, "sy": 840, "sw": 200, "sh": 280}],
+  vampire_cat: [{"pack": "zombie", "col": 3, "row": 3, "sx": 600, "sy": 840, "sw": 200, "sh": 280}],
+  zombie_cat: [{"pack": "zombie", "col": 4, "row": 3, "sx": 800, "sy": 840, "sw": 200, "sh": 280}],
+  bury: [{"pack": "barking", "col": 0, "row": 0, "sx": 0, "sy": 0, "sw": 200, "sh": 280}, {"pack": "barking", "col": 1, "row": 0, "sx": 200, "sy": 0, "sw": 200, "sh": 280}],
+  barking_kitten: [{"pack": "barking", "col": 2, "row": 0, "sx": 400, "sy": 0, "sw": 200, "sh": 280}, {"pack": "barking", "col": 3, "row": 0, "sx": 600, "sy": 0, "sw": 200, "sh": 280}],
+  ill_take_that: [{"pack": "barking", "col": 4, "row": 0, "sx": 800, "sy": 0, "sw": 200, "sh": 280}, {"pack": "barking", "col": 0, "row": 1, "sx": 0, "sy": 280, "sw": 200, "sh": 280}, {"pack": "barking", "col": 1, "row": 1, "sx": 200, "sy": 280, "sw": 200, "sh": 280}, {"pack": "barking", "col": 2, "row": 1, "sx": 400, "sy": 280, "sw": 200, "sh": 280}],
+  potluck: [{"pack": "barking", "col": 3, "row": 1, "sx": 600, "sy": 280, "sw": 200, "sh": 280}, {"pack": "barking", "col": 4, "row": 1, "sx": 800, "sy": 280, "sw": 200, "sh": 280}],
+  personal_attack: [{"pack": "barking", "col": 0, "row": 2, "sx": 0, "sy": 560, "sw": 200, "sh": 280}, {"pack": "barking", "col": 1, "row": 2, "sx": 200, "sy": 560, "sw": 200, "sh": 280}, {"pack": "barking", "col": 2, "row": 2, "sx": 400, "sy": 560, "sw": 200, "sh": 280}, {"pack": "barking", "col": 3, "row": 2, "sx": 600, "sy": 560, "sw": 200, "sh": 280}],
+  share_future_3: [{"pack": "barking", "col": 4, "row": 2, "sx": 800, "sy": 560, "sw": 200, "sh": 280}, {"pack": "barking", "col": 0, "row": 3, "sx": 0, "sy": 840, "sw": 200, "sh": 280}],
+  tower_of_power: [{"pack": "barking", "col": 1, "row": 3, "sx": 200, "sy": 840, "sw": 200, "sh": 280}],
+  streaking_kitten: [{"pack": "streaking", "col": 0, "row": 0, "sx": 0, "sy": 0, "sw": 200, "sh": 280}],
+  super_skip: [{"pack": "streaking", "col": 1, "row": 0, "sx": 200, "sy": 0, "sw": 200, "sh": 280}],
+  see_future_5: [{"pack": "streaking", "col": 2, "row": 0, "sx": 400, "sy": 0, "sw": 200, "sh": 280}],
+  alter_future_5: [{"pack": "streaking", "col": 3, "row": 0, "sx": 600, "sy": 0, "sw": 200, "sh": 280}],
+  swap_top_bottom: [{"pack": "streaking", "col": 4, "row": 0, "sx": 800, "sy": 0, "sw": 200, "sh": 280}],
+  garbage_collection: [{"pack": "streaking", "col": 0, "row": 1, "sx": 0, "sy": 280, "sw": 200, "sh": 280}],
+  catomic_bomb: [{"pack": "streaking", "col": 1, "row": 1, "sx": 200, "sy": 280, "sw": 200, "sh": 280}],
+  curse_cat_butt: [{"pack": "streaking", "col": 2, "row": 1, "sx": 400, "sy": 280, "sw": 200, "sh": 280}, {"pack": "streaking", "col": 3, "row": 1, "sx": 600, "sy": 280, "sw": 200, "sh": 280}],
+  mark: [{"pack": "streaking", "col": 4, "row": 1, "sx": 800, "sy": 280, "sw": 200, "sh": 280}],
+  imploding_kitten: [{"pack": "imploding", "col": 0, "row": 0, "sx": 0, "sy": 0, "sw": 200, "sh": 280}],
+  feral_cat: [{"pack": "imploding", "col": 1, "row": 0, "sx": 200, "sy": 0, "sw": 200, "sh": 280}],
+  reverse: [{"pack": "imploding", "col": 2, "row": 0, "sx": 400, "sy": 0, "sw": 200, "sh": 280}, {"pack": "imploding", "col": 3, "row": 0, "sx": 600, "sy": 0, "sw": 200, "sh": 280}, {"pack": "imploding", "col": 4, "row": 0, "sx": 800, "sy": 0, "sw": 200, "sh": 280}, {"pack": "imploding", "col": 0, "row": 1, "sx": 0, "sy": 280, "sw": 200, "sh": 280}],
+  draw_bottom: [{"pack": "imploding", "col": 1, "row": 1, "sx": 200, "sy": 280, "sw": 200, "sh": 280}],
+  alter_future_3: [{"pack": "imploding", "col": 2, "row": 1, "sx": 400, "sy": 280, "sw": 200, "sh": 280}, {"pack": "imploding", "col": 3, "row": 1, "sx": 600, "sy": 280, "sw": 200, "sh": 280}, {"pack": "imploding", "col": 4, "row": 1, "sx": 800, "sy": 280, "sw": 200, "sh": 280}, {"pack": "imploding", "col": 0, "row": 2, "sx": 0, "sy": 560, "sw": 200, "sh": 280}],
+  targeted_attack: [{"pack": "imploding", "col": 1, "row": 2, "sx": 200, "sy": 560, "sw": 200, "sh": 280}, {"pack": "imploding", "col": 2, "row": 2, "sx": 400, "sy": 560, "sw": 200, "sh": 280}, {"pack": "imploding", "col": 3, "row": 2, "sx": 600, "sy": 560, "sw": 200, "sh": 280}],
+  armageddon: [{"pack": "good_vs_evil", "col": 0, "row": 0, "sx": 0, "sy": 0, "sw": 200, "sh": 280}, {"pack": "good_vs_evil", "col": 1, "row": 0, "sx": 200, "sy": 0, "sw": 200, "sh": 280}, {"pack": "good_vs_evil", "col": 2, "row": 0, "sx": 400, "sy": 0, "sw": 200, "sh": 280}],
+  godcat: [{"pack": "good_vs_evil", "col": 3, "row": 0, "sx": 600, "sy": 0, "sw": 200, "sh": 280}],
+  devilcat: [{"pack": "good_vs_evil", "col": 4, "row": 0, "sx": 800, "sy": 0, "sw": 200, "sh": 280}],
+  raising_heck: [{"pack": "good_vs_evil", "col": 0, "row": 1, "sx": 0, "sy": 280, "sw": 200, "sh": 280}, {"pack": "good_vs_evil", "col": 1, "row": 1, "sx": 200, "sy": 280, "sw": 200, "sh": 280}],
+  reveal_future_3: [{"pack": "good_vs_evil", "col": 2, "row": 1, "sx": 400, "sy": 280, "sw": 200, "sh": 280}, {"pack": "good_vs_evil", "col": 3, "row": 1, "sx": 600, "sy": 280, "sw": 200, "sh": 280}, {"pack": "good_vs_evil", "col": 4, "row": 1, "sx": 800, "sy": 280, "sw": 200, "sh": 280}],
+  horse_cat: [{"pack": "good_vs_evil", "col": 0, "row": 2, "sx": 0, "sy": 560, "sw": 200, "sh": 280}],
+  knight_cat: [{"pack": "good_vs_evil", "col": 1, "row": 2, "sx": 200, "sy": 560, "sw": 200, "sh": 280}],
+  mercat: [{"pack": "good_vs_evil", "col": 2, "row": 2, "sx": 400, "sy": 560, "sw": 200, "sh": 280}],
+  troll_cat: [{"pack": "good_vs_evil", "col": 3, "row": 2, "sx": 600, "sy": 560, "sw": 200, "sh": 280}],
 };
 
-let cachedAtlasImg: HTMLImageElement | null = null;
-let atlasLoaded = false;
+const cachedPackImgs = new Map<IkAtlasPackId, HTMLImageElement>();
+const loadedPacks = new Set<IkAtlasPackId>();
 
-export function getIkCardAtlasImage(): HTMLImageElement | null {
+export function getIkCardAtlasImageForPack(
+  pack: IkAtlasPackId
+): HTMLImageElement | null {
   if (typeof window === "undefined") return null;
-  if (atlasLoaded && cachedAtlasImg) return cachedAtlasImg;
-  if (!cachedAtlasImg) {
+  if (loadedPacks.has(pack)) {
+    return cachedPackImgs.get(pack) ?? null;
+  }
+  if (!cachedPackImgs.has(pack)) {
     const img = new Image();
     img.decoding = "async";
     img.onload = () => {
-      atlasLoaded = true;
+      loadedPacks.add(pack);
     };
-    img.src = IK_CARD_ATLAS_URL;
-    cachedAtlasImg = img;
+    img.src = IK_ATLAS_PACK_META[pack].url;
+    cachedPackImgs.set(pack, img);
   }
   return null;
+}
+
+/**
+ * Preloads Core + all enabled expansion pack atlases in parallel (call while waiting in Lobby!).
+ */
+export function preloadIkCardAtlases(
+  expansions?: Partial<Record<IkExpansionId, boolean>>
+): void {
+  if (typeof window === "undefined") return;
+  getIkCardAtlasImageForPack("core");
+  const expansionIds: IkExpansionId[] = ["imploding", "streaking", "barking", "zombie", "good_vs_evil"];
+  for (const expId of expansionIds) {
+    if (expansions ? expansions[expId] !== false : true) {
+      getIkCardAtlasImageForPack(expId);
+    }
+  }
 }
 
 function hashCardIdToVariantIndex(cardId: string, count: number): number {
@@ -115,11 +149,12 @@ export function getIkCardSpriteBgStyle(
   cardId = "0"
 ) {
   const slot = getIkCardAtlasSlot(type, cardId);
-  const xPct = IK_CARD_ATLAS_COLS > 1 ? (slot.col / (IK_CARD_ATLAS_COLS - 1)) * 100 : 0;
-  const yPct = IK_CARD_ATLAS_ROWS > 1 ? (slot.row / (IK_CARD_ATLAS_ROWS - 1)) * 100 : 0;
+  const meta = IK_ATLAS_PACK_META[slot.pack];
+  const xPct = meta.cols > 1 ? (slot.col / (meta.cols - 1)) * 100 : 0;
+  const yPct = meta.rows > 1 ? (slot.row / (meta.rows - 1)) * 100 : 0;
   return {
-    backgroundImage: `url(${IK_CARD_ATLAS_URL})`,
-    backgroundSize: `${IK_CARD_ATLAS_COLS * 100}% ${IK_CARD_ATLAS_ROWS * 100}%`,
+    backgroundImage: `url(${meta.url})`,
+    backgroundSize: `${meta.cols * 100}% ${meta.rows * 100}%`,
     backgroundPosition: `${xPct}% ${yPct}%`,
     backgroundRepeat: "no-repeat" as const,
   };

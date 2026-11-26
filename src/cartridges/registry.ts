@@ -153,7 +153,7 @@ export function listCartridges(): CatalogEntry[] {
     {
       cartridgeId: implodingKittensCartridge.cartridgeId,
       title: implodingKittensCartridge.title,
-      genreVi: "Rút bài sinh tồn • 4 Bản mở rộng Mèo Nổ",
+      genreVi: "Rút bài sinh tồn • 5 Bản mở rộng Mèo Nổ",
       subtitle: implodingKittensCartridge.subtitle,
       description: implodingKittensCartridge.description,
       minSeats: implodingKittensCartridge.minSeats,

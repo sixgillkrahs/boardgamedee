@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getIkCardSpriteBgStyle } from "@/canvas/imploding-kittens-art";
+import {
+  getIkCardSpriteBgStyle,
+  preloadIkCardAtlases,
+} from "@/canvas/imploding-kittens-art";
 import { ImplodingKittensCanvas } from "@/components/imploding-kittens-canvas";
 import {
   IK_CARD_META,
@@ -238,6 +241,17 @@ export function ImplodingKittensRoom({
     zombie: snapshot?.room.config?.expansions?.zombie ?? true,
     good_vs_evil: snapshot?.room.config?.expansions?.good_vs_evil ?? true,
   };
+
+  // Preload Core + enabled expansion pack atlases immediately while waiting in Lobby
+  useEffect(() => {
+    preloadIkCardAtlases(expansionsConfig);
+  }, [
+    expansionsConfig.imploding,
+    expansionsConfig.streaking,
+    expansionsConfig.barking,
+    expansionsConfig.zombie,
+    expansionsConfig.good_vs_evil,
+  ]);
 
   return (
     <main

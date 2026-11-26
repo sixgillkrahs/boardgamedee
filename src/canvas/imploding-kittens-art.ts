@@ -2,9 +2,10 @@ import { drawRoundedRect, getCanvasFontFamilies } from "@/canvas/engine";
 import {
   IK_CARD_ATLAS_SLOTS,
   IK_CARD_BACK_SLOT,
-  getIkCardAtlasImage,
+  getIkCardAtlasImageForPack,
   getIkCardAtlasSlot,
   getIkCardSpriteBgStyle,
+  preloadIkCardAtlases,
 } from "@/canvas/imploding-kittens-atlas";
 import {
   IK_CARD_META,
@@ -12,7 +13,12 @@ import {
   type IkCardType,
 } from "@/cartridges/imploding-kittens";
 
-export { getIkCardAtlasImage, getIkCardAtlasSlot, getIkCardSpriteBgStyle };
+export {
+  getIkCardAtlasImageForPack,
+  getIkCardAtlasSlot,
+  getIkCardSpriteBgStyle,
+  preloadIkCardAtlases,
+};
 
 let cachedIkLogoImg: HTMLImageElement | null = null;
 let ikLogoLoaded = false;
@@ -781,7 +787,7 @@ export function drawIkCard2D(
 
   if (!card || options?.blinded) {
     const isBlind = Boolean(options?.blinded);
-    const atlasImg = getIkCardAtlasImage();
+    const atlasImg = getIkCardAtlasImageForPack(IK_CARD_BACK_SLOT.pack);
     const cx = x + w * 0.5;
 
     if (atlasImg) {
@@ -887,10 +893,10 @@ export function drawIkCard2D(
   const isFaceUpImploding =
     card.type === "imploding_kitten" && Boolean(card.faceUp);
 
-  // Crisp 2D Cel-Shaded full-card rendering from the single unified Sprite Atlas!
+  // Crisp 2D Cel-Shaded full-card rendering from per-pack Sprite Atlases!
   if (card.type in IK_CARD_ATLAS_SLOTS) {
-    const atlasImg = getIkCardAtlasImage();
     const slot = getIkCardAtlasSlot(card.type, card.id);
+    const atlasImg = getIkCardAtlasImageForPack(slot.pack);
     if (atlasImg) {
       drawRoundedRect(ctx, x, y, w, h, r);
       ctx.save();
