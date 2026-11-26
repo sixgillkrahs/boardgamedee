@@ -35,6 +35,29 @@ describe("Imploding Kittens Cartridge (Core + 5 Expansions)", () => {
     expect(explodingInDeck).toHaveLength(2);
     expect(implodingInDeck).toHaveLength(1);
     expect(implodingInDeck[0].faceUp).toBe(false);
+
+    // Verify starting player is picked randomly via rng (not hardcoded to Seat 1!)
+    const startS1 = implodingKittensCartridge.createInitialState({
+      config: implodingKittensCartridge.defaultConfig(3),
+      seats: SAMPLE_SEATS,
+      nowMs: 1000,
+      rng: () => 0.0,
+    });
+    const startS2 = implodingKittensCartridge.createInitialState({
+      config: implodingKittensCartridge.defaultConfig(3),
+      seats: SAMPLE_SEATS,
+      nowMs: 1000,
+      rng: () => 0.5,
+    });
+    const startS3 = implodingKittensCartridge.createInitialState({
+      config: implodingKittensCartridge.defaultConfig(3),
+      seats: SAMPLE_SEATS,
+      nowMs: 1000,
+      rng: () => 0.99,
+    });
+    expect(startS1.state.activeSeatNo).toBe(1);
+    expect(startS2.state.activeSeatNo).toBe(2);
+    expect(startS3.state.activeSeatNo).toBe(3);
   });
 
   it("handles Imploding Kitten two-stage rule: 1st draw flips it FACE UP and inserts into deck; 2nd draw while FACE UP eliminates player bypassing Defuse", () => {
@@ -42,6 +65,7 @@ describe("Imploding Kittens Cartridge (Core + 5 Expansions)", () => {
       config: implodingKittensCartridge.defaultConfig(2),
       seats: SAMPLE_SEATS.slice(0, 2),
       nowMs: 1000,
+      rng: () => 0,
     });
 
     // Place face-down Imploding Kitten right on top of drawPile (end of array)
@@ -99,6 +123,7 @@ describe("Imploding Kittens Cartridge (Core + 5 Expansions)", () => {
       config: implodingKittensCartridge.defaultConfig(3),
       seats: SAMPLE_SEATS,
       nowMs: 1000,
+      rng: () => 0,
     });
 
     const [s1, s2, s3] = init.state.seats;
@@ -239,6 +264,7 @@ describe("Imploding Kittens Cartridge (Core + 5 Expansions)", () => {
       config: implodingKittensCartridge.defaultConfig(2),
       seats: SAMPLE_SEATS.slice(0, 2),
       nowMs: 1000,
+      rng: () => 0,
     });
 
     // Barking expansion is enabled by default -> 6 non-bomb stash cards set aside
@@ -331,6 +357,7 @@ describe("Imploding Kittens Cartridge (Core + 5 Expansions)", () => {
       config: implodingKittensCartridge.defaultConfig(3),
       seats: SAMPLE_SEATS,
       nowMs: 1000,
+      rng: () => 0,
     });
 
     expect(init.state.godcatOnPlaymat).toBe(true);
@@ -524,6 +551,7 @@ describe("Imploding Kittens Cartridge (Core + 5 Expansions)", () => {
       config: implodingKittensCartridge.defaultConfig(2),
       seats: SAMPLE_SEATS.slice(0, 2),
       nowMs: 1000,
+      rng: () => 0,
     });
 
     const [s1, s2] = init.state.seats;

@@ -535,12 +535,21 @@ export async function startMatch(input: {
   }));
 
   const nowMs = Date.now();
-  const initial = cartridge.createInitialState({
+  let initial = cartridge.createInitialState({
     config: room.config,
     seats: seatDescriptors,
     nowMs,
     rng: input.rng,
   });
+
+  const botSeatNos = roomSeats.filter((s) => s.isBot).map((s) => s.seatNo);
+  if (cartridge.autoActBots && botSeatNos.length > 0) {
+    initial = cartridge.autoActBots({
+      current: initial,
+      botSeatNos,
+      nowMs,
+    });
+  }
 
   const [match] = await db
     .insert(matches)

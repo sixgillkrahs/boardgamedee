@@ -3252,12 +3252,14 @@ export const implodingKittensCartridge: GameCartridge<
     }
 
     const drawPile = shuffle(preBombDeck, rng);
+    const startingSeat =
+      seats[Math.floor(rng() * seats.length)] ?? seats[0];
 
     const state: IkMatchState = {
       config: normalizedConfig,
       turnNumber: 1,
       step: "TurnPlayStep",
-      activeSeatNo: seats[0].seatNo,
+      activeSeatNo: startingSeat.seatNo,
       direction: 1,
       turnsRemaining: 1,
       seats: seatStates,
@@ -3291,7 +3293,7 @@ export const implodingKittensCartridge: GameCartridge<
     const events: MatchEventRecord[] = [
       {
         eventType: "IK_MATCH_STARTED",
-        message: `Đại chiến Imploding Kittens bắt đầu (${seats.length} người chơi • Mở rộng: ${enabledNames || "Cơ bản"} • ${explodingCount} Mèo Nổ + ${implodingCount} Mèo Hố Đen trong Bộ bài rút)!`,
+        message: `Đại chiến Imploding Kittens bắt đầu (${seats.length} người chơi • ${startingSeat.displayName} đi trước • Mở rộng: ${enabledNames || "Cơ bản"} • ${explodingCount} Mèo Nổ + ${implodingCount} Mèo Hố Đen trong Bộ bài rút)!`,
         visibleToSeatNos: "all",
       },
     ];
