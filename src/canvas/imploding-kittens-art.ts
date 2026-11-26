@@ -168,7 +168,7 @@ export const IK_PIXEL_CARD_URLS: Record<IkCardType, string[]> = {
     "/sprites/ik-card-armageddon-2-pixel.png",
     "/sprites/ik-card-armageddon-3-pixel.png",
   ],
-  godcat: [],
+  godcat: ["/sprites/ik-card-godcat-1-pixel.png"],
   devilcat: [],
   raising_heck: [],
   reveal_future_3: [],
