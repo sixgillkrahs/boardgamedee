@@ -789,7 +789,9 @@ export function drawIkCard2D(
       ctx.save();
       ctx.clip();
       const prevSmooth = ctx.imageSmoothingEnabled;
-      ctx.imageSmoothingEnabled = false;
+      const prevQuality = ctx.imageSmoothingQuality;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
       ctx.drawImage(
         atlasImg,
         IK_CARD_BACK_SLOT.sx,
@@ -802,6 +804,7 @@ export function drawIkCard2D(
         h
       );
       ctx.imageSmoothingEnabled = prevSmooth;
+      ctx.imageSmoothingQuality = prevQuality;
       if (isBlind) {
         ctx.fillStyle = "rgba(190, 18, 60, 0.25)";
         ctx.fillRect(x, y, w, h);
@@ -884,7 +887,7 @@ export function drawIkCard2D(
   const isFaceUpImploding =
     card.type === "imploding_kitten" && Boolean(card.faceUp);
 
-  // Special 16-bit Pixel Art full-card rendering from the single unified Sprite Atlas!
+  // Crisp 2D Cel-Shaded full-card rendering from the single unified Sprite Atlas!
   if (card.type in IK_CARD_ATLAS_SLOTS) {
     const atlasImg = getIkCardAtlasImage();
     const slot = getIkCardAtlasSlot(card.type, card.id);
@@ -893,7 +896,9 @@ export function drawIkCard2D(
       ctx.save();
       ctx.clip();
       const prevSmooth = ctx.imageSmoothingEnabled;
-      ctx.imageSmoothingEnabled = false;
+      const prevQuality = ctx.imageSmoothingQuality;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
       ctx.drawImage(
         atlasImg,
         slot.sx,
@@ -906,6 +911,7 @@ export function drawIkCard2D(
         h
       );
       ctx.imageSmoothingEnabled = prevSmooth;
+      ctx.imageSmoothingQuality = prevQuality;
       ctx.restore();
 
       drawRoundedRect(ctx, x, y, w, h, r);
