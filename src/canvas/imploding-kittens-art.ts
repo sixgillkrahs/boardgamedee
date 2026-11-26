@@ -137,6 +137,10 @@ export const IK_PIXEL_CARD_URLS: Partial<Record<IkCardType, string[]>> = {
   swap_top_bottom: ["/sprites/ik-card-swap-top-bottom-1-pixel.png"],
   garbage_collection: ["/sprites/ik-card-garbage-collection-1-pixel.png"],
   catomic_bomb: ["/sprites/ik-card-catomic-bomb-1-pixel.png"],
+  curse_cat_butt: [
+    "/sprites/ik-card-curse-cat-butt-1-pixel.png",
+    "/sprites/ik-card-curse-cat-butt-2-pixel.png",
+  ],
 };
 
 const cachedPixelUrlImages = new Map<string, HTMLImageElement>();
