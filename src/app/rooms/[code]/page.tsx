@@ -47,9 +47,9 @@ import type { GameRoomModuleProps } from "@/components/rooms/types";
 
 const RULES_MODAL_META: Record<string, { title: string; subtitle: string }> = {
   "imploding-kittens": {
-    title: "Luật Chơi Imploding Kittens (2–6 Người Chơi • Full 4 Bản Mở Rộng)",
+    title: "Luật Chơi Imploding Kittens (2–6 Người Chơi • Full 5 Bản Mở Rộng)",
     subtitle:
-      "Mèo Nổ & Mèo Hố Đen (Imploding) • Streaking • Barking • Zombie Kittens",
+      "Mèo Nổ & Mèo Hố Đen (Imploding) • Streaking • Barking • Zombie • Good vs. Evil",
   },
   heat: {
     title: "Luật Chơi Heat: Pedal to the Metal (2–6 Tay Đua)",
@@ -68,13 +68,11 @@ const RULES_MODAL_META: Record<string, { title: string; subtitle: string }> = {
   },
   "splendor-duel": {
     title: "Luật Chơi Splendor Duel (Đối Kháng 1v1)",
-    subtitle:
-      "Luật chuẩn Marc André & Bruno Cathala • Bàn 5×5, Ngọc Trai, Đặc Quyền & 3 Cách Thắng",
+    subtitle: "Bàn 5×5, Ngọc Trai, Đặc Quyền & 3 Cách Thắng",
   },
   splendor: {
     title: "Luật Chơi Splendor (2–4 Người Chơi)",
-    subtitle:
-      "Luật chuẩn Space Cowboys • Thu thập đá quý, đầu tư mỏ & mời Quý Tộc",
+    subtitle: "Thu thập đá quý, đầu tư mỏ & mời Quý Tộc",
   },
   coup: {
     title: "Luật Chơi Coup (3–6 Người Chơi)",

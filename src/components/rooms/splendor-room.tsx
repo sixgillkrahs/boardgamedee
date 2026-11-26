@@ -613,7 +613,7 @@ export function SplendorConfigContent({
             Điểm Uy Tín Mục Tiêu (Kích hoạt Vòng Cuối)
           </p>
           <p className="text-[11px] text-slate-400">
-            Chuẩn Space Cowboys là 15 điểm (có thể chỉnh 10–30 điểm)
+            Mặc định là 15 điểm (có thể chỉnh 10–30 điểm)
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
