@@ -134,6 +134,7 @@ export const IK_PIXEL_CARD_URLS: Partial<Record<IkCardType, string[]>> = {
   super_skip: ["/sprites/ik-card-super-skip-1-pixel.png"],
   see_future_5: ["/sprites/ik-card-see-future-5x-1-pixel.png"],
   alter_future_5: ["/sprites/ik-card-alter-future-5x-1-pixel.png"],
+  swap_top_bottom: ["/sprites/ik-card-swap-top-bottom-1-pixel.png"],
 };
 
 const cachedPixelUrlImages = new Map<string, HTMLImageElement>();
