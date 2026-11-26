@@ -58,6 +58,7 @@ export function listCartridges(): CatalogEntry[] {
       available: true,
       badgeVi: "Đang mở • Canvas 2D",
       accentColor: "#f59e0b",
+      coverImage: "/covers/werewolf-cover.webp",
     },
     {
       cartridgeId: "avalon",
@@ -159,7 +160,7 @@ export function listCartridges(): CatalogEntry[] {
       minSeats: implodingKittensCartridge.minSeats,
       maxSeats: implodingKittensCartridge.maxSeats,
       available: true,
-      badgeVi: "Đang mở • Full 4 DLC",
+      badgeVi: "Đang mở • Full 5 DLC",
       accentColor: "#a855f7",
       coverImage: "/covers/imploding-kittens-pixel.png",
     },

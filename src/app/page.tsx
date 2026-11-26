@@ -292,7 +292,11 @@ export default function HomePage() {
                         src={item.coverImage}
                         alt={item.title}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                        style={{ imageRendering: "pixelated" }}
+                        style={
+                          item.coverImage.includes("-pixel.")
+                            ? { imageRendering: "pixelated" }
+                            : undefined
+                        }
                       />
                     </div>
                   )}
