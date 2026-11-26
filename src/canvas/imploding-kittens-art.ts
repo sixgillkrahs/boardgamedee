@@ -1,250 +1,21 @@
 import { drawRoundedRect, getCanvasFontFamilies } from "@/canvas/engine";
 import {
+  IK_CARD_ATLAS_SLOTS,
+  IK_CARD_BACK_SLOT,
+  getIkCardAtlasImage,
+  getIkCardAtlasSlot,
+  getIkCardSpriteBgStyle,
+} from "@/canvas/imploding-kittens-atlas";
+import {
   IK_CARD_META,
   type IkCard,
   type IkCardType,
 } from "@/cartridges/imploding-kittens";
 
+export { getIkCardAtlasImage, getIkCardAtlasSlot, getIkCardSpriteBgStyle };
+
 let cachedIkLogoImg: HTMLImageElement | null = null;
 let ikLogoLoaded = false;
-
-export const IK_PIXEL_CARD_URLS: Record<IkCardType, string[]> = {
-  tacocat: ["/sprites/ik-card-tacocat-pixel.png"],
-  rainbow_cat: ["/sprites/ik-card-rainbow-cat-pixel.png"],
-  hairy_potato_cat: ["/sprites/ik-card-hairy-potato-cat-pixel.png"],
-  catermelon: ["/sprites/ik-card-catermelon-pixel.png"],
-  beard_cat: ["/sprites/ik-card-beard-cat-pixel.png"],
-  skip: [
-    "/sprites/ik-card-skip-1-pixel.png",
-    "/sprites/ik-card-skip-2-pixel.png",
-    "/sprites/ik-card-skip-3-pixel.png",
-    "/sprites/ik-card-skip-4-pixel.png",
-  ],
-  shuffle: [
-    "/sprites/ik-card-shuffle-1-pixel.png",
-    "/sprites/ik-card-shuffle-2-pixel.png",
-    "/sprites/ik-card-shuffle-3-pixel.png",
-    "/sprites/ik-card-shuffle-4-pixel.png",
-  ],
-  defuse: [
-    "/sprites/ik-card-defuse-1-pixel.png",
-    "/sprites/ik-card-defuse-2-pixel.png",
-    "/sprites/ik-card-defuse-3-pixel.png",
-    "/sprites/ik-card-defuse-4-pixel.png",
-    "/sprites/ik-card-defuse-5-pixel.png",
-  ],
-  see_future_3: [
-    "/sprites/ik-card-see-future-1-pixel.png",
-    "/sprites/ik-card-see-future-2-pixel.png",
-    "/sprites/ik-card-see-future-3-pixel.png",
-    "/sprites/ik-card-see-future-4-pixel.png",
-    "/sprites/ik-card-see-future-5-pixel.png",
-  ],
-  nope: [
-    "/sprites/ik-card-nope-1-pixel.png",
-    "/sprites/ik-card-nope-2-pixel.png",
-    "/sprites/ik-card-nope-3-pixel.png",
-    "/sprites/ik-card-nope-4-pixel.png",
-  ],
-  favor: [
-    "/sprites/ik-card-favor-1-pixel.png",
-    "/sprites/ik-card-favor-2-pixel.png",
-    "/sprites/ik-card-favor-3-pixel.png",
-    "/sprites/ik-card-favor-4-pixel.png",
-  ],
-  attack: [
-    "/sprites/ik-card-attack-1-pixel.png",
-    "/sprites/ik-card-attack-2-pixel.png",
-    "/sprites/ik-card-attack-3-pixel.png",
-    "/sprites/ik-card-attack-4-pixel.png",
-    "/sprites/ik-card-attack-5-pixel.png",
-  ],
-  exploding_kitten: [
-    "/sprites/ik-card-exploding-1-pixel.png",
-    "/sprites/ik-card-exploding-2-pixel.png",
-    "/sprites/ik-card-exploding-3-pixel.png",
-    "/sprites/ik-card-exploding-4-pixel.png",
-    "/sprites/ik-card-exploding-5-pixel.png",
-  ],
-  dig_deeper: [
-    "/sprites/ik-card-dig-deeper-1-pixel.png",
-    "/sprites/ik-card-dig-deeper-2-pixel.png",
-    "/sprites/ik-card-dig-deeper-3-pixel.png",
-    "/sprites/ik-card-dig-deeper-4-pixel.png",
-  ],
-  zombie_kitten: [
-    "/sprites/ik-card-zombie-kitten-1-pixel.png",
-    "/sprites/ik-card-zombie-kitten-2-pixel.png",
-    "/sprites/ik-card-zombie-kitten-3-pixel.png",
-    "/sprites/ik-card-zombie-kitten-4-pixel.png",
-    "/sprites/ik-card-zombie-kitten-5-pixel.png",
-  ],
-  attack_of_the_dead: [
-    "/sprites/ik-card-attack-dead-1-pixel.png",
-    "/sprites/ik-card-attack-dead-2-pixel.png",
-    "/sprites/ik-card-attack-dead-3-pixel.png",
-  ],
-  clairvoyance: [
-    "/sprites/ik-card-clairvoyance-1-pixel.png",
-    "/sprites/ik-card-clairvoyance-2-pixel.png",
-  ],
-  clone: [
-    "/sprites/ik-card-clone-1-pixel.png",
-    "/sprites/ik-card-clone-2-pixel.png",
-    "/sprites/ik-card-clone-3-pixel.png",
-  ],
-  feed_the_dead: [
-    "/sprites/ik-card-feed-dead-1-pixel.png",
-    "/sprites/ik-card-feed-dead-2-pixel.png",
-  ],
-  grave_robber: ["/sprites/ik-card-grave-robber-1-pixel.png"],
-  de_cat_ipated: ["/sprites/ik-card-de-cat-ipated-pixel.png"],
-  vampire_cat: ["/sprites/ik-card-vampire-cat-pixel.png"],
-  zombie_cat: ["/sprites/ik-card-zombie-cat-pixel.png"],
-  bury: [
-    "/sprites/ik-card-bury-1-pixel.png",
-    "/sprites/ik-card-bury-2-pixel.png",
-  ],
-  barking_kitten: [
-    "/sprites/ik-card-barking-kitten-1-pixel.png",
-    "/sprites/ik-card-barking-kitten-2-pixel.png",
-  ],
-  ill_take_that: [
-    "/sprites/ik-card-ill-take-that-1-pixel.png",
-    "/sprites/ik-card-ill-take-that-2-pixel.png",
-    "/sprites/ik-card-ill-take-that-3-pixel.png",
-    "/sprites/ik-card-ill-take-that-4-pixel.png",
-  ],
-  potluck: [
-    "/sprites/ik-card-potluck-1-pixel.png",
-    "/sprites/ik-card-potluck-2-pixel.png",
-  ],
-  personal_attack: [
-    "/sprites/ik-card-personal-attack-1-pixel.png",
-    "/sprites/ik-card-personal-attack-2-pixel.png",
-    "/sprites/ik-card-personal-attack-3-pixel.png",
-    "/sprites/ik-card-personal-attack-4-pixel.png",
-  ],
-  share_future_3: [
-    "/sprites/ik-card-share-future-1-pixel.png",
-    "/sprites/ik-card-share-future-2-pixel.png",
-  ],
-  tower_of_power: ["/sprites/ik-card-tower-of-power-1-pixel.png"],
-  streaking_kitten: ["/sprites/ik-card-streaking-kitten-1-pixel.png"],
-  super_skip: ["/sprites/ik-card-super-skip-1-pixel.png"],
-  see_future_5: ["/sprites/ik-card-see-future-5x-1-pixel.png"],
-  alter_future_5: ["/sprites/ik-card-alter-future-5x-1-pixel.png"],
-  swap_top_bottom: ["/sprites/ik-card-swap-top-bottom-1-pixel.png"],
-  garbage_collection: ["/sprites/ik-card-garbage-collection-1-pixel.png"],
-  catomic_bomb: ["/sprites/ik-card-catomic-bomb-1-pixel.png"],
-  curse_cat_butt: [
-    "/sprites/ik-card-curse-cat-butt-1-pixel.png",
-    "/sprites/ik-card-curse-cat-butt-2-pixel.png",
-  ],
-  mark: ["/sprites/ik-card-mark-1-pixel.png"],
-  imploding_kitten: ["/sprites/ik-card-imploding-kitten-1-pixel.png"],
-  feral_cat: ["/sprites/ik-card-feral-cat-1-pixel.png"],
-  reverse: [
-    "/sprites/ik-card-reverse-1-pixel.png",
-    "/sprites/ik-card-reverse-2-pixel.png",
-    "/sprites/ik-card-reverse-3-pixel.png",
-    "/sprites/ik-card-reverse-4-pixel.png",
-  ],
-  draw_bottom: ["/sprites/ik-card-draw-bottom-1-pixel.png"],
-  alter_future_3: [
-    "/sprites/ik-card-alter-future-3x-1-pixel.png",
-    "/sprites/ik-card-alter-future-3x-2-pixel.png",
-    "/sprites/ik-card-alter-future-3x-3-pixel.png",
-    "/sprites/ik-card-alter-future-3x-4-pixel.png",
-  ],
-  targeted_attack: [
-    "/sprites/ik-card-targeted-attack-1-pixel.png",
-    "/sprites/ik-card-targeted-attack-2-pixel.png",
-    "/sprites/ik-card-targeted-attack-3-pixel.png",
-  ],
-  // Good vs. Evil Expansion
-  armageddon: [
-    "/sprites/ik-card-armageddon-1-pixel.png",
-    "/sprites/ik-card-armageddon-2-pixel.png",
-    "/sprites/ik-card-armageddon-3-pixel.png",
-  ],
-  godcat: ["/sprites/ik-card-godcat-1-pixel.png"],
-  devilcat: ["/sprites/ik-card-devilcat-1-pixel.png"],
-  raising_heck: [
-    "/sprites/ik-card-raising-heck-1-pixel.png",
-    "/sprites/ik-card-raising-heck-2-pixel.png",
-  ],
-  reveal_future_3: [
-    "/sprites/ik-card-reveal-future-3x-1-pixel.png",
-    "/sprites/ik-card-reveal-future-3x-2-pixel.png",
-    "/sprites/ik-card-reveal-future-3x-3-pixel.png",
-  ],
-  horse_cat: ["/sprites/ik-card-horse-cat-pixel.png"],
-  knight_cat: ["/sprites/ik-card-knight-cat-pixel.png"],
-  mercat: ["/sprites/ik-card-mercat-pixel.png"],
-  troll_cat: ["/sprites/ik-card-troll-cat-pixel.png"],
-};
-
-const cachedPixelUrlImages = new Map<string, HTMLImageElement>();
-const loadedPixelUrls = new Set<string>();
-const IK_CARD_BACK_PIXEL_URL = "/sprites/ik-card-back-pixel.png";
-
-export function getIkCardBackImage(): HTMLImageElement | null {
-  if (typeof window === "undefined") return null;
-  if (loadedPixelUrls.has(IK_CARD_BACK_PIXEL_URL)) {
-    return cachedPixelUrlImages.get(IK_CARD_BACK_PIXEL_URL) ?? null;
-  }
-  if (!cachedPixelUrlImages.has(IK_CARD_BACK_PIXEL_URL)) {
-    const img = new Image();
-    img.decoding = "async";
-    img.onload = () => {
-      loadedPixelUrls.add(IK_CARD_BACK_PIXEL_URL);
-    };
-    img.src = IK_CARD_BACK_PIXEL_URL;
-    cachedPixelUrlImages.set(IK_CARD_BACK_PIXEL_URL, img);
-  }
-  return null;
-}
-
-function hashCardIdToVariantIndex(cardId: string, count: number): number {
-  if (count <= 1) return 0;
-  let h = 0;
-  for (let i = 0; i < cardId.length; i++) {
-    h = (h * 31 + cardId.charCodeAt(i)) >>> 0;
-  }
-  return h % count;
-}
-
-export function getIkPixelCardUrl(
-  type: IkCardType,
-  cardId = "0"
-): string | null {
-  const urls = IK_PIXEL_CARD_URLS[type];
-  if (!urls || urls.length === 0) return null;
-  return urls[hashCardIdToVariantIndex(cardId, urls.length)];
-}
-
-export function getIkPixelCardImage(
-  type: IkCardType,
-  cardId = "0"
-): HTMLImageElement | null {
-  if (typeof window === "undefined") return null;
-  const url = getIkPixelCardUrl(type, cardId);
-  if (!url) return null;
-  if (loadedPixelUrls.has(url)) {
-    return cachedPixelUrlImages.get(url) ?? null;
-  }
-  if (!cachedPixelUrlImages.has(url)) {
-    const img = new Image();
-    img.decoding = "async";
-    img.onload = () => {
-      loadedPixelUrls.add(url);
-    };
-    img.src = url;
-    cachedPixelUrlImages.set(url, img);
-  }
-  return null;
-}
 
 /**
  * Pure 2D Pixel-Grid procedural fallback renderer for TACOCAT matching the official card layout:
@@ -898,16 +669,26 @@ export function drawIkCard2D(
 
   if (!card || options?.blinded) {
     const isBlind = Boolean(options?.blinded);
-    const backImg = getIkCardBackImage();
+    const atlasImg = getIkCardAtlasImage();
     const cx = x + w * 0.5;
 
-    if (backImg) {
+    if (atlasImg) {
       drawRoundedRect(ctx, x, y, w, h, r);
       ctx.save();
       ctx.clip();
       const prevSmooth = ctx.imageSmoothingEnabled;
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(backImg, x, y, w, h);
+      ctx.drawImage(
+        atlasImg,
+        IK_CARD_BACK_SLOT.sx,
+        IK_CARD_BACK_SLOT.sy,
+        IK_CARD_BACK_SLOT.sw,
+        IK_CARD_BACK_SLOT.sh,
+        x,
+        y,
+        w,
+        h
+      );
       ctx.imageSmoothingEnabled = prevSmooth;
       if (isBlind) {
         ctx.fillStyle = "rgba(190, 18, 60, 0.25)";
@@ -991,55 +772,64 @@ export function drawIkCard2D(
   const isFaceUpImploding =
     card.type === "imploding_kitten" && Boolean(card.faceUp);
 
-  // Special 16-bit Pixel Art full-card rendering for all cards with bespoke pixel-art sprites!
-  if (card.type in IK_PIXEL_CARD_URLS) {
-    const pixelImg = getIkPixelCardImage(card.type, card.id);
-    drawRoundedRect(ctx, x, y, w, h, r);
-    ctx.save();
-    ctx.clip();
-    if (pixelImg) {
+  // Special 16-bit Pixel Art full-card rendering from the single unified Sprite Atlas!
+  if (card.type in IK_CARD_ATLAS_SLOTS) {
+    const atlasImg = getIkCardAtlasImage();
+    const slot = getIkCardAtlasSlot(card.type, card.id);
+    if (atlasImg) {
+      drawRoundedRect(ctx, x, y, w, h, r);
+      ctx.save();
+      ctx.clip();
       const prevSmooth = ctx.imageSmoothingEnabled;
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(pixelImg, x, y, w, h);
+      ctx.drawImage(
+        atlasImg,
+        slot.sx,
+        slot.sy,
+        slot.sw,
+        slot.sh,
+        x,
+        y,
+        w,
+        h
+      );
       ctx.imageSmoothingEnabled = prevSmooth;
-    } else {
-      drawTacocatPixelCardFallback2D(ctx, x, y, w, h);
+      ctx.restore();
+
+      drawRoundedRect(ctx, x, y, w, h, r);
+      ctx.strokeStyle = options?.selected
+        ? "#fde047"
+        : options?.hovered
+          ? meta.colorHex
+          : "#cbd5e1";
+      ctx.lineWidth = options?.selected ? 3 : options?.hovered ? 2.2 : 1.4;
+      ctx.stroke();
+
+      if (card.marked) {
+        drawRoundedRect(ctx, x + 5, y + 24, w - 10, 14, 4);
+        ctx.fillStyle = "rgba(234, 179, 8, 0.94)";
+        ctx.fill();
+        ctx.fillStyle = "#090d16";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = `900 8px ${fonts.sans}`;
+        ctx.fillText("🎯 ĐÃ BỊ LỘ", x + w * 0.5, y + 31);
+      }
+
+      if (options?.selected) {
+        drawRoundedRect(ctx, x + 5, y + h - 18, w - 10, 14, 4);
+        ctx.fillStyle = "#fde047";
+        ctx.fill();
+        ctx.fillStyle = "#090d16";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = `900 8.5px ${fonts.sans}`;
+        ctx.fillText("✓ ĐÃ CHỌN", x + w * 0.5, y + h - 11);
+      }
+
+      ctx.restore();
+      return;
     }
-    ctx.restore();
-
-    drawRoundedRect(ctx, x, y, w, h, r);
-    ctx.strokeStyle = options?.selected
-      ? "#fde047"
-      : options?.hovered
-        ? meta.colorHex
-        : "#cbd5e1";
-    ctx.lineWidth = options?.selected ? 3 : options?.hovered ? 2.2 : 1.4;
-    ctx.stroke();
-
-    if (card.marked) {
-      drawRoundedRect(ctx, x + 5, y + 24, w - 10, 14, 4);
-      ctx.fillStyle = "rgba(234, 179, 8, 0.94)";
-      ctx.fill();
-      ctx.fillStyle = "#090d16";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.font = `900 8px ${fonts.sans}`;
-      ctx.fillText("🎯 ĐÃ BỊ LỘ", x + w * 0.5, y + 31);
-    }
-
-    if (options?.selected) {
-      drawRoundedRect(ctx, x + 5, y + h - 18, w - 10, 14, 4);
-      ctx.fillStyle = "#fde047";
-      ctx.fill();
-      ctx.fillStyle = "#090d16";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.font = `900 8.5px ${fonts.sans}`;
-      ctx.fillText("✓ ĐÃ CHỌN", x + w * 0.5, y + h - 11);
-    }
-
-    ctx.restore();
-    return;
   }
 
   const grad = ctx.createLinearGradient(x, y, x, y + h);

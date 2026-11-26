@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getIkPixelCardUrl } from "@/canvas/imploding-kittens-art";
+import { getIkCardSpriteBgStyle } from "@/canvas/imploding-kittens-art";
 import { ImplodingKittensCanvas } from "@/components/imploding-kittens-canvas";
 import {
   IK_CARD_META,
@@ -637,8 +637,11 @@ export function ImplodingKittensRoom({
                     const meta = item.cardType
                       ? IK_CARD_META[item.cardType]
                       : null;
-                    const imgUrl = item.cardType
-                      ? getIkPixelCardUrl(item.cardType, item.cardId ?? String(idx))
+                    const spriteStyle = item.cardType
+                      ? getIkCardSpriteBgStyle(
+                          item.cardType,
+                          item.cardId ?? String(idx)
+                        )
                       : null;
                     const isFocused =
                       meta !== null && focusedPreviewType === meta.type;
@@ -681,12 +684,12 @@ export function ImplodingKittensRoom({
                         </span>
 
                         <div className="w-full aspect-[5/7] rounded-lg overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center">
-                          {imgUrl ? (
-                            <img
-                              src={imgUrl}
-                              alt={meta.nameVi}
-                              className="w-full h-full object-cover"
-                              style={{ imageRendering: "pixelated" }}
+                          {spriteStyle ? (
+                            <div
+                              role="img"
+                              aria-label={meta.nameVi}
+                              className="w-full h-full"
+                              style={spriteStyle}
                             />
                           ) : (
                             <div
@@ -807,7 +810,10 @@ export function ImplodingKittensRoom({
             const pct = maxIdx > 0 ? (clampedIdx / maxIdx) * 100 : 0;
             const isImploding = pi.reason === "INSERT_IMPLODING_FACEUP";
             const isBury = pi.reason === "BURY_CARD";
-            const cardImgUrl = getIkPixelCardUrl(pi.card.type, pi.card.id);
+            const cardSpriteStyle = getIkCardSpriteBgStyle(
+              pi.card.type,
+              pi.card.id
+            );
             const cardMeta = IK_CARD_META[pi.card.type];
             const accentBorder = isImploding
               ? "border-purple-500/70"
@@ -844,16 +850,14 @@ export function ImplodingKittensRoom({
                 >
                   {/* Header with mini pixel card preview */}
                   <div className="flex items-center gap-3">
-                    {cardImgUrl && (
-                      <div className="shrink-0 w-12 aspect-[5/7] rounded-lg overflow-hidden border border-slate-700 bg-slate-950 shadow">
-                        <img
-                          src={cardImgUrl}
-                          alt={cardMeta.nameVi}
-                          className="w-full h-full object-cover"
-                          style={{ imageRendering: "pixelated" }}
-                        />
-                      </div>
-                    )}
+                    <div className="shrink-0 w-12 aspect-[5/7] rounded-lg overflow-hidden border border-slate-700 bg-slate-950 shadow">
+                      <div
+                        role="img"
+                        aria-label={cardMeta.nameVi}
+                        className="w-full h-full"
+                        style={cardSpriteStyle}
+                      />
+                    </div>
                     <div className="min-w-0">
                       <p className={`text-sm font-extrabold ${accentTitle}`}>
                         {isImploding
@@ -1031,7 +1035,10 @@ export function ImplodingKittensRoom({
                     );
                     if (!card) return null;
                     const meta = IK_CARD_META[card.type];
-                    const imgUrl = getIkPixelCardUrl(card.type, card.id);
+                    const spriteStyle = getIkCardSpriteBgStyle(
+                      card.type,
+                      card.id
+                    );
                     const isFocused = focusedPreviewType === card.type;
 
                     return (
@@ -1062,26 +1069,12 @@ export function ImplodingKittensRoom({
                           }
                           className="w-full aspect-[5/7] rounded-lg overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center cursor-pointer"
                         >
-                          {imgUrl ? (
-                            <img
-                              src={imgUrl}
-                              alt={meta.nameVi}
-                              className="w-full h-full object-cover"
-                              style={{ imageRendering: "pixelated" }}
-                            />
-                          ) : (
-                            <div
-                              className="w-full h-full flex flex-col items-center justify-center p-2 text-center gap-1"
-                              style={{
-                                background: `linear-gradient(155deg, ${meta.colorHex}, ${meta.secondaryHex})`,
-                              }}
-                            >
-                              <span className="text-3xl">{meta.emoji}</span>
-                              <span className="text-[10px] font-extrabold text-white leading-tight">
-                                {meta.shortVi}
-                              </span>
-                            </div>
-                          )}
+                          <div
+                            role="img"
+                            aria-label={meta.nameVi}
+                            className="w-full h-full"
+                            style={spriteStyle}
+                          />
                         </button>
 
                         <div className="w-full text-center px-0.5">
@@ -1158,7 +1151,10 @@ export function ImplodingKittensRoom({
           (() => {
             const topCard = ikView.pendingDigDeeper!.topCard!;
             const topMeta = IK_CARD_META[topCard.type];
-            const topImgUrl = getIkPixelCardUrl(topCard.type, topCard.id);
+            const topSpriteStyle = getIkCardSpriteBgStyle(
+              topCard.type,
+              topCard.id
+            );
 
             return (
               <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
@@ -1169,26 +1165,12 @@ export function ImplodingKittensRoom({
 
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3.5">
                     <div className="shrink-0 w-32 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 bg-slate-950 shadow-xl flex items-center justify-center">
-                      {topImgUrl ? (
-                        <img
-                          src={topImgUrl}
-                          alt={topMeta.nameVi}
-                          className="w-full h-full object-cover"
-                          style={{ imageRendering: "pixelated" }}
-                        />
-                      ) : (
-                        <div
-                          className="w-full h-full flex flex-col items-center justify-center p-2 text-center gap-1"
-                          style={{
-                            background: `linear-gradient(155deg, ${topMeta.colorHex}, ${topMeta.secondaryHex})`,
-                          }}
-                        >
-                          <span className="text-4xl">{topMeta.emoji}</span>
-                          <span className="text-xs font-extrabold text-white">
-                            {topMeta.shortVi}
-                          </span>
-                        </div>
-                      )}
+                      <div
+                        role="img"
+                        aria-label={topMeta.nameVi}
+                        className="w-full h-full"
+                        style={topSpriteStyle}
+                      />
                     </div>
 
                     <div className="flex-1 min-w-0 space-y-1.5 text-left">
@@ -1271,9 +1253,9 @@ export function ImplodingKittensRoom({
                     const markedMeta = markedCard
                       ? IK_CARD_META[markedCard.type]
                       : null;
-                    const cardImgUrl = markedCard
-                      ? getIkPixelCardUrl(markedCard.type, markedCard.id)
-                      : "/sprites/ik-card-back-pixel.png";
+                    const cardSpriteStyle = markedCard
+                      ? getIkCardSpriteBgStyle(markedCard.type, markedCard.id)
+                      : getIkCardSpriteBgStyle("back");
 
                     return (
                       <button
@@ -1291,34 +1273,16 @@ export function ImplodingKittensRoom({
                         }
                         className="group relative w-20 sm:w-24 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 hover:border-amber-400 bg-slate-950 shadow-lg hover:shadow-amber-500/30 transition-all duration-150 hover:-translate-y-2.5 cursor-pointer disabled:opacity-50"
                       >
-                        {cardImgUrl ? (
-                          <img
-                            src={cardImgUrl}
-                            alt={
-                              markedMeta
-                                ? markedMeta.nameVi
-                                : `Lá úp #${idx + 1}`
-                            }
-                            className="w-full h-full object-cover"
-                            style={{ imageRendering: "pixelated" }}
-                          />
-                        ) : (
-                          <div
-                            className="w-full h-full flex flex-col items-center justify-center p-1.5 text-center gap-1"
-                            style={{
-                              background: markedMeta
-                                ? `linear-gradient(155deg, ${markedMeta.colorHex}, ${markedMeta.secondaryHex})`
-                                : undefined,
-                            }}
-                          >
-                            <span className="text-2xl">
-                              {markedMeta?.emoji ?? "🃏"}
-                            </span>
-                            <span className="text-[10px] font-extrabold text-white leading-tight">
-                              {markedMeta?.shortVi ?? `#${idx + 1}`}
-                            </span>
-                          </div>
-                        )}
+                        <div
+                          role="img"
+                          aria-label={
+                            markedMeta
+                              ? markedMeta.nameVi
+                              : `Lá úp #${idx + 1}`
+                          }
+                          className="w-full h-full"
+                          style={cardSpriteStyle}
+                        />
                         <span className="absolute bottom-1 inset-x-1 rounded bg-slate-950/85 px-1 py-0.5 text-[10px] font-extrabold text-amber-300 group-hover:bg-amber-400 group-hover:text-slate-950 transition">
                           {markedMeta
                             ? `🎯 ${markedMeta.shortVi}`
@@ -1373,11 +1337,12 @@ export function ImplodingKittensRoom({
             const pa = ikView.pendingArmageddon!;
             const isActor = pa.actorSeatNo === snapshot?.viewerSeatNo;
             const isTarget = pa.targetSeatNo === snapshot?.viewerSeatNo;
-            const godcatImg = getIkPixelCardUrl("godcat", "godcat-preview");
-            const devilcatImg = getIkPixelCardUrl(
+            const godcatStyle = getIkCardSpriteBgStyle("godcat", "godcat-preview");
+            const devilcatStyle = getIkCardSpriteBgStyle(
               "devilcat",
               "devilcat-preview"
             );
+            const cardBackStyle = getIkCardSpriteBgStyle("back");
 
             if (pa.stage === "ACTOR_PLACE" && isActor) {
               return (
@@ -1399,22 +1364,13 @@ export function ImplodingKittensRoom({
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="rounded-xl border border-yellow-400/50 bg-yellow-950/35 p-2.5 flex flex-col items-center gap-1.5">
-                        <div className="w-20 sm:w-24 aspect-[5/7] rounded-lg overflow-hidden border border-yellow-400/60 bg-gradient-to-br from-yellow-400 to-amber-700 flex flex-col items-center justify-center">
-                          {godcatImg ? (
-                            <img
-                              src={godcatImg}
-                              alt="Godcat"
-                              className="w-full h-full object-cover"
-                              style={{ imageRendering: "pixelated" }}
-                            />
-                          ) : (
-                            <>
-                              <span className="text-3xl">✨</span>
-                              <span className="text-[10px] font-black text-white">
-                                MÈO THẦN
-                              </span>
-                            </>
-                          )}
+                        <div className="w-20 sm:w-24 aspect-[5/7] rounded-lg overflow-hidden border border-yellow-400/60 bg-slate-950">
+                          <div
+                            role="img"
+                            aria-label="Godcat"
+                            className="w-full h-full"
+                            style={godcatStyle}
+                          />
                         </div>
                         <p className="text-xs font-extrabold text-yellow-300">
                           ✨ Mèo Thần (Godcat)
@@ -1425,22 +1381,13 @@ export function ImplodingKittensRoom({
                       </div>
 
                       <div className="rounded-xl border border-rose-500/50 bg-rose-950/35 p-2.5 flex flex-col items-center gap-1.5">
-                        <div className="w-20 sm:w-24 aspect-[5/7] rounded-lg overflow-hidden border border-rose-500/60 bg-gradient-to-br from-red-600 to-rose-950 flex flex-col items-center justify-center">
-                          {devilcatImg ? (
-                            <img
-                              src={devilcatImg}
-                              alt="Devilcat"
-                              className="w-full h-full object-cover"
-                              style={{ imageRendering: "pixelated" }}
-                            />
-                          ) : (
-                            <>
-                              <span className="text-3xl">😈</span>
-                              <span className="text-[10px] font-black text-white">
-                                MÈO QUỶ
-                              </span>
-                            </>
-                          )}
+                        <div className="w-20 sm:w-24 aspect-[5/7] rounded-lg overflow-hidden border border-rose-500/60 bg-slate-950">
+                          <div
+                            role="img"
+                            aria-label="Devilcat"
+                            className="w-full h-full"
+                            style={devilcatStyle}
+                          />
                         </div>
                         <p className="text-xs font-extrabold text-rose-300">
                           😈 Mèo Quỷ (Devilcat)
@@ -1513,11 +1460,11 @@ export function ImplodingKittensRoom({
                     <div className="flex items-center justify-center gap-6 py-1">
                       <div className="flex flex-col items-center gap-1">
                         <div className="w-20 aspect-[5/7] rounded-xl overflow-hidden border-2 border-amber-400/70 bg-slate-950 shadow-lg">
-                          <img
-                            src="/sprites/ik-card-back-pixel.png"
-                            alt="Lá của bạn"
-                            className="w-full h-full object-cover"
-                            style={{ imageRendering: "pixelated" }}
+                          <div
+                            role="img"
+                            aria-label="Lá của bạn"
+                            className="w-full h-full"
+                            style={cardBackStyle}
                           />
                         </div>
                         <span className="text-[11px] font-extrabold text-amber-300">
@@ -1529,11 +1476,11 @@ export function ImplodingKittensRoom({
                       </span>
                       <div className="flex flex-col items-center gap-1">
                         <div className="w-20 aspect-[5/7] rounded-xl overflow-hidden border-2 border-rose-400/70 bg-slate-950 shadow-lg">
-                          <img
-                            src="/sprites/ik-card-back-pixel.png"
-                            alt="Lá của đối thủ"
-                            className="w-full h-full object-cover"
-                            style={{ imageRendering: "pixelated" }}
+                          <div
+                            role="img"
+                            aria-label="Lá của đối thủ"
+                            className="w-full h-full"
+                            style={cardBackStyle}
                           />
                         </div>
                         <span className="text-[11px] font-extrabold text-rose-300">
@@ -1597,7 +1544,7 @@ export function ImplodingKittensRoom({
             (() => {
               const bottomCard = ikView.pendingRaisingHeck!.bottomCard!;
               const bottomMeta = IK_CARD_META[bottomCard.type];
-              const bottomImgUrl = getIkPixelCardUrl(
+              const bottomSpriteStyle = getIkCardSpriteBgStyle(
                 bottomCard.type,
                 bottomCard.id
               );
@@ -1612,26 +1559,12 @@ export function ImplodingKittensRoom({
 
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3.5">
                       <div className="shrink-0 w-32 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 bg-slate-950 shadow-xl flex items-center justify-center">
-                        {bottomImgUrl ? (
-                          <img
-                            src={bottomImgUrl}
-                            alt={bottomMeta.nameVi}
-                            className="w-full h-full object-cover"
-                            style={{ imageRendering: "pixelated" }}
-                          />
-                        ) : (
-                          <div
-                            className="w-full h-full flex flex-col items-center justify-center p-2 text-center gap-1"
-                            style={{
-                              background: `linear-gradient(155deg, ${bottomMeta.colorHex}, ${bottomMeta.secondaryHex})`,
-                            }}
-                          >
-                            <span className="text-4xl">{bottomMeta.emoji}</span>
-                            <span className="text-xs font-extrabold text-white">
-                              {bottomMeta.shortVi}
-                            </span>
-                          </div>
-                        )}
+                        <div
+                          role="img"
+                          aria-label={bottomMeta.nameVi}
+                          className="w-full h-full"
+                          style={bottomSpriteStyle}
+                        />
                       </div>
 
                       <div className="flex-1 min-w-0 space-y-1.5 text-left">

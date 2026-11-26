@@ -11,7 +11,7 @@ import {
 import {
   drawIkBackground2D,
   drawIkCard2D,
-  getIkPixelCardUrl,
+  getIkCardSpriteBgStyle,
 } from "@/canvas/imploding-kittens-art";
 import {
   ImplodingKittensFxEngine,
@@ -1147,8 +1147,8 @@ export function ImplodingKittensCanvas({
   };
 
   const inspectedMeta = inspectedCard ? IK_CARD_META[inspectedCard.type] : null;
-  const inspectedImgUrl = inspectedCard
-    ? getIkPixelCardUrl(inspectedCard.type, inspectedCard.id)
+  const inspectedSpriteStyle = inspectedCard
+    ? getIkCardSpriteBgStyle(inspectedCard.type, inspectedCard.id)
     : null;
   const inspectedPackLabel =
     inspectedMeta && inspectedMeta.pack !== "core"
@@ -1180,12 +1180,12 @@ export function ImplodingKittensCanvas({
           >
             {/* Enlarged Card Preview */}
             <div className="shrink-0 w-24 [@media(min-height:500px)]:w-36 sm:w-44 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 bg-slate-950 shadow-xl flex items-center justify-center">
-              {inspectedImgUrl ? (
-                <img
-                  src={inspectedImgUrl}
-                  alt={inspectedMeta.nameVi}
-                  className="w-full h-full object-cover"
-                  style={{ imageRendering: "pixelated" }}
+              {inspectedSpriteStyle ? (
+                <div
+                  role="img"
+                  aria-label={inspectedMeta.nameVi}
+                  className="w-full h-full"
+                  style={inspectedSpriteStyle}
                 />
               ) : (
                 <div
