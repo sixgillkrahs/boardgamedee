@@ -150,6 +150,7 @@ export const IK_PIXEL_CARD_URLS: Partial<Record<IkCardType, string[]>> = {
     "/sprites/ik-card-reverse-3-pixel.png",
     "/sprites/ik-card-reverse-4-pixel.png",
   ],
+  draw_bottom: ["/sprites/ik-card-draw-bottom-1-pixel.png"],
 };
 
 const cachedPixelUrlImages = new Map<string, HTMLImageElement>();
