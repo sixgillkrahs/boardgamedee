@@ -11,6 +11,7 @@ import {
 import {
   drawIkBackground2D,
   drawIkCard2D,
+  drawIkLobbyBackground2D,
   getIkCardSpriteBgStyle,
 } from "@/canvas/imploding-kittens-art";
 import {
@@ -236,111 +237,50 @@ export function ImplodingKittensCanvas({
         ctx.translate(shakeOff.dx, shakeOff.dy);
       }
 
-      drawIkBackground2D(
-        ctx,
-        width,
-        height,
-        now,
-        pv?.direction ?? 1,
-        Boolean(pv?.faceUpImplodingInDeck)
-      );
-
       const newHitRegions: HitRegion[] = [];
       const isShort = height < 520;
 
       if (curMode === "lobby" || !pv) {
         fx.activeFavorPaw = null;
-        // Lobby Preview Tabletop with gentle card levitation & subtle shimmer
+        drawIkLobbyBackground2D(ctx, width, height, now);
+
+        // Bold 2D comic header title floating cleanly above the screaming black cat artwork
+        ctx.save();
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
+        const titleSize = isShort
+          ? Math.min(20, Math.round(height * 0.062))
+          : Math.min(34, Math.max(22, Math.round(width * 0.036)));
+        const titleY = isShort ? height * 0.08 : Math.min(44, height * 0.08);
+        ctx.font = `900 ${titleSize}px ${fonts.sans}`;
+        ctx.lineJoin = "round";
+        ctx.lineWidth = Math.max(4, titleSize * 0.2);
+        ctx.strokeStyle = "rgba(15, 5, 10, 0.92)";
+        ctx.strokeText("💣 IMPLODING KITTENS", width * 0.5, titleY);
         ctx.fillStyle = "#fde047";
-        ctx.font = `900 ${isShort ? Math.min(20, Math.round(height * 0.06)) : Math.min(30, Math.round(width * 0.045))}px ${fonts.sans}`;
-        ctx.fillText(
-          "💣🕳️ IMPLODING KITTENS",
-          width * 0.5,
-          isShort ? height * 0.09 : height * 0.16
-        );
+        ctx.fillText("💣 IMPLODING KITTENS", width * 0.5, titleY);
+
         if (!isShort) {
-          ctx.fillStyle = "#cbd5e1";
-          ctx.font = `600 12px ${fonts.sans}`;
-          ctx.fillText(
-            "Mèo Nổ + 5 Bản Mở Rộng (Imploding • Streaking • Barking • Zombie • Good vs. Evil)",
-            width * 0.5,
-            height * 0.22
-          );
+          const subY = titleY + titleSize * 0.82;
+          ctx.font = `700 12px ${fonts.sans}`;
+          ctx.lineWidth = 3.5;
+          ctx.strokeStyle = "rgba(15, 5, 10, 0.88)";
+          const subText =
+            "Mèo Nổ • Trọn Bộ 5 Bản Mở Rộng (Imploding • Streaking • Barking • Zombie • Good vs. Evil)";
+          ctx.strokeText(subText, width * 0.5, subY);
+          ctx.fillStyle = "#f8fafc";
+          ctx.fillText(subText, width * 0.5, subY);
         }
-
-        const sampleTypes = [
-          "tacocat",
-          "rainbow_cat",
-          "defuse",
-          "exploding_kitten",
-          "nope",
-          "attack",
-          "see_future_3",
-        ] as const;
-        const cardW = isShort
-          ? Math.min(54, Math.max(38, Math.round(height * 0.14)))
-          : Math.min(92, Math.round(width * 0.11));
-        const cardH = Math.round(cardW * 1.44);
-
-        sampleTypes.forEach((t, i) => {
-          const off = i - 3;
-          const waveY = Math.sin(now / 480 + i * 0.75) * (isShort ? 3 : 6);
-          const waveRot = Math.cos(now / 720 + i * 0.6) * 0.025;
-          ctx.save();
-          ctx.translate(
-            width * 0.5 + off * (cardW * 0.74),
-            (isShort ? height * 0.28 : height * 0.44) +
-              Math.abs(off) * (isShort ? 3 : 7) +
-              waveY
-          );
-          ctx.rotate(off * 0.08 + waveRot);
-          drawIkCard2D(
-            ctx,
-            -cardW / 2,
-            -cardH / 2,
-            cardW,
-            cardH,
-            {
-              id: `sample-${t}-${i}`,
-              type: t,
-            },
-            { now }
-          );
-          ctx.restore();
-        });
-
-        // Lobby seated players strip (only on tall screens; short landscape uses the floating lobby panel)
-        if (!isShort) {
-          const count = Math.max(1, curLobbySeats.length);
-          const pillW = Math.min(165, Math.floor((width - 40) / count) - 8);
-          const startX =
-            width * 0.5 - ((pillW + 8) * curLobbySeats.length - 8) / 2;
-          curLobbySeats.forEach((s, idx) => {
-            const px = startX + idx * (pillW + 8);
-            const py = height * 0.66 + Math.sin(now / 600 + idx) * 2;
-            drawRoundedRect(ctx, px, py, pillW, 44, 11);
-            ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
-            ctx.fill();
-            ctx.strokeStyle =
-              s.seatNo === curViewer ? "#facc15" : "rgba(148, 163, 184, 0.4)";
-            ctx.lineWidth = s.seatNo === curViewer ? 2 : 1.2;
-            ctx.stroke();
-
-            ctx.fillStyle = "#f8fafc";
-            ctx.font = `700 11.5px ${fonts.sans}`;
-            ctx.fillText(s.displayName, px + pillW / 2, py + 16, pillW - 12);
-            ctx.fillStyle = s.isBot ? "#38bdf8" : "#fde047";
-            ctx.font = `600 10px ${fonts.sans}`;
-            ctx.fillText(
-              s.isBot ? "🤖 Mèo Máy Bot" : `Ghế #${s.seatNo}`,
-              px + pillW / 2,
-              py + 32
-            );
-          });
-        }
+        ctx.restore();
       } else {
+        drawIkBackground2D(
+          ctx,
+          width,
+          height,
+          now,
+          pv?.direction ?? 1,
+          Boolean(pv?.faceUpImplodingInDeck)
+        );
         // --- ACTIVE MATCH TABLETOP ---
         const mySeat =
           pv.seats.find((s) => s.seatNo === curViewer) ?? pv.seats[0];

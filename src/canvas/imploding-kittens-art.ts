@@ -17,6 +17,118 @@ export { getIkCardAtlasImage, getIkCardAtlasSlot, getIkCardSpriteBgStyle };
 let cachedIkLogoImg: HTMLImageElement | null = null;
 let ikLogoLoaded = false;
 
+export const IK_LOBBY_BG_URL = "/sprites/ik-lobby-bg.webp";
+let cachedIkLobbyBgImg: HTMLImageElement | null = null;
+let ikLobbyBgLoaded = false;
+
+export function getIkLobbyBgImage(): HTMLImageElement | null {
+  if (typeof window === "undefined") return null;
+  if (ikLobbyBgLoaded && cachedIkLobbyBgImg) return cachedIkLobbyBgImg;
+  if (!cachedIkLobbyBgImg) {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      ikLobbyBgLoaded = true;
+    };
+    img.src = IK_LOBBY_BG_URL;
+    cachedIkLobbyBgImg = img;
+  }
+  return null;
+}
+
+/**
+ * Renders the vibrant 2D cel-shaded Imploding Kittens lobby splash illustration
+ * (screaming black cat hugging the exploding Earth) with subtle breathing camera zoom,
+ * rising 2D comic embers, and top/bottom readability vignettes.
+ */
+export function drawIkLobbyBackground2D(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  now: number
+) {
+  ctx.save();
+
+  // Deep crimson fallback backdrop before WebP finishes decoding
+  const fallbackGrad = ctx.createRadialGradient(
+    width * 0.5,
+    height * 0.42,
+    24,
+    width * 0.5,
+    height * 0.5,
+    Math.max(width, height) * 0.78
+  );
+  fallbackGrad.addColorStop(0, "#991b1b");
+  fallbackGrad.addColorStop(0.55, "#5c0b12");
+  fallbackGrad.addColorStop(1, "#1e050a");
+  ctx.fillStyle = fallbackGrad;
+  ctx.fillRect(0, 0, width, height);
+
+  const bgImg = getIkLobbyBgImage();
+  if (bgImg && bgImg.naturalWidth > 0 && bgImg.naturalHeight > 0) {
+    const imgRatio = bgImg.naturalWidth / bgImg.naturalHeight;
+    const canvasRatio = width / Math.max(1, height);
+    const breathe = 1.015 + Math.sin(now / 2800) * 0.014;
+
+    let drawW: number;
+    let drawH: number;
+    if (canvasRatio > imgRatio) {
+      drawW = width * breathe;
+      drawH = drawW / imgRatio;
+    } else {
+      drawH = height * breathe;
+      drawW = drawH * imgRatio;
+    }
+
+    const dx = (width - drawW) * 0.5;
+    // Frame slightly toward upper-center so the screaming cat & Earth stay clearly visible above the Lobby card
+    const dy = (height - drawH) * 0.32;
+
+    const prevSmooth = ctx.imageSmoothingEnabled;
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(bgImg, dx, dy, drawW, drawH);
+    ctx.imageSmoothingEnabled = prevSmooth;
+  }
+
+  // Subtle animated 2D comic embers drifting upward around the explosion
+  for (let i = 0; i < 18; i++) {
+    const speed = 0.025 + (i % 5) * 0.009;
+    const prog = ((now * speed) / 100 + i * 0.19) % 1;
+    const ex =
+      ((i * 173.3) % width) + Math.sin(now / 700 + i * 1.4) * 18;
+    const ey = height * (0.95 - prog * 0.92);
+    const alpha = Math.sin(prog * Math.PI) * 0.72;
+    const r = 1.8 + (i % 3) * 1.1;
+    ctx.fillStyle =
+      i % 3 === 0
+        ? `rgba(254, 240, 138, ${alpha})`
+        : i % 3 === 1
+          ? `rgba(251, 146, 60, ${alpha})`
+          : `rgba(255, 255, 255, ${alpha * 0.85})`;
+    ctx.beginPath();
+    ctx.arc(ex, ey, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Soft top vignette for crisp title contrast
+  const topVig = ctx.createLinearGradient(0, 0, 0, Math.min(140, height * 0.28));
+  topVig.addColorStop(0, "rgba(15, 5, 10, 0.72)");
+  topVig.addColorStop(1, "rgba(15, 5, 10, 0)");
+  ctx.fillStyle = topVig;
+  ctx.fillRect(0, 0, width, Math.min(140, height * 0.28));
+
+  // Soft bottom vignette so the floating Lobby panel sits cleanly over the art
+  const botStart = height * 0.56;
+  const botVig = ctx.createLinearGradient(0, botStart, 0, height);
+  botVig.addColorStop(0, "rgba(10, 6, 14, 0)");
+  botVig.addColorStop(0.6, "rgba(10, 6, 14, 0.55)");
+  botVig.addColorStop(1, "rgba(9, 10, 18, 0.88)");
+  ctx.fillStyle = botVig;
+  ctx.fillRect(0, botStart, width, height - botStart);
+
+  ctx.restore();
+}
+
 /**
  * Pure 2D Pixel-Grid procedural fallback renderer for TACOCAT matching the official card layout:
  * - Off-white card base with rounded grey border
