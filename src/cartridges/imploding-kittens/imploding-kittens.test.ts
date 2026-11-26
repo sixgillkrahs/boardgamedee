@@ -8,7 +8,7 @@ const SAMPLE_SEATS: SeatDescriptor[] = [
   { seatNo: 3, actorId: "a3", displayName: "Mèo Mướp" },
 ];
 
-describe("Imploding Kittens Cartridge (Core + 4 Expansions)", () => {
+describe("Imploding Kittens Cartridge (Core + 5 Expansions)", () => {
   it("initializes 8-card starting hands (with 1 guaranteed Defuse) and inserts Exploding & Imploding Kittens according to enabled expansions", () => {
     const res = implodingKittensCartridge.createInitialState({
       config: implodingKittensCartridge.defaultConfig(3),
@@ -305,5 +305,198 @@ describe("Imploding Kittens Cartridge (Core + 4 Expansions)", () => {
     expect(afterClaim.state.towerStashCards).toHaveLength(0);
     expect(afterClaim.state.seats[0].hand).toHaveLength(2); // secret-defuse + 1 card taken from Tower
     expect(afterClaim.state.drawPile).toHaveLength(deckCountBeforeClaim + 3);
+  });
+
+  it("supports Good vs. Evil expansion: Armageddon showdown (anti-cheat), Godcat wildcard + emergency Defuse, Raising Heck, and Reveal the Future 3x", () => {
+    const init = implodingKittensCartridge.createInitialState({
+      config: implodingKittensCartridge.defaultConfig(3),
+      seats: SAMPLE_SEATS,
+      nowMs: 1000,
+    });
+
+    expect(init.state.godcatOnPlaymat).toBe(true);
+
+    const [s1, s2, s3] = init.state.seats;
+    s1.hand = [
+      { id: "s1-arm1", type: "armageddon" },
+      { id: "s1-defuse", type: "defuse" },
+      { id: "s1-reveal", type: "reveal_future_3" },
+    ];
+    s2.hand = [
+      { id: "s2-arm2", type: "armageddon" },
+      { id: "s2-heck", type: "raising_heck" },
+      { id: "s2-horse1", type: "horse_cat" },
+      { id: "s2-horse2", type: "horse_cat" },
+    ];
+    s3.hand = [{ id: "s3-skip", type: "skip" }];
+
+    // 1. Reveal the Future 3x exposes top 3 cards to ALL alive players!
+    const afterReveal = implodingKittensCartridge.reduce({
+      state: init.state,
+      actorSeatNo: 1,
+      nowMs: 1050,
+      command: { type: "PLAY_CARD", cardId: "s1-reveal" },
+    });
+    expect(afterReveal.state.step).toBe("TurnPlayStep");
+    expect(afterReveal.state.seats[0].privateVision?.cards).toHaveLength(3);
+    expect(afterReveal.state.seats[1].privateVision?.cards).toHaveLength(3);
+    expect(afterReveal.state.seats[2].privateVision?.cards).toHaveLength(3);
+
+    // 2. Seat 1 plays Armageddon targeting Seat 2 -> enters ArmageddonStep (ACTOR_PLACE)
+    const afterArmPlay = implodingKittensCartridge.reduce({
+      state: afterReveal.state,
+      actorSeatNo: 1,
+      nowMs: 1100,
+      command: { type: "PLAY_CARD", cardId: "s1-arm1", targetSeatNo: 2 },
+    });
+    expect(afterArmPlay.state.step).toBe("ArmageddonStep");
+    expect(afterArmPlay.state.pendingArmageddon?.stage).toBe("ACTOR_PLACE");
+
+    // Seat 1 secretly places Godcat in front of Seat 1 (giveGodcatToTarget: false) and Devilcat in front of Seat 2
+    const afterPlace = implodingKittensCartridge.reduce({
+      state: afterArmPlay.state,
+      actorSeatNo: 1,
+      nowMs: 1150,
+      command: { type: "ARMAGEDDON_PLACE", giveGodcatToTarget: false },
+    });
+    expect(afterPlace.state.pendingArmageddon?.stage).toBe("TARGET_CHOOSE");
+
+    // Anti-cheat check: Seat 2 MUST NOT see `godcatGivenToTarget`, while Seat 1 DOES see it!
+    const s2ArmView = implodingKittensCartridge.projectView({
+      state: afterPlace.state,
+      viewerSeatNo: 2,
+    });
+    const s1ArmView = implodingKittensCartridge.projectView({
+      state: afterPlace.state,
+      viewerSeatNo: 1,
+    });
+    expect(s2ArmView.pendingArmageddon?.godcatGivenToTarget).toBeNull();
+    expect(s1ArmView.pendingArmageddon?.godcatGivenToTarget).toBe(false);
+
+    // Seat 2 chooses SWAP (swap: true) -> Seat 2 steals Godcat, Seat 1 gets Devilcat and burns Defuse to survive!
+    // Armageddon also ends Seat 1's turn -> activeSeatNo advances to Seat 2!
+    const afterDecide = implodingKittensCartridge.reduce({
+      state: afterPlace.state,
+      actorSeatNo: 2,
+      nowMs: 1200,
+      command: { type: "ARMAGEDDON_DECIDE", swap: true },
+    });
+    expect(afterDecide.state.step).toBe("TurnPlayStep");
+    expect(afterDecide.state.activeSeatNo).toBe(2);
+    expect(afterDecide.state.godcatOnPlaymat).toBe(false);
+    expect(afterDecide.state.seats[1].hand.some((c) => c.type === "godcat")).toBe(
+      true
+    );
+    expect(afterDecide.state.seats[0].alive).toBe(true);
+    expect(afterDecide.state.seats[0].hand.some((c) => c.type === "defuse")).toBe(
+      false
+    );
+
+    // 3. While Godcat is off Playmat, Seat 2 CANNOT play Armageddon!
+    expect(() =>
+      implodingKittensCartridge.reduce({
+        state: afterDecide.state,
+        actorSeatNo: 2,
+        nowMs: 1250,
+        command: { type: "PLAY_CARD", cardId: "s2-arm2", targetSeatNo: 1 },
+      })
+    ).toThrow(/Thảm đấu/);
+
+    // 4. Godcat CANNOT be played as Nope!
+    const s2Godcat = afterDecide.state.seats[1].hand.find(
+      (c) => c.type === "godcat"
+    )!;
+    expect(() =>
+      implodingKittensCartridge.reduce({
+        state: afterDecide.state,
+        actorSeatNo: 2,
+        nowMs: 1260,
+        command: {
+          type: "PLAY_CARD",
+          cardId: s2Godcat.id,
+          mimicCardType: "nope",
+        },
+      })
+    ).toThrow();
+
+    // 5. Seat 2 plays Godcat mimicking `shuffle` -> Godcat returns to Playmat (NOT Discard Pile!)
+    const discardBeforeGodcat = afterDecide.state.discardPile.length;
+    const afterGodcatShuffle = implodingKittensCartridge.reduce({
+      state: afterDecide.state,
+      actorSeatNo: 2,
+      nowMs: 1300,
+      command: {
+        type: "PLAY_CARD",
+        cardId: s2Godcat.id,
+        mimicCardType: "shuffle",
+      },
+    });
+    expect(afterGodcatShuffle.state.godcatOnPlaymat).toBe(true);
+    expect(
+      afterGodcatShuffle.state.discardPile.some((c) => c.type === "godcat")
+    ).toBe(false);
+    expect(afterGodcatShuffle.state.discardPile).toHaveLength(
+      discardBeforeGodcat
+    );
+
+    // 6. Raising Heck: Put an Exploding Kitten at the BOTTOM of drawPile (index 0)
+    afterGodcatShuffle.state.drawPile.unshift({
+      id: "bottom-bomb-heck",
+      type: "exploding_kitten",
+    });
+    const afterHeckPlay = implodingKittensCartridge.reduce({
+      state: afterGodcatShuffle.state,
+      actorSeatNo: 2,
+      nowMs: 1350,
+      command: { type: "PLAY_CARD", cardId: "s2-heck" },
+    });
+    expect(afterHeckPlay.state.step).toBe("RaisingHeckStep");
+    // Anti-cheat: Seat 3 cannot see bottomCard; Seat 2 sees the bomb!
+    expect(
+      implodingKittensCartridge.projectView({
+        state: afterHeckPlay.state,
+        viewerSeatNo: 3,
+      }).pendingRaisingHeck?.bottomCard
+    ).toBeNull();
+    expect(
+      implodingKittensCartridge.projectView({
+        state: afterHeckPlay.state,
+        viewerSeatNo: 2,
+      }).pendingRaisingHeck?.bottomCard?.id
+    ).toBe("bottom-bomb-heck");
+
+    // Seat 2 chooses to put the bottom bomb directly on TOP of drawPile without exploding, ending Seat 2's turn!
+    const afterHeckTop = implodingKittensCartridge.reduce({
+      state: afterHeckPlay.state,
+      actorSeatNo: 2,
+      nowMs: 1400,
+      command: { type: "RAISING_HECK_DECIDE", takeToHand: false },
+    });
+    expect(afterHeckTop.state.step).toBe("TurnPlayStep");
+    expect(afterHeckTop.state.activeSeatNo).toBe(3);
+    expect(
+      afterHeckTop.state.drawPile[afterHeckTop.state.drawPile.length - 1].id
+    ).toBe("bottom-bomb-heck");
+
+    // 7. Godcat as Emergency Defuse: give Seat 3 Godcat, Seat 3 draws the top Exploding Kitten -> Godcat defuses it and returns to Playmat!
+    afterHeckTop.state.godcatOnPlaymat = false;
+    afterHeckTop.state.seats[2].hand.push({
+      id: "s3-godcat-defuse",
+      type: "godcat",
+    });
+    const afterS3DrawBomb = implodingKittensCartridge.reduce({
+      state: afterHeckTop.state,
+      actorSeatNo: 3,
+      nowMs: 1450,
+      command: { type: "DRAW_CARD" },
+    });
+    expect(afterS3DrawBomb.state.step).toBe("DefuseInsertStep");
+    expect(afterS3DrawBomb.state.godcatOnPlaymat).toBe(true);
+    expect(
+      afterS3DrawBomb.state.seats[2].hand.some((c) => c.type === "godcat")
+    ).toBe(false);
+    expect(
+      afterS3DrawBomb.state.discardPile.some((c) => c.type === "godcat")
+    ).toBe(false);
   });
 });

@@ -7,6 +7,7 @@ import {
   IK_CARD_META,
   IK_EXPANSION_IDS,
   IK_EXPANSION_META,
+  IK_GODCAT_MIMICABLE_TYPES,
   validateFiveCardCombo,
   validateMatchingComboCards,
   type IkCardType,
@@ -16,11 +17,17 @@ import {
 import type { GameConfigModalProps, GameRoomModuleProps } from "./types";
 
 const STEALABLE_CARD_TYPES: IkCardType[] = [
+  "godcat",
   "defuse",
+  "zombie_kitten",
   "nope",
+  "armageddon",
+  "raising_heck",
+  "reveal_future_3",
   "super_skip",
   "targeted_attack",
   "attack",
+  "attack_of_the_dead",
   "skip",
   "reverse",
   "draw_bottom",
@@ -28,10 +35,20 @@ const STEALABLE_CARD_TYPES: IkCardType[] = [
   "streaking_kitten",
   "alter_future_5",
   "alter_future_3",
+  "share_future_3",
   "see_future_5",
   "see_future_3",
   "favor",
   "tower_of_power",
+  "barking_kitten",
+  "bury",
+  "ill_take_that",
+  "potluck",
+  "clone",
+  "dig_deeper",
+  "clairvoyance",
+  "curse_cat_butt",
+  "mark",
   "shuffle",
   "feral_cat",
   "tacocat",
@@ -39,6 +56,13 @@ const STEALABLE_CARD_TYPES: IkCardType[] = [
   "hairy_potato_cat",
   "beard_cat",
   "rainbow_cat",
+  "de_cat_ipated",
+  "vampire_cat",
+  "zombie_cat",
+  "horse_cat",
+  "knight_cat",
+  "mercat",
+  "troll_cat",
 ];
 
 export function ImplodingKittensRoom({
@@ -56,6 +80,8 @@ export function ImplodingKittensRoom({
     number | null
   >(null);
   const [wantedCardType, setWantedCardType] = useState<IkCardType>("defuse");
+  const [godcatMimicType, setGodcatMimicType] =
+    useState<IkCardType>("targeted_attack");
   const [wantedDiscardId, setWantedDiscardId] = useState<string>("");
   const [alterOrderIds, setAlterOrderIds] = useState<string[]>([]);
   const [insertIndex, setInsertIndex] = useState<number>(0);
@@ -152,12 +178,30 @@ export function ImplodingKittensRoom({
     ikView.step === "TurnPlayStep" &&
     ikView.activeSeatNo === snapshot?.viewerSeatNo;
 
+  const isSelectedGodcat =
+    isMyTurn &&
+    selectedCards.length === 1 &&
+    selectedCards[0].type === "godcat";
+
+  const isSelectedArmageddonBlocked =
+    isMyTurn &&
+    selectedCards.length === 1 &&
+    selectedCards[0].type === "armageddon" &&
+    !ikView.godcatOnPlaymat;
+
   const canPlaySingle =
     isMyTurn &&
     selectedCards.length === 1 &&
-    !["defuse", "nope", "streaking_kitten", "exploding_kitten", "imploding_kitten"].includes(
-      selectedCards[0].type
-    ) &&
+    !isSelectedGodcat &&
+    ![
+      "defuse",
+      "zombie_kitten",
+      "nope",
+      "streaking_kitten",
+      "exploding_kitten",
+      "imploding_kitten",
+      "devilcat",
+    ].includes(selectedCards[0].type) &&
     IK_CARD_META[selectedCards[0].type].category !== "cat" &&
     IK_CARD_META[selectedCards[0].type].category !== "wildcard_cat";
 
@@ -192,6 +236,7 @@ export function ImplodingKittensRoom({
     streaking: snapshot?.room.config?.expansions?.streaking ?? true,
     barking: snapshot?.room.config?.expansions?.barking ?? true,
     zombie: snapshot?.room.config?.expansions?.zombie ?? true,
+    good_vs_evil: snapshot?.room.config?.expansions?.good_vs_evil ?? true,
   };
 
   return (
@@ -232,14 +277,14 @@ export function ImplodingKittensRoom({
                     Người Chơi)
                   </span>
                   <p className="text-[11px] text-slate-400">
-                    Chủ phòng có thể bật/tắt 4 Gói Mở Rộng bên dưới trước khi
+                    Chủ phòng có thể bật/tắt 5 Gói Mở Rộng bên dưới trước khi
                     bắt đầu!
                   </p>
                 </div>
               </div>
 
-              {/* 4 Expansion Toggles right in Lobby */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+              {/* 5 Expansion Toggles right in Lobby */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
                 {IK_EXPANSION_IDS.map((expId) => {
                   const meta = IK_EXPANSION_META[expId];
                   const enabled = expansionsConfig[expId];
@@ -360,7 +405,7 @@ export function ImplodingKittensRoom({
               {canPlaySingle && (
                 <button
                   type="button"
-                  disabled={busy}
+                  disabled={busy || isSelectedArmageddonBlocked}
                   onClick={() => {
                     void sendRoomAction({
                       type: "MATCH_COMMAND",
@@ -372,10 +417,57 @@ export function ImplodingKittensRoom({
                     });
                     setSelectedCardIds([]);
                   }}
-                  className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-4 py-2 text-xs font-extrabold text-slate-950 shadow cursor-pointer"
+                  className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-4 py-2 text-xs font-extrabold text-slate-950 shadow cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed"
                 >
-                  ⚡ Đánh Lá [{IK_CARD_META[selectedCards[0].type].nameVi}]
+                  {isSelectedArmageddonBlocked
+                    ? "⚖️ Cần Mèo Thần Trên Thảm Mới Đánh Được Armageddon"
+                    : `⚡ Đánh Lá [${IK_CARD_META[selectedCards[0].type].nameVi}]`}
                 </button>
+              )}
+
+              {isSelectedGodcat && (
+                <div className="flex flex-wrap items-center justify-center gap-1.5">
+                  <select
+                    value={godcatMimicType}
+                    onChange={(e) =>
+                      setGodcatMimicType(e.target.value as IkCardType)
+                    }
+                    className="rounded-lg border border-yellow-400/60 bg-slate-900 px-2 py-1.5 text-xs font-bold text-yellow-300"
+                  >
+                    {IK_GODCAT_MIMICABLE_TYPES.map((t) => (
+                      <option key={t} value={t}>
+                        {IK_CARD_META[t].emoji} {IK_CARD_META[t].nameVi}
+                        {IK_CARD_META[t].needsTargetSeat ? " (Cần Mục Tiêu)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    disabled={
+                      busy ||
+                      (IK_CARD_META[godcatMimicType].needsTargetSeat &&
+                        selectedTargetSeatNo === null)
+                    }
+                    onClick={() => {
+                      void sendRoomAction({
+                        type: "MATCH_COMMAND",
+                        command: {
+                          type: "PLAY_CARD",
+                          cardId: selectedCards[0].id,
+                          mimicCardType: godcatMimicType,
+                          targetSeatNo: IK_CARD_META[godcatMimicType]
+                            .needsTargetSeat
+                            ? (selectedTargetSeatNo ?? undefined)
+                            : undefined,
+                        },
+                      });
+                      setSelectedCardIds([]);
+                    }}
+                    className="rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 px-3.5 py-2 text-xs font-extrabold text-slate-950 shadow cursor-pointer disabled:opacity-45"
+                  >
+                    ✨ Hóa Thân Mèo Thần ({IK_CARD_META[godcatMimicType].shortVi})
+                  </button>
+                </div>
               )}
 
               {canPlayCombo2 && (
@@ -1273,6 +1365,346 @@ export function ImplodingKittensRoom({
             </div>
           )}
 
+        {/* 8.5. ARMAGEDDON SHOWDOWN MODAL (GOOD VS. EVIL) */}
+        {!isLobby &&
+          ikView?.step === "ArmageddonStep" &&
+          ikView.pendingArmageddon &&
+          (() => {
+            const pa = ikView.pendingArmageddon!;
+            const isActor = pa.actorSeatNo === snapshot?.viewerSeatNo;
+            const isTarget = pa.targetSeatNo === snapshot?.viewerSeatNo;
+            const godcatImg = getIkPixelCardUrl("godcat", "godcat-preview");
+            const devilcatImg = getIkPixelCardUrl(
+              "devilcat",
+              "devilcat-preview"
+            );
+
+            if (pa.stage === "ACTOR_PLACE" && isActor) {
+              return (
+                <div className="absolute inset-0 z-30 bg-slate-950/82 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+                  <div className="w-full max-w-lg max-h-[92dvh] overflow-y-auto rounded-2xl border border-amber-400/70 bg-slate-900/95 p-4 sm:p-5 shadow-2xl space-y-3.5 text-center">
+                    <div>
+                      <p className="text-sm sm:text-base font-extrabold text-amber-300">
+                        ⚖️ Tận Thế (Armageddon) — Đấu Trí Với{" "}
+                        <span className="text-rose-300">
+                          {pa.targetDisplayName}
+                        </span>
+                      </p>
+                      <p className="text-[11px] text-slate-300 mt-1">
+                        Chỉ riêng bạn biết vị trí 2 lá! Hãy đặt úp 1 lá cho mình
+                        và 1 lá cho {pa.targetDisplayName} — sau đó đối thủ sẽ
+                        đoán để chọn GIỮ hoặc ĐỔI!
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-xl border border-yellow-400/50 bg-yellow-950/35 p-2.5 flex flex-col items-center gap-1.5">
+                        <div className="w-20 sm:w-24 aspect-[5/7] rounded-lg overflow-hidden border border-yellow-400/60 bg-gradient-to-br from-yellow-400 to-amber-700 flex flex-col items-center justify-center">
+                          {godcatImg ? (
+                            <img
+                              src={godcatImg}
+                              alt="Godcat"
+                              className="w-full h-full object-cover"
+                              style={{ imageRendering: "pixelated" }}
+                            />
+                          ) : (
+                            <>
+                              <span className="text-3xl">✨</span>
+                              <span className="text-[10px] font-black text-white">
+                                MÈO THẦN
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <p className="text-xs font-extrabold text-yellow-300">
+                          ✨ Mèo Thần (Godcat)
+                        </p>
+                        <p className="text-[10px] text-slate-300">
+                          Cầm về tay • Hóa mọi lá (trừ Nope)
+                        </p>
+                      </div>
+
+                      <div className="rounded-xl border border-rose-500/50 bg-rose-950/35 p-2.5 flex flex-col items-center gap-1.5">
+                        <div className="w-20 sm:w-24 aspect-[5/7] rounded-lg overflow-hidden border border-rose-500/60 bg-gradient-to-br from-red-600 to-rose-950 flex flex-col items-center justify-center">
+                          {devilcatImg ? (
+                            <img
+                              src={devilcatImg}
+                              alt="Devilcat"
+                              className="w-full h-full object-cover"
+                              style={{ imageRendering: "pixelated" }}
+                            />
+                          ) : (
+                            <>
+                              <span className="text-3xl">😈</span>
+                              <span className="text-[10px] font-black text-white">
+                                MÈO QUỶ
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <p className="text-xs font-extrabold text-rose-300">
+                          😈 Mèo Quỷ (Devilcat)
+                        </p>
+                        <p className="text-[10px] text-slate-300">
+                          Nổ ngay lập tức (phải Defuse!)
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          sendRoomAction({
+                            type: "MATCH_COMMAND",
+                            command: {
+                              type: "ARMAGEDDON_PLACE",
+                              giveGodcatToTarget: false,
+                            },
+                          })
+                        }
+                        className="rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 shadow cursor-pointer"
+                      >
+                        ✨ Giữ Mèo Thần • Đẩy 😈 Mèo Quỷ cho{" "}
+                        {pa.targetDisplayName}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          sendRoomAction({
+                            type: "MATCH_COMMAND",
+                            command: {
+                              type: "ARMAGEDDON_PLACE",
+                              giveGodcatToTarget: true,
+                            },
+                          })
+                        }
+                        className="rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-400 hover:to-orange-400 px-3 py-2.5 text-xs font-extrabold text-white shadow cursor-pointer"
+                      >
+                        😈 Cú Lừa Tâm Lý! Đặt ✨ Mèo Thần cho{" "}
+                        {pa.targetDisplayName}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            if (pa.stage === "TARGET_CHOOSE" && isTarget) {
+              return (
+                <div className="absolute inset-0 z-30 bg-slate-950/82 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+                  <div className="w-full max-w-md max-h-[92dvh] overflow-y-auto rounded-2xl border border-rose-500/70 bg-slate-900/95 p-4 sm:p-5 shadow-2xl space-y-3.5 text-center">
+                    <div>
+                      <p className="text-sm sm:text-base font-extrabold text-rose-300">
+                        ⚖️ Tận Thế (Armageddon) — Đến Lượt Bạn Chọn!
+                      </p>
+                      <p className="text-xs text-slate-300 mt-1">
+                        <strong className="text-amber-300">
+                          {pa.actorDisplayName}
+                        </strong>{" "}
+                        đã đặt úp 1 lá trước mặt bạn và 1 lá trước mặt họ (1 lá
+                        là ✨ Mèo Thần, 1 lá là 😈 Mèo Quỷ). Bạn chọn GIỮ hay
+                        ĐỔI?
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-center gap-6 py-1">
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="w-20 aspect-[5/7] rounded-xl overflow-hidden border-2 border-amber-400/70 bg-slate-950 shadow-lg">
+                          <img
+                            src="/sprites/ik-card-back-pixel.png"
+                            alt="Lá của bạn"
+                            className="w-full h-full object-cover"
+                            style={{ imageRendering: "pixelated" }}
+                          />
+                        </div>
+                        <span className="text-[11px] font-extrabold text-amber-300">
+                          Lá Trước Mặt Bạn
+                        </span>
+                      </div>
+                      <span className="text-xl font-black text-slate-400">
+                        ⇄
+                      </span>
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="w-20 aspect-[5/7] rounded-xl overflow-hidden border-2 border-rose-400/70 bg-slate-950 shadow-lg">
+                          <img
+                            src="/sprites/ik-card-back-pixel.png"
+                            alt="Lá của đối thủ"
+                            className="w-full h-full object-cover"
+                            style={{ imageRendering: "pixelated" }}
+                          />
+                        </div>
+                        <span className="text-[11px] font-extrabold text-rose-300">
+                          Lá Của {pa.actorDisplayName}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          sendRoomAction({
+                            type: "MATCH_COMMAND",
+                            command: { type: "ARMAGEDDON_DECIDE", swap: false },
+                          })
+                        }
+                        className="rounded-xl bg-emerald-500 hover:bg-emerald-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 shadow cursor-pointer"
+                      >
+                        🛡️ GIỮ Lá Của Mình
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          sendRoomAction({
+                            type: "MATCH_COMMAND",
+                            command: { type: "ARMAGEDDON_DECIDE", swap: true },
+                          })
+                        }
+                        className="rounded-xl bg-amber-500 hover:bg-amber-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 shadow cursor-pointer"
+                      >
+                        🔄 ĐỔI Với {pa.actorDisplayName}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div className="absolute top-14 [@media(min-height:520px)]:top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
+                <div className="rounded-2xl border border-amber-400/65 bg-slate-950/95 p-3.5 shadow-2xl text-center">
+                  <p className="text-xs font-extrabold text-amber-300">
+                    {pa.stage === "ACTOR_PLACE"
+                      ? `⚖️ Tận Thế! Đang chờ ${pa.actorDisplayName} đặt úp Mèo Thần & Mèo Quỷ trước mặt ${pa.targetDisplayName}...`
+                      : `⚖️ Tận Thế! Đang chờ ${pa.targetDisplayName} cân não chọn GIỮ hay ĐỔI bài với ${pa.actorDisplayName}...`}
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
+
+        {/* 8.6. RAISING HECK MODAL (GOOD VS. EVIL) */}
+        {!isLobby &&
+          ikView?.step === "RaisingHeckStep" &&
+          ikView.pendingRaisingHeck &&
+          (ikView.pendingRaisingHeck.seatNo === snapshot?.viewerSeatNo &&
+          ikView.pendingRaisingHeck.bottomCard ? (
+            (() => {
+              const bottomCard = ikView.pendingRaisingHeck!.bottomCard!;
+              const bottomMeta = IK_CARD_META[bottomCard.type];
+              const bottomImgUrl = getIkPixelCardUrl(
+                bottomCard.type,
+                bottomCard.id
+              );
+              const isBomb = bottomMeta.category === "bomb";
+
+              return (
+                <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+                  <div className="w-full max-w-md max-h-[92dvh] overflow-y-auto rounded-2xl border border-orange-500/70 bg-slate-900/95 p-4 sm:p-5 shadow-2xl space-y-3.5">
+                    <p className="text-sm font-extrabold text-orange-300 text-center">
+                      🔥 Quậy Tưng Bừng (Raising Heck) — Lá Dưới ĐÁY Bộ Bài
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3.5">
+                      <div className="shrink-0 w-32 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 bg-slate-950 shadow-xl flex items-center justify-center">
+                        {bottomImgUrl ? (
+                          <img
+                            src={bottomImgUrl}
+                            alt={bottomMeta.nameVi}
+                            className="w-full h-full object-cover"
+                            style={{ imageRendering: "pixelated" }}
+                          />
+                        ) : (
+                          <div
+                            className="w-full h-full flex flex-col items-center justify-center p-2 text-center gap-1"
+                            style={{
+                              background: `linear-gradient(155deg, ${bottomMeta.colorHex}, ${bottomMeta.secondaryHex})`,
+                            }}
+                          >
+                            <span className="text-4xl">{bottomMeta.emoji}</span>
+                            <span className="text-xs font-extrabold text-white">
+                              {bottomMeta.shortVi}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0 space-y-1.5 text-left">
+                        <p className="text-sm font-extrabold text-white">
+                          {bottomMeta.nameVi}
+                        </p>
+                        <p className="text-[11px] font-semibold text-orange-300/90">
+                          {bottomMeta.subtitleVi}
+                        </p>
+                        <p className="text-xs text-slate-200 leading-relaxed rounded-lg border border-slate-800 bg-slate-950/80 p-2.5">
+                          {bottomMeta.ruleVi}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          sendRoomAction({
+                            type: "MATCH_COMMAND",
+                            command: {
+                              type: "RAISING_HECK_DECIDE",
+                              takeToHand: true,
+                            },
+                          })
+                        }
+                        className={`rounded-xl px-3 py-2.5 text-xs font-extrabold cursor-pointer ${
+                          isBomb
+                            ? "bg-rose-600 hover:bg-rose-500 text-white"
+                            : "bg-emerald-500 hover:bg-emerald-400 text-slate-950"
+                        }`}
+                      >
+                        {isBomb
+                          ? "⚠️ Rút Bom Này Về Tay"
+                          : "✋ Lấy Lá Này Về Tay"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          sendRoomAction({
+                            type: "MATCH_COMMAND",
+                            command: {
+                              type: "RAISING_HECK_DECIDE",
+                              takeToHand: false,
+                            },
+                          })
+                        }
+                        className="rounded-xl bg-orange-500 hover:bg-orange-400 px-3 py-2.5 text-xs font-extrabold text-slate-950 cursor-pointer"
+                      >
+                        🔥 Đặt Lên ĐỈNH Bộ Bài!
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()
+          ) : (
+            <div className="absolute top-14 [@media(min-height:520px)]:top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
+              <div className="rounded-2xl border border-orange-500/60 bg-slate-950/95 p-3.5 shadow-2xl text-center">
+                <p className="text-xs font-extrabold text-orange-300">
+                  🔥 Đang chờ{" "}
+                  {ikView.seats.find(
+                    (s) => s.seatNo === ikView.pendingRaisingHeck?.seatNo
+                  )?.displayName ?? "đối thủ"}{" "}
+                  xem lá dưới Đáy Bộ bài (Raising Heck)...
+                </p>
+              </div>
+            </div>
+          ))}
+
         {/* 9. FINISHED REMATCH OVERLAY */}
         {!isLobby && ikView?.step === "Finished" && (
           <div className="absolute top-14 [@media(min-height:520px)]:top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
@@ -1309,6 +1741,7 @@ export function ImplodingKittensConfigContent({
     streaking: snapshot?.room.config?.expansions?.streaking ?? true,
     barking: snapshot?.room.config?.expansions?.barking ?? true,
     zombie: snapshot?.room.config?.expansions?.zombie ?? true,
+    good_vs_evil: snapshot?.room.config?.expansions?.good_vs_evil ?? true,
   };
 
   return (
@@ -1408,6 +1841,35 @@ export function ImplodingKittensRulesContent() {
         <p>
           • <strong>🌟 Combo 5 Lá Khác Nhau</strong>: Chọn lấy lại bất kỳ 1 lá
           bài nào từ Chồng bài bỏ (Discard Pile) về tay.
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-2">
+        <p className="font-bold text-yellow-300 text-xs">
+          3. Gói Mở Rộng Good vs. Evil (Thiện &amp; Ác)
+        </p>
+        <p>
+          • <strong>⚖️ Tận Thế (Armageddon)</strong>: Chỉ đánh được khi cả{" "}
+          <strong>✨ Mèo Thần (Godcat)</strong> và{" "}
+          <strong>😈 Mèo Quỷ (Devilcat)</strong> đang ở trên Thảm đấu. Người
+          đánh bí mật đặt úp 2 lá cho mình và 1 đối thủ; đối thủ chọn{" "}
+          <strong>GIỮ</strong> hoặc <strong>ĐỔI</strong> rồi lật bài — ai nhận{" "}
+          <strong>Mèo Thần</strong> cầm về tay, ai nhận{" "}
+          <strong>Mèo Quỷ</strong> phát nổ ngay trừ khi đốt Defuse!
+        </p>
+        <p>
+          • <strong>✨ Mèo Thần (Godcat)</strong>: Biến hóa thành mọi lá Hành
+          Động (trừ <em>Nope</em>) hoặc tự động dùng làm <em>Defuse</em> khẩn
+          cấp, sau đó quay trở lại Thảm đấu.
+        </p>
+        <p>
+          • <strong>🔥 Quậy Tưng Bừng (Raising Heck)</strong>: Xem bí mật lá
+          dưới Đáy Bộ bài, chọn lấy về tay hoặc đặt thẳng lên Đỉnh Bộ bài để kết
+          thúc lượt.
+        </p>
+        <p>
+          • <strong>👁️‍🗨️ Tiết Lộ Tương Lai 3x (Reveal the Future)</strong>: Lật
+          công khai 3 lá trên cùng Bộ bài cho cả bàn cùng xem!
         </p>
       </div>
     </div>

@@ -264,7 +264,7 @@ export function ImplodingKittensCanvas({
           ctx.fillStyle = "#cbd5e1";
           ctx.font = `600 12px ${fonts.sans}`;
           ctx.fillText(
-            "Mèo Nổ + 4 Bản Mở Rộng (Imploding • Streaking • Barking • Zombie Kittens)",
+            "Mèo Nổ + 5 Bản Mở Rộng (Imploding • Streaking • Barking • Zombie • Good vs. Evil)",
             width * 0.5,
             height * 0.22
           );
@@ -441,7 +441,9 @@ export function ImplodingKittensCanvas({
             !opp.alive
               ? opp.eliminatedBy === "imploding"
                 ? "🕳️ SẬP HỐ"
-                : "💥 ĐÃ NỔ"
+                : opp.eliminatedBy === "devilcat"
+                  ? "😈 MÈO QUỶ"
+                  : "💥 ĐÃ NỔ"
               : isActing
                 ? `👑 ${pv.turnsRemaining} LƯỢT`
                 : `🃏 ${opp.handCount} LÁ`,
@@ -450,6 +452,9 @@ export function ImplodingKittensCanvas({
           );
 
           const badges: string[] = [];
+          if (opp.hasGodcat) {
+            badges.push("✨ Mèo Thần");
+          }
           if (pv.towerHolderSeatNo === opp.seatNo && pv.towerStashCount > 0) {
             badges.push(`👑 Tháp (${pv.towerStashCount})`);
           }
@@ -749,6 +754,18 @@ export function ImplodingKittensCanvas({
             arenaY + 24
           );
         }
+        if (pv.config.expansions.good_vs_evil) {
+          const godcatHolder = pv.seats.find((s) => s.hasGodcat);
+          ctx.fillStyle = pv.godcatOnPlaymat ? "#fde047" : "#fb923c";
+          ctx.font = `800 9.5px ${fonts.sans}`;
+          ctx.fillText(
+            pv.godcatOnPlaymat
+              ? "⚖️ Thảm Thiện & Ác: ✨ Mèo Thần + 😈 Mèo Quỷ (Sẵn sàng)"
+              : `⚖️ Thảm Thiện & Ác: ✨ Mèo Thần trong tay ${godcatHolder?.displayName ?? "..."}`,
+            width * 0.5,
+            arenaY + (pv.faceUpImplodingInDeck ? 40 : 24)
+          );
+        }
 
         // Discard Pile (Right-Center) with impact scale-bounce on landing!
         drawRoundedRect(ctx, discardX, discardY, pileW, pileH, 10);
@@ -812,7 +829,7 @@ export function ImplodingKittensCanvas({
         ctx.fillStyle = isMyTurn ? "#fde047" : "#f8fafc";
         ctx.font = `800 11.5px ${fonts.sans}`;
         ctx.fillText(
-          `${mySeat.displayName} (${pv.myHand.length} lá trên tay)${pv.towerHolderSeatNo === mySeat.seatNo && pv.towerStashCount > 0 ? ` • 👑 ĐANG ĐỘI THÁP QUYỀN LỰC (${pv.towerStashCount} lá dự trữ)` : ""}${pv.myIsBlind ? " • 🍑 ĐANG BỊ ÚP MÙ BÀI!" : ""}${!mySeat.alive ? " • 💀 ĐÃ BỊ LOẠI" : ""}`,
+          `${mySeat.displayName} (${pv.myHand.length} lá trên tay)${mySeat.hasGodcat ? " • ✨ ĐANG CẦM MÈO THẦN" : ""}${pv.towerHolderSeatNo === mySeat.seatNo && pv.towerStashCount > 0 ? ` • 👑 ĐANG ĐỘI THÁP QUYỀN LỰC (${pv.towerStashCount} lá dự trữ)` : ""}${pv.myIsBlind ? " • 🍑 ĐANG BỊ ÚP MÙ BÀI!" : ""}${!mySeat.alive ? " • 💀 ĐÃ BỊ LOẠI" : ""}`,
           24,
           dockY + 16
         );

@@ -6,13 +6,19 @@ import type {
   SeatDescriptor,
 } from "@/cartridges/types";
 
-export type IkExpansionId = "imploding" | "streaking" | "barking" | "zombie";
+export type IkExpansionId =
+  | "imploding"
+  | "streaking"
+  | "barking"
+  | "zombie"
+  | "good_vs_evil";
 
 export const IK_EXPANSION_IDS: IkExpansionId[] = [
   "imploding",
   "streaking",
   "barking",
   "zombie",
+  "good_vs_evil",
 ];
 
 export interface IkExpansionMeta {
@@ -60,6 +66,15 @@ export const IK_EXPANSION_META: Record<IkExpansionId, IkExpansionMeta> = {
     descriptionVi:
       "Thêm Nhân Bản (Clone sao chép bài vừa đánh), Đào Sâu Hơn (Dig Deeper), Đoàn Quân Xác Sống (Attack 3x) & Thấu Tâm (Clairvoyance).",
     accentColor: "#10b981",
+  },
+  good_vs_evil: {
+    id: "good_vs_evil",
+    nameVi: "Good vs. Evil (Thiện & Ác)",
+    shortVi: "Good vs. Evil",
+    badgeVi: "Mở Rộng #5",
+    descriptionVi:
+      "Thêm Tận Thế (Armageddon đấu trí giành Mèo Thần Godcat & né Mèo Quỷ Devilcat trên Thảm đấu), Quậy Tưng Bừng (Raising Heck), Tiết Lộ Tương Lai 3x & 4 Lá Mèo mới.",
+    accentColor: "#f59e0b",
   },
 };
 
@@ -115,7 +130,17 @@ export type IkCardType =
   | "grave_robber"
   | "de_cat_ipated"
   | "vampire_cat"
-  | "zombie_cat";
+  | "zombie_cat"
+  // Good vs. Evil Expansion
+  | "armageddon"
+  | "godcat"
+  | "devilcat"
+  | "raising_heck"
+  | "reveal_future_3"
+  | "horse_cat"
+  | "knight_cat"
+  | "mercat"
+  | "troll_cat";
 
 export type IkCardCategory =
   | "bomb"
@@ -730,7 +755,157 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     category: "cat",
     pack: "zombie",
   },
+  armageddon: {
+    type: "armageddon",
+    nameVi: "Tận Thế (Armageddon)",
+    shortVi: "Armageddon",
+    subtitleVi: "Đấu trí Thiện & Ác: Giành Mèo Thần, đẩy Mèo Quỷ!",
+    ruleVi:
+      "Chỉ đánh được khi cả Mèo Thần (Godcat) và Mèo Quỷ (Devilcat) đang ở trên Thảm đấu. Bạn bí mật chia úp 2 lá cho mình và 1 đối thủ. Đối thủ phải chọn GIỮ hay ĐỔI mà không được xem: ai nhận Mèo Thần sẽ cầm về tay, ai nhận Mèo Quỷ sẽ NỔ NGAY LẬP TỨC (phải dùng Defuse hoặc bị loại)! Sau đó Mèo Quỷ quay lại Thảm và kết thúc lượt của bạn.",
+    emoji: "⚖️",
+    colorHex: "#dc2626",
+    secondaryHex: "#450a0a",
+    category: "action",
+    pack: "good_vs_evil",
+    needsTargetSeat: true,
+  },
+  godcat: {
+    type: "godcat",
+    nameVi: "Mèo Thần (Godcat)",
+    shortVi: "Mèo Thần",
+    subtitleVi: "Vạn Năng: Hóa thành MỌI lá bài (trừ Nope)!",
+    ruleVi:
+      "Lá bài tối thượng từ Thảm Thiện & Ác! Có thể đánh hóa thân thành BẤT KỲ lá Hành Động nào bạn muốn (Tấn Công, Bỏ Lượt, Đổi Tương Lai, Xin Xỏ, Bom Nguyên Tử...) HOẶC tự động làm lá Tháo Ngòi (Defuse) khi gặp Bom — ngoại trừ KHÔNG thể dùng làm Nope! Sau khi dùng, Mèo Thần quay trở lại Thảm đấu (không vào Mộ hay Bộ bài rút).",
+    emoji: "✨",
+    colorHex: "#facc15",
+    secondaryHex: "#854d0e",
+    category: "action",
+    pack: "good_vs_evil",
+  },
+  devilcat: {
+    type: "devilcat",
+    nameVi: "Mèo Quỷ (Devilcat)",
+    shortVi: "Mèo Quỷ",
+    subtitleVi: "Lật phải trong Armageddon là NỔ NGAY!",
+    ruleVi:
+      "Nằm cố định trên Thảm Thiện & Ác và chỉ xuất hiện trong màn đấu trí Tận Thế (Armageddon). Ai lật trúng Mèo Quỷ lập tức PHÁT NỔ — buộc phải đốt 1 lá Tháo Ngòi (Defuse) hoặc bị loại ngay lập tức! Dù nổ hay gỡ được, Mèo Quỷ luôn quay trở lại Thảm đấu.",
+    emoji: "😈",
+    colorHex: "#991b1b",
+    secondaryHex: "#2a0606",
+    category: "bomb",
+    pack: "good_vs_evil",
+  },
+  raising_heck: {
+    type: "raising_heck",
+    nameVi: "Quậy Tưng Bừng (Raising Heck)",
+    shortVi: "Raising Heck",
+    subtitleVi: "Xem lá ĐÁY: Lấy về tay hoặc đặt lên ĐỈNH!",
+    ruleVi:
+      "Bí mật xem lá bài nằm dưới ĐÁY CÙNG của Bộ bài rút. Bạn được quyền chọn: lấy lá đó về tay HOẶC đặt thẳng nó lên ĐỈNH Bộ bài rút (không kích nổ bom nếu đặt lên đỉnh!). Dù chọn cách nào, lượt của bạn cũng kết thúc ngay.",
+    emoji: "🔥",
+    colorHex: "#ea580c",
+    secondaryHex: "#431407",
+    category: "action",
+    pack: "good_vs_evil",
+  },
+  reveal_future_3: {
+    type: "reveal_future_3",
+    nameVi: "Tiết Lộ Tương Lai 3x (Reveal Future)",
+    shortVi: "Tiết Lộ 3x",
+    subtitleVi: "Lật công khai 3 lá đầu Bộ bài cho CẢ BÀN xem!",
+    ruleVi:
+      "Lật mở 3 lá trên cùng của Bộ bài rút cho TẤT CẢ mọi người chơi trên bàn cùng nhìn thấy theo đúng thứ tự, sau đó úp lại nguyên vị trí cũ (không kết thúc lượt).",
+    emoji: "👁️‍🗨️",
+    colorHex: "#a855f7",
+    secondaryHex: "#3b0764",
+    category: "action",
+    pack: "good_vs_evil",
+  },
+  horse_cat: {
+    type: "horse_cat",
+    nameVi: "Mèo Ngựa (Horse Cat)",
+    shortVi: "Horse Cat",
+    subtitleVi: "Lá Mèo Thiện & Ác • Ghép đôi / bộ 3 / bộ 5",
+    ruleVi:
+      "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
+    emoji: "🐴",
+    colorHex: "#b45309",
+    secondaryHex: "#451a03",
+    category: "cat",
+    pack: "good_vs_evil",
+  },
+  knight_cat: {
+    type: "knight_cat",
+    nameVi: "Mèo Hiệp Sĩ (Knight Cat)",
+    shortVi: "Knight Cat",
+    subtitleVi: "Lá Mèo Thiện & Ác • Ghép đôi / bộ 3 / bộ 5",
+    ruleVi:
+      "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
+    emoji: "⚔️",
+    colorHex: "#64748b",
+    secondaryHex: "#0f172a",
+    category: "cat",
+    pack: "good_vs_evil",
+  },
+  mercat: {
+    type: "mercat",
+    nameVi: "Mèo Tiên Cá (Mercat)",
+    shortVi: "Mercat",
+    subtitleVi: "Lá Mèo Thiện & Ác • Ghép đôi / bộ 3 / bộ 5",
+    ruleVi:
+      "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
+    emoji: "🧜",
+    colorHex: "#06b6d4",
+    secondaryHex: "#164e63",
+    category: "cat",
+    pack: "good_vs_evil",
+  },
+  troll_cat: {
+    type: "troll_cat",
+    nameVi: "Mèo Yêu Tinh (Troll Cat)",
+    shortVi: "Troll Cat",
+    subtitleVi: "Lá Mèo Thiện & Ác • Ghép đôi / bộ 3 / bộ 5",
+    ruleVi:
+      "Không có tác dụng đơn lẻ. Ghép 2 lá cùng loại để cướp 1 lá ngẫu nhiên, 3 lá cùng loại để chỉ định tên bài muốn cướp, hoặc 5 lá khác nhau để nhặt bài từ Mộ!",
+    emoji: "👹",
+    colorHex: "#16a34a",
+    secondaryHex: "#14532d",
+    category: "cat",
+    pack: "good_vs_evil",
+  },
 };
+
+export const IK_GODCAT_MIMICABLE_TYPES: IkCardType[] = [
+  "attack",
+  "targeted_attack",
+  "skip",
+  "super_skip",
+  "reverse",
+  "draw_bottom",
+  "favor",
+  "shuffle",
+  "see_future_3",
+  "see_future_5",
+  "alter_future_3",
+  "alter_future_5",
+  "share_future_3",
+  "reveal_future_3",
+  "raising_heck",
+  "swap_top_bottom",
+  "catomic_bomb",
+  "garbage_collection",
+  "curse_cat_butt",
+  "mark",
+  "bury",
+  "potluck",
+  "ill_take_that",
+  "personal_attack",
+  "dig_deeper",
+  "clairvoyance",
+  "attack_of_the_dead",
+  "feed_the_dead",
+  "grave_robber",
+];
 
 export const IK_CAT_TYPES: IkCardType[] = [
   "tacocat",
@@ -738,6 +913,17 @@ export const IK_CAT_TYPES: IkCardType[] = [
   "hairy_potato_cat",
   "beard_cat",
   "rainbow_cat",
+];
+
+export const IK_ALL_CAT_TYPES: IkCardType[] = [
+  ...IK_CAT_TYPES,
+  "de_cat_ipated",
+  "vampire_cat",
+  "zombie_cat",
+  "horse_cat",
+  "knight_cat",
+  "mercat",
+  "troll_cat",
 ];
 
 export interface IkCard {
@@ -758,6 +944,8 @@ export type IkStep =
   | "Combo2PickStep"
   | "DigDeeperStep"
   | "GarbagePickStep"
+  | "ArmageddonStep"
+  | "RaisingHeckStep"
   | "Finished";
 
 export interface IkConfig {
@@ -773,6 +961,7 @@ export interface IkPendingAction {
   actorSeatNo: number;
   cards: IkCard[];
   effectiveType?: IkCardType;
+  isGodcat?: boolean;
   targetSeatNo?: number;
   wantedCardType?: IkCardType;
   discardCardId?: string;
@@ -797,7 +986,7 @@ export interface IkSeatState {
   displayName: string;
   avatarSeed: string;
   alive: boolean;
-  eliminatedBy: "exploding" | "imploding" | "barking" | null;
+  eliminatedBy: "exploding" | "imploding" | "barking" | "devilcat" | null;
   hand: IkCard[];
   isBlind: boolean;
   barkingPlayedFaceUp: boolean;
@@ -846,6 +1035,8 @@ export interface IkMatchState {
   towerHolderSeatNo: number | null;
   /** Barking Kittens: Face-down Stash cards (6 cards set aside at match start) protecting the Tower holder */
   towerStashCards: IkCard[];
+  /** Good vs. Evil: True when Godcat is currently resting on the Playmat (required to play Armageddon) */
+  godcatOnPlaymat: boolean;
   pendingAction: IkPendingAction | null;
   /** Holds the bomb or bury card currently waiting to be inserted into Draw Pile during DefuseInsertStep */
   pendingInsert: {
@@ -885,6 +1076,18 @@ export interface IkMatchState {
     pendingSeatNos: number[];
     collectedCards: { seatNo: number; card: IkCard }[];
   } | null;
+  /** Good vs. Evil: Armageddon two-stage Godcat/Devilcat bluff showdown */
+  pendingArmageddon: {
+    actorSeatNo: number;
+    targetSeatNo: number;
+    stage: "ACTOR_PLACE" | "TARGET_CHOOSE";
+    godcatGivenToTarget: boolean | null;
+  } | null;
+  /** Good vs. Evil: Raising Heck bottom card peek decision */
+  pendingRaisingHeck: {
+    seatNo: number;
+    bottomCard: IkCard;
+  } | null;
   animSeq: number;
   lastAnim: IkLastAnim | null;
   winnerSeatNos: number[];
@@ -897,6 +1100,8 @@ export type IkCommand =
       type: "PLAY_CARD";
       cardId: string;
       targetSeatNo?: number;
+      /** Used when playing Godcat: the action card type Godcat transforms into (cannot be Nope) */
+      mimicCardType?: IkCardType;
     }
   | {
       type: "PLAY_COMBO_2";
@@ -950,6 +1155,18 @@ export type IkCommand =
     }
   | {
       type: "CLAIM_TOWER_STASH";
+    }
+  | {
+      type: "ARMAGEDDON_PLACE";
+      giveGodcatToTarget: boolean;
+    }
+  | {
+      type: "ARMAGEDDON_DECIDE";
+      swap: boolean;
+    }
+  | {
+      type: "RAISING_HECK_DECIDE";
+      takeToHand: boolean;
     };
 
 export interface IkSeatView {
@@ -958,11 +1175,13 @@ export interface IkSeatView {
   displayName: string;
   avatarSeed: string;
   alive: boolean;
-  eliminatedBy: "exploding" | "imploding" | "barking" | null;
+  eliminatedBy: "exploding" | "imploding" | "barking" | "devilcat" | null;
   handCount: number;
   isBlind: boolean;
   barkingPlayedFaceUp: boolean;
   illTakeThatFromSeatNo: number | null;
+  /** Good vs. Evil: True if this seat holds Godcat (has a distinct golden card back visible to all!) */
+  hasGodcat: boolean;
   /** Publicly visible Marked cards in this player's hand */
   markedCards: IkCard[];
 }
@@ -987,6 +1206,7 @@ export interface IkPlayerView {
   discardPileCards: IkCard[];
   towerHolderSeatNo: number | null;
   towerStashCount: number;
+  godcatOnPlaymat: boolean;
   myHand: IkCard[];
   myIsBlind: boolean;
   myPrivateVision: {
@@ -1038,6 +1258,20 @@ export interface IkPlayerView {
     pendingSeatNos: number[];
     needsViewerCard: boolean;
   } | null;
+  pendingArmageddon: {
+    actorSeatNo: number;
+    actorDisplayName: string;
+    targetSeatNo: number;
+    targetDisplayName: string;
+    stage: "ACTOR_PLACE" | "TARGET_CHOOSE";
+    /** Only populated for actorSeatNo; null for targetSeatNo & everyone else! */
+    godcatGivenToTarget: boolean | null;
+  } | null;
+  pendingRaisingHeck: {
+    seatNo: number;
+    /** Only populated for the acting seat */
+    bottomCard: IkCard | null;
+  } | null;
   lastAnim: IkLastAnim | null;
   winnerSeatNos: number[];
   winReasonVi: string | null;
@@ -1071,6 +1305,7 @@ function cloneState(state: IkMatchState): IkMatchState {
     discardPile: state.discardPile.map((c) => ({ ...c })),
     towerHolderSeatNo: state.towerHolderSeatNo ?? null,
     towerStashCards: (state.towerStashCards ?? []).map((c) => ({ ...c })),
+    godcatOnPlaymat: state.godcatOnPlaymat ?? false,
     pendingAction: state.pendingAction
       ? {
           ...state.pendingAction,
@@ -1114,6 +1349,15 @@ function cloneState(state: IkMatchState): IkMatchState {
             seatNo: x.seatNo,
             card: { ...x.card },
           })),
+        }
+      : null,
+    pendingArmageddon: state.pendingArmageddon
+      ? { ...state.pendingArmageddon }
+      : null,
+    pendingRaisingHeck: state.pendingRaisingHeck
+      ? {
+          ...state.pendingRaisingHeck,
+          bottomCard: { ...state.pendingRaisingHeck.bottomCard },
         }
       : null,
     winnerSeatNos: [...state.winnerSeatNos],
@@ -1234,6 +1478,17 @@ export function buildImplodingDeck(
     add("zombie_cat", 4);
   }
 
+  // 6. Expansion #5: Good vs. Evil (Netflix Series Edition)
+  if (expansions.good_vs_evil) {
+    add("armageddon", 3);
+    add("raising_heck", 2);
+    add("reveal_future_3", 3);
+    add("horse_cat", 4);
+    add("knight_cat", 4);
+    add("mercat", 4);
+    add("troll_cat", 4);
+  }
+
   return deck;
 }
 
@@ -1257,6 +1512,8 @@ function checkVictory(
   state.pendingCombo2Pick = null;
   state.pendingDigDeeper = null;
   state.pendingGroupSubmit = null;
+  state.pendingArmageddon = null;
+  state.pendingRaisingHeck = null;
   state.phaseDeadlineMs = null;
   state.winnerSeatNos = [winner.seatNo];
   state.winReasonVi = `🏆 ${winner.displayName} là người sống sót cuối cùng trong đại chiến Mèo Nổ & Mèo Hố Đen!`;
@@ -1311,6 +1568,20 @@ function consumeOneTurnOrAdvanceSeat(
 }
 
 /**
+ * Pushes discarded cards to `discardPile`, EXCEPT `godcat` which per official Good vs. Evil rules
+ * ALWAYS returns to the Playmat and never enters the Discard or Draw Pile.
+ */
+function discardCardsRespectingPlaymat(state: IkMatchState, cards: IkCard[]): void {
+  for (const c of cards) {
+    if (c.type === "godcat") {
+      state.godcatOnPlaymat = true;
+    } else if (c.type !== "devilcat") {
+      state.discardPile.push(c);
+    }
+  }
+}
+
+/**
  * Checks if `seat` is holding an `exploding_kitten` in hand WITHOUT a `streaking_kitten` (e.g. after their Streaking Kitten was stolen or given away!).
  * If so, immediately triggers the Exploding Kitten in their hand!
  */
@@ -1327,12 +1598,16 @@ function checkExposedHandBomb(
 
   // Their Streaking Kitten is gone while holding an Exploding Kitten!
   const [bomb] = seat.hand.splice(bombIdx, 1);
-  const defuseIdx = seat.hand.findIndex(
-    (c) => c.type === "defuse" || c.type === "zombie_kitten"
-  );
+  let defuseIdx = seat.hand.findIndex((c) => c.type === "defuse");
+  if (defuseIdx === -1) {
+    defuseIdx = seat.hand.findIndex((c) => c.type === "zombie_kitten");
+  }
+  if (defuseIdx === -1) {
+    defuseIdx = seat.hand.findIndex((c) => c.type === "godcat");
+  }
   if (defuseIdx !== -1) {
     const [defuseCard] = seat.hand.splice(defuseIdx, 1);
-    state.discardPile.push(defuseCard);
+    discardCardsRespectingPlaymat(state, [defuseCard]);
     // Reinsert bomb at random position in drawPile
     const randPos = Math.floor(Math.random() * (state.drawPile.length + 1));
     state.drawPile.splice(randPos, 0, bomb);
@@ -1350,13 +1625,13 @@ function checkExposedHandBomb(
     }
     events.push({
       eventType: "IK_STREAKING_LOST_DEFUSED",
-      message: `💥🛠️ ${seat.displayName} bị mất Mèo Chạy Rông khi đang giấu Mèo Nổ trên tay — buộc phải đốt ngay 1 lá ${defuseCard.type === "zombie_kitten" ? "Mèo Xác Sống (Zombie Kitten)" : "Tháo Ngòi (Defuse)"} và nhét lại bom vào bộ bài!`,
+      message: `💥🛠️ ${seat.displayName} bị mất Mèo Chạy Rông khi đang giấu Mèo Nổ trên tay — buộc phải dùng ngay 1 lá ${defuseCard.type === "godcat" ? "Mèo Thần (Godcat — quay về Thảm đấu)" : defuseCard.type === "zombie_kitten" ? "Mèo Xác Sống (Zombie Kitten)" : "Tháo Ngòi (Defuse)"} và nhét lại bom vào bộ bài!`,
       visibleToSeatNos: "all",
     });
   } else {
     seat.alive = false;
     seat.eliminatedBy = "exploding";
-    state.discardPile.push(bomb, ...seat.hand);
+    discardCardsRespectingPlaymat(state, [bomb, ...seat.hand]);
     seat.hand = [];
     setAnim(
       state,
@@ -1453,7 +1728,7 @@ function resolveCardDrawnBySeat(
       // Drawn while FACE UP -> CANNOT BE DEFUSED! Instant elimination!
       recipient.alive = false;
       recipient.eliminatedBy = "imploding";
-      state.discardPile.push(drawnCard, ...recipient.hand);
+      discardCardsRespectingPlaymat(state, [drawnCard, ...recipient.hand]);
       recipient.hand = [];
 
       setAnim(
@@ -1511,15 +1786,18 @@ function resolveCardDrawnBySeat(
       return;
     }
 
-    // Prefer Defuse; if none (or if Zombie Kitten is available), consume Zombie Kitten to defuse & revive a dead player!
+    // Prefer Defuse -> Zombie Kitten -> Godcat (official rule: Godcat can act as Defuse and returns to Playmat!)
     let defuseIdx = recipient.hand.findIndex((c) => c.type === "defuse");
     if (defuseIdx === -1) {
       defuseIdx = recipient.hand.findIndex((c) => c.type === "zombie_kitten");
     }
+    if (defuseIdx === -1) {
+      defuseIdx = recipient.hand.findIndex((c) => c.type === "godcat");
+    }
     if (defuseIdx !== -1) {
-      // Auto-consume 1 Defuse / Zombie Kitten card and enter DefuseInsertStep so player picks where to hide the bomb!
+      // Auto-consume 1 Defuse / Zombie Kitten / Godcat card and enter DefuseInsertStep so player picks where to hide the bomb!
       const [defuseCard] = recipient.hand.splice(defuseIdx, 1);
-      state.discardPile.push(defuseCard);
+      discardCardsRespectingPlaymat(state, [defuseCard]);
 
       let revivedMsg = "";
       if (defuseCard.type === "zombie_kitten") {
@@ -1553,9 +1831,11 @@ function resolveCardDrawnBySeat(
       events.push({
         eventType: "IK_EXPLODING_DEFUSED",
         message:
-          defuseCard.type === "zombie_kitten"
-            ? `💣🧟 HÚ HỒN! ${recipient.displayName} rút phải MÈO NỔ nhưng tung lá Mèo Xác Sống (Zombie Kitten) gỡ bom — đang chọn vị trí gài lại bom!${revivedMsg}`
-            : `💣🛠️ HÚ HỒN! ${recipient.displayName} rút phải MÈO NỔ nhưng kịp tung lá Tháo Ngòi (Defuse) — đang chọn vị trí gài lại bom vào Bộ bài!`,
+          defuseCard.type === "godcat"
+            ? `💣✨ PHÉP MÀU MÈO THẦN! ${recipient.displayName} hóa Mèo Thần (Godcat) thành Tháo Ngòi gỡ Mèo Nổ (Mèo Thần quay về Thảm đấu) — đang chọn vị trí gài lại bom!`
+            : defuseCard.type === "zombie_kitten"
+              ? `💣🧟 HÚ HỒN! ${recipient.displayName} rút phải MÈO NỔ nhưng tung lá Mèo Xác Sống (Zombie Kitten) gỡ bom — đang chọn vị trí gài lại bom!${revivedMsg}`
+              : `💣🛠️ HÚ HỒN! ${recipient.displayName} rút phải MÈO NỔ nhưng kịp tung lá Tháo Ngòi (Defuse) — đang chọn vị trí gài lại bom vào Bộ bài!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -1564,7 +1844,7 @@ function resolveCardDrawnBySeat(
     // No Defuse and no Streaking Kitten -> BOOM! Eliminated!
     recipient.alive = false;
     recipient.eliminatedBy = "exploding";
-    state.discardPile.push(drawnCard, ...recipient.hand);
+    discardCardsRespectingPlaymat(state, [drawnCard, ...recipient.hand]);
     recipient.hand = [];
 
     setAnim(
@@ -2331,10 +2611,13 @@ function executeResolvedAction(
         victim.barkingPlayedFaceUp = false;
         actor.barkingPlayedFaceUp = false;
 
-        const defuseIdx = victim.hand.findIndex((c) => c.type === "defuse");
+        const defuseIdx =
+          victim.hand.findIndex((c) => c.type === "defuse") !== -1
+            ? victim.hand.findIndex((c) => c.type === "defuse")
+            : victim.hand.findIndex((c) => c.type === "godcat");
         if (defuseIdx !== -1) {
           const [defCard] = victim.hand.splice(defuseIdx, 1);
-          state.discardPile.push(defCard);
+          discardCardsRespectingPlaymat(state, [defCard]);
           setAnim(
             state,
             {
@@ -2346,13 +2629,13 @@ function executeResolvedAction(
           );
           events.push({
             eventType: "IK_BARKING_DEFUSED",
-            message: `🐶💥 MÈO SỦA KÍCH NỔ! ${victim.displayName} bị ${actor.displayName} kích nổ Mèo Sủa và buộc phải mất 1 lá Tháo Ngòi (Defuse) để thoát chết!`,
+            message: `🐶💥 MÈO SỦA KÍCH NỔ! ${victim.displayName} bị ${actor.displayName} kích nổ Mèo Sủa và buộc phải dùng 1 lá ${defCard.type === "godcat" ? "Mèo Thần (Godcat)" : "Tháo Ngòi (Defuse)"} để thoát chết!`,
             visibleToSeatNos: "all",
           });
         } else {
           victim.alive = false;
           victim.eliminatedBy = "barking";
-          state.discardPile.push(...victim.hand);
+          discardCardsRespectingPlaymat(state, [...victim.hand]);
           victim.hand = [];
           setAnim(
             state,
@@ -2374,6 +2657,88 @@ function executeResolvedAction(
         state.step = "TurnPlayStep";
         state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       }
+      return;
+    }
+
+    case "armageddon": {
+      const target = getSeat(state, pending.targetSeatNo!);
+      if (!state.godcatOnPlaymat || !target.alive) {
+        state.step = "TurnPlayStep";
+        state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+        return;
+      }
+      state.step = "ArmageddonStep";
+      state.pendingArmageddon = {
+        actorSeatNo: actor.seatNo,
+        targetSeatNo: target.seatNo,
+        stage: "ACTOR_PLACE",
+        godcatGivenToTarget: null,
+      };
+      state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+      events.push({
+        eventType: "IK_ARMAGEDDON_START",
+        message: `⚖️ TẬN THẾ (ARMAGEDDON)! ${actor.displayName} cầm Mèo Thần & Mèo Quỷ lên và thách đấu tâm lý với ${target.displayName}!`,
+        visibleToSeatNos: "all",
+      });
+      return;
+    }
+
+    case "raising_heck": {
+      if (state.drawPile.length === 0) {
+        consumeOneTurnOrAdvanceSeat(state, events, nowMs);
+        return;
+      }
+      const bottomCard = state.drawPile[0];
+      state.step = "RaisingHeckStep";
+      state.pendingRaisingHeck = {
+        seatNo: actor.seatNo,
+        bottomCard,
+      };
+      state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+      events.push({
+        eventType: "IK_RAISING_HECK_START",
+        message: `🔥 ${actor.displayName} đánh Quậy Tưng Bừng (Raising Heck) — đang bí mật xem lá dưới ĐÁY Bộ bài để chọn lấy về tay hay đặt lên ĐỈNH!`,
+        visibleToSeatNos: "all",
+      });
+      return;
+    }
+
+    case "reveal_future_3": {
+      const topCards: IkCard[] = [];
+      for (
+        let i = state.drawPile.length - 1;
+        i >= Math.max(0, state.drawPile.length - 3);
+        i--
+      ) {
+        topCards.push(state.drawPile[i]);
+      }
+      const visionPayload = {
+        titleVi: `👁️‍🗨️ Tiết Lộ Tương Lai 3x (${actor.displayName} lật công khai cho CẢ BÀN):`,
+        cards: topCards.map((c, idx) => ({
+          labelVi: `#${idx + 1}: ${IK_CARD_META[c.type].shortVi}${c.faceUp ? " (NGỬA)" : ""}`,
+          emoji: IK_CARD_META[c.type].emoji,
+          colorHex: IK_CARD_META[c.type].colorHex,
+          cardId: c.id,
+          cardType: c.type,
+          positionLabelVi: idx === 0 ? "#1 (ĐỈNH)" : `#${idx + 1}`,
+          faceUp: c.faceUp,
+        })),
+      };
+      for (const s of state.seats) {
+        if (s.alive) {
+          s.privateVision = {
+            titleVi: visionPayload.titleVi,
+            cards: [...visionPayload.cards],
+          };
+        }
+      }
+      state.step = "TurnPlayStep";
+      state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+      events.push({
+        eventType: "IK_REVEAL_FUTURE",
+        message: `👁️‍🗨️ ${actor.displayName} đánh Tiết Lộ Tương Lai 3x — lật mở công khai ${topCards.length} lá đầu Bộ bài rút cho TẤT CẢ mọi người cùng thấy!`,
+        visibleToSeatNos: "all",
+      });
       return;
     }
 
@@ -2570,10 +2935,45 @@ function chooseBotCommand(
   ) {
     const sorted = [...bot.hand].sort((a, b) => {
       const score = (c: IkCard) =>
-        c.type === "defuse" ? 100 : c.type === "streaking_kitten" ? 90 : 5;
+        c.type === "godcat"
+          ? 120
+          : c.type === "defuse"
+            ? 100
+            : c.type === "streaking_kitten"
+              ? 90
+              : 5;
       return score(a) - score(b);
     });
     return { type: "SUBMIT_GROUP_CARD", cardId: sorted[0].id };
+  }
+
+  if (state.step === "ArmageddonStep" && state.pendingArmageddon) {
+    const pa = state.pendingArmageddon;
+    if (pa.stage === "ACTOR_PLACE" && pa.actorSeatNo === botSeatNo) {
+      return {
+        type: "ARMAGEDDON_PLACE",
+        giveGodcatToTarget: Math.random() < 0.5,
+      };
+    }
+    if (pa.stage === "TARGET_CHOOSE" && pa.targetSeatNo === botSeatNo) {
+      return {
+        type: "ARMAGEDDON_DECIDE",
+        swap: Math.random() < 0.5,
+      };
+    }
+  }
+
+  if (
+    state.step === "RaisingHeckStep" &&
+    state.pendingRaisingHeck?.seatNo === botSeatNo
+  ) {
+    const bottom = state.pendingRaisingHeck.bottomCard;
+    const isBottomBomb =
+      bottom.type === "exploding_kitten" || bottom.type === "imploding_kitten";
+    return {
+      type: "RAISING_HECK_DECIDE",
+      takeToHand: !isBottomBomb,
+    };
   }
 
   if (state.step === "TurnPlayStep" && state.activeSeatNo === botSeatNo) {
@@ -2601,6 +3001,7 @@ function chooseBotCommand(
         "skip",
         "reverse",
         "draw_bottom",
+        "raising_heck",
         "swap_top_bottom",
         "shuffle",
         "bury",
@@ -2618,11 +3019,20 @@ function chooseBotCommand(
           };
         }
       }
+      // Bot can use Godcat as Super Skip to escape danger!
+      const godcatCard = bot.hand.find((c) => c.type === "godcat");
+      if (godcatCard) {
+        return {
+          type: "PLAY_CARD",
+          cardId: godcatCard.id,
+          mimicCardType: "super_skip",
+        };
+      }
     }
 
     // Try playing a 2-card Cat Combo if holding a pair and an opponent has cards
     if (richestOpp && richestOpp.hand.length > 0) {
-      for (const catType of IK_CAT_TYPES) {
+      for (const catType of IK_ALL_CAT_TYPES) {
         const matches = bot.hand.filter(
           (c) => c.type === catType || c.type === "feral_cat"
         );
@@ -2645,6 +3055,32 @@ function chooseBotCommand(
       return { type: "CLAIM_TOWER_STASH" };
     }
 
+    // Play Armageddon if Playmat has Godcat and Bot has a Defuse or feels bold
+    const armageddonCard = bot.hand.find((c) => c.type === "armageddon");
+    if (
+      armageddonCard &&
+      state.godcatOnPlaymat &&
+      richestOpp &&
+      (bot.hand.some((c) => c.type === "defuse") || Math.random() < 0.35)
+    ) {
+      return {
+        type: "PLAY_CARD",
+        cardId: armageddonCard.id,
+        targetSeatNo: richestOpp.seatNo,
+      };
+    }
+
+    // Occasionally use Godcat offensively as Targeted Attack
+    const godcatCard = bot.hand.find((c) => c.type === "godcat");
+    if (godcatCard && richestOpp && Math.random() < 0.45) {
+      return {
+        type: "PLAY_CARD",
+        cardId: godcatCard.id,
+        mimicCardType: "targeted_attack",
+        targetSeatNo: richestOpp.seatNo,
+      };
+    }
+
     // Occasionally play utility/attack cards from hand
     const utilityCard = bot.hand.find((c) =>
       [
@@ -2656,6 +3092,7 @@ function chooseBotCommand(
         "barking_kitten",
         "see_future_3",
         "see_future_5",
+        "reveal_future_3",
         "clairvoyance",
       ].includes(c.type)
     );
@@ -2684,9 +3121,9 @@ export const implodingKittensCartridge: GameCartridge<
   cartridgeId: "imploding-kittens",
   title: "Imploding Kittens",
   subtitle:
-    "Mèo Nổ & Mèo Hố Đen (Full 4 Bản Mở Rộng) • Phủ quyết, Thấu thị & Cướp bài • 2–6 người chơi",
+    "Mèo Nổ & Mèo Hố Đen (Full 5 Bản Mở Rộng) • Phủ quyết, Thấu thị, Thiện & Ác • 2–6 người chơi",
   description:
-    "Phiên bản đại chiến Mèo Nổ tích hợp trọn bộ 4 bản mở rộng tùy chọn (Imploding, Streaking, Barking & Zombie Kittens) với Mèo Hố Đen lật ngửa không thể tháo ngòi!",
+    "Phiên bản đại chiến Mèo Nổ tích hợp trọn bộ 5 bản mở rộng tùy chọn (Imploding, Streaking, Barking, Zombie & Good vs. Evil) với Mèo Hố Đen và đấu trí Mèo Thần / Mèo Quỷ!",
   minSeats: 2,
   maxSeats: 6,
   available: true,
@@ -2698,6 +3135,7 @@ export const implodingKittensCartridge: GameCartridge<
         streaking: true,
         barking: true,
         zombie: true,
+        good_vs_evil: true,
       },
       timers: {
         turnSeconds: 45,
@@ -2724,6 +3162,7 @@ export const implodingKittensCartridge: GameCartridge<
         streaking: config?.expansions?.streaking ?? true,
         barking: config?.expansions?.barking ?? true,
         zombie: config?.expansions?.zombie ?? true,
+        good_vs_evil: config?.expansions?.good_vs_evil ?? true,
       },
       timers: {
         turnSeconds: config?.timers?.turnSeconds ?? 45,
@@ -2807,6 +3246,7 @@ export const implodingKittensCartridge: GameCartridge<
       discardPile: [],
       towerHolderSeatNo: null,
       towerStashCards,
+      godcatOnPlaymat: normalizedConfig.expansions.good_vs_evil,
       pendingAction: null,
       pendingInsert: null,
       pendingAlterFuture: null,
@@ -2814,6 +3254,8 @@ export const implodingKittensCartridge: GameCartridge<
       pendingCombo2Pick: null,
       pendingDigDeeper: null,
       pendingGroupSubmit: null,
+      pendingArmageddon: null,
+      pendingRaisingHeck: null,
       animSeq: 1,
       lastAnim: null,
       winnerSeatNos: [],
@@ -3220,7 +3662,11 @@ export const implodingKittensCartridge: GameCartridge<
       if (pg.pendingSeatNos.length === 0) {
         if (pg.mode === "GARBAGE_COLLECTION") {
           for (const item of pg.collectedCards) {
-            state.drawPile.push(item.card);
+            if (item.card.type === "godcat") {
+              state.godcatOnPlaymat = true;
+            } else {
+              state.drawPile.push(item.card);
+            }
           }
           state.drawPile = shuffle(state.drawPile, Math.random);
           events.push({
@@ -3231,7 +3677,11 @@ export const implodingKittensCartridge: GameCartridge<
         } else if (pg.mode === "FEED_THE_DEAD" && pg.recipientSeatNo) {
           const deadRecipient = getSeat(state, pg.recipientSeatNo);
           for (const item of pg.collectedCards) {
-            deadRecipient.hand.push(item.card);
+            if (item.card.type === "godcat") {
+              state.godcatOnPlaymat = true;
+            } else {
+              deadRecipient.hand.push(item.card);
+            }
           }
           events.push({
             eventType: "IK_FEED_DEAD_DONE",
@@ -3241,7 +3691,11 @@ export const implodingKittensCartridge: GameCartridge<
         } else {
           // Potluck: place collected cards on TOP of drawPile in turn order without shuffling
           for (const item of pg.collectedCards) {
-            state.drawPile.push(item.card);
+            if (item.card.type === "godcat") {
+              state.godcatOnPlaymat = true;
+            } else {
+              state.drawPile.push(item.card);
+            }
           }
           events.push({
             eventType: "IK_POTLUCK_DONE",
@@ -3252,6 +3706,166 @@ export const implodingKittensCartridge: GameCartridge<
         state.pendingGroupSubmit = null;
         state.step = "TurnPlayStep";
         state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+      }
+
+      return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
+    }
+
+    // --- STEP: ARMAGEDDON (GOOD VS. EVIL SHOWDOWN) ---
+    if (state.step === "ArmageddonStep" && state.pendingArmageddon) {
+      const pa = state.pendingArmageddon;
+
+      if (pa.stage === "ACTOR_PLACE") {
+        if (
+          command.type !== "ARMAGEDDON_PLACE" ||
+          pa.actorSeatNo !== actor.seatNo
+        ) {
+          throw new Error(
+            "Đang chờ người kích hoạt Tận Thế đặt úp Mèo Thần & Mèo Quỷ."
+          );
+        }
+        pa.godcatGivenToTarget = Boolean(command.giveGodcatToTarget);
+        pa.stage = "TARGET_CHOOSE";
+        state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+        const target = getSeat(state, pa.targetSeatNo);
+        events.push({
+          eventType: "IK_ARMAGEDDON_PLACED",
+          message: `⚖️ ${actor.displayName} đã đặt úp 2 lá bài! Đến lượt ${target.displayName} quyết định GIỮ hay ĐỔI mà không được xem!`,
+          visibleToSeatNos: "all",
+        });
+        return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
+      }
+
+      if (pa.stage === "TARGET_CHOOSE") {
+        if (
+          command.type !== "ARMAGEDDON_DECIDE" ||
+          pa.targetSeatNo !== actor.seatNo
+        ) {
+          throw new Error(
+            "Đang chờ đối thủ chọn GIỮ hoặc ĐỔI lá bài trong màn đấu trí Tận Thế."
+          );
+        }
+        const armActor = getSeat(state, pa.actorSeatNo);
+        const armTarget = getSeat(state, pa.targetSeatNo);
+        const targetInitiallyHadGodcat = Boolean(pa.godcatGivenToTarget);
+        const targetGetsGodcat = command.swap
+          ? !targetInitiallyHadGodcat
+          : targetInitiallyHadGodcat;
+
+        const godcatWinner = targetGetsGodcat ? armTarget : armActor;
+        const devilcatVictim = targetGetsGodcat ? armActor : armTarget;
+
+        state.pendingArmageddon = null;
+
+        // 1. Winner receives Godcat into hand (removed from Playmat)
+        state.godcatOnPlaymat = false;
+        const godcatCard: IkCard = {
+          id: `ik-godcat-${state.turnNumber}-${nowMs}`,
+          type: "godcat",
+        };
+        godcatWinner.hand.push(godcatCard);
+
+        // 2. Victim flips Devilcat -> immediately explodes unless Defused (or Zombie Kitten)!
+        // Note: Devilcat ALWAYS returns to Playmat; victim cannot use Godcat since godcatWinner has it.
+        let defuseIdx = devilcatVictim.hand.findIndex(
+          (c) => c.type === "defuse"
+        );
+        if (defuseIdx === -1) {
+          defuseIdx = devilcatVictim.hand.findIndex(
+            (c) => c.type === "zombie_kitten"
+          );
+        }
+
+        const swapText = command.swap ? "chọn ĐỔI BÀI 🔄" : "chọn GIỮ BÀI 🛡️";
+
+        if (defuseIdx !== -1) {
+          const [defCard] = devilcatVictim.hand.splice(defuseIdx, 1);
+          state.discardPile.push(defCard);
+          let revivedMsg = "";
+          if (defCard.type === "zombie_kitten") {
+            const deadSeat = state.seats.find((s) => !s.alive);
+            if (deadSeat) {
+              deadSeat.alive = true;
+              deadSeat.eliminatedBy = null;
+              revivedMsg = ` đồng thời hồi sinh 🧟 ${deadSeat.displayName}!`;
+            }
+          }
+          const outcomeMsg = `⚖️ ${armTarget.displayName} ${swapText}! ✨ ${godcatWinner.displayName} đoạt MÈO THẦN (Godcat) • 😈 ${devilcatVictim.displayName} lật phải MÈO QUỶ nhưng kịp đốt ${defCard.type === "zombie_kitten" ? "Zombie Kitten" : "Defuse"} thoát chết!${revivedMsg}`;
+          setAnim(
+            state,
+            {
+              kind: "DEFUSE",
+              actorSeatNo: devilcatVictim.seatNo,
+              targetSeatNo: godcatWinner.seatNo,
+              card: { id: "ik-devilcat-playmat", type: "devilcat" },
+              messageVi: outcomeMsg,
+            },
+            nowMs
+          );
+          events.push({
+            eventType: "IK_ARMAGEDDON_RESOLVED",
+            message: outcomeMsg,
+            visibleToSeatNos: "all",
+          });
+        } else {
+          devilcatVictim.alive = false;
+          devilcatVictim.eliminatedBy = "devilcat";
+          discardCardsRespectingPlaymat(state, [...devilcatVictim.hand]);
+          devilcatVictim.hand = [];
+          const outcomeMsg = `⚖️💀 ${armTarget.displayName} ${swapText}! ✨ ${godcatWinner.displayName} đoạt MÈO THẦN (Godcat) • 😈 ${devilcatVictim.displayName} lật phải MÈO QUỶ (Devilcat) khi không còn Defuse — NỔ TUNG NGAY LẬP TỨC!`;
+          setAnim(
+            state,
+            {
+              kind: "EXPLODE_DEATH",
+              actorSeatNo: devilcatVictim.seatNo,
+              targetSeatNo: godcatWinner.seatNo,
+              card: { id: "ik-devilcat-playmat", type: "devilcat" },
+              messageVi: outcomeMsg,
+            },
+            nowMs
+          );
+          events.push({
+            eventType: "IK_ARMAGEDDON_KILLED",
+            message: outcomeMsg,
+            visibleToSeatNos: "all",
+          });
+        }
+
+        // Playing Armageddon ends the actor's turn without drawing a card!
+        consumeOneTurnOrAdvanceSeat(state, events, nowMs);
+        return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
+      }
+    }
+
+    // --- STEP: RAISING HECK (GOOD VS. EVIL BOTTOM CARD DECISION) ---
+    if (state.step === "RaisingHeckStep" && state.pendingRaisingHeck) {
+      if (
+        command.type !== "RAISING_HECK_DECIDE" ||
+        state.pendingRaisingHeck.seatNo !== actor.seatNo
+      ) {
+        throw new Error(
+          "Đang chờ người chơi quyết định Quậy Tưng Bừng (Raising Heck)."
+        );
+      }
+
+      state.pendingRaisingHeck = null;
+      if (state.drawPile.length === 0) {
+        consumeOneTurnOrAdvanceSeat(state, events, nowMs);
+        return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
+      }
+
+      const bottomCard = state.drawPile.shift()!;
+      if (command.takeToHand) {
+        resolveCardDrawnBySeat(state, actor, bottomCard, true, events, nowMs);
+      } else {
+        // Put the bottom card directly on TOP of Draw Pile without exploding, and end 1 turn!
+        state.drawPile.push(bottomCard);
+        events.push({
+          eventType: "IK_RAISING_HECK_TOP",
+          message: `🔥 ${actor.displayName} xem lá dưới Đáy rồi đặt thẳng nó lên ĐỈNH Bộ bài rút và kết thúc lượt!`,
+          visibleToSeatNos: "all",
+        });
+        consumeOneTurnOrAdvanceSeat(state, events, nowMs);
       }
 
       return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
@@ -3313,10 +3927,12 @@ export const implodingKittensCartridge: GameCartridge<
 
       if (
         card.type === "defuse" ||
+        card.type === "zombie_kitten" ||
         card.type === "nope" ||
         card.type === "streaking_kitten" ||
         card.type === "exploding_kitten" ||
-        card.type === "imploding_kitten"
+        card.type === "imploding_kitten" ||
+        card.type === "devilcat"
       ) {
         throw new Error(
           `Lá [${meta.shortVi}] không thể đánh đơn lẻ trong lượt thông thường.`
@@ -3329,7 +3945,18 @@ export const implodingKittensCartridge: GameCartridge<
       }
 
       let effectiveType: IkCardType = card.type;
-      if (card.type === "clone") {
+      let isGodcatPlay = false;
+
+      if (card.type === "godcat") {
+        const mimic = command.mimicCardType;
+        if (!mimic || !IK_GODCAT_MIMICABLE_TYPES.includes(mimic)) {
+          throw new Error(
+            "Hãy chọn 1 lá Hành Động hợp lệ để Mèo Thần (Godcat) hóa thân (không thể hóa thành Nope)!"
+          );
+        }
+        effectiveType = mimic;
+        isGodcatPlay = true;
+      } else if (card.type === "clone") {
         const topDiscard =
           state.discardPile.length > 0
             ? state.discardPile[state.discardPile.length - 1]
@@ -3337,6 +3964,7 @@ export const implodingKittensCartridge: GameCartridge<
         if (
           !topDiscard ||
           topDiscard.type === "clone" ||
+          topDiscard.type === "godcat" ||
           IK_CARD_META[topDiscard.type].category !== "action"
         ) {
           throw new Error(
@@ -3344,6 +3972,12 @@ export const implodingKittensCartridge: GameCartridge<
           );
         }
         effectiveType = topDiscard.type;
+      }
+
+      if (effectiveType === "armageddon" && !state.godcatOnPlaymat) {
+        throw new Error(
+          "Chỉ có thể đánh Tận Thế (Armageddon) khi Mèo Thần (Godcat) đang nằm trên Thảm đấu!"
+        );
       }
 
       const effMeta = IK_CARD_META[effectiveType];
@@ -3359,10 +3993,14 @@ export const implodingKittensCartridge: GameCartridge<
         }
       }
 
-      // Remove card from hand & push to discardPile
+      // Remove card from hand; Godcat ALWAYS returns to Playmat (never Discard Pile!)
       actor.hand.splice(idx, 1);
       card.marked = false;
-      state.discardPile.push(card);
+      if (isGodcatPlay) {
+        state.godcatOnPlaymat = true;
+      } else {
+        state.discardPile.push(card);
+      }
 
       setAnim(
         state,
@@ -3380,8 +4018,9 @@ export const implodingKittensCartridge: GameCartridge<
         : "";
       events.push({
         eventType: "IK_CARD_PLAYED",
-        message:
-          card.type === "clone"
+        message: isGodcatPlay
+          ? `✨ ${actor.displayName} tung Mèo Thần (Godcat) hóa thân thành [${effMeta.emoji} ${effMeta.nameVi}]${targetName} (Mèo Thần quay về Thảm đấu)!`
+          : card.type === "clone"
             ? `🧬 ${actor.displayName} đánh Nhân Bản (Clone) sao chép lá [${effMeta.emoji} ${effMeta.nameVi}]${targetName}!`
             : `${meta.emoji} ${actor.displayName} đánh lá [${meta.nameVi}]${targetName}!`,
         visibleToSeatNos: "all",
@@ -3394,6 +4033,7 @@ export const implodingKittensCartridge: GameCartridge<
           actorSeatNo: actor.seatNo,
           cards: [card],
           effectiveType,
+          isGodcat: isGodcatPlay,
           targetSeatNo: command.targetSeatNo,
           nopeCount: 0,
           lastNopeBySeatNo: null,
@@ -3421,9 +4061,15 @@ export const implodingKittensCartridge: GameCartridge<
         if (!found) throw new Error("Lá bài trong Combo không nằm trên tay bạn.");
         if (
           found.type === "exploding_kitten" ||
-          found.type === "imploding_kitten"
+          found.type === "imploding_kitten" ||
+          found.type === "devilcat" ||
+          found.type === "godcat"
         ) {
-          throw new Error("Không thể dùng lá Bom để ghép Combo.");
+          throw new Error(
+            found.type === "godcat"
+              ? "Không thể đốt Mèo Thần (Godcat) trong Combo — hãy đánh trực tiếp để biến hóa thành mọi lá Hành Động!"
+              : "Không thể dùng lá Bom để ghép Combo."
+          );
         }
         cards.push(found);
       }
@@ -3608,6 +4254,43 @@ export const implodingKittensCartridge: GameCartridge<
       return current;
     }
 
+    if (prevState.step === "ArmageddonStep" && prevState.pendingArmageddon) {
+      const pa = prevState.pendingArmageddon;
+      if (pa.stage === "ACTOR_PLACE") {
+        return this.reduce({
+          state: prevState,
+          actorSeatNo: pa.actorSeatNo,
+          nowMs,
+          command: {
+            type: "ARMAGEDDON_PLACE",
+            giveGodcatToTarget: Math.random() < 0.5,
+          },
+        });
+      }
+      return this.reduce({
+        state: prevState,
+        actorSeatNo: pa.targetSeatNo,
+        nowMs,
+        command: {
+          type: "ARMAGEDDON_DECIDE",
+          swap: Math.random() < 0.5,
+        },
+      });
+    }
+
+    if (prevState.step === "RaisingHeckStep" && prevState.pendingRaisingHeck) {
+      const bottom = prevState.pendingRaisingHeck.bottomCard;
+      const isBomb =
+        bottom.type === "exploding_kitten" ||
+        bottom.type === "imploding_kitten";
+      return this.reduce({
+        state: prevState,
+        actorSeatNo: prevState.pendingRaisingHeck.seatNo,
+        nowMs,
+        command: { type: "RAISING_HECK_DECIDE", takeToHand: !isBomb },
+      });
+    }
+
     return this.reduce({
       state: prevState,
       actorSeatNo: prevState.activeSeatNo,
@@ -3690,7 +4373,13 @@ export const implodingKittensCartridge: GameCartridge<
                 ? st.pendingCombo2Pick?.actorSeatNo
                 : st.step === "DigDeeperStep"
                   ? st.pendingDigDeeper?.seatNo
-                  : st.activeSeatNo;
+                  : st.step === "ArmageddonStep"
+                    ? st.pendingArmageddon?.stage === "ACTOR_PLACE"
+                      ? st.pendingArmageddon.actorSeatNo
+                      : st.pendingArmageddon?.targetSeatNo
+                    : st.step === "RaisingHeckStep"
+                      ? st.pendingRaisingHeck?.seatNo
+                      : st.activeSeatNo;
 
       if (actingSeatNo !== undefined && botSet.has(actingSeatNo)) {
         const cmd = chooseBotCommand(st, actingSeatNo);
@@ -3757,6 +4446,7 @@ export const implodingKittensCartridge: GameCartridge<
         isBlind: s.isBlind,
         barkingPlayedFaceUp: s.barkingPlayedFaceUp,
         illTakeThatFromSeatNo: s.illTakeThatFromSeatNo,
+        hasGodcat: s.hand.some((c) => c.type === "godcat"),
         markedCards: s.hand.filter((c) => Boolean(c.marked)),
       })),
       drawPileCount: state.drawPile.length,
@@ -3770,6 +4460,7 @@ export const implodingKittensCartridge: GameCartridge<
       discardPileCards: state.discardPile.slice(-14),
       towerHolderSeatNo: state.towerHolderSeatNo ?? null,
       towerStashCount: (state.towerStashCards ?? []).length,
+      godcatOnPlaymat: Boolean(state.godcatOnPlaymat),
       myHand: mySeat ? mySeat.hand : [],
       myIsBlind: Boolean(mySeat?.isBlind),
       myPrivateVision: mySeat?.privateVision ?? null,
@@ -3849,6 +4540,35 @@ export const implodingKittensCartridge: GameCartridge<
             needsViewerCard:
               viewerSeatNo !== null &&
               state.pendingGroupSubmit.pendingSeatNos.includes(viewerSeatNo),
+          }
+        : null,
+      pendingArmageddon: state.pendingArmageddon
+        ? {
+            actorSeatNo: state.pendingArmageddon.actorSeatNo,
+            actorDisplayName: getSeat(
+              state,
+              state.pendingArmageddon.actorSeatNo
+            ).displayName,
+            targetSeatNo: state.pendingArmageddon.targetSeatNo,
+            targetDisplayName: getSeat(
+              state,
+              state.pendingArmageddon.targetSeatNo
+            ).displayName,
+            stage: state.pendingArmageddon.stage,
+            // Anti-cheat: chỉ người đặt bài mới biết đã đặt Mèo Thần cho ai; đối thủ & người khác luôn thấy null!
+            godcatGivenToTarget:
+              state.pendingArmageddon.actorSeatNo === viewerSeatNo
+                ? state.pendingArmageddon.godcatGivenToTarget
+                : null,
+          }
+        : null,
+      pendingRaisingHeck: state.pendingRaisingHeck
+        ? {
+            seatNo: state.pendingRaisingHeck.seatNo,
+            bottomCard:
+              state.pendingRaisingHeck.seatNo === viewerSeatNo
+                ? state.pendingRaisingHeck.bottomCard
+                : null,
           }
         : null,
       lastAnim: state.lastAnim,
