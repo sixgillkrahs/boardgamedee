@@ -172,6 +172,25 @@ describe("Imploding Kittens Cartridge (Core + 5 Expansions)", () => {
     expect(
       afterPick.state.seats[0].hand.some((c) => c.id === "s2-prize")
     ).toBe(true);
+    // Verify COMBO_STEAL privacy: thief (Seat 1) and victim (Seat 2) both see the stolen card, while Seat 3 does NOT!
+    expect(
+      implodingKittensCartridge.projectView({
+        state: afterPick.state,
+        viewerSeatNo: 1,
+      }).lastAnim?.card?.id
+    ).toBe("s2-prize");
+    expect(
+      implodingKittensCartridge.projectView({
+        state: afterPick.state,
+        viewerSeatNo: 2,
+      }).lastAnim?.card?.id
+    ).toBe("s2-prize");
+    expect(
+      implodingKittensCartridge.projectView({
+        state: afterPick.state,
+        viewerSeatNo: 3,
+      }).lastAnim?.card
+    ).toBeUndefined();
 
     // Seat 1 plays Targeted Attack on Seat 3 -> Seat 3 now owes 2 turns!
     const afterTargetAtk = implodingKittensCartridge.reduce({

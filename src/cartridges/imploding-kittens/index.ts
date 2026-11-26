@@ -1015,6 +1015,8 @@ export interface IkLastAnim {
   actorSeatNo: number;
   targetSeatNo?: number;
   card?: IkCard;
+  /** True when Tower of Power intercepted the steal (stash card stays secret from target) */
+  fromTower?: boolean;
   messageVi?: string;
   atMs: number;
 }
@@ -1869,14 +1871,28 @@ function resolveCardDrawnBySeat(
 
   // CASE 3: SAFE CARD
   recipient.hand.push(drawnCard);
-  setAnim(
-    state,
-    {
-      kind: "DRAW_SAFE",
-      actorSeatNo: recipient.seatNo,
-    },
-    nowMs
-  );
+  if (recipient.seatNo !== drawerSeat.seatNo) {
+    setAnim(
+      state,
+      {
+        kind: "COMBO_STEAL",
+        actorSeatNo: recipient.seatNo,
+        targetSeatNo: drawerSeat.seatNo,
+        card: drawnCard,
+        messageVi: "Đưa Đây Cho Tôi",
+      },
+      nowMs
+    );
+  } else {
+    setAnim(
+      state,
+      {
+        kind: "DRAW_SAFE",
+        actorSeatNo: recipient.seatNo,
+      },
+      nowMs
+    );
+  }
   events.push({
     eventType: "IK_CARD_DRAWN",
     message: fromBottom
@@ -1932,6 +1948,7 @@ function executeResolvedAction(
           actorSeatNo: actor.seatNo,
           targetSeatNo: target.seatNo,
           card: stolen,
+          fromTower: true,
         },
         nowMs
       );
@@ -1990,6 +2007,7 @@ function executeResolvedAction(
           actorSeatNo: actor.seatNo,
           targetSeatNo: target.seatNo,
           card: stolen,
+          fromTower: true,
         },
         nowMs
       );
@@ -2312,6 +2330,7 @@ function executeResolvedAction(
             actorSeatNo: actor.seatNo,
             targetSeatNo: target.seatNo,
             card: stolen,
+            fromTower: true,
           },
           nowMs
         );
@@ -4586,7 +4605,21 @@ export const implodingKittensCartridge: GameCartridge<
                 : null,
           }
         : null,
-      lastAnim: state.lastAnim,
+      lastAnim: state.lastAnim
+        ? state.lastAnim.kind === "COMBO_STEAL"
+          ? (() => {
+              const isActor = state.lastAnim!.actorSeatNo === viewerSeatNo;
+              const isTarget = state.lastAnim!.targetSeatNo === viewerSeatNo;
+              const canSeeStolenCard = state.lastAnim!.fromTower
+                ? isActor
+                : isActor || isTarget;
+              return {
+                ...state.lastAnim!,
+                card: canSeeStolenCard ? state.lastAnim!.card : undefined,
+              };
+            })()
+          : state.lastAnim
+        : null,
       winnerSeatNos: state.winnerSeatNos,
       winReasonVi: state.winReasonVi,
       phaseDeadlineMs: state.phaseDeadlineMs,

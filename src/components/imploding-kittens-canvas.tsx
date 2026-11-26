@@ -92,6 +92,13 @@ export function ImplodingKittensCanvas({
   const lastConfettiMsRef = useRef<number>(0);
   const holdStateRef = useRef<ActiveHoldState | null>(null);
   const [inspectedCard, setInspectedCard] = useState<IkCard | null>(null);
+  const [stealNotice, setStealNotice] = useState<{
+    id: number;
+    role: "victim" | "thief";
+    fromTower: boolean;
+    otherName: string;
+    card: IkCard | null;
+  } | null>(null);
 
   const clearHoldTimer = () => {
     const h = holdStateRef.current;
@@ -106,6 +113,14 @@ export function ImplodingKittensCanvas({
       clearHoldTimer();
     };
   }, []);
+
+  useEffect(() => {
+    if (!stealNotice) return;
+    const tid = window.setTimeout(() => {
+      setStealNotice((cur) => (cur?.id === stealNotice.id ? null : cur));
+    }, 4800);
+    return () => window.clearTimeout(tid);
+  }, [stealNotice]);
 
   useEffect(() => {
     if (!inspectedCard) return;
@@ -165,6 +180,32 @@ export function ImplodingKittensCanvas({
         playerView.direction,
         viewerSeatNo
       );
+
+      if (anim.kind === "COMBO_STEAL" && viewerSeatNo !== null) {
+        if (anim.targetSeatNo === viewerSeatNo) {
+          const thiefName =
+            playerView.seats.find((s) => s.seatNo === anim.actorSeatNo)
+              ?.displayName ?? "Đối thủ";
+          setStealNotice({
+            id: anim.id,
+            role: "victim",
+            fromTower: Boolean(anim.fromTower),
+            otherName: thiefName,
+            card: anim.card ?? null,
+          });
+        } else if (anim.actorSeatNo === viewerSeatNo && anim.card) {
+          const victimName =
+            playerView.seats.find((s) => s.seatNo === anim.targetSeatNo)
+              ?.displayName ?? "Đối thủ";
+          setStealNotice({
+            id: anim.id,
+            role: "thief",
+            fromTower: Boolean(anim.fromTower),
+            otherName: victimName,
+            card: anim.card,
+          });
+        }
+      }
     }
   }, [
     mode,
@@ -1107,6 +1148,112 @@ export function ImplodingKittensCanvas({
         onContextMenu={(e) => e.preventDefault()}
         className="w-full h-full block touch-none select-none"
       />
+
+      {/* Stolen Card Alert Toast (shows exact card stolen from you or taken by you) */}
+      {stealNotice && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 w-[min(92vw,380px)] pointer-events-auto">
+          <div
+            className={`rounded-2xl border backdrop-blur-md p-2.5 sm:p-3 shadow-2xl flex items-center gap-3 ${
+              stealNotice.role === "victim"
+                ? stealNotice.fromTower
+                  ? "border-amber-400/80 bg-amber-950/92 text-amber-50"
+                  : "border-rose-500/85 bg-rose-950/92 text-rose-50"
+                : "border-sky-400/80 bg-slate-900/94 text-slate-50"
+            }`}
+          >
+            {stealNotice.card ? (
+              <div className="shrink-0 w-12 sm:w-14 aspect-[5/7] rounded-lg overflow-hidden border border-white/25 bg-slate-950 shadow-lg">
+                <div
+                  role="img"
+                  aria-label={IK_CARD_META[stealNotice.card.type].nameVi}
+                  className="w-full h-full"
+                  style={getIkCardSpriteBgStyle(
+                    stealNotice.card.type,
+                    stealNotice.card.id
+                  )}
+                />
+              </div>
+            ) : (
+              <div className="shrink-0 w-12 sm:w-14 aspect-[5/7] rounded-lg overflow-hidden border border-amber-400/50 bg-slate-950 shadow-lg">
+                <div
+                  role="img"
+                  aria-label="Lá trong Tháp Quyền Lực"
+                  className="w-full h-full"
+                  style={getIkCardSpriteBgStyle("back")}
+                />
+              </div>
+            )}
+
+            <div className="flex-1 min-w-0 text-left space-y-0.5">
+              <p
+                className={`text-[10.5px] font-black uppercase tracking-wider ${
+                  stealNotice.role === "victim"
+                    ? stealNotice.fromTower
+                      ? "text-amber-300"
+                      : "text-rose-300"
+                    : "text-sky-300"
+                }`}
+              >
+                {stealNotice.role === "victim"
+                  ? stealNotice.fromTower
+                    ? "Tháp Quyền Lực Đã Chắn Đòn"
+                    : "Bạn Vừa Bị Cướp Bài"
+                  : "Cướp Bài Thành Công"}
+              </p>
+              <p className="text-xs font-extrabold leading-snug text-white">
+                {stealNotice.role === "victim" ? (
+                  stealNotice.fromTower ? (
+                    <>
+                      <span className="text-amber-300">
+                        {stealNotice.otherName}
+                      </span>{" "}
+                      phải rút mù 1 lá từ đỉnh Tháp thay vì lấy bài trên tay
+                      bạn.
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-amber-300">
+                        {stealNotice.otherName}
+                      </span>{" "}
+                      đã lấy lá{" "}
+                      <span className="text-rose-200 underline decoration-rose-400/70">
+                        {stealNotice.card
+                          ? IK_CARD_META[stealNotice.card.type].nameVi
+                          : "1 lá bài"}
+                      </span>{" "}
+                      từ tay bạn!
+                    </>
+                  )
+                ) : (
+                  <>
+                    Bạn vừa lấy lá{" "}
+                    <span className="text-amber-300">
+                      {stealNotice.card
+                        ? IK_CARD_META[stealNotice.card.type].nameVi
+                        : "1 lá bài"}
+                    </span>{" "}
+                    từ {stealNotice.otherName}!
+                  </>
+                )}
+              </p>
+              {stealNotice.card && (
+                <p className="text-[10.5px] text-slate-300/90 truncate">
+                  {IK_CARD_META[stealNotice.card.type].subtitleVi}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setStealNotice(null)}
+              className="shrink-0 self-start rounded-lg border border-white/15 bg-black/30 hover:bg-black/50 px-2 py-0.5 text-[11px] font-bold text-slate-200 cursor-pointer"
+              aria-label="Đóng thông báo"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 1s Hold Vietnamese Card Info Overlay */}
       {inspectedCard && inspectedMeta && (

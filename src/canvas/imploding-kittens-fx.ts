@@ -713,6 +713,18 @@ export class ImplodingKittensFxEngine {
       }
 
       case "COMBO_STEAL": {
+        const isVictim =
+          viewerSeatNo !== null && anim.targetSeatNo === viewerSeatNo;
+        const isThief =
+          viewerSeatNo !== null && anim.actorSeatNo === viewerSeatNo;
+        const stolenMeta = anim.card ? IK_CARD_META[anim.card.type] : null;
+        const beamColor =
+          isVictim && !anim.fromTower
+            ? "#f43f5e"
+            : anim.fromTower
+              ? "#fbbf24"
+              : "#38bdf8";
+
         this.spawnBeam(
           nowMs,
           "tether",
@@ -720,42 +732,106 @@ export class ImplodingKittensFxEngine {
           targetPos.y,
           actorPos.x,
           actorPos.y,
-          "#38bdf8",
-          680
+          beamColor,
+          isVictim ? 820 : 680
         );
+
+        if (isVictim && !anim.fromTower) {
+          // Dramatic crimson hit alert when a card is yanked right out of your hand!
+          this.triggerShake(nowMs, 7, 300);
+          this.spawnFlash(nowMs, "#f43f5e", 0.24, 340);
+          this.spawnRing(
+            nowMs,
+            targetPos.x,
+            targetPos.y,
+            24,
+            180,
+            "#f43f5e",
+            4,
+            560
+          );
+          this.spawnSparkles(
+            targetPos.x,
+            targetPos.y,
+            ["#f43f5e", "#fb7185", "#fde047"],
+            28,
+            170
+          );
+        } else if (isVictim && anim.fromTower) {
+          this.spawnRing(
+            nowMs,
+            targetPos.x,
+            targetPos.y,
+            24,
+            165,
+            "#fbbf24",
+            4,
+            540
+          );
+          this.spawnSparkles(
+            targetPos.x,
+            targetPos.y,
+            ["#fbbf24", "#fde047", "#ffffff"],
+            24,
+            145
+          );
+        }
+
+        // Reveal the stolen card FACE-UP as it arcs across the table for the victim & thief!
+        const visibleFlyingCard =
+          (isVictim || isThief) && anim.card ? anim.card : null;
         this.spawnFlyingCard({
-          card: null,
+          card: visibleFlyingCard,
           fromX: targetPos.x,
           fromY: targetPos.y,
           ctrlX: (targetPos.x + actorPos.x) * 0.5,
-          ctrlY: Math.min(targetPos.y, actorPos.y) - 65,
+          ctrlY: Math.min(targetPos.y, actorPos.y) - (isVictim ? 95 : 70),
           toX: actorPos.x,
           toY: actorPos.y,
-          w: Math.round(cardW * 0.72),
-          h: Math.round(cardH * 0.72),
+          w: Math.round(cardW * (visibleFlyingCard ? 0.92 : 0.72)),
+          h: Math.round(cardH * (visibleFlyingCard ? 0.92 : 0.72)),
           startMs: nowMs,
-          durationMs: 520,
-          startRot: -0.25,
-          endRot: 0.25,
-          peakScale: 1.15,
-          glowColor: "#38bdf8",
+          durationMs: isVictim ? 860 : isThief ? 740 : 520,
+          startRot: -0.22,
+          endRot: 0.22,
+          peakScale: visibleFlyingCard ? 1.42 : 1.15,
+          glowColor: beamColor,
         });
         this.spawnSparkles(
           actorPos.x,
           actorPos.y,
-          ["#38bdf8", "#fde047", "#ffffff"],
+          [beamColor, "#fde047", "#ffffff"],
           24,
           130
         );
         this.spawnStamp(
           nowMs,
-          "CƯỚP BÀI THÀNH CÔNG!",
-          "#38bdf8",
+          isVictim
+            ? anim.fromTower
+              ? "THÁP QUYỀN LỰC CHẮN ĐÒN!"
+              : "BẠN BỊ CƯỚP BÀI!"
+            : "CƯỚP BÀI THÀNH CÔNG!",
+          isVictim
+            ? anim.fromTower
+              ? "#fde047"
+              : "#fda4af"
+            : "#38bdf8",
           anchors.center.x,
           anchors.center.y - 30,
           {
-            bgHex: "rgba(12, 74, 110, 0.94)",
-            durationMs: 1350,
+            subtitle:
+              isVictim && anim.fromTower
+                ? "Bài trên tay bạn vẫn an toàn"
+                : stolenMeta
+                  ? stolenMeta.nameVi
+                  : undefined,
+            bgHex:
+              isVictim && !anim.fromTower
+                ? "rgba(136, 19, 55, 0.95)"
+                : anim.fromTower
+                  ? "rgba(120, 53, 15, 0.94)"
+                  : "rgba(12, 74, 110, 0.94)",
+            durationMs: isVictim || isThief ? 1850 : 1350,
           }
         );
         break;
