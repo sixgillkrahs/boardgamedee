@@ -13,6 +13,8 @@ export interface IkTableAnchors {
   discardPile: { x: number; y: number; w: number; h: number };
   center: { x: number; y: number };
   seatPositions: Map<number, { x: number; y: number }>;
+  dockTopY?: number;
+  oppBottomY?: number;
 }
 
 export type IkParticleKind =
@@ -119,6 +121,7 @@ export interface FavorCatPawFx {
   anchorX: number;
   baseY: number;
   peakY: number;
+  scale: number;
   startMs: number;
   retractStartMs: number | null;
   lastHeartMs: number;
@@ -264,18 +267,26 @@ export class ImplodingKittensFxEngine {
     }
 
     const isViewerBegging = favorActorSeatNo === viewerSeatNo;
+    const pawScale = Math.max(
+      0.56,
+      Math.min(1, Math.min(anchors.width / 540, anchors.height / 480))
+    );
     const dockTopY =
+      anchors.dockTopY ??
       anchors.height -
-      Math.max(176, Math.min(220, Math.round(anchors.height * 0.28))) -
-      6;
+        Math.max(176, Math.min(220, Math.round(anchors.height * 0.28))) -
+        6;
+    const oppBottomY = anchors.oppBottomY ?? 122;
     const actorPos =
       anchors.seatPositions.get(favorActorSeatNo) ?? anchors.center;
+    const marginX = Math.round(92 * pawScale);
     const anchorX = isViewerBegging
       ? anchors.center.x
-      : Math.max(120, Math.min(anchors.width - 120, actorPos.x));
-    const baseY = isViewerBegging ? dockTopY + 6 : 122;
-    // Short stubby forearm: palm sits ~94px out from the dock/panel edge!
-    const peakY = isViewerBegging ? baseY - 94 : baseY + 94;
+      : Math.max(marginX, Math.min(anchors.width - marginX, actorPos.x));
+    const baseY = isViewerBegging ? dockTopY + 6 : oppBottomY;
+    // Short stubby forearm scaled proportionally to screen dimensions!
+    const reachOffset = Math.round(94 * pawScale);
+    const peakY = isViewerBegging ? baseY - reachOffset : baseY + reachOffset;
 
     if (
       !this.activeFavorPaw ||
@@ -288,6 +299,7 @@ export class ImplodingKittensFxEngine {
         anchorX,
         baseY,
         peakY,
+        scale: pawScale,
         startMs: nowMs,
         retractStartMs: null,
         lastHeartMs: nowMs,
@@ -299,6 +311,7 @@ export class ImplodingKittensFxEngine {
       this.activeFavorPaw.anchorX = anchorX;
       this.activeFavorPaw.baseY = baseY;
       this.activeFavorPaw.peakY = peakY;
+      this.activeFavorPaw.scale = pawScale;
       if (nowMs - this.activeFavorPaw.lastHeartMs > 680) {
         this.activeFavorPaw.lastHeartMs = nowMs;
         this.spawnHearts(anchorX, peakY - (isViewerBegging ? 18 : -18), 3);
@@ -1321,9 +1334,14 @@ export class ImplodingKittensFxEngine {
 
       if (this.activeFavorPaw) {
         const dirY = fp.fromBottom ? 1 : -1;
+        const pScale = fp.scale;
         const pawCenterY =
-          lerp(fp.baseY + dirY * 56, fp.peakY, reach) + dirY * begDipY;
-        const armHeight = Math.max(18, Math.abs(fp.baseY - pawCenterY));
+          lerp(fp.baseY + dirY * 56 * pScale, fp.peakY, reach) +
+          dirY * begDipY * pScale;
+        const armHeight = Math.max(
+          18,
+          Math.abs(fp.baseY - pawCenterY) / Math.max(0.4, pScale)
+        );
 
         ctx.save();
         ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
@@ -1341,7 +1359,7 @@ export class ImplodingKittensFxEngine {
         if (!fp.fromBottom) {
           ctx.scale(1, -1);
         }
-        ctx.scale(cupScaleX, cupScaleY);
+        ctx.scale(cupScaleX * pScale, cupScaleY * pScale);
 
         ctx.shadowColor = "rgba(244, 114, 182, 0.45)";
         ctx.shadowBlur = 20;
@@ -1474,16 +1492,18 @@ export class ImplodingKittensFxEngine {
         // 6. Cute comic pleading bubble right above/below the begging cat paw
         if (reach > 0.65) {
           const bText = "Cho xin 1 lá đi mà!";
-          ctx.font = `900 12.5px ${fonts.sans}`;
-          const bw = ctx.measureText(bText).width + 26;
-          const bh = 28;
+          const bFont = Math.max(10.5, Math.round(12.5 * pScale));
+          ctx.font = `900 ${bFont}px ${fonts.sans}`;
+          const bw = Math.min(width - 20, ctx.measureText(bText).width + 22);
+          const bh = Math.round(26 * Math.max(0.82, pScale));
           const bx = Math.max(
             bw * 0.5 + 10,
             Math.min(width - bw * 0.5 - 10, fp.anchorX)
           );
+          const bubbleOff = Math.round(80 * pScale);
           const by = fp.fromBottom
-            ? Math.max(26, pawCenterY - 82)
-            : Math.min(height - 26, pawCenterY + 82);
+            ? Math.max(24, pawCenterY - bubbleOff)
+            : Math.min(height - 24, pawCenterY + bubbleOff);
 
           ctx.save();
           ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
@@ -1582,12 +1602,16 @@ export class ImplodingKittensFxEngine {
       ctx.rotate(st.tiltRad);
       ctx.scale(scale, scale);
 
-      ctx.font = `900 17px ${fonts.sans}`;
+      const stampScaleMul = Math.max(0.76, Math.min(1, width / 460));
+      const titleFontSize = Math.round(16 * stampScaleMul);
+      const subFontSize = Math.round(10.5 * stampScaleMul);
+      ctx.font = `900 ${titleFontSize}px ${fonts.sans}`;
       const titleW = ctx.measureText(st.title).width;
-      ctx.font = `700 10.5px ${fonts.sans}`;
+      ctx.font = `700 ${subFontSize}px ${fonts.sans}`;
       const subW = st.subtitle ? ctx.measureText(st.subtitle).width : 0;
-      const boxW = Math.max(titleW, subW) + 34;
-      const boxH = st.subtitle ? 52 : 36;
+      const maxBoxW = Math.max(180, width - 24);
+      const boxW = Math.min(maxBoxW, Math.max(titleW, subW) + 30);
+      const boxH = st.subtitle ? Math.round(48 * stampScaleMul) : Math.round(34 * stampScaleMul);
 
       ctx.shadowColor = st.color;
       ctx.shadowBlur = 18;
@@ -1603,13 +1627,13 @@ export class ImplodingKittensFxEngine {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillStyle = st.color;
-      ctx.font = `900 16px ${fonts.sans}`;
-      ctx.fillText(st.title, 0, st.subtitle ? -8 : 0);
+      ctx.font = `900 ${titleFontSize}px ${fonts.sans}`;
+      ctx.fillText(st.title, 0, st.subtitle ? -8 * stampScaleMul : 0, boxW - 16);
 
       if (st.subtitle) {
         ctx.fillStyle = "#f8fafc";
-        ctx.font = `700 10.5px ${fonts.sans}`;
-        ctx.fillText(st.subtitle, 0, 12);
+        ctx.font = `700 ${subFontSize}px ${fonts.sans}`;
+        ctx.fillText(st.subtitle, 0, 11 * stampScaleMul, boxW - 16);
       }
 
       ctx.restore();

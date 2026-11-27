@@ -88,6 +88,10 @@ export function ImplodingKittensCanvas({
   );
   const handSpringsRef = useRef<Map<string, HandCardSpring>>(new Map());
   const anchorsRef = useRef<IkTableAnchors | null>(null);
+  const lastCssLayoutRef = useRef<{ dockH: number; oppBottom: number }>({
+    dockH: -1,
+    oppBottom: -1,
+  });
   const lastAnimIdRef = useRef<number>(0);
   const lastConfettiMsRef = useRef<number>(0);
   const holdStateRef = useRef<ActiveHoldState | null>(null);
@@ -245,6 +249,8 @@ export function ImplodingKittensCanvas({
     const observer = new ResizeObserver(resize);
     if (canvas.parentElement) observer.observe(canvas.parentElement);
     window.addEventListener("resize", resize);
+    window.addEventListener("orientationchange", resize);
+    window.visualViewport?.addEventListener("resize", resize);
     document.addEventListener("fullscreenchange", resize);
     document.addEventListener("webkitfullscreenchange", resize);
 
@@ -280,6 +286,28 @@ export function ImplodingKittensCanvas({
 
       const newHitRegions: HitRegion[] = [];
       const isShort = height < 520;
+      const isPortrait = height > width && width < 700;
+      const isCompactW = width < 640;
+
+      const syncCssLayoutVars = (dockFromBottomPx: number, oppBottomPx: number) => {
+        const roundedDock = Math.round(dockFromBottomPx);
+        const roundedOpp = Math.round(oppBottomPx);
+        if (
+          lastCssLayoutRef.current.dockH === roundedDock &&
+          lastCssLayoutRef.current.oppBottom === roundedOpp
+        ) {
+          return;
+        }
+        lastCssLayoutRef.current = {
+          dockH: roundedDock,
+          oppBottom: roundedOpp,
+        };
+        const roomWrap = canvas.parentElement?.parentElement;
+        if (roomWrap) {
+          roomWrap.style.setProperty("--ik-dock-h", `${roundedDock}px`);
+          roomWrap.style.setProperty("--ik-opp-bottom", `${roundedOpp}px`);
+        }
+      };
 
       if (curMode === "lobby" || !pv) {
         fx.activeFavorPaw = null;
@@ -291,26 +319,31 @@ export function ImplodingKittensCanvas({
         ctx.textBaseline = "middle";
         const titleSize = isShort
           ? Math.min(20, Math.round(height * 0.062))
-          : Math.min(34, Math.max(22, Math.round(width * 0.036)));
-        const titleY = isShort ? height * 0.08 : Math.min(44, height * 0.08);
+          : isPortrait
+            ? Math.min(28, Math.max(19, Math.round(width * 0.068)))
+            : Math.min(34, Math.max(22, Math.round(width * 0.036)));
+        const titleY = isShort
+          ? Math.max(16, height * 0.065)
+          : Math.min(44, Math.max(24, height * 0.065));
         ctx.font = `900 ${titleSize}px ${fonts.sans}`;
         ctx.lineJoin = "round";
         ctx.lineWidth = Math.max(4, titleSize * 0.2);
         ctx.strokeStyle = "rgba(15, 5, 10, 0.92)";
-        ctx.strokeText("IMPLODING KITTENS", width * 0.5, titleY);
+        ctx.strokeText("IMPLODING KITTENS", width * 0.5, titleY, width - 24);
         ctx.fillStyle = "#fde047";
-        ctx.fillText("IMPLODING KITTENS", width * 0.5, titleY);
+        ctx.fillText("IMPLODING KITTENS", width * 0.5, titleY, width - 24);
 
         if (!isShort) {
-          const subY = titleY + titleSize * 0.82;
-          ctx.font = `700 12px ${fonts.sans}`;
-          ctx.lineWidth = 3.5;
+          const subY = titleY + titleSize * 0.85;
+          ctx.font = `700 ${isPortrait ? 10.5 : 12}px ${fonts.sans}`;
+          ctx.lineWidth = 3.2;
           ctx.strokeStyle = "rgba(15, 5, 10, 0.88)";
-          const subText =
-            "Mèo Nổ • Trọn Bộ 5 Bản Mở Rộng (Imploding • Streaking • Barking • Zombie • Good vs. Evil)";
-          ctx.strokeText(subText, width * 0.5, subY);
+          const subText = isPortrait
+            ? "Mèo Nổ • 5 Bản Mở Rộng Tùy Chọn"
+            : "Mèo Nổ • Trọn Bộ 5 Bản Mở Rộng (Imploding • Streaking • Barking • Zombie • Good vs. Evil)";
+          ctx.strokeText(subText, width * 0.5, subY, width - 24);
           ctx.fillStyle = "#f8fafc";
-          ctx.fillText(subText, width * 0.5, subY);
+          ctx.fillText(subText, width * 0.5, subY, width - 24);
         }
         ctx.restore();
       } else {
@@ -331,23 +364,51 @@ export function ImplodingKittensCanvas({
 
         const seatPositions = new Map<number, { x: number; y: number }>();
 
-        // 1. TOP ROW: Opponents around the table (clickable as targets!)
+        // 1. TOP OPPONENTS GRID — Auto-wraps to 2 rows on narrow portrait phones with 4+ opponents!
         const oppCount = Math.max(1, opponents.length);
-        const oppGap = isShort ? 6 : 10;
-        const oppW = Math.min(
-          isShort ? 210 : 235,
-          Math.floor((width - (isShort ? 16 : 28) - oppGap * (oppCount - 1)) / oppCount)
+        const oppPadX = isShort || isPortrait ? 12 : 28;
+        const oppGap = isShort || isPortrait ? 6 : 10;
+        const singleRowW = Math.floor(
+          (width - oppPadX - oppGap * (oppCount - 1)) / oppCount
         );
-        const oppY = isShort ? 6 : 12;
+        const useTwoOppRows =
+          !isShort &&
+          opponents.length >= 4 &&
+          (isPortrait || singleRowW < 108);
+        const oppRowGap = 5;
+        const oppTopY = isShort ? 5 : isPortrait ? 8 : 12;
         const oppH = isShort
-          ? Math.max(46, Math.min(58, Math.round(height * 0.15)))
-          : 112;
-        const oppStartX =
-          width * 0.5 - (oppW * oppCount + oppGap * (oppCount - 1)) / 2;
+          ? Math.max(42, Math.min(54, Math.round(height * 0.145)))
+          : useTwoOppRows
+            ? 50
+            : isPortrait
+              ? 64
+              : width < 820
+                ? 88
+                : 112;
+
+        const topRowCount = useTwoOppRows
+          ? Math.ceil(opponents.length / 2)
+          : opponents.length;
+
+        let maxOppBottom = oppTopY + oppH;
 
         opponents.forEach((opp, idx) => {
-          const ox = oppStartX + idx * (oppW + oppGap);
-          const oy = oppY;
+          const rowIdx = useTwoOppRows && idx >= topRowCount ? 1 : 0;
+          const colIdx = rowIdx === 0 ? idx : idx - topRowCount;
+          const colsInRow =
+            rowIdx === 0
+              ? Math.max(1, topRowCount)
+              : Math.max(1, opponents.length - topRowCount);
+          const oppW = Math.min(
+            isShort ? 210 : isPortrait ? 190 : 235,
+            Math.floor((width - oppPadX - oppGap * (colsInRow - 1)) / colsInRow)
+          );
+          const rowTotalW = oppW * colsInRow + oppGap * (colsInRow - 1);
+          const ox = Math.round(width * 0.5 - rowTotalW * 0.5 + colIdx * (oppW + oppGap));
+          const oy = oppTopY + rowIdx * (oppH + oppRowGap);
+          maxOppBottom = Math.max(maxOppBottom, oy + oppH);
+
           const isTarget = curTargetSeatNo === opp.seatNo;
           const isActing = pv.activeSeatNo === opp.seatNo;
           const regId = `opp-seat-${opp.seatNo}`;
@@ -370,22 +431,24 @@ export function ImplodingKittensCanvas({
             });
           }
 
+          const cardRadius = oppH < 60 ? 10 : 12;
+
           // Animated breathing spotlight halo on acting opponent or targeted opponent
           if (opp.alive && (isActing || isTarget)) {
             const pulse = 0.5 + 0.5 * Math.sin(now / 260);
             ctx.save();
             ctx.shadowColor = isTarget ? "#f43f5e" : "#facc15";
-            ctx.shadowBlur = 10 + pulse * 14;
-            drawRoundedRect(ctx, ox, oy, oppW, oppH, 12);
+            ctx.shadowBlur = 9 + pulse * 12;
+            drawRoundedRect(ctx, ox, oy, oppW, oppH, cardRadius);
             ctx.strokeStyle = isTarget
               ? "rgba(244, 63, 94, 0.85)"
               : "rgba(250, 204, 21, 0.85)";
-            ctx.lineWidth = 2.6;
+            ctx.lineWidth = 2.4;
             ctx.stroke();
             ctx.restore();
           }
 
-          drawRoundedRect(ctx, ox, oy, oppW, oppH, 12);
+          drawRoundedRect(ctx, ox, oy, oppW, oppH, cardRadius);
           ctx.fillStyle = !opp.alive
             ? "rgba(15, 23, 42, 0.55)"
             : isActing
@@ -397,18 +460,24 @@ export function ImplodingKittensCanvas({
             : isActing
               ? "#facc15"
               : "rgba(148, 163, 184, 0.32)";
-          ctx.lineWidth = isTarget || isActing ? 2.4 : 1.2;
+          ctx.lineWidth = isTarget || isActing ? 2.2 : 1.2;
           ctx.stroke();
+
+          const compactOpp = oppH < 72 || oppW < 130;
+          const padIn = compactOpp ? 7 : 10;
+          const headerY = oy + (oppH < 54 ? 15 : 18);
+          const statusRightReserve = compactOpp ? 48 : 66;
+          const nameMaxW = Math.max(24, oppW - padIn * 2 - statusRightReserve);
 
           ctx.textAlign = "left";
           ctx.textBaseline = "middle";
           ctx.fillStyle = opp.alive ? "#f8fafc" : "#64748b";
-          ctx.font = `800 12px ${fonts.sans}`;
+          ctx.font = `800 ${compactOpp ? 10.5 : 12}px ${fonts.sans}`;
           ctx.fillText(
             `${isTarget ? "▸ " : ""}${opp.displayName}`,
-            ox + 10,
-            oy + 18,
-            oppW - 78
+            ox + padIn,
+            headerY,
+            nameMaxW
           );
 
           ctx.textAlign = "right";
@@ -417,7 +486,7 @@ export function ImplodingKittensCanvas({
             : isActing
               ? "#fde047"
               : "#38bdf8";
-          ctx.font = `800 10.5px ${fonts.mono}`;
+          ctx.font = `800 ${compactOpp ? 9.5 : 10.5}px ${fonts.mono}`;
           ctx.fillText(
             !opp.alive
               ? opp.eliminatedBy === "imploding"
@@ -428,8 +497,9 @@ export function ImplodingKittensCanvas({
               : isActing
                 ? `${pv.turnsRemaining} LƯỢT`
                 : `${opp.handCount} LÁ`,
-            ox + oppW - 10,
-            oy + 18
+            ox + oppW - padIn,
+            headerY,
+            statusRightReserve + 6
           );
 
           const badges: string[] = [];
@@ -437,9 +507,9 @@ export function ImplodingKittensCanvas({
             badges.push("Mèo Thần");
           }
           if (pv.towerHolderSeatNo === opp.seatNo && pv.towerStashCount > 0) {
-            badges.push(`Tháp (${pv.towerStashCount})`);
+            badges.push(`Tháp(${pv.towerStashCount})`);
           }
-          if (opp.isBlind) badges.push("Mù Bài");
+          if (opp.isBlind) badges.push("Mù");
           if (opp.barkingPlayedFaceUp) badges.push("Mèo Sủa");
           if (opp.illTakeThatFromSeatNo !== null)
             badges.push("Cướp Rút");
@@ -448,35 +518,36 @@ export function ImplodingKittensCanvas({
               `${opp.markedCards.map((mc) => IK_CARD_META[mc.type].shortVi).join(", ")}`
             );
           }
+          const subLineY = oy + (oppH < 54 ? 33 : 36);
           if (badges.length > 0) {
             ctx.textAlign = "left";
             ctx.fillStyle = "#fda4af";
-            ctx.font = `700 9.5px ${fonts.sans}`;
+            ctx.font = `700 ${compactOpp ? 8.5 : 9.5}px ${fonts.sans}`;
             ctx.fillText(
               badges.join(" • "),
-              ox + 10,
-              oy + (oppH < 82 ? 36 : 36),
-              oppW - 20
+              ox + padIn,
+              subLineY,
+              Math.max(24, oppW - padIn * 2)
             );
           } else if (oppH < 82 && opp.alive) {
             ctx.textAlign = "left";
-            ctx.fillStyle = "#94a3b8";
-            ctx.font = `600 9.5px ${fonts.sans}`;
+            ctx.fillStyle = isTarget ? "#fda4af" : "#94a3b8";
+            ctx.font = `600 ${compactOpp ? 8.5 : 9.5}px ${fonts.sans}`;
             ctx.fillText(
-              isTarget ? "Đang chọn làm mục tiêu" : "Bấm chọn làm mục tiêu",
-              ox + 10,
-              oy + 36,
-              oppW - 20
+              isTarget ? "Đang chọn mục tiêu" : "Chạm chọn mục tiêu",
+              ox + padIn,
+              subLineY,
+              Math.max(24, oppW - padIn * 2)
             );
           }
 
           if (opp.alive && oppH >= 82) {
-            const miniW = 28;
-            const miniH = 40;
+            const miniW = oppH < 96 ? 22 : 28;
+            const miniH = Math.round(miniW * 1.43);
             const showCount = Math.min(7, opp.handCount);
             const stepMini = Math.min(
-              22,
-              Math.floor((oppW - 36) / Math.max(1, showCount))
+              miniW - 6,
+              Math.floor((oppW - padIn * 2 - miniW) / Math.max(1, showCount - 1))
             );
             for (let cIdx = 0; cIdx < showCount; cIdx++) {
               const markedCard = opp.markedCards[cIdx] ?? null;
@@ -485,8 +556,8 @@ export function ImplodingKittensCanvas({
                 : 0;
               drawIkCard2D(
                 ctx,
-                ox + 12 + cIdx * stepMini,
-                oy + 52 + idleBob,
+                ox + padIn + cIdx * (showCount > 1 ? Math.max(8, stepMini) : 0),
+                oy + (oppH < 96 ? 48 : 52) + idleBob,
                 miniW,
                 miniH,
                 markedCard,
@@ -496,50 +567,240 @@ export function ImplodingKittensCanvas({
           }
         });
 
-        // 2. CENTER ARENA & BOTTOM DOCK — Responsive for BOTH Desktop & Short Phone Landscape!
+        // 2. BOTTOM HAND DOCK DIMENSIONS (Computed before Arena so Arena gets exact free space!)
+        const handCards = pv.myHand;
+        const useTwoHandRows = isPortrait && handCards.length >= 7;
+        const dockMarginBottom = isShort ? 4 : 6;
         const dockH = isShort
-          ? Math.max(104, Math.min(140, Math.round(height * 0.35)))
-          : Math.max(176, Math.min(220, Math.round(height * 0.28)));
-        const dockY = height - dockH - (isShort ? 4 : 6);
+          ? Math.max(96, Math.min(130, Math.round(height * 0.34)))
+          : isPortrait
+            ? useTwoHandRows
+              ? Math.max(182, Math.min(248, Math.round(height * 0.33)))
+              : Math.max(138, Math.min(182, Math.round(height * 0.24)))
+            : Math.max(176, Math.min(220, Math.round(height * 0.28)));
+        const dockY = height - dockH - dockMarginBottom;
 
-        const oppBottom = oppY + oppH + (isShort ? 6 : 12);
-        const arenaAvailH = Math.max(82, dockY - oppBottom - (isShort ? 26 : 34));
-        const arenaY = oppBottom + arenaAvailH * 0.5;
-        const maxPileHBySpace = Math.max(
-          64,
-          Math.min(168, arenaAvailH - (isShort ? 6 : 12))
-        );
-        const pileH = isShort
-          ? Math.round(maxPileHBySpace)
-          : Math.round(
-              Math.min(
-                maxPileHBySpace,
-                Math.min(116, Math.max(88, width * 0.1)) * 1.44
-              )
+        const oppBottom = maxOppBottom + (isShort ? 4 : 8);
+        syncCssLayoutVars(height - dockY, oppBottom);
+
+        // 3. CENTER ARENA — Separate clean layout for Portrait/Narrow vs Landscape/Desktop!
+        const actionBarReserve = isMyTurn ? (isShort ? 40 : 48) : isShort ? 12 : 16;
+        const arenaTop = oppBottom;
+        const arenaBottom = Math.max(arenaTop + 84, dockY - actionBarReserve);
+        const arenaAvailH = arenaBottom - arenaTop;
+
+        let pileW = 92;
+        let pileH = 132;
+        let drawX = 0;
+        let drawY = 0;
+        let discardX = 0;
+        let discardY = 0;
+        let arenaCenterY = arenaTop + arenaAvailH * 0.5;
+        let orbitRadius = 56;
+
+        const actSeat = pv.seats.find((s) => s.seatNo === pv.activeSeatNo);
+        const hasSecondaryStatus =
+          Boolean(pv.faceUpImplodingInDeck) ||
+          Boolean(pv.config.expansions.good_vs_evil);
+
+        if (isCompactW) {
+          // PORTRAIT / NARROW LAYOUT: Status Pill on top, Draw & Discard Piles cleanly side-by-side below!
+          const statusBoxH = hasSecondaryStatus ? 44 : 28;
+          const statusY = arenaTop + statusBoxH * 0.5 + 2;
+          const pilesTop = arenaTop + statusBoxH + 10;
+          const pilesAvailH = Math.max(76, arenaBottom - pilesTop - 22);
+          const pairGap = Math.max(18, Math.min(36, Math.round(width * 0.065)));
+          const maxPileWByW = Math.floor((width - 34 - pairGap) * 0.5);
+          const maxPileHByH = Math.max(74, Math.min(168, pilesAvailH));
+          pileH = Math.round(Math.min(maxPileHByH, maxPileWByW * 1.44));
+          pileW = Math.round(pileH / 1.44);
+
+          arenaCenterY = pilesTop + pilesAvailH * 0.5;
+          drawX = Math.round(width * 0.5 - pileW - pairGap * 0.5);
+          discardX = Math.round(width * 0.5 + pairGap * 0.5);
+          drawY = Math.round(arenaCenterY - pileH * 0.5);
+          discardY = drawY;
+          orbitRadius = Math.max(26, Math.min(44, pileW * 0.42));
+
+          // Centered Status Pill above the 2 piles (Zero collision with cards!)
+          const pillW = Math.min(width - 20, 380);
+          drawRoundedRect(
+            ctx,
+            width * 0.5 - pillW * 0.5,
+            statusY - statusBoxH * 0.5,
+            pillW,
+            statusBoxH,
+            10
+          );
+          ctx.fillStyle = "rgba(9, 13, 22, 0.78)";
+          ctx.fill();
+          ctx.strokeStyle = pv.faceUpImplodingInDeck
+            ? "rgba(216, 180, 254, 0.65)"
+            : "rgba(250, 204, 21, 0.35)";
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = "#fde047";
+          ctx.font = `800 11px ${fonts.sans}`;
+          const dirSymbol = pv.direction === 1 ? "↻" : "↺";
+          ctx.fillText(
+            `${dirSymbol} Lượt: ${actSeat?.displayName ?? "..."} (${pv.turnsRemaining} lượt)`,
+            width * 0.5,
+            hasSecondaryStatus ? statusY - 8 : statusY,
+            pillW - 16
+          );
+          if (pv.faceUpImplodingInDeck) {
+            ctx.fillStyle = "#e879f9";
+            ctx.font = `800 9.5px ${fonts.sans}`;
+            ctx.fillText(
+              "Cảnh báo: Có Mèo Hố Đen LẬT NGỬA trong Bộ bài!",
+              width * 0.5,
+              statusY + 10,
+              pillW - 16
             );
-        const pileW = Math.round(pileH / 1.44);
-        const pileGap = isShort
-          ? Math.max(54, Math.min(96, Math.round(width * 0.11)))
-          : 88;
+          } else if (pv.config.expansions.good_vs_evil) {
+            const godcatHolder = pv.seats.find((s) => s.hasGodcat);
+            ctx.fillStyle = pv.godcatOnPlaymat ? "#fde047" : "#fb923c";
+            ctx.font = `700 9.5px ${fonts.sans}`;
+            ctx.fillText(
+              pv.godcatOnPlaymat
+                ? "Thảm Thiện & Ác: Mèo Thần + Mèo Quỷ (Sẵn sàng)"
+                : `Mèo Thần đang trong tay ${godcatHolder?.displayName ?? "..."}`,
+              width * 0.5,
+              statusY + 10,
+              pillW - 16
+            );
+          }
+        } else {
+          // LANDSCAPE / TABLET / DESKTOP 3-COLUMN ARENA: Draw Pile | Center Status | Discard Pile
+          const labelReserve = isShort ? 18 : 30;
+          const maxPileHBySpace = Math.max(
+            60,
+            Math.min(168, arenaAvailH - labelReserve)
+          );
+          pileH = isShort
+            ? Math.round(maxPileHBySpace)
+            : Math.round(
+                Math.min(
+                  maxPileHBySpace,
+                  Math.min(116, Math.max(88, width * 0.1)) * 1.44
+                )
+              );
+          pileW = Math.round(pileH / 1.44);
+          const centerHalfGap = isShort
+            ? Math.max(66, Math.min(102, Math.round(width * 0.13)))
+            : Math.max(82, Math.min(112, Math.round(width * 0.11)));
 
-        const drawX = Math.round(width * 0.5 - pileW - pileGap);
-        const drawY = Math.round(arenaY - pileH * 0.5);
-        const discardX = Math.round(width * 0.5 + pileGap);
-        const discardY = drawY;
+          arenaCenterY = arenaTop + (arenaAvailH - labelReserve * 0.45) * 0.5;
+          drawX = Math.round(width * 0.5 - pileW - centerHalfGap);
+          discardX = Math.round(width * 0.5 + centerHalfGap);
+          drawY = Math.round(arenaCenterY - pileH * 0.5);
+          discardY = drawY;
+          orbitRadius = Math.max(30, Math.min(58, centerHalfGap * 0.56, arenaAvailH * 0.36));
+
+          // Animated rotating orbital direction ring in center arena
+          ctx.save();
+          ctx.translate(width * 0.5, arenaCenterY);
+          const orbitAngle = (now / 2600) * pv.direction;
+          ctx.rotate(orbitAngle);
+          ctx.strokeStyle = pv.faceUpImplodingInDeck
+            ? "rgba(216, 180, 254, 0.34)"
+            : "rgba(250, 204, 21, 0.22)";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([10, 8]);
+          ctx.beginPath();
+          ctx.arc(0, 0, orbitRadius, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          for (let k = 0; k < 2; k++) {
+            const a = k * Math.PI;
+            const ax = Math.cos(a) * orbitRadius;
+            const ay = Math.sin(a) * orbitRadius;
+            ctx.save();
+            ctx.translate(ax, ay);
+            ctx.rotate(
+              a + (pv.direction === 1 ? Math.PI * 0.5 : -Math.PI * 0.5)
+            );
+            ctx.fillStyle = pv.faceUpImplodingInDeck ? "#e879f9" : "#facc15";
+            ctx.beginPath();
+            ctx.moveTo(6, 0);
+            ctx.lineTo(-4, -4);
+            ctx.lineTo(-4, 4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          }
+          ctx.restore();
+
+          // Center Cone of Shame Direction & Active Turn Indicator (clamped cleanly between piles!)
+          const centerMaxTextW = Math.max(96, centerHalfGap * 1.88);
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = "#f8fafc";
+          ctx.font = `900 ${isShort ? 11 : 13}px ${fonts.sans}`;
+          ctx.fillText(
+            pv.direction === 1 ? "↻ Chiều Kim Đồng Hồ" : "↺ Ngược Kim Đồng Hồ",
+            width * 0.5,
+            arenaCenterY - (isShort ? 15 : 18),
+            centerMaxTextW
+          );
+          ctx.fillStyle = "#fde047";
+          ctx.font = `800 ${isShort ? 10.5 : 11.5}px ${fonts.sans}`;
+          ctx.fillText(
+            `Lượt: ${actSeat?.displayName ?? "..."} (${pv.turnsRemaining})`,
+            width * 0.5,
+            arenaCenterY + (isShort ? 2 : 4),
+            centerMaxTextW
+          );
+          if (pv.faceUpImplodingInDeck) {
+            ctx.fillStyle = "#e879f9";
+            ctx.font = `800 ${isShort ? 8.5 : 10}px ${fonts.sans}`;
+            ctx.fillText(
+              "Có Mèo Hố Đen LẬT NGỬA!",
+              width * 0.5,
+              arenaCenterY + (isShort ? 18 : 24),
+              centerMaxTextW
+            );
+          }
+          if (pv.config.expansions.good_vs_evil) {
+            const godcatHolder = pv.seats.find((s) => s.hasGodcat);
+            ctx.fillStyle = pv.godcatOnPlaymat ? "#fde047" : "#fb923c";
+            ctx.font = `800 ${isShort ? 8.5 : 9.5}px ${fonts.sans}`;
+            ctx.fillText(
+              pv.godcatOnPlaymat
+                ? "Thảm: Mèo Thần + Mèo Quỷ"
+                : `Mèo Thần: ${godcatHolder?.displayName ?? "..."}`,
+              width * 0.5,
+              arenaCenterY +
+                (pv.faceUpImplodingInDeck
+                  ? isShort
+                    ? 30
+                    : 40
+                  : isShort
+                    ? 18
+                    : 24),
+              centerMaxTextW
+            );
+          }
+        }
 
         seatPositions.set(mySeat.seatNo, {
           x: width * 0.5,
           y: dockY + dockH * 0.48,
         });
 
-        // Update live anchors for FX engine
+        // Update live anchors for FX engine (including exact dockTopY & oppBottomY!)
         anchorsRef.current = {
           width,
           height,
           drawPile: { x: drawX, y: drawY, w: pileW, h: pileH },
           discardPile: { x: discardX, y: discardY, w: pileW, h: pileH },
-          center: { x: width * 0.5, y: arenaY },
+          center: { x: width * 0.5, y: arenaCenterY },
           seatPositions,
+          dockTopY: dockY,
+          oppBottomY: oppBottom,
         };
 
         // Keep the Favor begging cat paw visible throughout NopeWindow(favor) & FavorGiveStep!
@@ -558,41 +819,8 @@ export function ImplodingKittensCanvas({
           now
         );
 
-        // Animated rotating orbital direction ring in center arena
-        ctx.save();
-        ctx.translate(width * 0.5, arenaY);
-        const orbitAngle = (now / 2600) * pv.direction;
-        ctx.rotate(orbitAngle);
-        ctx.strokeStyle = pv.faceUpImplodingInDeck
-          ? "rgba(216, 180, 254, 0.34)"
-          : "rgba(250, 204, 21, 0.22)";
-        ctx.lineWidth = 2;
-        ctx.setLineDash([12, 10]);
-        ctx.beginPath();
-        ctx.arc(0, 0, 58, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        // Two little direction arrowheads on the orbit ring
-        for (let k = 0; k < 2; k++) {
-          const a = k * Math.PI;
-          const ax = Math.cos(a) * 58;
-          const ay = Math.sin(a) * 58;
-          ctx.save();
-          ctx.translate(ax, ay);
-          ctx.rotate(a + (pv.direction === 1 ? Math.PI * 0.5 : -Math.PI * 0.5));
-          ctx.fillStyle = pv.faceUpImplodingInDeck ? "#e879f9" : "#facc15";
-          ctx.beginPath();
-          ctx.moveTo(6, 0);
-          ctx.lineTo(-4, -4);
-          ctx.lineTo(-4, 4);
-          ctx.closePath();
-          ctx.fill();
-          ctx.restore();
-        }
-        ctx.restore();
-
         // Reverse spin vortex overlay if active
-        fx.drawReverseSwirl(ctx, width * 0.5, arenaY, now);
+        fx.drawReverseSwirl(ctx, width * 0.5, arenaCenterY, now);
 
         // Draw Pile (Clickable when isMyTurn to end 1 turn by drawing; hold 1s on face-up Imploding Kitten to inspect)
         if (isMyTurn && pv.drawPileCount > 0) {
@@ -624,7 +852,7 @@ export function ImplodingKittensCanvas({
           const pulse = 0.5 + 0.5 * Math.sin(now / 260);
           ctx.save();
           ctx.shadowColor = pv.topDrawCardFaceUp ? "#e879f9" : "#4ade80";
-          ctx.shadowBlur = 14 + pulse * 18;
+          ctx.shadowBlur = 12 + pulse * 16;
           drawRoundedRect(
             ctx,
             drawX - 4,
@@ -643,15 +871,15 @@ export function ImplodingKittensCanvas({
 
         // If top card is a FACE-UP Imploding Kitten, pulse warning rings!
         if (pv.topDrawCardFaceUp) {
-          const pulseR = 16 + ((now / 18) % 34);
+          const pulseR = 12 + ((now / 18) % 28);
           ctx.save();
           ctx.strokeStyle = "rgba(216, 180, 254, 0.75)";
-          ctx.lineWidth = 3;
+          ctx.lineWidth = 2.6;
           ctx.beginPath();
           ctx.arc(
             drawX + pileW * 0.5,
             drawY + pileH * 0.5,
-            pileW * 0.55 + pulseR,
+            pileW * 0.5 + pulseR,
             0,
             Math.PI * 2
           );
@@ -688,63 +916,29 @@ export function ImplodingKittensCanvas({
           );
         }
 
+        const pileLabelMaxW = Math.max(pileW + 34, isCompactW ? width * 0.44 : 180);
+        const pileLabelY = drawY + pileH + (isShort ? 12 : 15);
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillStyle = pv.topDrawCardFaceUp ? "#f0abfc" : "#fde047";
-        ctx.font = `900 11px ${fonts.sans}`;
+        ctx.font = `900 ${isShort || isCompactW ? 10 : 11}px ${fonts.sans}`;
         ctx.fillText(
           pv.topDrawCardFaceUp
-            ? `MÈO HỐ ĐEN NGỬA TRÊN ĐỈNH! (${pv.drawPileCount} lá)`
-            : `BỘ BÀI RÚT (${pv.drawPileCount} LÁ)`,
+            ? `HỐ ĐEN NGỬA! (${pv.drawPileCount})`
+            : `BỘ BÀI RÚT (${pv.drawPileCount})`,
           drawX + pileW * 0.5,
-          drawY + pileH + 16
+          pileLabelY,
+          pileLabelMaxW
         );
-        if (isMyTurn) {
-          const arrowBob = Math.sin(now / 220) * 3;
+        if (isMyTurn && !isShort) {
+          const arrowBob = Math.sin(now / 220) * 2.5;
           ctx.fillStyle = "#4ade80";
-          ctx.font = `800 10px ${fonts.sans}`;
+          ctx.font = `800 ${isCompactW ? 9 : 10}px ${fonts.sans}`;
           ctx.fillText(
-            "Bấm để Rút Bài Kết Thúc Lượt",
+            "Chạm rút bài",
             drawX + pileW * 0.5,
-            drawY + pileH + 31 + arrowBob
-          );
-        }
-
-        // Center Cone of Shame Direction & Active Turn Indicator
-        const actSeat = pv.seats.find((s) => s.seatNo === pv.activeSeatNo);
-        ctx.fillStyle = "#f8fafc";
-        ctx.font = `900 13px ${fonts.sans}`;
-        ctx.fillText(
-          pv.direction === 1 ? "↻ Chiều Kim Đồng Hồ" : "↺ Ngược Kim Đồng Hồ",
-          width * 0.5,
-          arenaY - 18
-        );
-        ctx.fillStyle = "#fde047";
-        ctx.font = `800 11.5px ${fonts.sans}`;
-        ctx.fillText(
-          `Lượt: ${actSeat?.displayName ?? "..."} (${pv.turnsRemaining} lượt)`,
-          width * 0.5,
-          arenaY + 4
-        );
-        if (pv.faceUpImplodingInDeck) {
-          ctx.fillStyle = "#e879f9";
-          ctx.font = `800 10px ${fonts.sans}`;
-          ctx.fillText(
-            "Cảnh báo: Đang có Mèo Hố Đen LẬT NGỬA trong Bộ bài!",
-            width * 0.5,
-            arenaY + 24
-          );
-        }
-        if (pv.config.expansions.good_vs_evil) {
-          const godcatHolder = pv.seats.find((s) => s.hasGodcat);
-          ctx.fillStyle = pv.godcatOnPlaymat ? "#fde047" : "#fb923c";
-          ctx.font = `800 9.5px ${fonts.sans}`;
-          ctx.fillText(
-            pv.godcatOnPlaymat
-              ? "Thảm Thiện & Ác: Mèo Thần + Mèo Quỷ (Sẵn sàng)"
-              : `Thảm Thiện & Ác: Mèo Thần trong tay ${godcatHolder?.displayName ?? "..."}`,
-            width * 0.5,
-            arenaY + (pv.faceUpImplodingInDeck ? 40 : 24)
+            pileLabelY + 14 + arrowBob,
+            pileLabelMaxW
           );
         }
 
@@ -781,23 +975,26 @@ export function ImplodingKittensCanvas({
           ctx.restore();
         } else {
           ctx.fillStyle = "#64748b";
-          ctx.font = `700 11px ${fonts.sans}`;
+          ctx.font = `700 ${isShort || isCompactW ? 9.5 : 11}px ${fonts.sans}`;
           ctx.fillText(
-            "MỘ BÀI TRỐNG",
+            "MỘ TRỐNG",
             discardX + pileW * 0.5,
-            discardY + pileH * 0.5
+            discardY + pileH * 0.5,
+            pileW - 8
           );
         }
         ctx.fillStyle = "#cbd5e1";
-        ctx.font = `800 11px ${fonts.sans}`;
+        ctx.font = `800 ${isShort || isCompactW ? 10 : 11}px ${fonts.sans}`;
         ctx.fillText(
-          `CHỒNG BÀI BỎ (${pv.discardPileCount} LÁ)`,
+          `CHỒNG BỎ (${pv.discardPileCount})`,
           discardX + pileW * 0.5,
-          discardY + pileH + 16
+          pileLabelY,
+          pileLabelMaxW
         );
 
-        // 3. BOTTOM PLAYER HAND DOCK WITH SMOOTH SPRING PHYSICS
-        drawRoundedRect(ctx, 10, dockY, width - 20, dockH, 16);
+        // 4. BOTTOM PLAYER HAND DOCK WITH SMOOTH SPRING PHYSICS (1-row OR 2-row on Portrait!)
+        const dockSidePad = isPortrait || isShort ? 6 : 10;
+        drawRoundedRect(ctx, dockSidePad, dockY, width - dockSidePad * 2, dockH, isShort ? 12 : 16);
         ctx.fillStyle = "rgba(9, 13, 22, 0.94)";
         ctx.fill();
         ctx.strokeStyle = isMyTurn
@@ -806,41 +1003,31 @@ export function ImplodingKittensCanvas({
         ctx.lineWidth = isMyTurn ? 2.2 : 1.2;
         ctx.stroke();
 
+        const dockHeaderY = dockY + (isShort ? 13 : 16);
+        const showRightHint = width >= 560;
+        const leftHeaderMaxW = showRightHint
+          ? width - 220
+          : width - dockSidePad * 2 - 20;
+
         ctx.textAlign = "left";
         ctx.fillStyle = isMyTurn ? "#fde047" : "#f8fafc";
-        ctx.font = `800 11.5px ${fonts.sans}`;
+        ctx.font = `800 ${isShort || isPortrait ? 10.5 : 11.5}px ${fonts.sans}`;
         ctx.fillText(
-          `${mySeat.displayName} (${pv.myHand.length} lá trên tay)${mySeat.hasGodcat ? " • ĐANG CẦM MÈO THẦN" : ""}${pv.towerHolderSeatNo === mySeat.seatNo && pv.towerStashCount > 0 ? ` • ĐANG ĐỘI THÁP QUYỀN LỰC (${pv.towerStashCount} lá dự trữ)` : ""}${pv.myIsBlind ? " • ĐANG BỊ ÚP MÙ BÀI!" : ""}${!mySeat.alive ? " • ĐÃ BỊ LOẠI" : ""}`,
-          24,
-          dockY + 16
+          `${mySeat.displayName} (${pv.myHand.length} lá)${mySeat.hasGodcat ? " • MÈO THẦN" : ""}${pv.towerHolderSeatNo === mySeat.seatNo && pv.towerStashCount > 0 ? ` • THÁP (${pv.towerStashCount})` : ""}${pv.myIsBlind ? " • MÙ BÀI!" : ""}${!mySeat.alive ? " • ĐÃ LOẠI" : ""}`,
+          dockSidePad + 12,
+          dockHeaderY,
+          Math.max(80, leftHeaderMaxW)
         );
-        if (width >= 540) {
+        if (showRightHint) {
           ctx.textAlign = "right";
           ctx.fillStyle = "rgba(148, 163, 184, 0.85)";
-          ctx.font = `600 10.5px ${fonts.sans}`;
+          ctx.font = `600 10px ${fonts.sans}`;
           ctx.fillText(
             "Giữ 1s vào lá bài để xem chức năng",
-            width - 24,
-            dockY + 16
+            width - dockSidePad - 12,
+            dockHeaderY
           );
         }
-
-        const handCards = pv.myHand;
-        const cCount = Math.max(1, handCards.length);
-        const cardH = isShort
-          ? Math.min(dockH - 24, 112)
-          : Math.min(dockH - 36, 156);
-        const cardW = Math.round(cardH * 0.69);
-        const availHandW = width - (isShort ? 32 : 56);
-        const stepX =
-          cCount > 1
-            ? Math.min(
-                cardW + (isShort ? 6 : 10),
-                Math.floor((availHandW - cardW) / (cCount - 1))
-              )
-            : cardW;
-        const totalRowW = cardW + (cCount - 1) * stepX;
-        const startCardX = Math.round((width - totalRowW) * 0.5);
 
         // Prune removed cards from spring map
         const activeIds = new Set(handCards.map((c) => c.id));
@@ -853,92 +1040,203 @@ export function ImplodingKittensCanvas({
           card: (typeof handCards)[number];
           idx: number;
           spring: HandCardSpring;
+          cardW: number;
+          cardH: number;
           isSelected: boolean;
           hovered: boolean;
+          row: number;
         }[] = [];
 
-        handCards.forEach((card, idx) => {
-          const isSelected = curSelectedCards.includes(card.id);
-          const regId = `my-card-${card.id}`;
-          const hovered = hoveredIdRef.current === regId;
-          const liftY = isSelected
-            ? isShort
-              ? -12
-              : -20
-            : hovered
+        if (useTwoHandRows) {
+          // 2-ROW PORTRAIT HAND LAYOUT: Keeps cards big & comfortably tappable when holding 7+ cards!
+          const topCount = Math.ceil(handCards.length / 2);
+          const availDockH = dockH - 28;
+          const rowOverlap = 18;
+          const cardH = Math.max(
+            74,
+            Math.min(116, Math.floor((availDockH + rowOverlap) * 0.5))
+          );
+          const cardW = Math.round(cardH * 0.69);
+          const availHandW = width - dockSidePad * 2 - 20;
+
+          handCards.forEach((card, idx) => {
+            const row = idx < topCount ? 0 : 1;
+            const col = row === 0 ? idx : idx - topCount;
+            const rowCount = row === 0 ? topCount : handCards.length - topCount;
+            const stepX =
+              rowCount > 1
+                ? Math.min(
+                    cardW + 6,
+                    Math.max(22, Math.floor((availHandW - cardW) / (rowCount - 1)))
+                  )
+                : cardW;
+            const totalRowW = cardW + Math.max(0, rowCount - 1) * stepX;
+            const startX = Math.round((width - totalRowW) * 0.5);
+
+            const isSelected = curSelectedCards.includes(card.id);
+            const regId = `my-card-${card.id}`;
+            const hovered = hoveredIdRef.current === regId;
+            const liftY = isSelected ? -14 : hovered ? -8 : 0;
+            const targetX = startX + col * stepX;
+            const rowBaseY =
+              dockY + 24 + row * Math.max(cardH - rowOverlap, Math.floor(availDockH * 0.48));
+            const targetY = Math.min(dockY + dockH - cardH - 4, rowBaseY) + liftY;
+            const targetScale = isSelected ? 1.08 : hovered ? 1.06 : 1.0;
+            const centerNorm = rowCount > 1 ? (col / (rowCount - 1)) * 2 - 1 : 0;
+            const targetRot = isSelected || hovered ? 0 : centerNorm * 0.025;
+
+            let sp = handSpringsRef.current.get(card.id);
+            if (!sp) {
+              sp = { x: drawX, y: drawY, scale: 0.72, rot: -0.15 };
+              handSpringsRef.current.set(card.id, sp);
+            } else {
+              sp.x = lerp(sp.x, targetX, smoothFactor);
+              sp.y = lerp(sp.y, targetY, smoothFactor);
+              sp.scale = lerp(sp.scale, targetScale, smoothFactor);
+              sp.rot = lerp(sp.rot, targetRot, smoothFactor);
+            }
+
+            if (mySeat.alive) {
+              newHitRegions.push({
+                id: regId,
+                shape: "rect",
+                x: targetX,
+                y: targetY,
+                width: cardW,
+                height: cardH,
+                cursor: "pointer",
+                data: {
+                  type: "toggle_hand_card",
+                  cardId: card.id,
+                  card: pv.myIsBlind ? null : card,
+                },
+              });
+            } else if (!pv.myIsBlind) {
+              newHitRegions.push({
+                id: regId,
+                shape: "rect",
+                x: targetX,
+                y: targetY,
+                width: cardW,
+                height: cardH,
+                cursor: "help",
+                data: { type: "inspect_card", card },
+              });
+            }
+
+            renderQueue.push({
+              card,
+              idx,
+              spring: sp,
+              cardW,
+              cardH,
+              isSelected,
+              hovered,
+              row,
+            });
+          });
+        } else {
+          // SINGLE-ROW HAND FAN (Desktop, Tablet, Phone Landscape, or Portrait with <= 6 cards)
+          const cCount = Math.max(1, handCards.length);
+          const cardH = isShort
+            ? Math.max(66, Math.min(dockH - 22, 108))
+            : isPortrait
+              ? Math.max(88, Math.min(dockH - 30, 140))
+              : Math.min(dockH - 36, 156);
+          const cardW = Math.round(cardH * 0.69);
+          const availHandW = width - (isShort || isPortrait ? 28 : 56);
+          const stepX =
+            cCount > 1
+              ? Math.min(
+                  cardW + (isShort || isPortrait ? 6 : 10),
+                  Math.max(18, Math.floor((availHandW - cardW) / (cCount - 1)))
+                )
+              : cardW;
+          const totalRowW = cardW + (cCount - 1) * stepX;
+          const startCardX = Math.round((width - totalRowW) * 0.5);
+
+          handCards.forEach((card, idx) => {
+            const isSelected = curSelectedCards.includes(card.id);
+            const regId = `my-card-${card.id}`;
+            const hovered = hoveredIdRef.current === regId;
+            const liftY = isSelected
               ? isShort
-                ? -8
-                : -15
-              : 0;
-          const targetX = startCardX + idx * stepX;
-          const targetY = dockY + (isShort ? 21 : 28) + liftY;
-          const targetScale = isSelected ? 1.07 : hovered ? 1.08 : 1.0;
-          const centerNorm =
-            cCount > 1 ? (idx / (cCount - 1)) * 2 - 1 : 0;
-          const targetRot =
-            isSelected || hovered ? 0 : centerNorm * 0.032;
+                ? -11
+                : -18
+              : hovered
+                ? isShort
+                  ? -7
+                  : -14
+                : 0;
+            const targetX = startCardX + idx * stepX;
+            const targetY = dockY + (isShort ? 21 : 28) + liftY;
+            const targetScale = isSelected ? 1.07 : hovered ? 1.08 : 1.0;
+            const centerNorm = cCount > 1 ? (idx / (cCount - 1)) * 2 - 1 : 0;
+            const targetRot = isSelected || hovered ? 0 : centerNorm * 0.032;
 
-          let sp = handSpringsRef.current.get(card.id);
-          if (!sp) {
-            // New cards smoothly glide in from the Draw Pile!
-            sp = {
-              x: drawX,
-              y: drawY,
-              scale: 0.72,
-              rot: -0.15,
-            };
-            handSpringsRef.current.set(card.id, sp);
-          } else {
-            sp.x = lerp(sp.x, targetX, smoothFactor);
-            sp.y = lerp(sp.y, targetY, smoothFactor);
-            sp.scale = lerp(sp.scale, targetScale, smoothFactor);
-            sp.rot = lerp(sp.rot, targetRot, smoothFactor);
-          }
+            let sp = handSpringsRef.current.get(card.id);
+            if (!sp) {
+              sp = { x: drawX, y: drawY, scale: 0.72, rot: -0.15 };
+              handSpringsRef.current.set(card.id, sp);
+            } else {
+              sp.x = lerp(sp.x, targetX, smoothFactor);
+              sp.y = lerp(sp.y, targetY, smoothFactor);
+              sp.scale = lerp(sp.scale, targetScale, smoothFactor);
+              sp.rot = lerp(sp.rot, targetRot, smoothFactor);
+            }
 
-          if (mySeat.alive) {
-            newHitRegions.push({
-              id: regId,
-              shape: "rect",
-              x: targetX,
-              y: targetY,
-              width: cardW,
-              height: cardH,
-              cursor: "pointer",
-              data: {
-                type: "toggle_hand_card",
-                cardId: card.id,
-                card: pv.myIsBlind ? null : card,
-              },
+            if (mySeat.alive) {
+              newHitRegions.push({
+                id: regId,
+                shape: "rect",
+                x: targetX,
+                y: targetY,
+                width: cardW,
+                height: cardH,
+                cursor: "pointer",
+                data: {
+                  type: "toggle_hand_card",
+                  cardId: card.id,
+                  card: pv.myIsBlind ? null : card,
+                },
+              });
+            } else if (!pv.myIsBlind) {
+              newHitRegions.push({
+                id: regId,
+                shape: "rect",
+                x: targetX,
+                y: targetY,
+                width: cardW,
+                height: cardH,
+                cursor: "help",
+                data: { type: "inspect_card", card },
+              });
+            }
+
+            renderQueue.push({
+              card,
+              idx,
+              spring: sp,
+              cardW,
+              cardH,
+              isSelected,
+              hovered,
+              row: 0,
             });
-          } else if (!pv.myIsBlind) {
-            newHitRegions.push({
-              id: regId,
-              shape: "rect",
-              x: targetX,
-              y: targetY,
-              width: cardW,
-              height: cardH,
-              cursor: "help",
-              data: { type: "inspect_card", card },
-            });
-          }
+          });
+        }
 
-          renderQueue.push({ card, idx, spring: sp, isSelected, hovered });
-        });
-
-        // Draw non-hovered cards first, then draw hovered card on top so it's never occluded!
+        // Draw non-hovered/non-selected cards first, then selected/hovered on top so they're never occluded!
         const orderedQueue = [
-          ...renderQueue.filter((item) => !item.hovered),
+          ...renderQueue.filter((item) => !item.hovered && !item.isSelected),
+          ...renderQueue.filter((item) => item.isSelected && !item.hovered),
           ...renderQueue.filter((item) => item.hovered),
         ];
 
         for (const item of orderedQueue) {
-          const { card, idx, spring, isSelected, hovered } = item;
+          const { card, idx, spring, cardW, cardH, isSelected, hovered } = item;
           ctx.save();
-          ctx.translate(
-            spring.x + cardW * 0.5,
-            spring.y + cardH * 0.5
-          );
+          ctx.translate(spring.x + cardW * 0.5, spring.y + cardH * 0.5);
           ctx.rotate(spring.rot);
           ctx.scale(spring.scale, spring.scale);
           if (isSelected || hovered) {
@@ -1025,6 +1323,8 @@ export function ImplodingKittensCanvas({
       cancelAnimationFrame(rafId);
       observer.disconnect();
       window.removeEventListener("resize", resize);
+      window.removeEventListener("orientationchange", resize);
+      window.visualViewport?.removeEventListener("resize", resize);
       document.removeEventListener("fullscreenchange", resize);
       document.removeEventListener("webkitfullscreenchange", resize);
     };
@@ -1137,7 +1437,7 @@ export function ImplodingKittensCanvas({
       : "Bộ Cơ Bản (Core)";
 
   return (
-    <div className="relative w-full h-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl">
+    <div className="relative w-full h-full rounded-xl sm:rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl">
       <canvas
         ref={canvasRef}
         onPointerMove={handlePointerMove}
@@ -1259,14 +1559,14 @@ export function ImplodingKittensCanvas({
       {inspectedCard && inspectedMeta && (
         <div
           onClick={() => setInspectedCard(null)}
-          className="absolute inset-0 z-40 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+          className="absolute inset-0 z-40 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-2xl border border-amber-400/50 bg-slate-900/95 p-3.5 sm:p-5 shadow-2xl flex flex-row items-start gap-3.5 sm:gap-4"
+            className="w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-2xl border border-amber-400/50 bg-slate-900/95 p-3 sm:p-5 shadow-2xl flex flex-col [@media(min-width:440px)]:flex-row items-center [@media(min-width:440px)]:items-start gap-3 sm:gap-4"
           >
             {/* Enlarged Card Preview */}
-            <div className="shrink-0 w-24 [@media(min-height:500px)]:w-36 sm:w-44 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 bg-slate-950 shadow-xl flex items-center justify-center">
+            <div className="shrink-0 w-28 [@media(max-height:460px)]:w-24 sm:w-40 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 bg-slate-950 shadow-xl flex items-center justify-center">
               {inspectedSpriteStyle ? (
                 <div
                   role="img"

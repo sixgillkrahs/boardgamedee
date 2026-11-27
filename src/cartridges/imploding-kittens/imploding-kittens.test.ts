@@ -616,4 +616,42 @@ describe("Imploding Kittens Cartridge (Core + 5 Expansions)", () => {
       afterCombo5.state.discardPile.some((c) => c.id === "buried-defuse")
     ).toBe(false);
   });
+
+  it("allows the room host to customize the number of Exploding Kittens and validates bounds", () => {
+    const baseCfg = implodingKittensCartridge.defaultConfig(3);
+
+    expect(
+      implodingKittensCartridge.validateConfig(
+        { ...baseCfg, explodingKittenCount: 0 },
+        3
+      ).valid
+    ).toBe(false);
+    expect(
+      implodingKittensCartridge.validateConfig(
+        { ...baseCfg, explodingKittenCount: 16 },
+        3
+      ).valid
+    ).toBe(false);
+    expect(
+      implodingKittensCartridge.validateConfig(
+        { ...baseCfg, explodingKittenCount: 7 },
+        3
+      ).valid
+    ).toBe(true);
+
+    const customInit = implodingKittensCartridge.createInitialState({
+      config: { ...baseCfg, explodingKittenCount: 7 },
+      seats: SAMPLE_SEATS,
+      nowMs: 1000,
+    });
+    const explodingInDeck = customInit.state.drawPile.filter(
+      (c) => c.type === "exploding_kitten"
+    );
+    const implodingInDeck = customInit.state.drawPile.filter(
+      (c) => c.type === "imploding_kitten"
+    );
+    expect(explodingInDeck).toHaveLength(7);
+    expect(implodingInDeck).toHaveLength(1);
+    expect(customInit.state.config.explodingKittenCount).toBe(7);
+  });
 });

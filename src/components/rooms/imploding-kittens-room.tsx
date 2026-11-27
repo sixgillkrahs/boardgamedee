@@ -7,10 +7,13 @@ import {
 } from "@/canvas/imploding-kittens-art";
 import { ImplodingKittensCanvas } from "@/components/imploding-kittens-canvas";
 import {
+  getDefaultExplodingKittenCount,
   IK_CARD_META,
   IK_EXPANSION_IDS,
   IK_EXPANSION_META,
   IK_GODCAT_MIMICABLE_TYPES,
+  IK_MAX_EXPLODING_KITTENS,
+  IK_MIN_EXPLODING_KITTENS,
   validateFiveCardCombo,
   validateMatchingComboCards,
   type IkCardType,
@@ -242,6 +245,35 @@ export function ImplodingKittensRoom({
     good_vs_evil: snapshot?.room.config?.expansions?.good_vs_evil ?? true,
   };
 
+  const customExplodingCount: number | null =
+    typeof snapshot?.room.config?.explodingKittenCount === "number"
+      ? snapshot.room.config.explodingKittenCount
+      : null;
+  const autoExplodingCount = getDefaultExplodingKittenCount(
+    expansionsConfig,
+    snapshot?.seats.length ?? 2
+  );
+  const effectiveExplodingCount = customExplodingCount ?? autoExplodingCount;
+
+  const updateExplodingKittenCount = (nextCount: number | null) => {
+    if (!snapshot) return;
+    const clamped =
+      nextCount === null
+        ? null
+        : Math.max(
+            IK_MIN_EXPLODING_KITTENS,
+            Math.min(IK_MAX_EXPLODING_KITTENS, nextCount)
+          );
+    void sendRoomAction({
+      type: "UPDATE_CONFIG",
+      config: {
+        ...snapshot.room.config,
+        expansions: expansionsConfig,
+        explodingKittenCount: clamped,
+      },
+    });
+  };
+
   // Preload Core + enabled expansion pack atlases immediately while waiting in Lobby
   useEffect(() => {
     preloadIkCardAtlases(expansionsConfig);
@@ -255,17 +287,11 @@ export function ImplodingKittensRoom({
 
   return (
     <main
-      className={`relative flex-1 min-h-0 flex flex-col w-full ${
-        isExpanded ? "p-0" : "p-1 sm:p-1.5"
+      className={`relative flex-1 min-h-0 flex flex-col w-full overflow-hidden ${
+        isExpanded ? "p-0" : "p-0.5 sm:p-1.5"
       }`}
     >
-      <div
-        className={`flex-1 relative w-full min-h-[280px] ${
-          isExpanded
-            ? "h-full"
-            : "h-[calc(100dvh-52px)] [@media(max-height:500px)]:h-[calc(100dvh-44px)]"
-        }`}
-      >
+      <div className="flex-1 min-h-0 h-full relative w-full">
         <ImplodingKittensCanvas
           mode={isLobby ? "lobby" : "match"}
           lobbySeats={snapshot?.seats ?? []}
@@ -282,23 +308,23 @@ export function ImplodingKittensRoom({
 
         {/* 1. LOBBY FLOATING OVERLAY WITH EXPANSION PACK TOGGLES */}
         {(isLobby || !ikView) && snapshot && (
-          <div className="absolute inset-x-0 bottom-2 sm:bottom-4 z-20 flex flex-col items-center pointer-events-none px-2 sm:px-3">
-            <div className="pointer-events-auto w-full max-w-2xl max-h-[76dvh] overflow-y-auto rounded-2xl border border-purple-500/45 bg-slate-950/92 backdrop-blur-md p-2.5 sm:p-3.5 shadow-2xl space-y-2 sm:space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+          <div className="absolute inset-x-0 bottom-1.5 sm:bottom-4 z-20 flex flex-col items-center pointer-events-none px-1.5 sm:px-3">
+            <div className="pointer-events-auto w-full max-w-2xl max-h-[82dvh] sm:max-h-[76dvh] overflow-y-auto rounded-2xl border border-purple-500/45 bg-slate-950/92 backdrop-blur-md p-2 sm:p-3.5 shadow-2xl space-y-1.5 sm:space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-slate-800 pb-1.5 sm:pb-2">
                 <div>
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-purple-300">
+                  <span className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-purple-300">
                     Sảnh Chờ Imploding Kittens ({snapshot.seats.length}/6
                     Người Chơi)
                   </span>
-                  <p className="text-[11px] text-slate-400">
-                    Chủ phòng có thể bật/tắt 5 Gói Mở Rộng bên dưới trước khi
-                    bắt đầu!
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 [@media(max-height:460px)]:hidden">
+                    Chủ phòng có thể bật/tắt 5 Gói Mở Rộng và số lá Mèo Nổ trước
+                    khi bắt đầu!
                   </p>
                 </div>
               </div>
 
               {/* 5 Expansion Toggles right in Lobby */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+              <div className="grid grid-cols-2 [@media(min-width:540px)]:grid-cols-5 gap-1.5">
                 {IK_EXPANSION_IDS.map((expId) => {
                   const meta = IK_EXPANSION_META[expId];
                   const enabled = expansionsConfig[expId];
@@ -335,6 +361,75 @@ export function ImplodingKittensRoom({
                     </button>
                   );
                 })}
+              </div>
+
+              {/* Host Customizable Exploding Kittens Bomb Count */}
+              <div className="rounded-xl border border-rose-500/35 bg-rose-950/20 px-2.5 py-2 flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-rose-200">
+                    <span>💣 Số Lá Mèo Nổ</span>
+                    <span className="rounded-md bg-rose-500/20 border border-rose-400/40 px-1.5 py-0.5 text-[10px] font-mono text-rose-200">
+                      {effectiveExplodingCount} Mèo Nổ
+                      {expansionsConfig.imploding ? " + 1 Hố Đen" : ""}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    {customExplodingCount === null
+                      ? `Đang dùng mặc định theo số người chơi (${autoExplodingCount} lá Mèo Nổ)`
+                      : `Chủ phòng đã tùy chỉnh cố định ${customExplodingCount} lá Mèo Nổ trong bộ bài`}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={busy || !snapshot.isHost || customExplodingCount === null}
+                    onClick={() => updateExplodingKittenCount(null)}
+                    className={`rounded-lg border px-2 py-1 text-[10px] font-extrabold transition ${
+                      customExplodingCount === null
+                        ? "border-amber-400/70 bg-amber-500/20 text-amber-200"
+                        : "border-slate-700 bg-slate-900/80 text-slate-300 hover:border-amber-400/60"
+                    } ${snapshot.isHost && customExplodingCount !== null ? "cursor-pointer" : "cursor-default"}`}
+                  >
+                    Tự động ({autoExplodingCount})
+                  </button>
+
+                  <div className="flex items-center rounded-lg border border-slate-700 bg-slate-900/90 overflow-hidden">
+                    <button
+                      type="button"
+                      aria-label="Giảm số lá Mèo Nổ"
+                      disabled={
+                        busy ||
+                        !snapshot.isHost ||
+                        effectiveExplodingCount <= IK_MIN_EXPLODING_KITTENS
+                      }
+                      onClick={() =>
+                        updateExplodingKittenCount(effectiveExplodingCount - 1)
+                      }
+                      className="px-2.5 py-1 text-xs font-black text-rose-300 hover:bg-rose-500/20 disabled:opacity-35 cursor-pointer"
+                    >
+                      −
+                    </button>
+                    <span className="min-w-[30px] text-center text-xs font-mono font-extrabold text-white px-1">
+                      {effectiveExplodingCount}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Tăng số lá Mèo Nổ"
+                      disabled={
+                        busy ||
+                        !snapshot.isHost ||
+                        effectiveExplodingCount >= IK_MAX_EXPLODING_KITTENS
+                      }
+                      onClick={() =>
+                        updateExplodingKittenCount(effectiveExplodingCount + 1)
+                      }
+                      className="px-2.5 py-1 text-xs font-black text-rose-300 hover:bg-rose-500/20 disabled:opacity-35 cursor-pointer"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Seated Players Grid */}
@@ -414,8 +509,8 @@ export function ImplodingKittensRoom({
 
         {/* 2. FLOATING ACTION BAR WHEN PLAYER SELECTS CARDS ON THEIR TURN */}
         {!isLobby && ikView && isMyTurn && (
-          <div className="absolute inset-x-0 bottom-[calc(clamp(104px,35%,140px)+10px)] [@media(min-height:520px)]:bottom-[calc(clamp(176px,28%,220px)+14px)] z-20 flex justify-center pointer-events-none px-2 sm:px-3">
-            <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 rounded-2xl border border-amber-400/50 bg-slate-950/92 backdrop-blur-md px-2.5 py-1.5 sm:px-3.5 sm:py-2 shadow-2xl max-w-[96vw]">
+          <div className="absolute inset-x-0 bottom-[calc(var(--ik-dock-h,180px)+6px)] z-20 flex justify-center pointer-events-none px-1.5 sm:px-3">
+            <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-1 sm:gap-2 rounded-xl sm:rounded-2xl border border-amber-400/50 bg-slate-950/92 backdrop-blur-md px-2 py-1 sm:px-3.5 sm:py-2 shadow-2xl max-w-[96vw]">
               {canPlaySingle && (
                 <button
                   type="button"
@@ -431,22 +526,22 @@ export function ImplodingKittensRoom({
                     });
                     setSelectedCardIds([]);
                   }}
-                  className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-4 py-2 text-xs font-extrabold text-slate-950 shadow cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed"
+                  className="rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-2.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-extrabold text-slate-950 shadow cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed max-w-[90vw] truncate"
                 >
                   {isSelectedArmageddonBlocked
-                    ? "Cần Mèo Thần Trên Thảm Mới Đánh Được Armageddon"
-                    : `Đánh Lá [${IK_CARD_META[selectedCards[0].type].nameVi}]`}
+                    ? "Cần Mèo Thần Trên Thảm"
+                    : `Đánh [${IK_CARD_META[selectedCards[0].type].shortVi}]`}
                 </button>
               )}
 
               {isSelectedGodcat && (
-                <div className="flex flex-wrap items-center justify-center gap-1.5">
+                <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5">
                   <select
                     value={godcatMimicType}
                     onChange={(e) =>
                       setGodcatMimicType(e.target.value as IkCardType)
                     }
-                    className="rounded-lg border border-yellow-400/60 bg-slate-900 px-2 py-1.5 text-xs font-bold text-yellow-300"
+                    className="max-w-[44vw] sm:max-w-none rounded-lg border border-yellow-400/60 bg-slate-900 px-1.5 py-1 sm:px-2 sm:py-1.5 text-[11px] sm:text-xs font-bold text-yellow-300"
                   >
                     {IK_GODCAT_MIMICABLE_TYPES.map((t) => (
                       <option key={t} value={t}>
@@ -477,9 +572,9 @@ export function ImplodingKittensRoom({
                       });
                       setSelectedCardIds([]);
                     }}
-                    className="rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 px-3.5 py-2 text-xs font-extrabold text-slate-950 shadow cursor-pointer disabled:opacity-45"
+                    className="rounded-lg sm:rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-[11px] sm:text-xs font-extrabold text-slate-950 shadow cursor-pointer disabled:opacity-45"
                   >
-                    Hóa Thân Mèo Thần ({IK_CARD_META[godcatMimicType].shortVi})
+                    Hóa Thân ({IK_CARD_META[godcatMimicType].shortVi})
                   </button>
                 </div>
               )}
@@ -499,20 +594,20 @@ export function ImplodingKittensRoom({
                     });
                     setSelectedCardIds([]);
                   }}
-                  className="rounded-xl bg-sky-500 hover:bg-sky-400 px-4 py-2 text-xs font-extrabold text-slate-950 shadow cursor-pointer"
+                  className="rounded-lg sm:rounded-xl bg-sky-500 hover:bg-sky-400 px-2.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-extrabold text-slate-950 shadow cursor-pointer"
                 >
-                  Đánh Combo 2 Lá (Chọn Rút 1 Lá Từ Mục Tiêu)
+                  Combo 2 Lá (Cướp Bài)
                 </button>
               )}
 
               {canPlayCombo3 && (
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5">
                   <select
                     value={wantedCardType}
                     onChange={(e) =>
                       setWantedCardType(e.target.value as IkCardType)
                     }
-                    className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs font-bold text-amber-300"
+                    className="max-w-[44vw] sm:max-w-none rounded-lg border border-slate-700 bg-slate-900 px-1.5 py-1 sm:px-2 sm:py-1.5 text-[11px] sm:text-xs font-bold text-amber-300"
                   >
                     {STEALABLE_CARD_TYPES.map((t) => (
                       <option key={t} value={t}>
@@ -539,19 +634,19 @@ export function ImplodingKittensRoom({
                       });
                       setSelectedCardIds([]);
                     }}
-                    className="rounded-xl bg-purple-500 hover:bg-purple-400 px-3.5 py-2 text-xs font-extrabold text-white shadow cursor-pointer"
+                    className="rounded-lg sm:rounded-xl bg-purple-500 hover:bg-purple-400 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-[11px] sm:text-xs font-extrabold text-white shadow cursor-pointer"
                   >
-                    Đánh Combo 3 Lá (Chỉ Định Tên Bài)
+                    Combo 3 Lá
                   </button>
                 </div>
               )}
 
               {canPlayCombo5 && (
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5">
                   <select
                     value={wantedDiscardId}
                     onChange={(e) => setWantedDiscardId(e.target.value)}
-                    className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs font-bold text-emerald-300"
+                    className="max-w-[44vw] sm:max-w-none rounded-lg border border-slate-700 bg-slate-900 px-1.5 py-1 sm:px-2 sm:py-1.5 text-[11px] sm:text-xs font-bold text-emerald-300"
                   >
                     {ikView.discardPileCards.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -580,9 +675,9 @@ export function ImplodingKittensRoom({
                       });
                       setSelectedCardIds([]);
                     }}
-                    className="rounded-xl bg-emerald-500 hover:bg-emerald-400 px-3.5 py-2 text-xs font-extrabold text-slate-950 shadow cursor-pointer"
+                    className="rounded-lg sm:rounded-xl bg-emerald-500 hover:bg-emerald-400 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-[11px] sm:text-xs font-extrabold text-slate-950 shadow cursor-pointer"
                   >
-                    Combo 5 Lá Khác Nhau (Trục Vớt Từ Mộ)
+                    Combo 5 Lá (Nhặt Mộ)
                   </button>
                 </div>
               )}
@@ -598,10 +693,9 @@ export function ImplodingKittensRoom({
                         command: { type: "CLAIM_TOWER_STASH" },
                       })
                     }
-                    className="rounded-xl border border-amber-400/70 bg-amber-500/20 hover:bg-amber-500/35 px-3.5 py-2 text-xs font-extrabold text-amber-200 shadow cursor-pointer"
+                    className="rounded-lg sm:rounded-xl border border-amber-400/70 bg-amber-500/20 hover:bg-amber-500/35 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-[11px] sm:text-xs font-extrabold text-amber-200 shadow cursor-pointer"
                   >
-                    Rút 1 Lá Từ Tháp Quyền Lực (Còn {ikView.towerStashCount}{" "}
-                    lá)
+                    Rút Tháp ({ikView.towerStashCount})
                   </button>
                 )}
 
@@ -614,7 +708,7 @@ export function ImplodingKittensRoom({
                     command: { type: "DRAW_CARD" },
                   })
                 }
-                className="rounded-xl border border-emerald-500/50 bg-emerald-500/20 hover:bg-emerald-500/30 px-3.5 py-2 text-xs font-extrabold text-emerald-200 cursor-pointer"
+                className="rounded-lg sm:rounded-xl border border-emerald-500/50 bg-emerald-500/20 hover:bg-emerald-500/30 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-[11px] sm:text-xs font-extrabold text-emerald-200 cursor-pointer"
               >
                 Rút Bài Kết Thúc Lượt
               </button>
@@ -680,7 +774,7 @@ export function ImplodingKittensRoom({
                             prev === meta.type ? null : meta.type
                           )
                         }
-                        className={`w-28 sm:w-32 rounded-xl border p-1.5 bg-slate-950/90 flex flex-col items-center gap-1.5 text-center transition cursor-pointer ${
+                        className={`w-24 [@media(max-height:480px)]:w-20 sm:w-32 rounded-xl border p-1.5 bg-slate-950/90 flex flex-col items-center gap-1 sm:gap-1.5 text-center transition cursor-pointer ${
                           isFocused
                             ? "border-amber-400 ring-2 ring-amber-400/40 -translate-y-1"
                             : "border-slate-700 hover:border-purple-400 hover:-translate-y-0.5"
@@ -759,8 +853,8 @@ export function ImplodingKittensRoom({
         {!isLobby &&
           ikView?.step === "NopeWindowStep" &&
           ikView.pendingAction && (
-            <div className="absolute top-14 [@media(min-height:520px)]:top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
-              <div className="rounded-2xl border border-rose-500/70 bg-slate-950/95 p-4 shadow-2xl space-y-3 text-center">
+            <div className="absolute top-[calc(var(--ik-opp-bottom,120px)+6px)] left-1/2 -translate-x-1/2 z-30 w-full max-w-[min(94vw,28rem)] px-2">
+              <div className="rounded-2xl border border-rose-500/70 bg-slate-950/95 p-3 sm:p-4 shadow-2xl space-y-2 sm:space-y-3 text-center">
                 <p className="text-xs font-extrabold uppercase tracking-wider text-rose-300">
                   {ikView.pendingAction.isCanceledByNope
                     ? `ĐÃ BỊ NOPE (${ikView.pendingAction.nopeCount} lần) — Ai có Nope để đánh YUP không?`
@@ -1058,7 +1152,7 @@ export function ImplodingKittensRoom({
                     return (
                       <div
                         key={cid}
-                        className={`w-28 sm:w-32 rounded-xl border p-1.5 bg-slate-950/90 flex flex-col items-center gap-1.5 transition ${
+                        className={`w-24 [@media(max-height:480px)]:w-20 sm:w-32 rounded-xl border p-1.5 bg-slate-950/90 flex flex-col items-center gap-1 sm:gap-1.5 transition ${
                           isFocused
                             ? "border-amber-400 ring-2 ring-amber-400/35"
                             : "border-slate-700"
@@ -1177,8 +1271,8 @@ export function ImplodingKittensRoom({
                     Đào Sâu Hơn (Dig Deeper) — Lá #1 Trên Đỉnh
                   </p>
 
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3.5">
-                    <div className="shrink-0 w-32 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 bg-slate-950 shadow-xl flex items-center justify-center">
+                  <div className="flex flex-col [@media(min-width:440px)]:flex-row items-center [@media(min-width:440px)]:items-start gap-3">
+                    <div className="shrink-0 w-24 [@media(max-height:460px)]:w-20 sm:w-32 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 bg-slate-950 shadow-xl flex items-center justify-center">
                       <div
                         role="img"
                         aria-label={topMeta.nameVi}
@@ -1285,7 +1379,7 @@ export function ImplodingKittensRoom({
                             },
                           })
                         }
-                        className="group relative w-20 sm:w-24 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 hover:border-amber-400 bg-slate-950 shadow-lg hover:shadow-amber-500/30 transition-all duration-150 hover:-translate-y-2.5 cursor-pointer disabled:opacity-50"
+                        className="group relative w-16 [@media(min-width:420px)]:w-20 sm:w-24 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 hover:border-amber-400 bg-slate-950 shadow-lg hover:shadow-amber-500/30 transition-all duration-150 hover:-translate-y-2 cursor-pointer disabled:opacity-50"
                       >
                         <div
                           role="img"
@@ -1309,7 +1403,7 @@ export function ImplodingKittensRoom({
               </div>
             </div>
           ) : (
-            <div className="absolute top-14 [@media(min-height:520px)]:top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
+            <div className="absolute top-[calc(var(--ik-opp-bottom,120px)+6px)] left-1/2 -translate-x-1/2 z-30 w-full max-w-[min(94vw,28rem)] px-2">
               <div className="rounded-2xl border border-sky-400/60 bg-slate-950/95 p-3.5 shadow-2xl text-center">
                 <p className="text-xs font-extrabold text-sky-300">
                   Đang chờ{" "}
@@ -1330,7 +1424,7 @@ export function ImplodingKittensRoom({
             ikView.pendingFavor?.fromSeatNo === snapshot?.viewerSeatNo) ||
             (ikView.step === "GarbagePickStep" &&
               ikView.pendingGroupSubmit?.needsViewerCard)) && (
-            <div className="absolute top-14 [@media(min-height:520px)]:top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
+            <div className="absolute top-[calc(var(--ik-opp-bottom,120px)+6px)] left-1/2 -translate-x-1/2 z-30 w-full max-w-[min(94vw,28rem)] px-2">
               <div className="rounded-2xl border border-amber-400/70 bg-slate-950/95 p-3.5 shadow-2xl text-center">
                 <p className="text-xs font-extrabold text-amber-300">
                   {ikView.step === "FavorGiveStep"
@@ -1537,7 +1631,7 @@ export function ImplodingKittensRoom({
             }
 
             return (
-              <div className="absolute top-14 [@media(min-height:520px)]:top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
+              <div className="absolute top-[calc(var(--ik-opp-bottom,120px)+6px)] left-1/2 -translate-x-1/2 z-30 w-full max-w-[min(94vw,28rem)] px-2">
                 <div className="rounded-2xl border border-amber-400/65 bg-slate-950/95 p-3.5 shadow-2xl text-center">
                   <p className="text-xs font-extrabold text-amber-300">
                     {pa.stage === "ACTOR_PLACE"
@@ -1571,8 +1665,8 @@ export function ImplodingKittensRoom({
                       Quậy Tưng Bừng (Raising Heck) — Lá Dưới ĐÁY Bộ Bài
                     </p>
 
-                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3.5">
-                      <div className="shrink-0 w-32 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 bg-slate-950 shadow-xl flex items-center justify-center">
+                    <div className="flex flex-col [@media(min-width:440px)]:flex-row items-center [@media(min-width:440px)]:items-start gap-3">
+                      <div className="shrink-0 w-24 [@media(max-height:460px)]:w-20 sm:w-32 aspect-[5/7] rounded-xl overflow-hidden border-2 border-slate-700 bg-slate-950 shadow-xl flex items-center justify-center">
                         <div
                           role="img"
                           aria-label={bottomMeta.nameVi}
@@ -1639,7 +1733,7 @@ export function ImplodingKittensRoom({
               );
             })()
           ) : (
-            <div className="absolute top-14 [@media(min-height:520px)]:top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
+            <div className="absolute top-[calc(var(--ik-opp-bottom,120px)+6px)] left-1/2 -translate-x-1/2 z-30 w-full max-w-[min(94vw,28rem)] px-2">
               <div className="rounded-2xl border border-orange-500/60 bg-slate-950/95 p-3.5 shadow-2xl text-center">
                 <p className="text-xs font-extrabold text-orange-300">
                   Đang chờ{" "}
@@ -1654,7 +1748,7 @@ export function ImplodingKittensRoom({
 
         {/* 9. FINISHED REMATCH OVERLAY */}
         {!isLobby && ikView?.step === "Finished" && (
-          <div className="absolute top-14 [@media(min-height:520px)]:top-32 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-3">
+          <div className="absolute top-[calc(var(--ik-opp-bottom,120px)+6px)] left-1/2 -translate-x-1/2 z-30 w-full max-w-[min(94vw,28rem)] px-2">
             <div className="rounded-2xl border border-amber-400/70 bg-slate-950/95 p-4 shadow-2xl space-y-3 text-center">
               <p className="text-sm font-extrabold text-amber-300">
                 {ikView.winReasonVi}
@@ -1690,9 +1784,89 @@ export function ImplodingKittensConfigContent({
     zombie: snapshot?.room.config?.expansions?.zombie ?? true,
     good_vs_evil: snapshot?.room.config?.expansions?.good_vs_evil ?? true,
   };
+  const customExplodingCount: number | null =
+    typeof snapshot?.room.config?.explodingKittenCount === "number"
+      ? snapshot.room.config.explodingKittenCount
+      : null;
+  const autoExplodingCount = getDefaultExplodingKittenCount(
+    expansions,
+    snapshot?.seats.length ?? 2
+  );
+  const effectiveExplodingCount = customExplodingCount ?? autoExplodingCount;
+  const canEdit = Boolean(isLobby && snapshot?.isHost && !busy);
+
+  const updateBombCount = (nextCount: number | null) => {
+    const clamped =
+      nextCount === null
+        ? null
+        : Math.max(
+            IK_MIN_EXPLODING_KITTENS,
+            Math.min(IK_MAX_EXPLODING_KITTENS, nextCount)
+          );
+    void sendRoomAction({
+      type: "UPDATE_CONFIG",
+      config: {
+        ...snapshot?.room.config,
+        expansions,
+        explodingKittenCount: clamped,
+      },
+    });
+  };
 
   return (
     <div className="space-y-3">
+      <div className="rounded-xl border border-rose-500/35 bg-rose-950/20 p-3 space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="font-bold text-rose-200 text-xs">
+              💣 Số Lá Mèo Nổ (Exploding Kittens)
+            </p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Hiện tại: <strong className="text-rose-200">{effectiveExplodingCount} Mèo Nổ</strong>
+              {expansions.imploding ? " + 1 Mèo Hố Đen" : ""} (
+              {customExplodingCount === null ? "Tự động theo luật chuẩn" : "Chủ phòng tùy chỉnh"})
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              disabled={!canEdit || customExplodingCount === null}
+              onClick={() => updateBombCount(null)}
+              className={`rounded-lg border px-2.5 py-1 text-[11px] font-extrabold transition ${
+                customExplodingCount === null
+                  ? "border-amber-400/70 bg-amber-500/20 text-amber-200"
+                  : "border-slate-700 bg-slate-900/80 text-slate-300 hover:border-amber-400/60"
+              } ${canEdit && customExplodingCount !== null ? "cursor-pointer" : "cursor-default"}`}
+            >
+              Tự động ({autoExplodingCount})
+            </button>
+            <div className="flex items-center rounded-lg border border-slate-700 bg-slate-900/90 overflow-hidden">
+              <button
+                type="button"
+                aria-label="Giảm số lá Mèo Nổ"
+                disabled={!canEdit || effectiveExplodingCount <= IK_MIN_EXPLODING_KITTENS}
+                onClick={() => updateBombCount(effectiveExplodingCount - 1)}
+                className="px-2.5 py-1 text-xs font-black text-rose-300 hover:bg-rose-500/20 disabled:opacity-35 cursor-pointer"
+              >
+                −
+              </button>
+              <span className="min-w-[32px] text-center text-xs font-mono font-extrabold text-white px-1">
+                {effectiveExplodingCount}
+              </span>
+              <button
+                type="button"
+                aria-label="Tăng số lá Mèo Nổ"
+                disabled={!canEdit || effectiveExplodingCount >= IK_MAX_EXPLODING_KITTENS}
+                onClick={() => updateBombCount(effectiveExplodingCount + 1)}
+                className="px-2.5 py-1 text-xs font-black text-rose-300 hover:bg-rose-500/20 disabled:opacity-35 cursor-pointer"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="rounded-xl border border-purple-500/35 bg-slate-950/70 p-3 space-y-2">
         <p className="font-bold text-purple-300">
           Các Gói Bài Mở Rộng (Chủ Phòng Tùy Chọn Bật/Tắt)

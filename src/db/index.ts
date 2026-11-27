@@ -24,13 +24,18 @@ if (globalForDb.conn && globalForDb.connUrl !== connectionString) {
   globalForDb.conn = undefined;
 }
 
+const parsedMax = Number(process.env.DB_POOL_MAX);
+const poolMax =
+  Number.isFinite(parsedMax) && parsedMax >= 1 ? Math.floor(parsedMax) : 15;
+
 const conn =
   globalForDb.conn ??
   postgres(connectionString, {
     prepare: false,
-    max: 5,
+    max: poolMax,
     idle_timeout: 20,
     connect_timeout: 10,
+    max_lifetime: 60 * 30,
   });
 globalForDb.conn = conn;
 globalForDb.connUrl = connectionString;

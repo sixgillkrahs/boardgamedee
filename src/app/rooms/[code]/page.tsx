@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, use, useEffect, useState } from "react";
+import React, { Suspense, use, useEffect, useRef, useState } from "react";
 import type { RoomSnapshotForActor } from "@/platform/coordinator";
 import { RoomChatDrawer } from "@/components/rooms/room-chat-drawer";
 import {
@@ -159,6 +159,9 @@ function RoomPageContent({
   const [isExpanded, setIsExpanded] = useState(false);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const seenMessageIdsRef = useRef<Set<string>>(new Set());
+  const hasInitializedChatRef = useRef(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [rulesModalOpen, setRulesModalOpen] = useState(false);
 
@@ -175,6 +178,9 @@ function RoomPageContent({
         const data = JSON.parse(event.data);
         if (data.error) {
           setErrorMsg(data.error);
+          if (data.fatal) {
+            es.close();
+          }
           return;
         }
         if (data.snapshot) {
@@ -238,8 +244,52 @@ function RoomPageContent({
   };
 
   const openDrawer = () => {
+    if (snapshot?.messages) {
+      for (const m of snapshot.messages) {
+        seenMessageIdsRef.current.add(String(m.id));
+      }
+    }
+    setUnreadChatCount(0);
     setDrawerOpen(true);
   };
+
+  // Track unread incoming chat messages whenever the Chat drawer is closed
+  useEffect(() => {
+    const msgs = snapshot?.messages;
+    if (!msgs) return;
+
+    if (!hasInitializedChatRef.current) {
+      hasInitializedChatRef.current = true;
+      for (const m of msgs) {
+        seenMessageIdsRef.current.add(String(m.id));
+      }
+      setUnreadChatCount(0);
+      return;
+    }
+
+    if (drawerOpen) {
+      for (const m of msgs) {
+        seenMessageIdsRef.current.add(String(m.id));
+      }
+      setUnreadChatCount(0);
+      return;
+    }
+
+    let unread = 0;
+    for (const m of msgs) {
+      const key = String(m.id);
+      if (seenMessageIdsRef.current.has(key)) continue;
+      if (
+        snapshot.viewerSeatNo !== null &&
+        m.senderSeatNo === snapshot.viewerSeatNo
+      ) {
+        seenMessageIdsRef.current.add(key);
+        continue;
+      }
+      unread += 1;
+    }
+    setUnreadChatCount(unread);
+  }, [snapshot?.messages, snapshot?.viewerSeatNo, drawerOpen]);
 
   // Sync native fullscreen exits (e.g. pressing ESC on desktop/Android)
   useEffect(() => {
@@ -340,12 +390,16 @@ function RoomPageContent({
   const rulesMeta =
     RULES_MODAL_META[cartridgeId] ?? RULES_MODAL_META.werewolf;
 
+  const isViewportLockedRoom = cartridgeId === "imploding-kittens";
+
   return (
     <div
       className={
         isExpanded
           ? "fixed inset-0 h-[100dvh] w-screen bg-slate-950 text-slate-100 flex flex-col overflow-hidden z-30"
-          : "min-h-[100dvh] bg-slate-950 text-slate-100 flex flex-col overflow-x-hidden"
+          : isViewportLockedRoom
+            ? "h-[100dvh] w-full bg-slate-950 text-slate-100 flex flex-col overflow-hidden"
+            : "min-h-[100dvh] bg-slate-950 text-slate-100 flex flex-col overflow-x-hidden"
       }
     >
       {/* Compact Floating Controls when Expanded / iPhone Zen Fullscreen is active */}
@@ -354,10 +408,22 @@ function RoomPageContent({
           <button
             type="button"
             onClick={() => openDrawer()}
-            className="h-7 rounded-lg border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-2 text-[11px] font-bold text-amber-300 cursor-pointer"
-            title="Mở Kênh Chat"
+            className="relative h-7 rounded-lg border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-2 text-[11px] font-bold text-amber-300 cursor-pointer inline-flex items-center justify-center"
+            title={
+              unreadChatCount > 0
+                ? `Mở Kênh Chat (${unreadChatCount} tin nhắn mới)`
+                : "Mở Kênh Chat"
+            }
           >
-            💬
+            <span>💬</span>
+            {unreadChatCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[17px] h-[17px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-mono font-black leading-none inline-flex items-center justify-center shadow-lg ring-2 ring-slate-900">
+                <span className="absolute inset-0 rounded-full bg-rose-400 animate-ping opacity-60 pointer-events-none" />
+                <span className="relative">
+                  {unreadChatCount > 99 ? "99+" : unreadChatCount}
+                </span>
+              </span>
+            )}
           </button>
           <button
             type="button"
@@ -378,50 +444,68 @@ function RoomPageContent({
         </div>
       )}
 
-      {/* Top Platform Header Bar (hidden in Expanded/iPhone Zen Fullscreen mode, slimmed in phone landscape) */}
+      {/* Top Platform Header Bar (hidden in Expanded/iPhone Zen Fullscreen mode, single-row slim on mobile) */}
       {!isExpanded && (
-      <header className="border-b border-slate-800/80 bg-slate-900/85 backdrop-blur px-2.5 py-2 [@media(max-height:500px)]:py-1 sm:px-4 sm:py-2.5 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 z-30">
-        <div className="flex items-center gap-2 sm:gap-3">
+      <header className="shrink-0 border-b border-slate-800/80 bg-slate-900/85 backdrop-blur px-2 py-1.5 [@media(max-height:500px)]:py-1 sm:px-4 sm:py-2.5 flex flex-nowrap items-center justify-between gap-1.5 sm:gap-2 z-30">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
           <button
             type="button"
             onClick={async () => {
               await sendRoomAction({ type: "LEAVE" });
               window.location.href = "/";
             }}
-            className="rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition cursor-pointer"
+            className="shrink-0 rounded-lg border border-slate-700 bg-slate-800/80 px-2 sm:px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition cursor-pointer whitespace-nowrap"
+            title="Rời Phòng"
           >
-            ← <span className="hidden xs:inline">Rời Phòng</span>
+            ← <span className="hidden sm:inline">Rời Phòng</span>
           </button>
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 min-w-0">
             <span className="hidden md:inline text-xs uppercase tracking-wider text-slate-400">
               Mã phòng:
             </span>
-            <span className="rounded-lg bg-amber-500/15 border border-amber-500/40 px-2 py-1 font-mono text-xs sm:text-sm font-bold text-amber-300">
+            <span className="shrink-0 rounded-lg bg-amber-500/15 border border-amber-500/40 px-1.5 sm:px-2 py-1 font-mono text-xs sm:text-sm font-bold text-amber-300">
               {normalizedCode}
             </span>
             <button
               type="button"
               onClick={handleCopyCode}
-              className="rounded-lg bg-slate-800 hover:bg-slate-700 px-2 sm:px-2.5 py-1 text-xs font-medium text-slate-200 border border-slate-700 transition cursor-pointer"
+              className="shrink-0 rounded-lg bg-slate-800 hover:bg-slate-700 px-2 sm:px-2.5 py-1 text-xs font-medium text-slate-200 border border-slate-700 transition cursor-pointer whitespace-nowrap"
+              title="Sao chép link mời"
             >
-              {copied ? "✓ Đã chép" : "Sao chép link"}
+              {copied ? (
+                <>
+                  ✓ <span className="hidden sm:inline">Đã chép</span>
+                </>
+              ) : (
+                <>
+                  <span className="sm:hidden">📋</span>
+                  <span className="hidden sm:inline">Sao chép link</span>
+                </>
+              )}
             </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 text-xs">
+        <div className="flex items-center gap-1 sm:gap-2 text-xs shrink-0">
           {/* Quick Button to Open Chat Drawer */}
           <button
             type="button"
             onClick={() => openDrawer()}
-            className="h-8 rounded-lg border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-2.5 text-xs font-bold text-amber-300 transition cursor-pointer inline-flex items-center gap-1.5"
-            title="Mở Kênh Chat"
+            className="relative h-8 rounded-lg border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-2 sm:px-2.5 text-xs font-bold text-amber-300 transition cursor-pointer inline-flex items-center gap-1.5"
+            title={
+              unreadChatCount > 0
+                ? `Mở Kênh Chat (${unreadChatCount} tin nhắn mới)`
+                : "Mở Kênh Chat"
+            }
           >
             <span>💬</span>
             <span className="hidden sm:inline">Chat</span>
-            {(snapshot?.messages.length ?? 0) > 0 && (
-              <span className="rounded bg-amber-500/25 px-1.5 py-0.5 text-[10px] font-mono leading-none">
-                {snapshot?.messages.length}
+            {unreadChatCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-mono font-black leading-none inline-flex items-center justify-center shadow-lg ring-2 ring-slate-900">
+                <span className="absolute inset-0 rounded-full bg-rose-400 animate-ping opacity-60 pointer-events-none" />
+                <span className="relative">
+                  {unreadChatCount > 99 ? "99+" : unreadChatCount}
+                </span>
               </span>
             )}
           </button>
@@ -484,7 +568,7 @@ function RoomPageContent({
 
       {/* Error Toast */}
       {errorMsg && (
-        <div className="mx-3 mt-2 rounded-xl border border-rose-500/40 bg-rose-950/70 px-3.5 py-2 text-xs font-medium text-rose-200 flex items-center justify-between">
+        <div className="shrink-0 mx-2 sm:mx-3 mt-1.5 rounded-xl border border-rose-500/40 bg-rose-950/70 px-3 py-1.5 text-xs font-medium text-rose-200 flex items-center justify-between">
           <span>⚠️ {errorMsg}</span>
           <button
             type="button"

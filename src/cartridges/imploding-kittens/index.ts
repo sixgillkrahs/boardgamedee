@@ -948,12 +948,32 @@ export type IkStep =
   | "RaisingHeckStep"
   | "Finished";
 
+export const IK_MIN_EXPLODING_KITTENS = 1;
+export const IK_MAX_EXPLODING_KITTENS = 15;
+
 export interface IkConfig {
   expansions: Record<IkExpansionId, boolean>;
+  /**
+   * Optional host-configured number of Exploding Kittens (`1..15`).
+   * `null` or `undefined` uses the official auto formula based on player count & enabled expansions.
+   */
+  explodingKittenCount?: number | null;
   timers: {
     turnSeconds: number;
     nopeSeconds: number;
   };
+}
+
+export function getDefaultExplodingKittenCount(
+  expansions: Record<IkExpansionId, boolean>,
+  seatCount: number
+): number {
+  const safeSeats = Math.max(2, seatCount);
+  const useImplodingBomb = Boolean(expansions.imploding);
+  const extraStreakingBomb = expansions.streaking ? 1 : 0;
+  const totalBombs = Math.max(1, safeSeats - 1 + extraStreakingBomb);
+  const implodingCount = useImplodingBomb ? 1 : 0;
+  return Math.max(0, totalBombs - implodingCount);
 }
 
 export interface IkPendingAction {
@@ -3156,6 +3176,7 @@ export const implodingKittensCartridge: GameCartridge<
         zombie: true,
         good_vs_evil: true,
       },
+      explodingKittenCount: null,
       timers: {
         turnSeconds: 45,
         nopeSeconds: 7,
@@ -3163,7 +3184,7 @@ export const implodingKittensCartridge: GameCartridge<
     };
   },
 
-  validateConfig(_config: IkConfig, seatCount: number) {
+  validateConfig(config: IkConfig, seatCount: number) {
     if (seatCount < 2 || seatCount > 6) {
       return {
         valid: false,
@@ -3171,10 +3192,33 @@ export const implodingKittensCartridge: GameCartridge<
           "Imploding Kittens cần từ 2 đến 6 người chơi (có thể thêm Bot).",
       };
     }
+    const customCount = config?.explodingKittenCount;
+    if (customCount !== null && customCount !== undefined) {
+      if (
+        typeof customCount !== "number" ||
+        !Number.isInteger(customCount) ||
+        customCount < IK_MIN_EXPLODING_KITTENS ||
+        customCount > IK_MAX_EXPLODING_KITTENS
+      ) {
+        return {
+          valid: false,
+          error: `Số lá Mèo Nổ tùy chỉnh phải từ ${IK_MIN_EXPLODING_KITTENS} đến ${IK_MAX_EXPLODING_KITTENS} lá.`,
+        };
+      }
+    }
     return { valid: true };
   },
 
   createInitialState({ config, seats, nowMs, rng = Math.random }) {
+    const rawCustomBombs = config?.explodingKittenCount;
+    const normalizedCustomBombs =
+      typeof rawCustomBombs === "number" && Number.isInteger(rawCustomBombs)
+        ? Math.max(
+            IK_MIN_EXPLODING_KITTENS,
+            Math.min(IK_MAX_EXPLODING_KITTENS, rawCustomBombs)
+          )
+        : null;
+
     const normalizedConfig: IkConfig = {
       expansions: {
         imploding: config?.expansions?.imploding ?? true,
@@ -3183,6 +3227,7 @@ export const implodingKittensCartridge: GameCartridge<
         zombie: config?.expansions?.zombie ?? true,
         good_vs_evil: config?.expansions?.good_vs_evil ?? true,
       },
+      explodingKittenCount: normalizedCustomBombs,
       timers: {
         turnSeconds: config?.timers?.turnSeconds ?? 45,
         nopeSeconds: config?.timers?.nopeSeconds ?? 7,
@@ -3231,11 +3276,17 @@ export const implodingKittensCartridge: GameCartridge<
     // 3. Insert Bombs into Draw Pile:
     // Standard rule: (N - 1) total bombs. If Imploding pack is ON, 1 of those is the Imploding Kitten and (N - 2) are Exploding Kittens.
     // If Streaking pack is ON (which includes Streaking Kitten allowing 1 bomb in hand), add +1 extra Exploding Kitten!
+    // If the Host set a custom `explodingKittenCount` (`1..15`), insert that exact number of Exploding Kittens!
     const useImplodingBomb = normalizedConfig.expansions.imploding;
-    const extraStreakingBomb = normalizedConfig.expansions.streaking ? 1 : 0;
-    const totalBombs = Math.max(1, seats.length - 1 + extraStreakingBomb);
     const implodingCount = useImplodingBomb ? 1 : 0;
-    const explodingCount = Math.max(0, totalBombs - implodingCount);
+    const explodingCount =
+      normalizedConfig.explodingKittenCount !== null &&
+      normalizedConfig.explodingKittenCount !== undefined
+        ? normalizedConfig.explodingKittenCount
+        : getDefaultExplodingKittenCount(
+            normalizedConfig.expansions,
+            seats.length
+          );
 
     for (let i = 1; i <= explodingCount; i++) {
       preBombDeck.push({
