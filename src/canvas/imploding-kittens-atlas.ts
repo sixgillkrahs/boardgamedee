@@ -17,8 +17,9 @@ export const IK_ATLAS_PACK_META: Record<IkAtlasPackId, IkAtlasPackMeta> = {
   imploding: {"url": "/sprites/ik-atlas-imploding.webp", "cols": 5, "rows": 3, "tileW": 200, "tileH": 280},
   streaking: {"url": "/sprites/ik-atlas-streaking.webp", "cols": 5, "rows": 2, "tileW": 200, "tileH": 280},
   barking: {"url": "/sprites/ik-atlas-barking.webp", "cols": 5, "rows": 4, "tileW": 200, "tileH": 280},
-  zombie: {"url": "/sprites/ik-atlas-zombie.webp", "cols": 6, "rows": 4, "tileW": 200, "tileH": 280},
+  zombie: {"url": "/sprites/ik-atlas-zombie.webp", "cols": 6, "rows": 5, "tileW": 200, "tileH": 280},
   good_vs_evil: {"url": "/sprites/ik-atlas-good-vs-evil.webp", "cols": 5, "rows": 3, "tileW": 200, "tileH": 280},
+  pokepri: {"url": "/sprites/ik-atlas-pokepri.webp", "cols": 4, "rows": 2, "tileW": 200, "tileH": 280},
 };
 
 export interface IkCardAtlasSlot {
@@ -57,6 +58,7 @@ export const IK_CARD_ATLAS_SLOTS: Record<IkCardType, IkCardAtlasSlot[]> = {
   de_cat_ipated: [{"pack": "zombie", "col": 2, "row": 3, "sx": 400, "sy": 840, "sw": 200, "sh": 280}],
   vampire_cat: [{"pack": "zombie", "col": 3, "row": 3, "sx": 600, "sy": 840, "sw": 200, "sh": 280}],
   zombie_cat: [{"pack": "zombie", "col": 4, "row": 3, "sx": 800, "sy": 840, "sw": 200, "sh": 280}],
+  shuffle_now: [{"pack": "zombie", "col": 5, "row": 3, "sx": 1000, "sy": 840, "sw": 200, "sh": 280}, {"pack": "zombie", "col": 0, "row": 4, "sx": 0, "sy": 1120, "sw": 200, "sh": 280}],
   bury: [{"pack": "barking", "col": 0, "row": 0, "sx": 0, "sy": 0, "sw": 200, "sh": 280}, {"pack": "barking", "col": 1, "row": 0, "sx": 200, "sy": 0, "sw": 200, "sh": 280}],
   barking_kitten: [{"pack": "barking", "col": 2, "row": 0, "sx": 400, "sy": 0, "sw": 200, "sh": 280}, {"pack": "barking", "col": 3, "row": 0, "sx": 600, "sy": 0, "sw": 200, "sh": 280}],
   ill_take_that: [{"pack": "barking", "col": 4, "row": 0, "sx": 800, "sy": 0, "sw": 200, "sh": 280}, {"pack": "barking", "col": 0, "row": 1, "sx": 0, "sy": 280, "sw": 200, "sh": 280}, {"pack": "barking", "col": 1, "row": 1, "sx": 200, "sy": 280, "sw": 200, "sh": 280}, {"pack": "barking", "col": 2, "row": 1, "sx": 400, "sy": 280, "sw": 200, "sh": 280}],
@@ -88,6 +90,14 @@ export const IK_CARD_ATLAS_SLOTS: Record<IkCardType, IkCardAtlasSlot[]> = {
   knight_cat: [{"pack": "good_vs_evil", "col": 1, "row": 2, "sx": 200, "sy": 560, "sw": 200, "sh": 280}],
   mercat: [{"pack": "good_vs_evil", "col": 2, "row": 2, "sx": 400, "sy": 560, "sw": 200, "sh": 280}],
   troll_cat: [{"pack": "good_vs_evil", "col": 3, "row": 2, "sx": 600, "sy": 560, "sw": 200, "sh": 280}],
+  super_nope: [{"pack": "pokepri", "col": 0, "row": 0, "sx": 0, "sy": 0, "sw": 200, "sh": 280}],
+  black_hole: [{"pack": "pokepri", "col": 1, "row": 0, "sx": 200, "sy": 0, "sw": 200, "sh": 280}],
+  back_from_the_dead: [{"pack": "pokepri", "col": 2, "row": 0, "sx": 400, "sy": 0, "sw": 200, "sh": 280}],
+  copycat: [{"pack": "pokepri", "col": 3, "row": 0, "sx": 600, "sy": 0, "sw": 200, "sh": 280}],
+  fossil_restoration: [{"pack": "pokepri", "col": 0, "row": 1, "sx": 0, "sy": 280, "sw": 200, "sh": 280}],
+  purrfect_boost: [{"pack": "pokepri", "col": 1, "row": 1, "sx": 200, "sy": 280, "sw": 200, "sh": 280}],
+  last_resort: [{"pack": "pokepri", "col": 2, "row": 1, "sx": 400, "sy": 280, "sw": 200, "sh": 280}],
+  sneak_peek: [{"pack": "pokepri", "col": 3, "row": 1, "sx": 600, "sy": 280, "sw": 200, "sh": 280}],
 };
 
 const cachedPackImgs = new Map<IkAtlasPackId, HTMLImageElement>();
@@ -120,7 +130,7 @@ export function preloadIkCardAtlases(
 ): void {
   if (typeof window === "undefined") return;
   getIkCardAtlasImageForPack("core");
-  const expansionIds: IkExpansionId[] = ["imploding", "streaking", "barking", "zombie", "good_vs_evil"];
+  const expansionIds: IkExpansionId[] = ["imploding", "streaking", "barking", "zombie", "good_vs_evil", "pokepri"];
   for (const expId of expansionIds) {
     if (expansions ? expansions[expId] !== false : true) {
       getIkCardAtlasImageForPack(expId);

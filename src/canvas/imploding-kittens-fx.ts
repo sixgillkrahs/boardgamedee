@@ -880,7 +880,120 @@ export class ImplodingKittensFxEngine {
       }
 
       case "PLAY_CARD": {
+        const playedBundle =
+          anim.cards && anim.cards.length >= 2 ? anim.cards : null;
         const glowColor = meta?.colorHex ?? "#fde047";
+
+        if (playedBundle) {
+          const isCombo5 = anim.comboKind === "COMBO_5";
+          const isCombo3 = anim.comboKind === "COMBO_3";
+          const isBoost = anim.comboKind === "BOOST";
+          const comboColor = isCombo5
+            ? "#34d399"
+            : isCombo3
+              ? "#c084fc"
+              : isBoost
+                ? "#fbbf24"
+                : "#38bdf8";
+          const comboBg = isCombo5
+            ? "rgba(6, 78, 59, 0.95)"
+            : isCombo3
+              ? "rgba(59, 7, 100, 0.95)"
+              : isBoost
+                ? "rgba(120, 53, 15, 0.95)"
+                : "rgba(12, 74, 110, 0.95)";
+          const comboTitle = isCombo5
+            ? "COMBO 5 LÁ!"
+            : isCombo3
+              ? "COMBO 3 LÁ!"
+              : isBoost
+                ? "PURRFECT BOOST +1!"
+                : "COMBO 2 LÁ!";
+
+          const n = playedBundle.length;
+          const mid = (n - 1) / 2;
+          playedBundle.forEach((c, idx) => {
+            const offset = idx - mid;
+            const stagger = idx * 65;
+            this.spawnFlyingCard({
+              card: c,
+              fromX: actorPos.x + offset * 18,
+              fromY: actorPos.y + Math.abs(offset) * 4,
+              ctrlX: (actorPos.x + discardCenter.x) * 0.5 + offset * 52,
+              ctrlY:
+                Math.min(actorPos.y, discardCenter.y) -
+                78 -
+                (mid - Math.abs(offset)) * 12,
+              toX: discardCenter.x + offset * 14,
+              toY: discardCenter.y + Math.abs(offset) * 3,
+              w: cardW,
+              h: cardH,
+              startMs: nowMs + stagger,
+              durationMs: 460,
+              startRot: offset * 0.16,
+              endRot: offset * 0.11,
+              peakScale: 1.32,
+              glowColor: comboColor,
+            });
+          });
+
+          this.triggerDiscardPop(nowMs, 380 + (n - 1) * 55);
+          this.triggerShake(nowMs, isCombo5 ? 10 : 7, isCombo5 ? 380 : 280);
+          this.spawnFlash(nowMs, comboColor, isCombo5 ? 0.28 : 0.18, 340);
+          this.spawnRing(
+            nowMs + 220,
+            discardCenter.x,
+            discardCenter.y,
+            16,
+            isCombo5 ? 185 : 145,
+            comboColor,
+            4.5,
+            560
+          );
+          this.spawnRing(
+            nowMs + 340,
+            discardCenter.x,
+            discardCenter.y,
+            12,
+            isCombo5 ? 140 : 105,
+            "#fde047",
+            3,
+            480
+          );
+          this.spawnSparkles(
+            discardCenter.x,
+            discardCenter.y,
+            [comboColor, "#fde047", "#ffffff"],
+            isCombo5 ? 42 : 28,
+            165
+          );
+          if (anim.targetSeatNo !== undefined) {
+            this.spawnBeam(
+              nowMs + 100,
+              isBoost ? "lightning" : "tether",
+              actorPos.x,
+              actorPos.y,
+              targetPos.x,
+              targetPos.y,
+              comboColor,
+              640
+            );
+          }
+          this.spawnStamp(
+            nowMs,
+            comboTitle,
+            comboColor,
+            anchors.center.x,
+            anchors.center.y - 34,
+            {
+              subtitle: anim.messageVi,
+              bgHex: comboBg,
+              durationMs: 1750,
+            }
+          );
+          break;
+        }
+
         if (anim.card) {
           this.spawnFlyingCard({
             card: anim.card,
@@ -913,7 +1026,7 @@ export class ImplodingKittensFxEngine {
         );
 
         // Card-specific signature VFX!
-        if (cardType === "shuffle") {
+        if (cardType === "shuffle" || cardType === "shuffle_now") {
           this.shuffleRiffle = { startMs: nowMs + 140, durationMs: 780 };
           this.spawnSparkles(
             drawCenter.x,
@@ -924,7 +1037,7 @@ export class ImplodingKittensFxEngine {
           );
           this.spawnStamp(
             nowMs,
-            "TRÁO BÀI!",
+            cardType === "shuffle_now" ? "XÁO BÀI NGAY!" : "TRÁO BÀI!",
             "#fdba74",
             anchors.center.x,
             anchors.center.y - 32,
@@ -934,9 +1047,10 @@ export class ImplodingKittensFxEngine {
           cardType === "attack" ||
           cardType === "targeted_attack" ||
           cardType === "attack_of_the_dead" ||
-          cardType === "personal_attack"
+          cardType === "personal_attack" ||
+          cardType === "last_resort"
         ) {
-          this.triggerShake(nowMs, 8, 280);
+          this.triggerShake(nowMs, cardType === "last_resort" ? 12 : 8, 320);
           const boltTarget =
             anim.targetSeatNo !== undefined ? targetPos : anchors.center;
           this.spawnBeam(
@@ -946,7 +1060,7 @@ export class ImplodingKittensFxEngine {
             actorPos.y,
             boltTarget.x,
             boltTarget.y,
-            "#fb923c",
+            cardType === "last_resort" ? "#ef4444" : "#fb923c",
             580
           );
           this.spawnSparkles(
@@ -958,15 +1072,23 @@ export class ImplodingKittensFxEngine {
           );
           this.spawnStamp(
             nowMs,
-            cardType === "attack_of_the_dead"
-              ? "TẤN CÔNG 3X!"
-              : cardType === "personal_attack"
-                ? "TỰ ĐÁNH 3X!"
-                : "TẤN CÔNG 2X!",
-            "#fb923c",
+            cardType === "last_resort"
+              ? "LAST RESORT!"
+              : cardType === "attack_of_the_dead"
+                ? "TẤN CÔNG 3X!"
+                : cardType === "personal_attack"
+                  ? "TỰ ĐÁNH 3X!"
+                  : "TẤN CÔNG 2X!",
+            cardType === "last_resort" ? "#fca5a5" : "#fb923c",
             anchors.center.x,
             anchors.center.y - 32,
-            { bgHex: "rgba(67, 20, 7, 0.94)", durationMs: 1350 }
+            {
+              bgHex:
+                cardType === "last_resort"
+                  ? "rgba(69, 10, 10, 0.96)"
+                  : "rgba(67, 20, 7, 0.94)",
+              durationMs: 1450,
+            }
           );
         } else if (
           cardType === "see_future_3" ||

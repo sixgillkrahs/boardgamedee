@@ -908,6 +908,7 @@ export interface RoomSnapshotForActor {
   viewerSeatNo: number | null;
   isHost: boolean;
   matchVersion: number | null;
+  phaseDeadlineMs: number | null;
   playerView: any | null;
   channels: ChannelPermission[];
   messages: {
@@ -1000,6 +1001,10 @@ function buildRoomSnapshotFromData(input: {
     viewerSeatNo,
     isHost: actorId !== null && room.hostActorId === actorId,
     matchVersion,
+    phaseDeadlineMs:
+      match && match.status === "active" && match.phaseDeadlineAt
+        ? match.phaseDeadlineAt.getTime()
+        : null,
     playerView,
     channels,
     messages: visibleMessages,

@@ -36,6 +36,8 @@ export async function GET(
       let checkingMeta = false;
       let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
       let timerInterval: ReturnType<typeof setInterval> | null = null;
+      let exactDeadlineTimer: ReturnType<typeof setTimeout> | null = null;
+      let scheduledDeadlineMs: number | null = null;
       let unsubscribe: (() => void) | null = null;
 
       const closeStream = (closeController = true) => {
@@ -48,6 +50,11 @@ export async function GET(
         if (timerInterval) {
           clearInterval(timerInterval);
           timerInterval = null;
+        }
+        if (exactDeadlineTimer) {
+          clearTimeout(exactDeadlineTimer);
+          exactDeadlineTimer = null;
+          scheduledDeadlineMs = null;
         }
         if (unsubscribe) {
           unsubscribe();
@@ -75,6 +82,34 @@ export async function GET(
         }
       };
 
+      const scheduleExactDeadline = (ms: number | null) => {
+        if (closed) return;
+        if (ms === null || Number.isNaN(ms)) {
+          if (exactDeadlineTimer) {
+            clearTimeout(exactDeadlineTimer);
+            exactDeadlineTimer = null;
+            scheduledDeadlineMs = null;
+          }
+          return;
+        }
+        const delay = ms - Date.now();
+        // Schedule precise one-shot timeout for short windows (e.g. 3s Nope window) so it fires on time
+        if (delay <= 15_000 && ms !== scheduledDeadlineMs) {
+          if (exactDeadlineTimer) clearTimeout(exactDeadlineTimer);
+          scheduledDeadlineMs = ms;
+          exactDeadlineTimer = setTimeout(async () => {
+            exactDeadlineTimer = null;
+            scheduledDeadlineMs = null;
+            if (closed) return;
+            try {
+              await checkAndAdvanceExpiredMatch({ code: normalizedCode });
+            } catch {
+              // ignore race condition if already advanced
+            }
+          }, Math.max(25, delay + 35));
+        }
+      };
+
       // Flush SSE preamble immediately so Nginx/Cloudways sees instant upstream bytes
       safeEnqueue("retry: 2000\n: connected\n\n");
 
@@ -95,6 +130,11 @@ export async function GET(
             code: normalizedCode,
             actorId: actor.id,
           });
+          if (snapshot.room.status === "playing" && snapshot.phaseDeadlineMs) {
+            scheduleExactDeadline(snapshot.phaseDeadlineMs);
+          } else {
+            scheduleExactDeadline(null);
+          }
           const payload = JSON.stringify({ snapshot, actor });
           safeEnqueue(`data: ${payload}\n\n`);
         } catch (err: unknown) {

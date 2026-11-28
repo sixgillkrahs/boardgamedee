@@ -8,12 +8,15 @@ import {
 import { ImplodingKittensCanvas } from "@/components/imploding-kittens-canvas";
 import {
   getDefaultExplodingKittenCount,
+  IK_ATTACK_CARD_TYPES,
+  IK_BOOSTABLE_CARD_TYPES,
   IK_CARD_META,
   IK_EXPANSION_IDS,
   IK_EXPANSION_META,
   IK_GODCAT_MIMICABLE_TYPES,
   IK_MAX_EXPLODING_KITTENS,
   IK_MIN_EXPLODING_KITTENS,
+  IK_NOW_CARD_TYPES,
   validateFiveCardCombo,
   validateMatchingComboCards,
   type IkCardType,
@@ -26,7 +29,14 @@ const STEALABLE_CARD_TYPES: IkCardType[] = [
   "godcat",
   "defuse",
   "zombie_kitten",
+  "super_nope",
   "nope",
+  "last_resort",
+  "sneak_peek",
+  "purrfect_boost",
+  "back_from_the_dead",
+  "copycat",
+  "fossil_restoration",
   "armageddon",
   "raising_heck",
   "reveal_future_3",
@@ -56,6 +66,7 @@ const STEALABLE_CARD_TYPES: IkCardType[] = [
   "curse_cat_butt",
   "mark",
   "shuffle",
+  "shuffle_now",
   "feral_cat",
   "tacocat",
   "catermelon",
@@ -168,6 +179,11 @@ export function ImplodingKittensRoom({
       return;
     }
 
+    if (ikView.myIsBlind) {
+      setSelectedCardIds((prev) => (prev.includes(cardId) ? [] : [cardId]));
+      return;
+    }
+
     setSelectedCardIds((prev) =>
       prev.includes(cardId)
         ? prev.filter((id) => id !== cardId)
@@ -184,28 +200,86 @@ export function ImplodingKittensRoom({
     ikView.step === "TurnPlayStep" &&
     ikView.activeSeatNo === snapshot?.viewerSeatNo;
 
+  const isMyBlind = Boolean(ikView?.myIsBlind);
+
+  const isViewerAlive = Boolean(
+    ikView?.seats.find((s) => s.seatNo === snapshot?.viewerSeatNo)?.alive
+  );
+
+  const canPlayBlindSingle =
+    isMyTurn && isMyBlind && selectedCards.length === 1;
+
+  const canPlayNowOutOfTurn =
+    !!ikView &&
+    !isMyBlind &&
+    ikView.step === "TurnPlayStep" &&
+    isViewerAlive &&
+    !isMyTurn &&
+    selectedCards.length === 1 &&
+    IK_NOW_CARD_TYPES.includes(selectedCards[0].type);
+
   const isSelectedGodcat =
     isMyTurn &&
+    !isMyBlind &&
     selectedCards.length === 1 &&
     selectedCards[0].type === "godcat";
 
+  const isSelectedFossil =
+    isMyTurn &&
+    !isMyBlind &&
+    selectedCards.length === 1 &&
+    selectedCards[0].type === "fossil_restoration";
+
+  const boostPair =
+    isMyTurn && !isMyBlind && selectedCards.length === 2
+      ? (() => {
+          const [a, b] = selectedCards;
+          if (
+            a.type === "purrfect_boost" &&
+            IK_BOOSTABLE_CARD_TYPES.includes(b.type)
+          ) {
+            return { boostCard: a, targetCard: b };
+          }
+          if (
+            b.type === "purrfect_boost" &&
+            IK_BOOSTABLE_CARD_TYPES.includes(a.type)
+          ) {
+            return { boostCard: b, targetCard: a };
+          }
+          return null;
+        })()
+      : null;
+
   const isSelectedArmageddonBlocked =
     isMyTurn &&
+    !isMyBlind &&
     selectedCards.length === 1 &&
     selectedCards[0].type === "armageddon" &&
     !ikView.godcatOnPlaymat;
 
+  const isSelectedAttackLocked =
+    isMyTurn &&
+    !isMyBlind &&
+    Boolean(ikView?.attackLocked) &&
+    selectedCards.length === 1 &&
+    IK_ATTACK_CARD_TYPES.includes(selectedCards[0].type);
+
   const canPlaySingle =
     isMyTurn &&
+    !isMyBlind &&
     selectedCards.length === 1 &&
     !isSelectedGodcat &&
+    !isSelectedFossil &&
     ![
       "defuse",
       "zombie_kitten",
       "nope",
+      "super_nope",
+      "purrfect_boost",
       "streaking_kitten",
       "exploding_kitten",
       "imploding_kitten",
+      "black_hole",
       "devilcat",
     ].includes(selectedCards[0].type) &&
     IK_CARD_META[selectedCards[0].type].category !== "cat" &&
@@ -213,18 +287,21 @@ export function ImplodingKittensRoom({
 
   const canPlayCombo2 =
     isMyTurn &&
+    !isMyBlind &&
     selectedCards.length === 2 &&
     selectedTargetSeatNo !== null &&
     validateMatchingComboCards(selectedCards);
 
   const canPlayCombo3 =
     isMyTurn &&
+    !isMyBlind &&
     selectedCards.length === 3 &&
     selectedTargetSeatNo !== null &&
     validateMatchingComboCards(selectedCards);
 
   const canPlayCombo5 =
     isMyTurn &&
+    !isMyBlind &&
     selectedCards.length === 5 &&
     ikView.discardPileCards.length > 0 &&
     validateFiveCardCombo(selectedCards);
@@ -243,6 +320,7 @@ export function ImplodingKittensRoom({
     barking: snapshot?.room.config?.expansions?.barking ?? true,
     zombie: snapshot?.room.config?.expansions?.zombie ?? true,
     good_vs_evil: snapshot?.room.config?.expansions?.good_vs_evil ?? true,
+    pokepri: snapshot?.room.config?.expansions?.pokepri ?? true,
   };
 
   const customExplodingCount: number | null =
@@ -283,6 +361,7 @@ export function ImplodingKittensRoom({
     expansionsConfig.barking,
     expansionsConfig.zombie,
     expansionsConfig.good_vs_evil,
+    expansionsConfig.pokepri,
   ]);
 
   return (
@@ -317,14 +396,14 @@ export function ImplodingKittensRoom({
                     Người Chơi)
                   </span>
                   <p className="text-[10px] sm:text-[11px] text-slate-400 [@media(max-height:460px)]:hidden">
-                    Chủ phòng có thể bật/tắt 5 Gói Mở Rộng và số lá Mèo Nổ trước
+                    Chủ phòng có thể bật/tắt 6 Gói Mở Rộng và số lá Mèo Nổ trước
                     khi bắt đầu!
                   </p>
                 </div>
               </div>
 
-              {/* 5 Expansion Toggles right in Lobby */}
-              <div className="grid grid-cols-2 [@media(min-width:540px)]:grid-cols-5 gap-1.5">
+              {/* 6 Expansion Toggles right in Lobby */}
+              <div className="grid grid-cols-2 [@media(min-width:540px)]:grid-cols-3 gap-1.5">
                 {IK_EXPANSION_IDS.map((expId) => {
                   const meta = IK_EXPANSION_META[expId];
                   const enabled = expansionsConfig[expId];
@@ -507,14 +586,18 @@ export function ImplodingKittensRoom({
           </div>
         )}
 
-        {/* 2. FLOATING ACTION BAR WHEN PLAYER SELECTS CARDS ON THEIR TURN */}
-        {!isLobby && ikView && isMyTurn && (
+        {/* 2. FLOATING ACTION BAR WHEN PLAYER SELECTS CARDS ON THEIR TURN (OR NOW CARD OUT OF TURN) */}
+        {!isLobby && ikView && (isMyTurn || canPlayNowOutOfTurn) && (
           <div className="absolute inset-x-0 bottom-[calc(var(--ik-dock-h,180px)+6px)] z-20 flex justify-center pointer-events-none px-1.5 sm:px-3">
             <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-1 sm:gap-2 rounded-xl sm:rounded-2xl border border-amber-400/50 bg-slate-950/92 backdrop-blur-md px-2 py-1 sm:px-3.5 sm:py-2 shadow-2xl max-w-[96vw]">
-              {canPlaySingle && (
+              {(canPlaySingle || canPlayBlindSingle || canPlayNowOutOfTurn) && (
                 <button
                   type="button"
-                  disabled={busy || isSelectedArmageddonBlocked}
+                  disabled={
+                    busy ||
+                    isSelectedArmageddonBlocked ||
+                    isSelectedAttackLocked
+                  }
                   onClick={() => {
                     void sendRoomAction({
                       type: "MATCH_COMMAND",
@@ -526,11 +609,23 @@ export function ImplodingKittensRoom({
                     });
                     setSelectedCardIds([]);
                   }}
-                  className="rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-2.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-extrabold text-slate-950 shadow cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed max-w-[90vw] truncate"
+                  className={
+                    canPlayNowOutOfTurn
+                      ? "rounded-lg sm:rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-400 hover:to-amber-400 px-2.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-extrabold text-white shadow cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed max-w-[90vw] truncate"
+                      : canPlayBlindSingle
+                        ? "rounded-lg sm:rounded-xl bg-gradient-to-r from-purple-500 to-amber-500 hover:from-purple-400 hover:to-amber-400 px-2.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-extrabold text-white shadow cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed max-w-[90vw] truncate"
+                        : "rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-2.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-extrabold text-slate-950 shadow cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed max-w-[90vw] truncate"
+                  }
                 >
-                  {isSelectedArmageddonBlocked
-                    ? "Cần Mèo Thần Trên Thảm"
-                    : `Đánh [${IK_CARD_META[selectedCards[0].type].shortVi}]`}
+                  {canPlayBlindSingle
+                    ? "Đánh Mù Lá Bài Đang Chọn"
+                    : isSelectedArmageddonBlocked
+                      ? "Cần Mèo Thần Trên Thảm"
+                      : isSelectedAttackLocked
+                        ? "Bị Khóa Bởi Last Resort — Không Thể Đánh Tấn Công"
+                        : canPlayNowOutOfTurn
+                          ? `Đánh Ngay Ngoài Lượt [${IK_CARD_META[selectedCards[0].type].shortVi}]`
+                          : `Đánh [${IK_CARD_META[selectedCards[0].type].shortVi}]`}
                 </button>
               )}
 
@@ -577,6 +672,84 @@ export function ImplodingKittensRoom({
                     Hóa Thân ({IK_CARD_META[godcatMimicType].shortVi})
                   </button>
                 </div>
+              )}
+
+              {isSelectedFossil && (
+                <div className="flex flex-wrap items-center justify-center gap-1.5">
+                  {ikView.discardPileCards.length > 0 ? (
+                    <select
+                      value={wantedDiscardId}
+                      onChange={(e) => setWantedDiscardId(e.target.value)}
+                      className="rounded-lg border border-amber-400/60 bg-slate-900 px-2 py-1.5 text-xs font-bold text-amber-300"
+                    >
+                      {ikView.discardPileCards.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {IK_CARD_META[c.type].nameVi}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span className="text-[11px] text-slate-400 px-2">
+                      Chồng bài bỏ chưa có lá hợp lệ
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    disabled={busy || ikView.discardPileCards.length === 0}
+                    onClick={() => {
+                      void sendRoomAction({
+                        type: "MATCH_COMMAND",
+                        command: {
+                          type: "PLAY_CARD",
+                          cardId: selectedCards[0].id,
+                          discardCardId:
+                            wantedDiscardId ||
+                            ikView.discardPileCards[
+                              ikView.discardPileCards.length - 1
+                            ]?.id,
+                        },
+                      });
+                      setSelectedCardIds([]);
+                    }}
+                    className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-3.5 py-2 text-xs font-extrabold text-slate-950 shadow cursor-pointer disabled:opacity-45"
+                  >
+                    Đánh Fossil Restoration (Xáo Vào Bộ Bài &amp; Kết Lượt)
+                  </button>
+                </div>
+              )}
+
+              {boostPair && (
+                <button
+                  type="button"
+                  disabled={
+                    busy ||
+                    (IK_CARD_META[boostPair.targetCard.type].needsTargetSeat &&
+                      selectedTargetSeatNo === null) ||
+                    (ikView.attackLocked &&
+                      IK_ATTACK_CARD_TYPES.includes(boostPair.targetCard.type))
+                  }
+                  onClick={() => {
+                    void sendRoomAction({
+                      type: "MATCH_COMMAND",
+                      command: {
+                        type: "PLAY_BOOSTED_CARD",
+                        boostCardId: boostPair.boostCard.id,
+                        targetCardId: boostPair.targetCard.id,
+                        targetSeatNo: IK_CARD_META[boostPair.targetCard.type]
+                          .needsTargetSeat
+                          ? (selectedTargetSeatNo ?? undefined)
+                          : undefined,
+                      },
+                    });
+                    setSelectedCardIds([]);
+                  }}
+                  className="rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400 hover:from-amber-300 hover:to-orange-300 px-4 py-2 text-xs font-extrabold text-slate-950 shadow cursor-pointer disabled:opacity-45"
+                >
+                  {ikView.attackLocked &&
+                  IK_ATTACK_CARD_TYPES.includes(boostPair.targetCard.type)
+                    ? "Bị Khóa Bởi Last Resort — Không Thể Đánh Tấn Công"
+                    : `Đánh [${IK_CARD_META[boostPair.targetCard.type].shortVi}] + Purrfect Boost (+1 Hiệu Ứng)`}
+                </button>
               )}
 
               {canPlayCombo2 && (
@@ -849,16 +1022,21 @@ export function ImplodingKittensRoom({
             </div>
           )}
 
-        {/* 4. NOPE! WINDOW OVERLAY */}
+        {/* 4. NOPE! / SUPER NOPE! WINDOW OVERLAY — only visible to players who hold Nope or Super Nope */}
         {!isLobby &&
           ikView?.step === "NopeWindowStep" &&
-          ikView.pendingAction && (
+          ikView.pendingAction &&
+          (ikView.pendingAction.canViewerNope ||
+            ikView.pendingAction.canViewerSuperNope) &&
+          !ikView.pendingAction.hasViewerPassedNope && (
             <div className="absolute top-[calc(var(--ik-opp-bottom,120px)+6px)] left-1/2 -translate-x-1/2 z-30 w-full max-w-[min(94vw,28rem)] px-2">
               <div className="rounded-2xl border border-rose-500/70 bg-slate-950/95 p-3 sm:p-4 shadow-2xl space-y-2 sm:space-y-3 text-center">
                 <p className="text-xs font-extrabold uppercase tracking-wider text-rose-300">
                   {ikView.pendingAction.isCanceledByNope
-                    ? `ĐÃ BỊ NOPE (${ikView.pendingAction.nopeCount} lần) — Ai có Nope để đánh YUP không?`
-                    : "CỬA SỔ PHỦ QUYẾT (NOPE!)"}
+                    ? `ĐÃ BỊ NOPE (${ikView.pendingAction.nopeCount} lần) — Đánh YUP để phản lại?`
+                    : ikView.pendingAction.canViewerSuperNope
+                      ? "BẠN CÓ SUPER NOPE! — CHẶN TUYỆT ĐỐI HÀNH ĐỘNG NÀY?"
+                      : "BẠN CÓ LÁ NOPE! — CHẶN HÀNH ĐỘNG NÀY?"}
                 </p>
                 <p className="text-xs text-slate-200">
                   Hành động đang chờ:{" "}
@@ -868,7 +1046,24 @@ export function ImplodingKittensRoom({
                       .join(" + ")}
                   </strong>
                 </p>
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {ikView.pendingAction.canViewerSuperNope && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() =>
+                        sendRoomAction({
+                          type: "MATCH_COMMAND",
+                          command: { type: "PLAY_SUPER_NOPE" },
+                        })
+                      }
+                      className="rounded-xl bg-gradient-to-r from-red-700 via-rose-600 to-amber-500 hover:from-red-600 hover:to-amber-400 px-4 py-2 text-xs font-extrabold text-white shadow-lg border border-amber-300/60 cursor-pointer"
+                    >
+                      {ikView.pendingAction.isCanceledByNope
+                        ? "SUPER YUP! (Khóa Chặt)"
+                        : "SUPER NOPE! (Không Thể Phản)"}
+                    </button>
+                  )}
                   {ikView.pendingAction.canViewerNope && (
                     <button
                       type="button"
@@ -886,21 +1081,19 @@ export function ImplodingKittensRoom({
                         : "ĐÁNH NOPE! (Hủy Bỏ)"}
                     </button>
                   )}
-                  {!ikView.pendingAction.hasViewerPassedNope && (
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() =>
-                        sendRoomAction({
-                          type: "MATCH_COMMAND",
-                          command: { type: "PASS_NOPE" },
-                        })
-                      }
-                      className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-4 py-2 text-xs font-bold text-slate-200 cursor-pointer"
-                    >
-                      ✓ Cho Qua (Không Nope)
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() =>
+                      sendRoomAction({
+                        type: "MATCH_COMMAND",
+                        command: { type: "PASS_NOPE" },
+                      })
+                    }
+                    className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-4 py-2 text-xs font-bold text-slate-200 cursor-pointer"
+                  >
+                    Không dùng
+                  </button>
                 </div>
               </div>
             </div>
@@ -917,32 +1110,41 @@ export function ImplodingKittensRoom({
             const clampedIdx = Math.max(0, Math.min(maxIdx, insertIndex));
             const pct = maxIdx > 0 ? (clampedIdx / maxIdx) * 100 : 0;
             const isImploding = pi.reason === "INSERT_IMPLODING_FACEUP";
+            const isBlackHole = pi.reason === "INSERT_BLACK_HOLE_FACEUP";
             const isBury = pi.reason === "BURY_CARD";
             const cardSpriteStyle = getIkCardSpriteBgStyle(
               pi.card.type,
               pi.card.id
             );
             const cardMeta = IK_CARD_META[pi.card.type];
-            const accentBorder = isImploding
-              ? "border-purple-500/70"
-              : isBury
-                ? "border-amber-500/70"
-                : "border-rose-500/70";
-            const accentTitle = isImploding
-              ? "text-purple-300"
-              : isBury
-                ? "text-amber-300"
-                : "text-rose-300";
-            const accentBadgeBg = isImploding
-              ? "bg-purple-500/20 border-purple-400/50 text-purple-200"
-              : isBury
-                ? "bg-amber-500/20 border-amber-400/50 text-amber-200"
-                : "bg-rose-500/20 border-rose-400/50 text-rose-200";
-            const accentMarker = isImploding
-              ? "bg-purple-400 shadow-purple-500/80"
-              : isBury
-                ? "bg-amber-400 shadow-amber-500/80"
-                : "bg-rose-500 shadow-rose-500/80";
+            const accentBorder = isBlackHole
+              ? "border-indigo-400/75"
+              : isImploding
+                ? "border-purple-500/70"
+                : isBury
+                  ? "border-amber-500/70"
+                  : "border-rose-500/70";
+            const accentTitle = isBlackHole
+              ? "text-indigo-300"
+              : isImploding
+                ? "text-purple-300"
+                : isBury
+                  ? "text-amber-300"
+                  : "text-rose-300";
+            const accentBadgeBg = isBlackHole
+              ? "bg-indigo-500/20 border-indigo-400/50 text-indigo-200"
+              : isImploding
+                ? "bg-purple-500/20 border-purple-400/50 text-purple-200"
+                : isBury
+                  ? "bg-amber-500/20 border-amber-400/50 text-amber-200"
+                  : "bg-rose-500/20 border-rose-400/50 text-rose-200";
+            const accentMarker = isBlackHole
+              ? "bg-indigo-400 shadow-indigo-500/80"
+              : isImploding
+                ? "bg-purple-400 shadow-purple-500/80"
+                : isBury
+                  ? "bg-amber-400 shadow-amber-500/80"
+                  : "bg-rose-500 shadow-rose-500/80";
 
             const posDesc =
               clampedIdx === 0
@@ -968,11 +1170,13 @@ export function ImplodingKittensRoom({
                     </div>
                     <div className="min-w-0">
                       <p className={`text-sm font-extrabold ${accentTitle}`}>
-                        {isImploding
-                          ? "Cài Mèo Hố Đen (LẬT NGỬA) Vào Bộ Bài"
-                          : isBury
-                            ? `Chôn Giấu [${cardMeta.shortVi}] Vào Bộ Bài`
-                            : "Tháo Ngòi Thành Công! Gài Lại Mèo Nổ"}
+                        {isBlackHole
+                          ? "Cài Hố Đen Vũ Trụ (Black Hole — LẬT NGỬA) Vào Bộ Bài"
+                          : isImploding
+                            ? "Cài Mèo Hố Đen (LẬT NGỬA) Vào Bộ Bài"
+                            : isBury
+                              ? `Chôn Giấu [${cardMeta.shortVi}] Vào Bộ Bài`
+                              : "Tháo Ngòi Thành Công! Gài Lại Mèo Nổ"}
                       </p>
                       <p className="text-[11px] text-slate-400 mt-0.5">
                         Kéo thanh bên dưới để chọn chính xác vị trí giấu lá bài
@@ -1420,15 +1624,22 @@ export function ImplodingKittensRoom({
         {/* 8. FAVOR / GARBAGE COLLECTION PROMPT BANNER */}
         {!isLobby &&
           ikView &&
-          ((ikView.step === "FavorGiveStep" &&
-            ikView.pendingFavor?.fromSeatNo === snapshot?.viewerSeatNo) ||
+          ((ikView.step === "FavorGiveStep" && ikView.pendingFavor) ||
             (ikView.step === "GarbagePickStep" &&
               ikView.pendingGroupSubmit?.needsViewerCard)) && (
             <div className="absolute top-[calc(var(--ik-opp-bottom,120px)+6px)] left-1/2 -translate-x-1/2 z-30 w-full max-w-[min(94vw,28rem)] px-2">
               <div className="rounded-2xl border border-amber-400/70 bg-slate-950/95 p-3.5 shadow-2xl text-center">
                 <p className="text-xs font-extrabold text-amber-300">
-                  {ikView.step === "FavorGiveStep"
-                    ? "Hãy bấm chọn 1 lá bài trên tay bạn ở dưới đáy màn hình để đưa cho đối thủ (Favor)!"
+                  {ikView.step === "FavorGiveStep" && ikView.pendingFavor
+                    ? ikView.pendingFavor.fromSeatNo === snapshot?.viewerSeatNo
+                      ? (ikView.pendingFavor.remainingCount ?? 1) > 1
+                        ? `Favor + Purrfect Boost: Hãy bấm chọn lần lượt từng lá bài trên tay bạn để đưa cho đối thủ (còn ${ikView.pendingFavor.remainingCount} lá)!`
+                        : "Hãy bấm chọn 1 lá bài trên tay bạn ở dưới đáy màn hình để đưa cho đối thủ (Favor)!"
+                      : `Đang chờ ${
+                          ikView.seats.find(
+                            (s) => s.seatNo === ikView.pendingFavor?.fromSeatNo
+                          )?.displayName ?? "đối thủ"
+                        } chọn cống nạp ${ikView.pendingFavor.remainingCount ?? 1} lá bài (Favor)...`
                     : ikView.pendingGroupSubmit?.mode === "GARBAGE_COLLECTION"
                       ? "Thu Gom Rác: Hãy bấm chọn 1 lá bài trên tay bạn để trả vào Bộ bài rút!"
                       : "Góp Bài (Potluck): Hãy bấm chọn 1 lá bài trên tay bạn để đặt lên Đỉnh Bộ bài rút!"}
@@ -1783,6 +1994,7 @@ export function ImplodingKittensConfigContent({
     barking: snapshot?.room.config?.expansions?.barking ?? true,
     zombie: snapshot?.room.config?.expansions?.zombie ?? true,
     good_vs_evil: snapshot?.room.config?.expansions?.good_vs_evil ?? true,
+    pokepri: snapshot?.room.config?.expansions?.pokepri ?? true,
   };
   const customExplodingCount: number | null =
     typeof snapshot?.room.config?.explodingKittenCount === "number"
@@ -1991,6 +2203,47 @@ export function ImplodingKittensRulesContent() {
         <p>
           • <strong>Tiết Lộ Tương Lai 3x (Reveal the Future)</strong>: Lật
           công khai 3 lá trên cùng Bộ bài cho cả bàn cùng xem!
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-2">
+        <p className="font-bold text-rose-300 text-xs">
+          4. Gói Mở Rộng Pokepri Expansion
+        </p>
+        <p>
+          • <strong>Super Nope</strong>: Chặn đứng hành động của người khác —
+          không ai được đánh Nope hay Super Nope chồng lên!
+        </p>
+        <p>
+          • <strong>Black Hole (Hố Đen Vũ Trụ)</strong>: Rút khi úp thì cài lại
+          vào Bộ bài ở trạng thái Lật Ngửa; rút khi đang Lật Ngửa sẽ hút và xáo
+          toàn bộ bài trên tay bạn trở lại Bộ bài rút!
+        </p>
+        <p>
+          • <strong>Back From The Dead</strong>: Rút 2 lá bài từ người chơi vừa
+          bị nổ gần nhất.
+        </p>
+        <p>
+          • <strong>Copycat</strong>: Sao chép tác dụng của lá bài vừa đánh trên
+          cùng Chồng bài bỏ (không sao chép Lá Mèo).
+        </p>
+        <p>
+          • <strong>Fossil Restoration</strong>: Chọn 1 lá không phải bom từ
+          Chồng bài bỏ xáo vào Bộ bài rút và kết thúc lượt không cần rút.
+        </p>
+        <p>
+          • <strong>Purrfect Boost</strong>: Chọn đánh kèm cùng 1 lá Hành Động
+          phù hợp (Tấn Công, Last Resort, Soi/Đổi Tương Lai, Bỏ Lượt, Xin Xỏ,
+          Đánh Dấu, Back From The Dead, Sneak Peek...) để cộng +1 hiệu ứng!
+        </p>
+        <p>
+          • <strong>Last Resort (Đòn Quyết Tử)</strong>: Kết thúc lượt và ép 1
+          người chơi bất kỳ đi 2 lượt liên tiếp — KHÔNG THỂ dùng Nope để chặn và
+          mục tiêu KHÔNG THỂ đánh lá Tấn Công (Attack) chồng lên!
+        </p>
+        <p>
+          • <strong>Sneak Peek (Nhìn Trộm)</strong>: Chọn 1 đối thủ và xem bí
+          mật 3 lá ngẫu nhiên trên tay họ (chỉ riêng bạn thấy).
         </p>
       </div>
     </div>

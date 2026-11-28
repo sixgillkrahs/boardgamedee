@@ -11,7 +11,8 @@ export type IkExpansionId =
   | "streaking"
   | "barking"
   | "zombie"
-  | "good_vs_evil";
+  | "good_vs_evil"
+  | "pokepri";
 
 export const IK_EXPANSION_IDS: IkExpansionId[] = [
   "imploding",
@@ -19,6 +20,7 @@ export const IK_EXPANSION_IDS: IkExpansionId[] = [
   "barking",
   "zombie",
   "good_vs_evil",
+  "pokepri",
 ];
 
 export interface IkExpansionMeta {
@@ -76,6 +78,15 @@ export const IK_EXPANSION_META: Record<IkExpansionId, IkExpansionMeta> = {
       "Thêm Tận Thế (Armageddon đấu trí giành Mèo Thần Godcat & né Mèo Quỷ Devilcat trên Thảm đấu), Quậy Tưng Bừng (Raising Heck), Tiết Lộ Tương Lai 3x & 4 Lá Mèo mới.",
     accentColor: "#f59e0b",
   },
+  pokepri: {
+    id: "pokepri",
+    nameVi: "Pokepri Expansion",
+    shortVi: "Pokepri",
+    badgeVi: "Mở Rộng #6",
+    descriptionVi:
+      "Thêm 8 lá Pokepri: Super Nope, Black Hole, Back From The Dead, Copycat, Fossil Restoration, Purrfect Boost (+1), Last Resort (đòn tấn công không thể Attack/Nope chồng) & Sneak Peek (xem trộm 3 lá của đối thủ)!",
+    accentColor: "#dc2626",
+  },
 };
 
 export type IkCardType =
@@ -128,6 +139,7 @@ export type IkCardType =
   | "clairvoyance"
   | "feed_the_dead"
   | "grave_robber"
+  | "shuffle_now"
   | "de_cat_ipated"
   | "vampire_cat"
   | "zombie_cat"
@@ -140,7 +152,16 @@ export type IkCardType =
   | "horse_cat"
   | "knight_cat"
   | "mercat"
-  | "troll_cat";
+  | "troll_cat"
+  // Pokepri Expansion
+  | "super_nope"
+  | "black_hole"
+  | "back_from_the_dead"
+  | "copycat"
+  | "fossil_restoration"
+  | "purrfect_boost"
+  | "last_resort"
+  | "sneak_peek";
 
 export type IkCardCategory =
   | "bomb"
@@ -219,11 +240,11 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
   },
   feed_the_dead: {
     type: "feed_the_dead",
-    nameVi: "Cho Người Chết Ăn (Feed the Dead)",
+    nameVi: "Cho Người Chết Ăn (Feed the Dead NOW)",
     shortVi: "Feed the Dead",
-    subtitleVi: "Mọi người sống đưa 1 lá cho người đã chết",
+    subtitleVi: "Đánh BẤT KỲ LÚC NÀO • Mọi người sống đưa 1 lá cho người đã chết",
     ruleVi:
-      "Chọn 1 người chơi đã chết. Tất cả người chơi còn sống khác (trừ bạn) phải chọn 1 lá bài trên tay đưa cho người chết đó!",
+      "Tất cả người chơi còn sống khác (trừ bạn) phải chọn 1 lá bài trên tay đưa cho 1 người chơi đã chết. Có thể đánh NGAY CẢ KHI KHÔNG PHẢI LƯỢT CỦA BẠN!",
     emoji: "",
     colorHex: "#ef4444",
     secondaryHex: "#450a0a",
@@ -255,6 +276,112 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     secondaryHex: "#450a0a",
     category: "defense",
     pack: "core",
+  },
+  super_nope: {
+    type: "super_nope",
+    nameVi: "Siêu Phủ Quyết (Super Nope)",
+    shortVi: "Super Nope!",
+    subtitleVi: "Chặn tuyệt đối • Không ai được đánh Nope chồng lên!",
+    ruleVi:
+      "Chặn đứng hành động của người chơi khác ngay lập tức. KHÔNG AI có thể đánh Nope hay Super Nope chồng lên lá bài này!",
+    emoji: "",
+    colorHex: "#991b1b",
+    secondaryHex: "#450a0a",
+    category: "defense",
+    pack: "pokepri",
+  },
+  black_hole: {
+    type: "black_hole",
+    nameVi: "Hố Đen (Black Hole)",
+    shortVi: "Black Hole",
+    subtitleVi: "Rút lần 1: Lật ngửa nhét lại • Rút ngửa: Xáo sạch bài trên tay vào Bộ bài!",
+    ruleVi:
+      "Khi rút phải lúc úp mặt, đặt lại lá này vào Bộ bài rút ở trạng thái LẬT NGỬA. Khi ai đó rút phải lúc Lật Ngửa, toàn bộ bài trên tay họ bị hút sạch và xáo vào Bộ bài rút!",
+    emoji: "",
+    colorHex: "#4338ca",
+    secondaryHex: "#1e1b4b",
+    category: "bomb",
+    pack: "pokepri",
+  },
+  back_from_the_dead: {
+    type: "back_from_the_dead",
+    nameVi: "Rút Bài Người Nổ (Back From The Dead)",
+    shortVi: "Back From Dead",
+    subtitleVi: "Rút 2 lá từ người chơi vừa mới bị nổ!",
+    ruleVi:
+      "Rút ngẫu nhiên 2 lá bài (không phải bom) từ tay/di sản của người chơi vừa mới bị nổ gần nhất về tay bạn.",
+    emoji: "",
+    colorHex: "#475569",
+    secondaryHex: "#0f172a",
+    category: "action",
+    pack: "pokepri",
+  },
+  copycat: {
+    type: "copycat",
+    nameVi: "Mèo Bắt Chước (Copycat)",
+    shortVi: "Copycat",
+    subtitleVi: "Sao chép lá Hành Động vừa đánh (không chép lá Mèo)",
+    ruleVi:
+      "Hoạt động như bản sao của lá bài Hành Động trên cùng trong Chồng bài bỏ. Không thể sao chép các lá Mèo thường.",
+    emoji: "",
+    colorHex: "#78716c",
+    secondaryHex: "#292524",
+    category: "action",
+    pack: "pokepri",
+  },
+  fossil_restoration: {
+    type: "fossil_restoration",
+    nameVi: "Phục Hồi Hóa Thạch (Fossil Restoration)",
+    shortVi: "Fossil",
+    subtitleVi: "Xáo 1 lá từ Mộ vào Bộ bài rút & kết thúc lượt",
+    ruleVi:
+      "Chọn 1 lá bất kỳ (không phải Bom/Mèo Nổ) trong Chồng bài bỏ, xáo trộn vào Bộ bài rút và kết thúc ngay lượt của bạn mà không cần rút bài!",
+    emoji: "",
+    colorHex: "#d97706",
+    secondaryHex: "#451a03",
+    category: "action",
+    pack: "pokepri",
+  },
+  purrfect_boost: {
+    type: "purrfect_boost",
+    nameVi: "Tăng Lực Hoàn Hảo (Purrfect Boost)",
+    shortVi: "Boost +1",
+    subtitleVi: "Đánh kèm 1 lá phù hợp để cộng +1 hiệu ứng!",
+    ruleVi:
+      "Chọn đánh cùng lúc với 1 lá Hành Động phù hợp (Attack, Last Resort, Skip, See/Alter/Share/Reveal Future, Favor, Mark, Back From The Dead, Sneak Peek) để cộng thêm +1 vào hiệu ứng của lá đó!",
+    emoji: "",
+    colorHex: "#f59e0b",
+    secondaryHex: "#78350f",
+    category: "action",
+    pack: "pokepri",
+  },
+  last_resort: {
+    type: "last_resort",
+    nameVi: "Đòn Quyết Tử (Last Resort)",
+    shortVi: "Last Resort",
+    subtitleVi: "Ép 1 người đi 2 lượt • KHÔNG THỂ đánh Attack hay Nope chồng lên!",
+    ruleVi:
+      "Kết thúc lượt của bạn và chỉ định 1 người chơi bất kỳ phải đi 2 lượt liên tiếp. KHÔNG THỂ dùng Nope để chặn và mục tiêu KHÔNG THỂ đánh lá Tấn Công (Attack) chồng lên!",
+    emoji: "",
+    colorHex: "#b91c1c",
+    secondaryHex: "#450a0a",
+    category: "action",
+    pack: "pokepri",
+    needsTargetSeat: true,
+  },
+  sneak_peek: {
+    type: "sneak_peek",
+    nameVi: "Nhìn Trộm (Sneak Peek)",
+    shortVi: "Sneak Peek",
+    subtitleVi: "Chọn 1 đối thủ & xem bí mật 3 lá ngẫu nhiên trên tay họ!",
+    ruleVi:
+      "Chọn 1 người chơi bất kỳ và rút xem bí mật 3 lá ngẫu nhiên trên tay họ (chỉ riêng bạn nhìn thấy, không kết thúc lượt).",
+    emoji: "",
+    colorHex: "#f472b6",
+    secondaryHex: "#831843",
+    category: "action",
+    pack: "pokepri",
+    needsTargetSeat: true,
   },
   attack: {
     type: "attack",
@@ -387,6 +514,19 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
     secondaryHex: "#1e293b",
     category: "action",
     pack: "core",
+  },
+  shuffle_now: {
+    type: "shuffle_now",
+    nameVi: "Xáo Bài Ngay (Shuffle NOW)",
+    shortVi: "Xáo Ngay",
+    subtitleVi: "Đánh BẤT KỲ LÚC NÀO • Trộn tung Bộ bài rút",
+    ruleVi:
+      "Xáo trộn ngẫu nhiên toàn bộ Bộ bài rút ngay lập tức. Đặc biệt có thể đánh NGAY CẢ KHI KHÔNG PHẢI LƯỢT CỦA BẠN để phá bài đối thủ (vẫn có thể bị Nope chặn lại).",
+    emoji: "",
+    colorHex: "#b45309",
+    secondaryHex: "#451a03",
+    category: "action",
+    pack: "zombie",
   },
   see_future_3: {
     type: "see_future_3",
@@ -614,11 +754,11 @@ export const IK_CARD_META: Record<IkCardType, IkCardMeta> = {
   },
   clairvoyance: {
     type: "clairvoyance",
-    nameVi: "Thấu Tâm (Clairvoyance)",
+    nameVi: "Thấu Tâm (Clairvoyance NOW)",
     shortVi: "Thấu Tâm",
-    subtitleVi: "Soi vị trí mọi quả Bom trong Bộ bài",
+    subtitleVi: "Đánh BẤT KỲ LÚC NÀO • Soi vị trí mọi quả Bom trong Bộ bài",
     ruleVi:
-      "Bí mật soi chính xác vị trí hiện tại của toàn bộ các lá Mèo Nổ và Mèo Hố Đen đang nằm ở lá thứ mấy trong Bộ bài rút!",
+      "Bí mật soi chính xác vị trí hiện tại của toàn bộ các lá Mèo Nổ và Mèo Hố Đen đang nằm ở lá thứ mấy trong Bộ bài rút. Có thể đánh NGAY CẢ KHI KHÔNG PHẢI LƯỢT CỦA BẠN!",
     emoji: "",
     colorHex: "#2dd4bf",
     secondaryHex: "#115e59",
@@ -884,6 +1024,7 @@ export const IK_GODCAT_MIMICABLE_TYPES: IkCardType[] = [
   "draw_bottom",
   "favor",
   "shuffle",
+  "shuffle_now",
   "see_future_3",
   "see_future_5",
   "alter_future_3",
@@ -905,6 +1046,46 @@ export const IK_GODCAT_MIMICABLE_TYPES: IkCardType[] = [
   "attack_of_the_dead",
   "feed_the_dead",
   "grave_robber",
+  "back_from_the_dead",
+  "fossil_restoration",
+  "last_resort",
+  "sneak_peek",
+];
+
+/** Cards that can be paired with Purrfect Boost (+1 to their numeric effect) */
+export const IK_BOOSTABLE_CARD_TYPES: IkCardType[] = [
+  "attack",
+  "targeted_attack",
+  "personal_attack",
+  "attack_of_the_dead",
+  "last_resort",
+  "skip",
+  "see_future_3",
+  "see_future_5",
+  "alter_future_3",
+  "alter_future_5",
+  "share_future_3",
+  "reveal_future_3",
+  "favor",
+  "mark",
+  "back_from_the_dead",
+  "sneak_peek",
+];
+
+/** Attack cards blocked while under Pokepri's Last Resort ("NO ATTACK OR NOPE CAN BE PLAYED ON TOP") */
+export const IK_ATTACK_CARD_TYPES: IkCardType[] = [
+  "attack",
+  "targeted_attack",
+  "personal_attack",
+  "attack_of_the_dead",
+  "last_resort",
+];
+
+/** Official Zombie Kittens NOW cards ("PLAY AT ANY TIME") playable even out of turn */
+export const IK_NOW_CARD_TYPES: IkCardType[] = [
+  "shuffle_now",
+  "clairvoyance",
+  "feed_the_dead",
 ];
 
 export const IK_CAT_TYPES: IkCardType[] = [
@@ -988,6 +1169,8 @@ export interface IkPendingAction {
   nopeCount: number;
   lastNopeBySeatNo: number | null;
   passedSeatNos: number[];
+  /** True when played together with Pokepri's Purrfect Boost (+1 effect) */
+  boosted?: boolean;
 }
 
 export interface IkVisionCardItem {
@@ -1035,6 +1218,12 @@ export interface IkLastAnim {
   actorSeatNo: number;
   targetSeatNo?: number;
   card?: IkCard;
+  /** Full list of cards played together (for 2/3/5-card Combos and Purrfect Boost pairs) */
+  cards?: IkCard[];
+  /** Combo / Boost category for dedicated multi-card Canvas VFX & Showcase banner */
+  comboKind?: "COMBO_2" | "COMBO_3" | "COMBO_5" | "BOOST";
+  /** Wanted card type for Combo 3 banner display */
+  wantedCardType?: IkCardType;
   /** True when Tower of Power intercepted the steal (stash card stays secret from target) */
   fromTower?: boolean;
   messageVi?: string;
@@ -1059,12 +1248,21 @@ export interface IkMatchState {
   towerStashCards: IkCard[];
   /** Good vs. Evil: True when Godcat is currently resting on the Playmat (required to play Armageddon) */
   godcatOnPlaymat: boolean;
+  /** Pokepri Expansion: Seat & non-bomb cards of the player who most recently exploded (for Back From The Dead) */
+  lastExplodedSeatNo: number | null;
+  lastExplodedStash: IkCard[];
+  /** Pokepri Expansion: True while current active seat is under Last Resort ("NO ATTACK OR NOPE CAN BE PLAYED ON TOP") */
+  attackLocked: boolean;
   pendingAction: IkPendingAction | null;
   /** Holds the bomb or bury card currently waiting to be inserted into Draw Pile during DefuseInsertStep */
   pendingInsert: {
     seatNo: number;
     card: IkCard;
-    reason: "DEFUSE_EXPLODING" | "INSERT_IMPLODING_FACEUP" | "BURY_CARD";
+    reason:
+      | "DEFUSE_EXPLODING"
+      | "INSERT_IMPLODING_FACEUP"
+      | "INSERT_BLACK_HOLE_FACEUP"
+      | "BURY_CARD";
     endsTurnOnInsert: boolean;
   } | null;
   /** Holds the top N cards currently being reordered during AlterFutureStep */
@@ -1074,10 +1272,11 @@ export interface IkMatchState {
     shareWithNextSeatNo: number | null;
     cards: IkCard[];
   } | null;
-  /** Holds the Favor target waiting to hand over 1 card during FavorGiveStep */
+  /** Holds the Favor target waiting to hand over 1 (or 2 if Purrfect Boosted) cards during FavorGiveStep */
   pendingFavor: {
     fromSeatNo: number;
     toSeatNo: number;
+    remainingCount?: number;
   } | null;
   /** Holds the 2-Card Combo attacker choosing which card slot to draw from target's shuffled hand */
   pendingCombo2Pick: {
@@ -1124,6 +1323,14 @@ export type IkCommand =
       targetSeatNo?: number;
       /** Used when playing Godcat: the action card type Godcat transforms into (cannot be Nope) */
       mimicCardType?: IkCardType;
+      /** Used when playing Fossil Restoration: chosen non-bomb card ID from discardPile */
+      discardCardId?: string;
+    }
+  | {
+      type: "PLAY_BOOSTED_CARD";
+      boostCardId: string;
+      targetCardId: string;
+      targetSeatNo?: number;
     }
   | {
       type: "PLAY_COMBO_2";
@@ -1146,6 +1353,10 @@ export type IkCommand =
     }
   | {
       type: "PLAY_NOPE";
+      cardId?: string;
+    }
+  | {
+      type: "PLAY_SUPER_NOPE";
       cardId?: string;
     }
   | {
@@ -1229,6 +1440,8 @@ export interface IkPlayerView {
   towerHolderSeatNo: number | null;
   towerStashCount: number;
   godcatOnPlaymat: boolean;
+  /** Pokepri Expansion: True when active player is under Last Resort and cannot stack an Attack */
+  attackLocked: boolean;
   myHand: IkCard[];
   myIsBlind: boolean;
   myPrivateVision: {
@@ -1246,12 +1459,19 @@ export interface IkPlayerView {
     isCanceledByNope: boolean;
     lastNopeBySeatNo: number | null;
     canViewerNope: boolean;
+    canViewerSuperNope: boolean;
     hasViewerPassedNope: boolean;
+    deadlineMs: number | null;
+    windowMs: number;
   } | null;
   pendingInsert: {
     seatNo: number;
     card: IkCard;
-    reason: "DEFUSE_EXPLODING" | "INSERT_IMPLODING_FACEUP" | "BURY_CARD";
+    reason:
+      | "DEFUSE_EXPLODING"
+      | "INSERT_IMPLODING_FACEUP"
+      | "INSERT_BLACK_HOLE_FACEUP"
+      | "BURY_CARD";
     maxInsertIndex: number;
   } | null;
   pendingAlterFuture: {
@@ -1262,6 +1482,7 @@ export interface IkPlayerView {
   pendingFavor: {
     fromSeatNo: number;
     toSeatNo: number;
+    remainingCount?: number;
   } | null;
   pendingCombo2Pick: {
     actorSeatNo: number;
@@ -1328,6 +1549,9 @@ function cloneState(state: IkMatchState): IkMatchState {
     towerHolderSeatNo: state.towerHolderSeatNo ?? null,
     towerStashCards: (state.towerStashCards ?? []).map((c) => ({ ...c })),
     godcatOnPlaymat: state.godcatOnPlaymat ?? false,
+    lastExplodedSeatNo: state.lastExplodedSeatNo ?? null,
+    lastExplodedStash: (state.lastExplodedStash ?? []).map((c) => ({ ...c })),
+    attackLocked: Boolean(state.attackLocked),
     pendingAction: state.pendingAction
       ? {
           ...state.pendingAction,
@@ -1495,6 +1719,7 @@ export function buildImplodingDeck(
     add("clairvoyance", 2);
     add("feed_the_dead", 2);
     add("grave_robber", 1);
+    add("shuffle_now", 2);
     add("de_cat_ipated", 4);
     add("vampire_cat", 4);
     add("zombie_cat", 4);
@@ -1509,6 +1734,17 @@ export function buildImplodingDeck(
     add("knight_cat", 4);
     add("mercat", 4);
     add("troll_cat", 4);
+  }
+
+  // 7. Expansion #6: Pokepri Expansion
+  if (expansions.pokepri) {
+    add("super_nope", 2);
+    add("back_from_the_dead", 2);
+    add("copycat", 2);
+    add("fossil_restoration", 2);
+    add("purrfect_boost", 2);
+    add("last_resort", 2);
+    add("sneak_peek", 2);
   }
 
   return deck;
@@ -1563,6 +1799,7 @@ function consumeOneTurnOrAdvanceSeat(
   if (!active.alive) {
     // Eliminated player loses all remaining owed turns; next living player starts with 1 turn
     state.turnsRemaining = 1;
+    state.attackLocked = false;
     state.activeSeatNo = getNextAliveSeatNo(state, active.seatNo);
     state.turnNumber += 1;
     state.step = "TurnPlayStep";
@@ -1583,6 +1820,7 @@ function consumeOneTurnOrAdvanceSeat(
   }
 
   state.turnsRemaining = 1;
+  state.attackLocked = false;
   state.activeSeatNo = getNextAliveSeatNo(state, active.seatNo);
   state.turnNumber += 1;
   state.step = "TurnPlayStep";
@@ -1601,6 +1839,24 @@ function discardCardsRespectingPlaymat(state: IkMatchState, cards: IkCard[]): vo
       state.discardPile.push(c);
     }
   }
+}
+
+/**
+ * Records the most recently exploded player and their non-bomb hand cards
+ * so Pokepri's `back_from_the_dead` can draw 2 (or 3 with Purrfect Boost) cards off them.
+ */
+function recordExplodedPlayer(state: IkMatchState, seat: IkSeatState): void {
+  state.lastExplodedSeatNo = seat.seatNo;
+  state.lastExplodedStash = seat.hand
+    .filter(
+      (c) =>
+        c.type !== "exploding_kitten" &&
+        c.type !== "imploding_kitten" &&
+        c.type !== "black_hole" &&
+        c.type !== "devilcat" &&
+        c.type !== "godcat"
+    )
+    .map((c) => ({ ...c, marked: false }));
 }
 
 /**
@@ -1653,6 +1909,7 @@ function checkExposedHandBomb(
   } else {
     seat.alive = false;
     seat.eliminatedBy = "exploding";
+    recordExplodedPlayer(state, seat);
     discardCardsRespectingPlaymat(state, [bomb, ...seat.hand]);
     seat.hand = [];
     setAnim(
@@ -1716,6 +1973,75 @@ function resolveCardDrawnBySeat(
     });
   }
 
+  // CASE 0: BLACK HOLE (Pokepri Expansion)
+  if (drawnCard.type === "black_hole") {
+    if (!drawnCard.faceUp) {
+      // Drawn face-down: flip face-up and put back into draw pile at chosen position
+      drawnCard.faceUp = true;
+      state.step = "DefuseInsertStep";
+      state.pendingInsert = {
+        seatNo: recipient.seatNo,
+        card: drawnCard,
+        reason: "INSERT_BLACK_HOLE_FACEUP",
+        endsTurnOnInsert: true,
+      };
+      state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+
+      setAnim(
+        state,
+        {
+          kind: "IMPLODING_FACEUP",
+          actorSeatNo: recipient.seatNo,
+          card: drawnCard,
+        },
+        nowMs
+      );
+
+      events.push({
+        eventType: "IK_BLACK_HOLE_DRAWN_FIRST",
+        message: `${recipient.displayName} rút phải HỐ ĐEN VŨ TRỤ (Black Hole — lần đầu)! Lá bài đã LẬT NGỬA và đang được cài lại vào Bộ bài rút!`,
+        visibleToSeatNos: "all",
+      });
+      return;
+    } else {
+      // Drawn face-up: shuffle ALL cards in recipient's hand back into draw pile (player survives!)
+      state.discardPile.push(drawnCard);
+      const suckedCount = recipient.hand.length;
+      for (const c of recipient.hand) {
+        if (c.type === "godcat") {
+          state.godcatOnPlaymat = true;
+        } else {
+          c.marked = false;
+          state.drawPile.push(c);
+        }
+      }
+      recipient.hand = [];
+      state.drawPile = shuffle(state.drawPile, Math.random);
+      for (const s of state.seats) {
+        s.privateVision = null;
+      }
+
+      setAnim(
+        state,
+        {
+          kind: "CATOMIC_BOMB",
+          actorSeatNo: recipient.seatNo,
+          card: drawnCard,
+        },
+        nowMs
+      );
+
+      events.push({
+        eventType: "IK_BLACK_HOLE_TRIGGERED",
+        message: `HỐ ĐEN VŨ TRỤ (BLACK HOLE)! ${recipient.displayName} rút phải Black Hole đang Lật Ngửa — toàn bộ ${suckedCount} lá bài trên tay bị hút và xáo trộn trở lại vào Bộ bài rút!`,
+        visibleToSeatNos: "all",
+      });
+
+      consumeOneTurnOrAdvanceSeat(state, events, nowMs);
+      return;
+    }
+  }
+
   // CASE 1: IMPLODING KITTEN
   if (drawnCard.type === "imploding_kitten") {
     if (!drawnCard.faceUp) {
@@ -1750,6 +2076,7 @@ function resolveCardDrawnBySeat(
       // Drawn while FACE UP -> CANNOT BE DEFUSED! Instant elimination!
       recipient.alive = false;
       recipient.eliminatedBy = "imploding";
+      recordExplodedPlayer(state, recipient);
       discardCardsRespectingPlaymat(state, [drawnCard, ...recipient.hand]);
       recipient.hand = [];
 
@@ -1866,6 +2193,7 @@ function resolveCardDrawnBySeat(
     // No Defuse and no Streaking Kitten -> BOOM! Eliminated!
     recipient.alive = false;
     recipient.eliminatedBy = "exploding";
+    recordExplodedPlayer(state, recipient);
     discardCardsRespectingPlaymat(state, [drawnCard, ...recipient.hand]);
     recipient.hand = [];
 
@@ -2095,12 +2423,19 @@ function executeResolvedAction(
 
   // SINGLE ACTION CARD
   const effType = pending.effectiveType ?? pending.cards[0].type;
+  const boost = pending.boosted ? 1 : 0;
 
   switch (effType) {
     case "skip": {
+      if (boost > 0 && state.turnsRemaining > 1) {
+        state.turnsRemaining -= 1;
+      }
       events.push({
         eventType: "IK_SKIP",
-        message: `${actor.displayName} đánh Bỏ Lượt (Skip) — kết thúc 1 lượt mà không cần rút bài!`,
+        message:
+          boost > 0
+            ? `${actor.displayName} đánh Bỏ Lượt (Skip) + Purrfect Boost — bỏ qua tới 2 lượt mà không cần rút bài!`
+            : `${actor.displayName} đánh Bỏ Lượt (Skip) — kết thúc 1 lượt mà không cần rút bài!`,
         visibleToSeatNos: "all",
       });
       consumeOneTurnOrAdvanceSeat(state, events, nowMs);
@@ -2139,44 +2474,55 @@ function executeResolvedAction(
 
     case "attack":
     case "targeted_attack":
-    case "attack_of_the_dead": {
+    case "attack_of_the_dead":
+    case "last_resort": {
       const deadCount = state.seats.filter((s) => !s.alive).length;
-      const addedTurns =
+      const baseAdded =
         effType === "attack_of_the_dead"
           ? deadCount > 0
             ? deadCount * 3
             : 1
           : 2;
+      const addedTurns = baseAdded + boost;
       const carriedOver = state.turnsRemaining > 1 ? state.turnsRemaining : 0;
       const nextTurns = carriedOver + addedTurns;
       const nextSeatNo =
-        effType === "targeted_attack" && pending.targetSeatNo
+        (effType === "targeted_attack" || effType === "last_resort") &&
+        pending.targetSeatNo
           ? pending.targetSeatNo
           : getNextAliveSeatNo(state, actor.seatNo);
       const target = getSeat(state, nextSeatNo);
 
       state.activeSeatNo = target.seatNo;
       state.turnsRemaining = nextTurns;
+      state.attackLocked = effType === "last_resort";
       state.turnNumber += 1;
       state.step = "TurnPlayStep";
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
 
       events.push({
-        eventType: "IK_ATTACK_RESOLVED",
-        message: `${actor.displayName} tung ${IK_CARD_META[effType].nameVi} vào ${target.displayName} — ép ${target.displayName} phải đi liên tiếp ${nextTurns} lượt!`,
+        eventType:
+          effType === "last_resort"
+            ? "IK_LAST_RESORT_RESOLVED"
+            : "IK_ATTACK_RESOLVED",
+        message:
+          effType === "last_resort"
+            ? `${actor.displayName} tung Đòn Quyết Tử (Last Resort)${boost > 0 ? " (+Purrfect Boost)" : ""} vào ${target.displayName} — ép đi liên tiếp ${nextTurns} lượt (KHÔNG THỂ đánh Attack hay Nope chồng lên)!`
+            : `${actor.displayName} tung ${IK_CARD_META[effType].nameVi}${boost > 0 ? " (+Purrfect Boost)" : ""} vào ${target.displayName} — ép ${target.displayName} phải đi liên tiếp ${nextTurns} lượt!`,
         visibleToSeatNos: "all",
       });
       return;
     }
 
     case "personal_attack": {
-      const extra = (state.turnsRemaining > 1 ? state.turnsRemaining - 1 : 0) + 3;
+      const extra =
+        (state.turnsRemaining > 1 ? state.turnsRemaining - 1 : 0) + 3 + boost;
       state.turnsRemaining = extra;
       state.step = "TurnPlayStep";
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_PERSONAL_ATTACK",
-        message: `${actor.displayName} đánh Tự Tấn Công 3x — tự nhận đi ${state.turnsRemaining} lượt liên tiếp!`,
+        message: `${actor.displayName} đánh Tự Tấn Công${boost > 0 ? " (+Purrfect Boost)" : ""} — tự nhận đi ${state.turnsRemaining} lượt liên tiếp!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2193,13 +2539,20 @@ function executeResolvedAction(
       return;
     }
 
-    case "shuffle": {
+    case "shuffle":
+    case "shuffle_now": {
       state.drawPile = shuffle(state.drawPile, Math.random);
+      for (const s of state.seats) {
+        s.privateVision = null;
+      }
       state.step = "TurnPlayStep";
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_SHUFFLE",
-        message: `${actor.displayName} xáo trộn tung toàn bộ Bộ bài rút!`,
+        message:
+          pending.effectiveType === "shuffle_now"
+            ? `${actor.displayName} tung Xáo Bài Ngay (Shuffle NOW) trộn tung toàn bộ Bộ bài rút!`
+            : `${actor.displayName} xáo trộn tung toàn bộ Bộ bài rút!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2224,7 +2577,7 @@ function executeResolvedAction(
 
     case "see_future_3":
     case "see_future_5": {
-      const count = effType === "see_future_5" ? 5 : 3;
+      const count = (effType === "see_future_5" ? 5 : 3) + boost;
       const topCards: IkCard[] = [];
       for (
         let i = state.drawPile.length - 1;
@@ -2299,7 +2652,7 @@ function executeResolvedAction(
     case "alter_future_3":
     case "alter_future_5":
     case "share_future_3": {
-      const wantCount = effType === "alter_future_5" ? 5 : 3;
+      const wantCount = (effType === "alter_future_5" ? 5 : 3) + boost;
       const count = Math.min(wantCount, state.drawPile.length);
       if (count <= 1) {
         state.step = "TurnPlayStep";
@@ -2337,9 +2690,14 @@ function executeResolvedAction(
         state.towerHolderSeatNo === target.seatNo &&
         state.towerStashCards.length > 0
       ) {
-        const stolen = state.towerStashCards.pop()!;
-        stolen.marked = false;
-        actor.hand.push(stolen);
+        const takeCount = Math.min(1 + boost, state.towerStashCards.length);
+        let lastStolen: IkCard | undefined;
+        for (let i = 0; i < takeCount; i++) {
+          const stolen = state.towerStashCards.pop()!;
+          stolen.marked = false;
+          actor.hand.push(stolen);
+          lastStolen = stolen;
+        }
         if (state.towerStashCards.length === 0) {
           state.towerHolderSeatNo = null;
         }
@@ -2349,7 +2707,7 @@ function executeResolvedAction(
             kind: "COMBO_STEAL",
             actorSeatNo: actor.seatNo,
             targetSeatNo: target.seatNo,
-            card: stolen,
+            card: lastStolen,
             fromTower: true,
           },
           nowMs
@@ -2358,7 +2716,7 @@ function executeResolvedAction(
         state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
         events.push({
           eventType: "IK_TOWER_INTERCEPT",
-          message: `Tháp Quyền Lực chắn đòn Xin Xỏ (Favor)! ${actor.displayName} buộc phải rút mù 1 lá từ đỉnh Tháp của ${target.displayName} (còn ${state.towerStashCards.length} lá)!`,
+          message: `Tháp Quyền Lực chắn đòn Xin Xỏ (Favor)! ${actor.displayName} buộc phải rút mù ${takeCount} lá từ đỉnh Tháp của ${target.displayName} (còn ${state.towerStashCards.length} lá)!`,
           visibleToSeatNos: "all",
         });
         return;
@@ -2368,15 +2726,17 @@ function executeResolvedAction(
         state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
         return;
       }
+      const giveCount = Math.min(1 + boost, target.hand.length);
       state.step = "FavorGiveStep";
       state.pendingFavor = {
         fromSeatNo: target.seatNo,
         toSeatNo: actor.seatNo,
+        remainingCount: giveCount,
       };
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_FAVOR_ASKED",
-        message: `${actor.displayName} dùng Xin Xỏ (Favor) yêu cầu ${target.displayName} tự chọn 1 lá bài trên tay cống nạp!`,
+        message: `${actor.displayName} dùng Xin Xỏ (Favor)${boost > 0 ? " + Purrfect Boost" : ""} yêu cầu ${target.displayName} tự chọn ${giveCount} lá bài trên tay cống nạp!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2591,15 +2951,19 @@ function executeResolvedAction(
 
     case "mark": {
       const target = getSeat(state, pending.targetSeatNo!);
-      const unmarked = target.hand.filter((c) => !c.marked);
-      const pool = unmarked.length > 0 ? unmarked : target.hand;
-      if (pool.length > 0) {
-        const picked = pool[Math.floor(Math.random() * pool.length)];
+      const markTargetCount = 1 + boost;
+      const markedNames: string[] = [];
+      for (let m = 0; m < markTargetCount; m++) {
+        const unmarked = target.hand.filter((c) => !c.marked);
+        if (unmarked.length === 0) break;
+        const picked = unmarked[Math.floor(Math.random() * unmarked.length)];
         picked.marked = true;
-        const meta = IK_CARD_META[picked.type];
+        markedNames.push(`[${IK_CARD_META[picked.type].nameVi}]`);
+      }
+      if (markedNames.length > 0) {
         events.push({
           eventType: "IK_MARK_REVEALED",
-          message: `Đánh Dấu! ${actor.displayName} bắn lộ diện 1 lá bài trên tay của ${target.displayName}: đó là [${meta.nameVi}]!`,
+          message: `Đánh Dấu! ${actor.displayName} bắn lộ diện ${markedNames.length} lá bài trên tay của ${target.displayName}: ${markedNames.join(", ")}!`,
           visibleToSeatNos: "all",
         });
       }
@@ -2674,6 +3038,7 @@ function executeResolvedAction(
         } else {
           victim.alive = false;
           victim.eliminatedBy = "barking";
+          recordExplodedPlayer(state, victim);
           discardCardsRespectingPlaymat(state, [...victim.hand]);
           victim.hand = [];
           setAnim(
@@ -2743,16 +3108,17 @@ function executeResolvedAction(
     }
 
     case "reveal_future_3": {
+      const revealCount = 3 + boost;
       const topCards: IkCard[] = [];
       for (
         let i = state.drawPile.length - 1;
-        i >= Math.max(0, state.drawPile.length - 3);
+        i >= Math.max(0, state.drawPile.length - revealCount);
         i--
       ) {
         topCards.push(state.drawPile[i]);
       }
       const visionPayload = {
-        titleVi: `Tiết Lộ Tương Lai 3x (${actor.displayName} lật công khai cho CẢ BÀN):`,
+        titleVi: `Tiết Lộ Tương Lai ${topCards.length}x (${actor.displayName} lật công khai cho CẢ BÀN):`,
         cards: topCards.map((c, idx) => ({
           labelVi: `#${idx + 1}: ${IK_CARD_META[c.type].shortVi}${c.faceUp ? " (NGỬA)" : ""}`,
           emoji: IK_CARD_META[c.type].emoji,
@@ -2775,7 +3141,151 @@ function executeResolvedAction(
       state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
       events.push({
         eventType: "IK_REVEAL_FUTURE",
-        message: `${actor.displayName} đánh Tiết Lộ Tương Lai 3x — lật mở công khai ${topCards.length} lá đầu Bộ bài rút cho TẤT CẢ mọi người cùng thấy!`,
+        message: `${actor.displayName} đánh Tiết Lộ Tương Lai — lật mở công khai ${topCards.length} lá đầu Bộ bài rút cho TẤT CẢ mọi người cùng thấy!`,
+        visibleToSeatNos: "all",
+      });
+      return;
+    }
+
+    case "back_from_the_dead": {
+      const wantCount = 2 + boost;
+      const deadSeat =
+        state.lastExplodedSeatNo !== null
+          ? state.seats.find((s) => s.seatNo === state.lastExplodedSeatNo) ??
+            null
+          : state.seats.find((s) => !s.alive) ?? null;
+
+      const drawnCards: IkCard[] = [];
+      // 1. Prefer cards still held by that dead seat (e.g., Zombie Kittens Feed the Dead)
+      if (deadSeat && !deadSeat.alive && deadSeat.hand.length > 0) {
+        while (drawnCards.length < wantCount && deadSeat.hand.length > 0) {
+          const randIdx = Math.floor(Math.random() * deadSeat.hand.length);
+          const [card] = deadSeat.hand.splice(randIdx, 1);
+          card.marked = false;
+          drawnCards.push(card);
+        }
+      }
+      // 2. Otherwise pull from the last exploded player's recorded stash (removing from discardPile so cards are never duplicated)
+      while (
+        drawnCards.length < wantCount &&
+        state.lastExplodedStash.length > 0
+      ) {
+        const randIdx = Math.floor(
+          Math.random() * state.lastExplodedStash.length
+        );
+        const [stashed] = state.lastExplodedStash.splice(randIdx, 1);
+        const discIdx = state.discardPile.findIndex((c) => c.id === stashed.id);
+        if (discIdx !== -1) {
+          state.discardPile.splice(discIdx, 1);
+        }
+        stashed.marked = false;
+        drawnCards.push(stashed);
+      }
+
+      for (const c of drawnCards) {
+        actor.hand.push(c);
+      }
+
+      state.step = "TurnPlayStep";
+      state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+      events.push({
+        eventType: "IK_BACK_FROM_THE_DEAD",
+        message:
+          drawnCards.length > 0 && deadSeat
+            ? `Từ Cõi Chết Trở Về (Back From The Dead)! ${actor.displayName} thu hồi ${drawnCards.length} lá bài từ ${deadSeat.displayName} (người vừa nổ)!`
+            : `${actor.displayName} đánh Từ Cõi Chết Trở Về nhưng chưa có lá bài nào từ người vừa nổ để rút!`,
+        visibleToSeatNos: "all",
+      });
+      return;
+    }
+
+    case "fossil_restoration": {
+      const isValidNonKitten = (c: IkCard) =>
+        c.type !== "exploding_kitten" &&
+        c.type !== "imploding_kitten" &&
+        c.type !== "black_hole" &&
+        c.type !== "devilcat" &&
+        c.type !== "godcat";
+
+      let targetIdx = pending.discardCardId
+        ? state.discardPile.findIndex(
+            (c) => c.id === pending.discardCardId && isValidNonKitten(c)
+          )
+        : -1;
+
+      if (targetIdx === -1) {
+        // Fallback: latest non-kitten card in discardPile (excluding the played fossil_restoration card itself if possible)
+        const playedId = pending.cards[0]?.id;
+        for (let i = state.discardPile.length - 1; i >= 0; i--) {
+          if (
+            isValidNonKitten(state.discardPile[i]) &&
+            state.discardPile[i].id !== playedId
+          ) {
+            targetIdx = i;
+            break;
+          }
+        }
+      }
+
+      if (targetIdx !== -1) {
+        const [restored] = state.discardPile.splice(targetIdx, 1);
+        restored.marked = false;
+        restored.faceUp = false;
+        state.drawPile.push(restored);
+        state.drawPile = shuffle(state.drawPile, Math.random);
+        for (const s of state.seats) {
+          s.privateVision = null;
+        }
+        events.push({
+          eventType: "IK_FOSSIL_RESTORATION",
+          message: `Phục Hồi Hóa Thạch (Fossil Restoration)! ${actor.displayName} đưa lá [${IK_CARD_META[restored.type].nameVi}] từ Chồng bài bỏ xáo vào Bộ bài rút và kết thúc lượt không cần rút!`,
+          visibleToSeatNos: "all",
+        });
+      } else {
+        events.push({
+          eventType: "IK_FOSSIL_RESTORATION",
+          message: `${actor.displayName} đánh Phục Hồi Hóa Thạch (Fossil Restoration) và kết thúc lượt không cần rút!`,
+          visibleToSeatNos: "all",
+        });
+      }
+
+      consumeOneTurnOrAdvanceSeat(state, events, nowMs);
+      return;
+    }
+
+    case "sneak_peek": {
+      const target = getSeat(state, pending.targetSeatNo!);
+      const peekCount = Math.min(3 + boost, target.hand.length);
+      const picked = shuffle(target.hand, Math.random).slice(0, peekCount);
+      actor.privateVision = {
+        titleVi:
+          picked.length > 0
+            ? `Nhìn Trộm (Sneak Peek) — ${picked.length} lá ngẫu nhiên trên tay ${target.displayName}:`
+            : `Nhìn Trộm (Sneak Peek) — ${target.displayName} hiện không có lá bài nào trên tay!`,
+        cards:
+          picked.length > 0
+            ? picked.map((c, idx) => ({
+                labelVi: `#${idx + 1}: ${IK_CARD_META[c.type].shortVi}`,
+                emoji: IK_CARD_META[c.type].emoji,
+                colorHex: IK_CARD_META[c.type].colorHex,
+                cardId: c.id,
+                cardType: c.type,
+                positionLabelVi: `Lá #${idx + 1}`,
+                faceUp: c.faceUp,
+              }))
+            : [
+                {
+                  labelVi: `${target.displayName} không còn lá bài nào trên tay.`,
+                  emoji: "",
+                  colorHex: "#94a3b8",
+                },
+              ],
+      };
+      state.step = "TurnPlayStep";
+      state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+      events.push({
+        eventType: "IK_SNEAK_PEEK",
+        message: `${actor.displayName} dùng Nhìn Trộm (Sneak Peek)${boost > 0 ? " (+Purrfect Boost)" : ""} xem bí mật ${picked.length} lá ngẫu nhiên trên tay ${target.displayName}!`,
         visibleToSeatNos: "all",
       });
       return;
@@ -2789,8 +3299,30 @@ function executeResolvedAction(
 }
 
 /**
- * Either opens `NopeWindowStep` if at least one OTHER living player holds a `nope` card in hand,
- * OR resolves `pending` immediately in 0ms when no opponent has a `nope` card!
+ * Returns living, non-blind players (other than whoever currently owns the standing action/Nope)
+ * who actually hold a `nope` or `super_nope` card in hand.
+ */
+function getEligibleNopeHolders(
+  state: IkMatchState,
+  pending: IkPendingAction
+): IkSeatState[] {
+  const currentStandingSeatNo =
+    pending.nopeCount % 2 === 0
+      ? pending.actorSeatNo
+      : pending.lastNopeBySeatNo;
+  return state.seats.filter(
+    (s) =>
+      s.alive &&
+      !s.isBlind &&
+      s.seatNo !== currentStandingSeatNo &&
+      s.hand.some((c) => c.type === "nope" || c.type === "super_nope")
+  );
+}
+
+/**
+ * Opens the 3-second `NopeWindowStep` ONLY when at least one eligible opponent
+ * currently holds a `nope` or `super_nope` card in hand; otherwise resolves immediately (0ms)
+ * so gameplay stays snappy without unnecessary delays.
  */
 function maybeOpenNopeWindowOrExecute(
   state: IkMatchState,
@@ -2798,20 +3330,17 @@ function maybeOpenNopeWindowOrExecute(
   events: MatchEventRecord[],
   nowMs: number
 ): void {
-  // Barking Kitten cannot be Noped per official rules
-  if (pending.effectiveType === "barking_kitten") {
+  // Barking Kitten and Pokepri's Last Resort cannot be Noped per official rules
+  if (
+    pending.effectiveType === "barking_kitten" ||
+    pending.effectiveType === "last_resort"
+  ) {
     executeResolvedAction(state, pending, events, nowMs);
     return;
   }
 
-  const opponentsWithNope = state.seats.filter(
-    (s) =>
-      s.alive &&
-      s.seatNo !== pending.actorSeatNo &&
-      s.hand.some((c) => c.type === "nope")
-  );
-
-  if (opponentsWithNope.length === 0) {
+  // Resolve immediately if no eligible opponent holds Nope / Super Nope
+  if (getEligibleNopeHolders(state, pending).length === 0) {
     executeResolvedAction(state, pending, events, nowMs);
     return;
   }
@@ -2860,11 +3389,17 @@ function chooseBotCommand(
   if (state.step === "NopeWindowStep" && state.pendingAction) {
     const pa = state.pendingAction;
     const isCanceled = pa.nopeCount % 2 === 1;
-    const botHasNope = bot.hand.find((c) => c.type === "nope");
-    if (!botHasNope || pa.passedSeatNos.includes(botSeatNo)) {
+    const currentStandingSeatNo =
+      pa.nopeCount % 2 === 0 ? pa.actorSeatNo : pa.lastNopeBySeatNo;
+    if (botSeatNo === currentStandingSeatNo || bot.isBlind) {
       return null;
     }
-    // Bot plays Nope if it is the target of an Attack/Favor/Steal/Curse and action is not yet canceled
+    const botHasNope = bot.hand.find((c) => c.type === "nope");
+    const botHasSuperNope = bot.hand.find((c) => c.type === "super_nope");
+    if ((!botHasNope && !botHasSuperNope) || pa.passedSeatNos.includes(botSeatNo)) {
+      return null;
+    }
+    // Bot plays Nope/Super Nope if it is the target of an Attack/Favor/Steal/Curse and action is not yet canceled
     const isTargetingBot = pa.targetSeatNo === botSeatNo;
     const isAttackOnBot =
       (pa.effectiveType === "attack" ||
@@ -2872,7 +3407,12 @@ function chooseBotCommand(
       getNextAliveSeatNo(state, pa.actorSeatNo) === botSeatNo;
 
     if (!isCanceled && (isTargetingBot || isAttackOnBot)) {
-      return { type: "PLAY_NOPE", cardId: botHasNope.id };
+      if (botHasNope) {
+        return { type: "PLAY_NOPE", cardId: botHasNope.id };
+      }
+      if (botHasSuperNope) {
+        return { type: "PLAY_SUPER_NOPE", cardId: botHasSuperNope.id };
+      }
     }
     return { type: "PASS_NOPE" };
   }
@@ -3032,20 +3572,24 @@ function chooseBotCommand(
 
     // If top card is a visible FACE-UP Imploding Kitten (or deck is very thin), try to avoid drawing from top!
     if (topIsVisibleImploding || state.turnsRemaining > 1) {
-      const avoidTypes: IkCardType[] = [
-        "super_skip",
-        "targeted_attack",
-        "attack",
-        "attack_of_the_dead",
-        "skip",
-        "reverse",
-        "draw_bottom",
-        "raising_heck",
-        "swap_top_bottom",
-        "shuffle",
-        "bury",
-        "catomic_bomb",
-      ];
+      const avoidTypes: IkCardType[] = (
+        [
+          "super_skip",
+          "last_resort",
+          "targeted_attack",
+          "attack",
+          "attack_of_the_dead",
+          "skip",
+          "reverse",
+          "draw_bottom",
+          "raising_heck",
+          "swap_top_bottom",
+          "shuffle",
+          "shuffle_now",
+          "bury",
+          "catomic_bomb",
+        ] as IkCardType[]
+      ).filter((t) => !(state.attackLocked && IK_ATTACK_CARD_TYPES.includes(t)));
       for (const t of avoidTypes) {
         const card = bot.hand.find((c) => c.type === t);
         if (card) {
@@ -3111,7 +3655,7 @@ function chooseBotCommand(
 
     // Occasionally use Godcat offensively as Targeted Attack
     const godcatCard = bot.hand.find((c) => c.type === "godcat");
-    if (godcatCard && richestOpp && Math.random() < 0.45) {
+    if (godcatCard && !state.attackLocked && richestOpp && Math.random() < 0.45) {
       return {
         type: "PLAY_CARD",
         cardId: godcatCard.id,
@@ -3133,6 +3677,7 @@ function chooseBotCommand(
         "see_future_5",
         "reveal_future_3",
         "clairvoyance",
+        "sneak_peek",
       ].includes(c.type)
     );
     if (utilityCard && richestOpp) {
@@ -3160,9 +3705,9 @@ export const implodingKittensCartridge: GameCartridge<
   cartridgeId: "imploding-kittens",
   title: "Imploding Kittens",
   subtitle:
-    "Mèo Nổ & Mèo Hố Đen (Full 5 Bản Mở Rộng) • Phủ quyết, Thấu thị, Thiện & Ác • 2–6 người chơi",
+    "Mèo Nổ & Mèo Hố Đen (Full 6 Bản Mở Rộng) • Phủ quyết, Thấu thị, Thiện & Ác, Pokepri • 2–6 người chơi",
   description:
-    "Phiên bản đại chiến Mèo Nổ tích hợp trọn bộ 5 bản mở rộng tùy chọn (Imploding, Streaking, Barking, Zombie & Good vs. Evil) với Mèo Hố Đen và đấu trí Mèo Thần / Mèo Quỷ!",
+    "Phiên bản đại chiến Mèo Nổ tích hợp trọn bộ 6 bản mở rộng tùy chọn (Imploding, Streaking, Barking, Zombie, Good vs. Evil & Pokepri) với Mèo Hố Đen, Super Nope, Black Hole và đấu trí Mèo Thần / Mèo Quỷ!",
   minSeats: 2,
   maxSeats: 6,
   available: true,
@@ -3175,11 +3720,12 @@ export const implodingKittensCartridge: GameCartridge<
         barking: true,
         zombie: true,
         good_vs_evil: true,
+        pokepri: true,
       },
       explodingKittenCount: null,
       timers: {
         turnSeconds: 45,
-        nopeSeconds: 7,
+        nopeSeconds: 3,
       },
     };
   },
@@ -3226,11 +3772,12 @@ export const implodingKittensCartridge: GameCartridge<
         barking: config?.expansions?.barking ?? true,
         zombie: config?.expansions?.zombie ?? true,
         good_vs_evil: config?.expansions?.good_vs_evil ?? true,
+        pokepri: config?.expansions?.pokepri ?? true,
       },
       explodingKittenCount: normalizedCustomBombs,
       timers: {
         turnSeconds: config?.timers?.turnSeconds ?? 45,
-        nopeSeconds: config?.timers?.nopeSeconds ?? 7,
+        nopeSeconds: config?.timers?.nopeSeconds ?? 3,
       },
     };
 
@@ -3301,6 +3848,13 @@ export const implodingKittensCartridge: GameCartridge<
         faceUp: false,
       });
     }
+    if (normalizedConfig.expansions.pokepri) {
+      preBombDeck.push({
+        id: `ik-trap-black-hole-1`,
+        type: "black_hole",
+        faceUp: false,
+      });
+    }
 
     const drawPile = shuffle(preBombDeck, rng);
     const startingSeat =
@@ -3319,6 +3873,9 @@ export const implodingKittensCartridge: GameCartridge<
       towerHolderSeatNo: null,
       towerStashCards,
       godcatOnPlaymat: normalizedConfig.expansions.good_vs_evil,
+      lastExplodedSeatNo: null,
+      lastExplodedStash: [],
+      attackLocked: false,
       pendingAction: null,
       pendingInsert: null,
       pendingAlterFuture: null,
@@ -3415,14 +3972,8 @@ export const implodingKittensCartridge: GameCartridge<
           visibleToSeatNos: "all",
         });
 
-        // Check if anyone still holds another Nope card to counter-Nope; if not, resolve immediately!
-        const anyoneElseHasNope = state.seats.some(
-          (s) =>
-            s.alive &&
-            s.seatNo !== actor.seatNo &&
-            s.hand.some((c) => c.type === "nope")
-        );
-        if (!anyoneElseHasNope) {
+        // Re-open 3s Nope window ONLY if another eligible player holds Nope / Super Nope; otherwise resolve immediately!
+        if (getEligibleNopeHolders(state, pa).length === 0) {
           executeResolvedAction(state, pa, events, nowMs);
         } else {
           state.phaseDeadlineMs =
@@ -3432,21 +3983,56 @@ export const implodingKittensCartridge: GameCartridge<
         return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
       }
 
+      if (command.type === "PLAY_SUPER_NOPE") {
+        const superIdx = command.cardId
+          ? actor.hand.findIndex(
+              (c) => c.id === command.cardId && c.type === "super_nope"
+            )
+          : actor.hand.findIndex((c) => c.type === "super_nope");
+        if (superIdx === -1) {
+          throw new Error("Bạn không có lá Super Nope trên tay.");
+        }
+
+        const [superCard] = actor.hand.splice(superIdx, 1);
+        superCard.marked = false;
+        state.discardPile.push(superCard);
+
+        pa.nopeCount += 1;
+        pa.lastNopeBySeatNo = actor.seatNo;
+        pa.passedSeatNos = [];
+
+        const isYup = pa.nopeCount % 2 === 0;
+        setAnim(
+          state,
+          {
+            kind: isYup ? "YUP" : "NOPE",
+            actorSeatNo: actor.seatNo,
+            card: superCard,
+          },
+          nowMs
+        );
+
+        events.push({
+          eventType: isYup ? "IK_SUPER_YUP_PLAYED" : "IK_SUPER_NOPE_PLAYED",
+          message: isYup
+            ? `SUPER YUP! ${actor.displayName} tung Siêu Phủ Quyết khóa chặt hiệu lực hành động — không ai có thể Nope chồng lên!`
+            : `SUPER NOPE! ${actor.displayName} tung Siêu Phủ Quyết chặn đứng tuyệt đối hành động — không ai được đánh Nope chồng lên!`,
+          visibleToSeatNos: "all",
+        });
+
+        // Official Pokepri Super Nope rule: NO other player may play a Nope on top -> resolve immediately!
+        executeResolvedAction(state, pa, events, nowMs);
+        return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
+      }
+
       if (command.type === "PASS_NOPE") {
         if (!pa.passedSeatNos.includes(actor.seatNo)) {
           pa.passedSeatNos.push(actor.seatNo);
         }
-        // Check if every living player holding a Nope card (other than the one who wants the current state to stand) has passed
-        const waitingOnAnyone = state.seats.some(
-          (s) =>
-            s.alive &&
-            s.seatNo !==
-              (pa.nopeCount % 2 === 0 ? pa.actorSeatNo : pa.lastNopeBySeatNo) &&
-            s.hand.some((c) => c.type === "nope") &&
-            !pa.passedSeatNos.includes(s.seatNo)
-        );
 
-        if (!waitingOnAnyone) {
+        // Resolve immediately once all eligible Nope / Super Nope holders have passed
+        const eligibleHolders = getEligibleNopeHolders(state, pa);
+        if (eligibleHolders.every((s) => pa.passedSeatNos.includes(s.seatNo))) {
           executeResolvedAction(state, pa, events, nowMs);
         }
 
@@ -3492,9 +4078,11 @@ export const implodingKittensCartridge: GameCartridge<
         message:
           reason === "INSERT_IMPLODING_FACEUP"
             ? `${actor.displayName} đã cài Mèo Hố Đen (LẬT NGỬA) trở lại vào Bộ bài rút!`
-            : reason === "BURY_CARD"
-              ? `${actor.displayName} đã chôn giấu lá bài trở lại vào Bộ bài rút!`
-              : `${actor.displayName} đã bí mật gài lại Mèo Nổ vào Bộ bài rút!`,
+            : reason === "INSERT_BLACK_HOLE_FACEUP"
+              ? `${actor.displayName} đã cài Hố Đen Vũ Trụ (Black Hole — LẬT NGỬA) trở lại vào Bộ bài rút!`
+              : reason === "BURY_CARD"
+                ? `${actor.displayName} đã chôn giấu lá bài trở lại vào Bộ bài rút!`
+                : `${actor.displayName} đã bí mật gài lại Mèo Nổ vào Bộ bài rút!`,
         visibleToSeatNos: "all",
       });
 
@@ -3595,9 +4183,7 @@ export const implodingKittensCartridge: GameCartridge<
       const recipient = getSeat(state, state.pendingFavor.toSeatNo);
       recipient.hand.push(given);
 
-      state.pendingFavor = null;
-      state.step = "TurnPlayStep";
-      state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+      const remainingAfter = (state.pendingFavor.remainingCount ?? 1) - 1;
 
       setAnim(
         state,
@@ -3612,11 +4198,32 @@ export const implodingKittensCartridge: GameCartridge<
 
       events.push({
         eventType: "IK_FAVOR_GIVEN",
-        message: `${actor.displayName} đã đưa 1 lá bài trên tay cho ${recipient.displayName}.`,
+        message:
+          remainingAfter > 0 && actor.hand.length > 0
+            ? `${actor.displayName} đã đưa 1 lá bài cho ${recipient.displayName} (vẫn còn phải đưa thêm ${remainingAfter} lá nữa)!`
+            : `${actor.displayName} đã đưa 1 lá bài trên tay cho ${recipient.displayName}.`,
         visibleToSeatNos: "all",
       });
 
       checkExposedHandBomb(state, actor, events, nowMs);
+
+      if ((state.step as IkStep) !== "Finished") {
+        if (remainingAfter > 0 && actor.alive && actor.hand.length > 0) {
+          state.pendingFavor = {
+            fromSeatNo: actor.seatNo,
+            toSeatNo: recipient.seatNo,
+            remainingCount: remainingAfter,
+          };
+          state.step = "FavorGiveStep";
+          state.phaseDeadlineMs =
+            nowMs + state.config.timers.turnSeconds * 1000;
+        } else {
+          state.pendingFavor = null;
+          state.step = "TurnPlayStep";
+          state.phaseDeadlineMs =
+            nowMs + state.config.timers.turnSeconds * 1000;
+        }
+      }
       return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
     }
 
@@ -3882,6 +4489,7 @@ export const implodingKittensCartridge: GameCartridge<
         } else {
           devilcatVictim.alive = false;
           devilcatVictim.eliminatedBy = "devilcat";
+          recordExplodedPlayer(state, devilcatVictim);
           discardCardsRespectingPlaymat(state, [...devilcatVictim.hand]);
           devilcatVictim.hand = [];
           const outcomeMsg = `${armTarget.displayName} ${swapText}! ${godcatWinner.displayName} đoạt MÈO THẦN (Godcat) • ${devilcatVictim.displayName} lật phải MÈO QUỶ (Devilcat) khi không còn Defuse — NỔ TUNG NGAY LẬP TỨC!`;
@@ -3943,8 +4551,16 @@ export const implodingKittensCartridge: GameCartridge<
       return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
     }
 
-    // --- STEP: NORMAL TURN PLAY OR DRAW ---
-    if (state.activeSeatNo !== actor.seatNo) {
+    // --- STEP: NORMAL TURN PLAY OR DRAW (plus all NOW cards playable at ANY time!) ---
+    const isOutOfTurnNowPlay =
+      state.step === "TurnPlayStep" &&
+      !actor.isBlind &&
+      command.type === "PLAY_CARD" &&
+      actor.hand.some(
+        (c) => c.id === command.cardId && IK_NOW_CARD_TYPES.includes(c.type)
+      );
+
+    if (state.activeSeatNo !== actor.seatNo && !isOutOfTurnNowPlay) {
       throw new Error("Chưa đến lượt của bạn.");
     }
 
@@ -3997,30 +4613,98 @@ export const implodingKittensCartridge: GameCartridge<
       const card = actor.hand[idx];
       const meta = IK_CARD_META[card.type];
 
-      if (
+      const isNonSinglePlayable =
         card.type === "defuse" ||
         card.type === "zombie_kitten" ||
         card.type === "nope" ||
+        card.type === "super_nope" ||
         card.type === "streaking_kitten" ||
         card.type === "exploding_kitten" ||
         card.type === "imploding_kitten" ||
-        card.type === "devilcat"
-      ) {
-        throw new Error(
-          `Lá [${meta.shortVi}] không thể đánh đơn lẻ trong lượt thông thường.`
-        );
-      }
-      if (meta.category === "cat" || meta.category === "wildcard_cat") {
-        throw new Error(
-          "Lá Mèo cần được đánh theo Combo 2 lá (cướp bài), 3 lá (xin chỉ định), hoặc 5 lá khác nhau!"
-        );
+        card.type === "black_hole" ||
+        card.type === "purrfect_boost" ||
+        card.type === "devilcat";
+      const isCatOnly =
+        meta.category === "cat" || meta.category === "wildcard_cat";
+
+      // Official Curse of the Cat Butt (Blind) rule:
+      // Playing a blind card that has no standalone effect discards it with NO effect (wasted!),
+      // and never leaks card identity via validation errors!
+      if (actor.isBlind) {
+        if (
+          card.type === "exploding_kitten" ||
+          card.type === "imploding_kitten" ||
+          card.type === "black_hole" ||
+          card.type === "devilcat"
+        ) {
+          actor.hand.splice(idx, 1);
+          card.marked = false;
+          resolveCardDrawnBySeat(state, actor, card, false, events, nowMs);
+          return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
+        }
+
+        const topDiscard =
+          state.discardPile.length > 0
+            ? state.discardPile[state.discardPile.length - 1]
+            : null;
+        const cloneInvalid =
+          (card.type === "clone" || card.type === "copycat") &&
+          (!topDiscard ||
+            topDiscard.type === "clone" ||
+            topDiscard.type === "copycat" ||
+            topDiscard.type === "godcat" ||
+            topDiscard.type === "purrfect_boost" ||
+            IK_CARD_META[topDiscard.type].category !== "action");
+        const armageddonInvalid =
+          card.type === "armageddon" && !state.godcatOnPlaymat;
+
+        if (
+          isNonSinglePlayable ||
+          isCatOnly ||
+          cloneInvalid ||
+          armageddonInvalid
+        ) {
+          actor.hand.splice(idx, 1);
+          card.marked = false;
+          state.discardPile.push(card);
+          setAnim(
+            state,
+            {
+              kind: "PLAY_CARD",
+              actorSeatNo: actor.seatNo,
+              card,
+            },
+            nowMs
+          );
+          events.push({
+            eventType: "IK_BLIND_WASTED",
+            message: `${actor.displayName} đánh mù trúng lá [${meta.nameVi}] — không thể dùng đơn lẻ nên bị mất bài vô tác dụng!`,
+            visibleToSeatNos: "all",
+          });
+          state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+          return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
+        }
+      } else {
+        if (isNonSinglePlayable) {
+          throw new Error(
+            card.type === "purrfect_boost"
+              ? "Lá Purrfect Boost cần được chọn đánh KÈM cùng 1 lá Hành Động phù hợp để cộng +1 hiệu ứng!"
+              : `Lá [${meta.shortVi}] không thể đánh đơn lẻ trong lượt thông thường.`
+          );
+        }
+        if (isCatOnly) {
+          throw new Error(
+            "Lá Mèo cần được đánh theo Combo 2 lá (cướp bài), 3 lá (xin chỉ định), hoặc 5 lá khác nhau!"
+          );
+        }
       }
 
       let effectiveType: IkCardType = card.type;
       let isGodcatPlay = false;
 
       if (card.type === "godcat") {
-        const mimic = command.mimicCardType;
+        const mimic =
+          command.mimicCardType ?? (actor.isBlind ? "skip" : undefined);
         if (!mimic || !IK_GODCAT_MIMICABLE_TYPES.includes(mimic)) {
           throw new Error(
             "Hãy chọn 1 lá Hành Động hợp lệ để Mèo Thần (Godcat) hóa thân (không thể hóa thành Nope)!"
@@ -4028,7 +4712,7 @@ export const implodingKittensCartridge: GameCartridge<
         }
         effectiveType = mimic;
         isGodcatPlay = true;
-      } else if (card.type === "clone") {
+      } else if (card.type === "clone" || card.type === "copycat") {
         const topDiscard =
           state.discardPile.length > 0
             ? state.discardPile[state.discardPile.length - 1]
@@ -4036,11 +4720,15 @@ export const implodingKittensCartridge: GameCartridge<
         if (
           !topDiscard ||
           topDiscard.type === "clone" ||
+          topDiscard.type === "copycat" ||
           topDiscard.type === "godcat" ||
+          topDiscard.type === "purrfect_boost" ||
           IK_CARD_META[topDiscard.type].category !== "action"
         ) {
           throw new Error(
-            "Chỉ có thể đánh Nhân Bản (Clone) khi lá trên cùng của Chồng bài bỏ là 1 lá Hành Động!"
+            card.type === "copycat"
+              ? "Chỉ có thể đánh Copycat khi lá vừa đánh trên cùng Chồng bài bỏ là 1 lá Hành Động (không sao chép Lá Mèo)!"
+              : "Chỉ có thể đánh Nhân Bản (Clone) khi lá trên cùng của Chồng bài bỏ là 1 lá Hành Động!"
           );
         }
         effectiveType = topDiscard.type;
@@ -4052,16 +4740,85 @@ export const implodingKittensCartridge: GameCartridge<
         );
       }
 
-      const effMeta = IK_CARD_META[effectiveType];
-      if (effMeta.needsTargetSeat) {
-        if (
-          !command.targetSeatNo ||
-          command.targetSeatNo === actor.seatNo ||
-          !getSeat(state, command.targetSeatNo).alive
-        ) {
-          throw new Error(
-            `Lá [${effMeta.shortVi}] yêu cầu chọn 1 đối thủ còn sống làm mục tiêu.`
+      if (state.attackLocked && IK_ATTACK_CARD_TYPES.includes(effectiveType)) {
+        if (actor.isBlind) {
+          actor.hand.splice(idx, 1);
+          card.marked = false;
+          state.discardPile.push(card);
+          setAnim(
+            state,
+            {
+              kind: "PLAY_CARD",
+              actorSeatNo: actor.seatNo,
+              card,
+            },
+            nowMs
           );
+          events.push({
+            eventType: "IK_BLIND_WASTED",
+            message: `${actor.displayName} đánh mù trúng lá [${meta.nameVi}] khi đang bị khóa Attack bởi Last Resort — mất bài vô tác dụng!`,
+            visibleToSeatNos: "all",
+          });
+          state.phaseDeadlineMs = nowMs + state.config.timers.turnSeconds * 1000;
+          return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
+        }
+        throw new Error(
+          "Bạn đang chịu Đòn Quyết Tử (Last Resort) — KHÔNG THỂ đánh lá Tấn Công chồng lên!"
+        );
+      }
+
+      let resolvedDiscardCardId: string | undefined;
+      if (effectiveType === "fossil_restoration") {
+        const isValidNonKitten = (c: IkCard) =>
+          c.type !== "exploding_kitten" &&
+          c.type !== "imploding_kitten" &&
+          c.type !== "black_hole" &&
+          c.type !== "devilcat" &&
+          c.type !== "godcat";
+        if (command.discardCardId) {
+          const picked = state.discardPile.find(
+            (c) => c.id === command.discardCardId
+          );
+          if (!picked) {
+            throw new Error(
+              "Lá bài chọn để phục hồi không tồn tại trong Chồng bài bỏ."
+            );
+          }
+          if (!isValidNonKitten(picked)) {
+            throw new Error(
+              "Fossil Restoration không thể xáo lá Bom/Mèo Nổ từ Chồng bài bỏ vào Bộ bài rút."
+            );
+          }
+          resolvedDiscardCardId = picked.id;
+        } else {
+          const fallback = [...state.discardPile]
+            .reverse()
+            .find(isValidNonKitten);
+          if (fallback) {
+            resolvedDiscardCardId = fallback.id;
+          } else if (!actor.isBlind) {
+            throw new Error(
+              "Chồng bài bỏ chưa có lá bài hợp lệ nào để đánh Fossil Restoration."
+            );
+          }
+        }
+      }
+
+      const effMeta = IK_CARD_META[effectiveType];
+      let resolvedTargetSeatNo = command.targetSeatNo;
+      if (effMeta.needsTargetSeat) {
+        const isTargetValid =
+          resolvedTargetSeatNo !== undefined &&
+          resolvedTargetSeatNo !== actor.seatNo &&
+          getSeat(state, resolvedTargetSeatNo).alive;
+        if (!isTargetValid) {
+          if (actor.isBlind) {
+            resolvedTargetSeatNo = getNextAliveSeatNo(state, actor.seatNo);
+          } else {
+            throw new Error(
+              `Lá [${effMeta.shortVi}] yêu cầu chọn 1 đối thủ còn sống làm mục tiêu.`
+            );
+          }
         }
       }
 
@@ -4079,21 +4836,21 @@ export const implodingKittensCartridge: GameCartridge<
         {
           kind: "PLAY_CARD",
           actorSeatNo: actor.seatNo,
-          targetSeatNo: command.targetSeatNo,
+          targetSeatNo: resolvedTargetSeatNo,
           card,
         },
         nowMs
       );
 
-      const targetName = command.targetSeatNo
-        ? ` nhắm vào ${getSeat(state, command.targetSeatNo).displayName}`
+      const targetName = resolvedTargetSeatNo
+        ? ` nhắm vào ${getSeat(state, resolvedTargetSeatNo).displayName}`
         : "";
       events.push({
         eventType: "IK_CARD_PLAYED",
         message: isGodcatPlay
           ? `${actor.displayName} tung Mèo Thần (Godcat) hóa thân thành [${effMeta.nameVi}]${targetName} (Mèo Thần quay về Thảm đấu)!`
-          : card.type === "clone"
-            ? `${actor.displayName} đánh Nhân Bản (Clone) sao chép lá [${effMeta.nameVi}]${targetName}!`
+          : card.type === "clone" || card.type === "copycat"
+            ? `${actor.displayName} đánh ${card.type === "copycat" ? "Copycat" : "Nhân Bản (Clone)"} sao chép lá [${effMeta.nameVi}]${targetName}!`
             : `${actor.displayName} đánh lá [${meta.nameVi}]${targetName}!`,
         visibleToSeatNos: "all",
       });
@@ -4106,7 +4863,105 @@ export const implodingKittensCartridge: GameCartridge<
           cards: [card],
           effectiveType,
           isGodcat: isGodcatPlay,
-          targetSeatNo: command.targetSeatNo,
+          targetSeatNo: resolvedTargetSeatNo,
+          discardCardId: resolvedDiscardCardId,
+          nopeCount: 0,
+          lastNopeBySeatNo: null,
+          passedSeatNos: [],
+        },
+        events,
+        nowMs
+      );
+
+      return { state, events, phaseDeadlineMs: state.phaseDeadlineMs };
+    }
+
+    if (command.type === "PLAY_BOOSTED_CARD") {
+      if (actor.isBlind) {
+        throw new Error("Không thể ghép bài khi đang bị mù (Curse of the Cat Butt).");
+      }
+      if (command.boostCardId === command.targetCardId) {
+        throw new Error("Cần chọn 2 lá bài khác nhau để kết hợp Purrfect Boost.");
+      }
+      const boostIdx = actor.hand.findIndex(
+        (c) => c.id === command.boostCardId && c.type === "purrfect_boost"
+      );
+      if (boostIdx === -1) {
+        throw new Error("Không tìm thấy lá Purrfect Boost trên tay bạn.");
+      }
+      const targetIdx = actor.hand.findIndex(
+        (c) => c.id === command.targetCardId
+      );
+      if (targetIdx === -1) {
+        throw new Error("Không tìm thấy lá bài muốn cường hóa trên tay bạn.");
+      }
+      const boostCard = actor.hand[boostIdx];
+      const targetCard = actor.hand[targetIdx];
+      if (!IK_BOOSTABLE_CARD_TYPES.includes(targetCard.type)) {
+        throw new Error(
+          `Lá [${IK_CARD_META[targetCard.type].shortVi}] không hỗ trợ hiệu ứng +1 của Purrfect Boost.`
+        );
+      }
+      if (state.attackLocked && IK_ATTACK_CARD_TYPES.includes(targetCard.type)) {
+        throw new Error(
+          "Bạn đang chịu Đòn Quyết Tử (Last Resort) — KHÔNG THỂ đánh lá Tấn Công chồng lên!"
+        );
+      }
+
+      const targetMeta = IK_CARD_META[targetCard.type];
+      const resolvedTargetSeatNo = command.targetSeatNo;
+      if (targetMeta.needsTargetSeat) {
+        const isTargetValid =
+          resolvedTargetSeatNo !== undefined &&
+          resolvedTargetSeatNo !== actor.seatNo &&
+          getSeat(state, resolvedTargetSeatNo).alive;
+        if (!isTargetValid) {
+          throw new Error(
+            `Lá [${targetMeta.shortVi}] yêu cầu chọn 1 đối thủ còn sống làm mục tiêu.`
+          );
+        }
+      }
+
+      // Remove both cards from hand; put boostCard first then targetCard on top of discardPile
+      actor.hand = actor.hand.filter(
+        (c) => c.id !== boostCard.id && c.id !== targetCard.id
+      );
+      boostCard.marked = false;
+      targetCard.marked = false;
+      state.discardPile.push(boostCard, targetCard);
+
+      setAnim(
+        state,
+        {
+          kind: "PLAY_CARD",
+          actorSeatNo: actor.seatNo,
+          targetSeatNo: resolvedTargetSeatNo,
+          card: targetCard,
+          cards: [targetCard, boostCard],
+          comboKind: "BOOST",
+          messageVi: `${targetMeta.shortVi} + Purrfect Boost (+1)`,
+        },
+        nowMs
+      );
+
+      const targetName = resolvedTargetSeatNo
+        ? ` nhắm vào ${getSeat(state, resolvedTargetSeatNo).displayName}`
+        : "";
+      events.push({
+        eventType: "IK_BOOSTED_CARD_PLAYED",
+        message: `${actor.displayName} đánh [${targetMeta.nameVi}] kết hợp Purrfect Boost (+1 hiệu ứng)${targetName}!`,
+        visibleToSeatNos: "all",
+      });
+
+      maybeOpenNopeWindowOrExecute(
+        state,
+        {
+          kind: "SINGLE_CARD",
+          actorSeatNo: actor.seatNo,
+          cards: [targetCard, boostCard],
+          effectiveType: targetCard.type,
+          boosted: true,
+          targetSeatNo: resolvedTargetSeatNo,
           nopeCount: 0,
           lastNopeBySeatNo: null,
           passedSeatNos: [],
@@ -4134,6 +4989,7 @@ export const implodingKittensCartridge: GameCartridge<
         if (
           found.type === "exploding_kitten" ||
           found.type === "imploding_kitten" ||
+          found.type === "black_hole" ||
           found.type === "devilcat" ||
           found.type === "godcat"
         ) {
@@ -4171,6 +5027,7 @@ export const implodingKittensCartridge: GameCartridge<
         if (
           targetDiscard.type === "exploding_kitten" ||
           targetDiscard.type === "imploding_kitten" ||
+          targetDiscard.type === "black_hole" ||
           targetDiscard.type === "devilcat"
         ) {
           throw new Error("Không thể trục vớt lá Bom từ Chồng bài bỏ.");
@@ -4192,7 +5049,24 @@ export const implodingKittensCartridge: GameCartridge<
           actorSeatNo: actor.seatNo,
           targetSeatNo:
             command.type !== "PLAY_COMBO_5" ? command.targetSeatNo : undefined,
-          card: cards[0],
+          card: cards[cards.length - 1],
+          cards: cards.map((c) => ({ ...c })),
+          comboKind:
+            command.type === "PLAY_COMBO_2"
+              ? "COMBO_2"
+              : command.type === "PLAY_COMBO_3"
+                ? "COMBO_3"
+                : "COMBO_5",
+          wantedCardType:
+            command.type === "PLAY_COMBO_3"
+              ? command.wantedCardType
+              : undefined,
+          messageVi:
+            command.type === "PLAY_COMBO_2"
+              ? "Combo 2 Lá • Cướp 1 lá từ đối thủ"
+              : command.type === "PLAY_COMBO_3"
+                ? `Combo 3 Lá • Đòi [${IK_CARD_META[command.wantedCardType].shortVi}]`
+                : "Combo 5 Lá Khác Nhau • Trục vớt từ Mộ",
         },
         nowMs
       );
@@ -4277,15 +5151,33 @@ export const implodingKittensCartridge: GameCartridge<
     }
 
     if (prevState.step === "FavorGiveStep" && prevState.pendingFavor) {
-      const fromSeat = getSeat(prevState, prevState.pendingFavor.fromSeatNo);
-      if (fromSeat.hand.length > 0) {
-        return this.reduce({
-          state: prevState,
+      let current: CartridgeTransitionResult<IkMatchState> = {
+        state: prevState,
+        events: [],
+        phaseDeadlineMs: prevState.phaseDeadlineMs,
+      };
+      while (
+        current.state.step === "FavorGiveStep" &&
+        current.state.pendingFavor
+      ) {
+        const fromSeat = getSeat(
+          current.state,
+          current.state.pendingFavor.fromSeatNo
+        );
+        if (!fromSeat.alive || fromSeat.hand.length === 0) break;
+        const next = this.reduce({
+          state: current.state,
           actorSeatNo: fromSeat.seatNo,
           nowMs,
           command: { type: "GIVE_FAVOR_CARD", cardId: fromSeat.hand[0].id },
         });
+        current = {
+          state: next.state,
+          events: [...current.events, ...next.events],
+          phaseDeadlineMs: next.phaseDeadlineMs,
+        };
       }
+      return current;
     }
 
     if (prevState.step === "Combo2PickStep" && prevState.pendingCombo2Pick) {
@@ -4506,7 +5398,29 @@ export const implodingKittensCartridge: GameCartridge<
 
     const pa = state.pendingAction;
     const viewerHasNope = Boolean(
-      mySeat?.alive && mySeat.hand.some((c) => c.type === "nope")
+      mySeat?.alive &&
+        !mySeat.isBlind &&
+        mySeat.hand.some((c) => c.type === "nope")
+    );
+    const viewerHasSuperNope = Boolean(
+      mySeat?.alive &&
+        !mySeat.isBlind &&
+        mySeat.hand.some((c) => c.type === "super_nope")
+    );
+    const currentStandingSeatNo = pa
+      ? pa.nopeCount % 2 === 0
+        ? pa.actorSeatNo
+        : pa.lastNopeBySeatNo
+      : null;
+    const canViewerNope = Boolean(
+      viewerHasNope &&
+        viewerSeatNo !== null &&
+        viewerSeatNo !== currentStandingSeatNo
+    );
+    const canViewerSuperNope = Boolean(
+      viewerHasSuperNope &&
+        viewerSeatNo !== null &&
+        viewerSeatNo !== currentStandingSeatNo
     );
 
     return {
@@ -4543,12 +5457,22 @@ export const implodingKittensCartridge: GameCartridge<
         (c) =>
           c.type !== "exploding_kitten" &&
           c.type !== "imploding_kitten" &&
+          c.type !== "black_hole" &&
           c.type !== "devilcat"
       ),
       towerHolderSeatNo: state.towerHolderSeatNo ?? null,
       towerStashCount: (state.towerStashCards ?? []).length,
       godcatOnPlaymat: Boolean(state.godcatOnPlaymat),
-      myHand: mySeat ? mySeat.hand : [],
+      attackLocked: Boolean(state.attackLocked),
+      myHand: mySeat
+        ? mySeat.isBlind
+          ? mySeat.hand.map((c) => ({
+              id: c.id,
+              type: "tacocat" as IkCardType,
+              marked: false,
+            }))
+          : mySeat.hand
+        : [],
       myIsBlind: Boolean(mySeat?.isBlind),
       myPrivateVision: mySeat?.privateVision ?? null,
       pendingAction: pa
@@ -4562,9 +5486,12 @@ export const implodingKittensCartridge: GameCartridge<
             nopeCount: pa.nopeCount,
             isCanceledByNope: pa.nopeCount % 2 === 1,
             lastNopeBySeatNo: pa.lastNopeBySeatNo,
-            canViewerNope: viewerHasNope,
+            canViewerNope,
+            canViewerSuperNope,
             hasViewerPassedNope:
               viewerSeatNo !== null && pa.passedSeatNos.includes(viewerSeatNo),
+            deadlineMs: state.phaseDeadlineMs,
+            windowMs: state.config.timers.nopeSeconds * 1000,
           }
         : null,
       pendingInsert: state.pendingInsert
@@ -4572,7 +5499,8 @@ export const implodingKittensCartridge: GameCartridge<
             seatNo: state.pendingInsert.seatNo,
             card:
               state.pendingInsert.seatNo === viewerSeatNo ||
-              state.pendingInsert.reason === "INSERT_IMPLODING_FACEUP"
+              state.pendingInsert.reason === "INSERT_IMPLODING_FACEUP" ||
+              state.pendingInsert.reason === "INSERT_BLACK_HOLE_FACEUP"
                 ? state.pendingInsert.card
                 : { id: "hidden-insert", type: "exploding_kitten" },
             reason: state.pendingInsert.reason,

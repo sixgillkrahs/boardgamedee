@@ -90,6 +90,7 @@ const CARTRIDGE_ASSETS: Record<string, CartridgeAssetPack> = {
       { url: "/sprites/ik-atlas-good-vs-evil.webp", labelVi: "Bản mở rộng Good vs. Evil" },
       { url: "/sprites/ik-atlas-imploding.webp", labelVi: "Bản mở rộng Imploding" },
       { url: "/sprites/ik-atlas-streaking.webp", labelVi: "Bản mở rộng Streaking" },
+      { url: "/sprites/ik-atlas-pokepri.webp", labelVi: "Bản mở rộng Pokepri" },
       { url: "/sprites/ik-lobby-bg.webp", labelVi: "Ảnh nền sảnh Mèo Nổ" },
       { url: "/sprites/imploding-kittens-logo.jpg", labelVi: "Biểu tượng trò chơi" },
     ],

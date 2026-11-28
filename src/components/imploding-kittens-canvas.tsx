@@ -23,6 +23,7 @@ import {
   IK_EXPANSION_META,
   type IkCard,
   type IkCardCategory,
+  type IkCardType,
   type IkCommand,
   type IkPlayerView,
 } from "@/cartridges/imploding-kittens";
@@ -103,6 +104,14 @@ export function ImplodingKittensCanvas({
     otherName: string;
     card: IkCard | null;
   } | null>(null);
+  const [comboNotice, setComboNotice] = useState<{
+    id: number;
+    comboKind: "COMBO_2" | "COMBO_3" | "COMBO_5" | "BOOST";
+    actorName: string;
+    targetName: string | null;
+    wantedCardType?: IkCardType;
+    cards: IkCard[];
+  } | null>(null);
 
   const clearHoldTimer = () => {
     const h = holdStateRef.current;
@@ -125,6 +134,14 @@ export function ImplodingKittensCanvas({
     }, 4800);
     return () => window.clearTimeout(tid);
   }, [stealNotice]);
+
+  useEffect(() => {
+    if (!comboNotice) return;
+    const tid = window.setTimeout(() => {
+      setComboNotice((cur) => (cur?.id === comboNotice.id ? null : cur));
+    }, 3800);
+    return () => window.clearTimeout(tid);
+  }, [comboNotice]);
 
   useEffect(() => {
     if (!inspectedCard) return;
@@ -184,6 +201,30 @@ export function ImplodingKittensCanvas({
         playerView.direction,
         viewerSeatNo
       );
+
+      if (
+        anim.kind === "PLAY_CARD" &&
+        anim.comboKind &&
+        anim.cards &&
+        anim.cards.length >= 2
+      ) {
+        const actorName =
+          playerView.seats.find((s) => s.seatNo === anim.actorSeatNo)
+            ?.displayName ?? "Người chơi";
+        const targetName =
+          anim.targetSeatNo !== undefined
+            ? playerView.seats.find((s) => s.seatNo === anim.targetSeatNo)
+                ?.displayName ?? null
+            : null;
+        setComboNotice({
+          id: anim.id,
+          comboKind: anim.comboKind,
+          actorName,
+          targetName,
+          wantedCardType: anim.wantedCardType,
+          cards: anim.cards,
+        });
+      }
 
       if (anim.kind === "COMBO_STEAL" && viewerSeatNo !== null) {
         if (anim.targetSeatNo === viewerSeatNo) {
@@ -1448,6 +1489,101 @@ export function ImplodingKittensCanvas({
         onContextMenu={(e) => e.preventDefault()}
         className="w-full h-full block touch-none select-none"
       />
+
+      {/* Multi-Card Combo / Purrfect Boost Showcase Banner (shows ALL played cards to everyone) */}
+      {comboNotice && !stealNotice && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 w-[min(94vw,460px)] pointer-events-none">
+          <div
+            className={`pointer-events-auto rounded-2xl border backdrop-blur-md p-2.5 sm:p-3 shadow-2xl space-y-2 ${
+              comboNotice.comboKind === "COMBO_5"
+                ? "border-emerald-400/85 bg-emerald-950/92 text-emerald-50"
+                : comboNotice.comboKind === "COMBO_3"
+                  ? "border-purple-400/85 bg-purple-950/92 text-purple-50"
+                  : comboNotice.comboKind === "BOOST"
+                    ? "border-amber-400/85 bg-amber-950/92 text-amber-50"
+                    : "border-sky-400/85 bg-slate-900/94 text-sky-50"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 text-left">
+                <p
+                  className={`text-[10.5px] font-black uppercase tracking-wider ${
+                    comboNotice.comboKind === "COMBO_5"
+                      ? "text-emerald-300"
+                      : comboNotice.comboKind === "COMBO_3"
+                        ? "text-purple-300"
+                        : comboNotice.comboKind === "BOOST"
+                          ? "text-amber-300"
+                          : "text-sky-300"
+                  }`}
+                >
+                  {comboNotice.comboKind === "COMBO_5"
+                    ? "COMBO 5 LÁ KHÁC NHAU (TRỤC VỚT TỪ MỘ)"
+                    : comboNotice.comboKind === "COMBO_3"
+                      ? `COMBO 3 LÁ${
+                          comboNotice.wantedCardType
+                            ? ` — ĐÒI [${IK_CARD_META[comboNotice.wantedCardType].shortVi.toUpperCase()}]`
+                            : ""
+                        }`
+                      : comboNotice.comboKind === "BOOST"
+                        ? "PURRFECT BOOST (+1 HIỆU ỨNG)"
+                        : "COMBO 2 LÁ (CƯỚP 1 LÁ NGẪU NHIÊN)"}
+                </p>
+                <p className="text-xs font-extrabold text-white leading-snug">
+                  <span className="text-amber-300">
+                    {comboNotice.actorName}
+                  </span>{" "}
+                  vừa đánh {comboNotice.cards.length} lá
+                  {comboNotice.targetName ? (
+                    <>
+                      {" "}
+                      nhắm vào{" "}
+                      <span className="text-rose-300">
+                        {comboNotice.targetName}
+                      </span>
+                    </>
+                  ) : null}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setComboNotice(null)}
+                className="shrink-0 rounded-lg border border-white/15 bg-black/30 hover:bg-black/50 px-2 py-0.5 text-[11px] font-bold text-slate-200 cursor-pointer"
+                aria-label="Đóng thông báo Combo"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex items-start justify-center gap-1.5 sm:gap-2 overflow-x-auto pb-0.5">
+              {comboNotice.cards.map((c, idx) => {
+                const cMeta = IK_CARD_META[c.type];
+                const mid = (comboNotice.cards.length - 1) / 2;
+                const tiltDeg = (idx - mid) * 3;
+                return (
+                  <div
+                    key={`${c.id}-${idx}`}
+                    className="shrink-0 w-14 sm:w-16 flex flex-col items-center gap-1"
+                    style={{ transform: `rotate(${tiltDeg}deg)` }}
+                  >
+                    <div className="w-full aspect-[5/7] rounded-lg overflow-hidden border border-white/30 bg-slate-950 shadow-lg">
+                      <div
+                        role="img"
+                        aria-label={cMeta.nameVi}
+                        className="w-full h-full"
+                        style={getIkCardSpriteBgStyle(c.type, c.id)}
+                      />
+                    </div>
+                    <span className="w-full text-center text-[9.5px] font-bold text-slate-100 leading-tight truncate">
+                      {cMeta.shortVi}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stolen Card Alert Toast (shows exact card stolen from you or taken by you) */}
       {stealNotice && (
